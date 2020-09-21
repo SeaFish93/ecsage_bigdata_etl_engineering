@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/1/23 19:30
 # @Author  : wangsong
-# @FileName: exec_script_sql_new.py
+# @FileName: exec_script_sql.py
 # @Software: PyCharm
 import time
 import datetime

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/1/23 19:30
 # @Author  : wangsong
-# @FileName: exec_script_sql_new.py
+# @FileName: exec_script_sql.py
 # @Software: PyCharm
 import time
 import datetime
@@ -9,10 +9,10 @@ import importlib
 import pendulum
 
 
-from etl_main.common.airflow_instance import Airflow
-from etl_main.common.db_session import set_db_session
-from etl_main.common.alert_info import get_alert_info_d
-from etl_main.common.set_process_exit import set_exit
+from common.base.airflow_instance import Airflow
+from common.session.db_session import set_db_session
+from common.alert.alert_info import get_alert_info_d
+from common.base.set_process_exit import set_exit
 
 
 def run(jd,no_run_date, **kwargs):
@@ -85,13 +85,12 @@ def replace_placeholder(txt):
         .replace("${trx_next_date}", str(trx_next_date))\
         .replace("${trx_next_dt}", str(trx_next_dt)) \
         .replace("${trx_yesterday_yyyy_mm_dd}", str(trx_yesterday_yyyy_mm_dd))
-def get_task_module(DB="",Table=""):
+def get_task_module(packageName="",DB="",Table=""):
     try:
         pkg = ".bi_etl.%s.%s" % (DB, Table)
-        module = importlib.import_module(pkg, package="etl_main")
+        module = importlib.import_module(pkg, package=packageName)
         return module
     except Exception as e:
         msg = "|**** Error: 获取SQL文件失败 %s" % e
         #set_error_msg(msg)
         raise Exception("获取SQL文件失败!")
-    return None

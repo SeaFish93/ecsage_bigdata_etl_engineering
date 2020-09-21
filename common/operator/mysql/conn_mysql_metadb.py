@@ -4,9 +4,9 @@
 # @FileName: etl_metadata.py
 # @Software: PyCharm
 
-from etl_main.common.get_config import Conf
-from etl_main.common.mysql_operator import MysqlDB
-from etl_main.sql.etl_meta.etl_metadata import get_sql
+from common.base.get_config import Conf
+from common.operator.mysql.mysql_operator import MysqlDB
+from sql.etl_meta.etl_metadata import get_sql
 
 
 class EtlMetadata:

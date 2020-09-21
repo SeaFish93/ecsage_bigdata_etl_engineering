@@ -29,7 +29,7 @@ class BeelineNoSqlDB(BaseDB):
         f.flush()
         # add by wangsong（print sql）
         print(sql_set)
-        print("beeline exec sql：\n" + sql)
+        print("beeline exec_script sql：\n" + sql)
         res = os.system("%s -f %s" % (self.conn, sql_file))
         os.system("rm %s" % sql_file)
         f.close()
@@ -45,11 +45,11 @@ class BeelineNoSqlDB(BaseDB):
 
 
 """
-set hive.exec.parallel.thread.number=3;
+set hive.exec_script.parallel.thread.number=3;
 set mapred.max.split.size=256000000;
 set mapred.min.split.size.per.node=256000000;
 set mapred.min.split.size.per.rack=256000000;
-set hive.exec.reducers.bytes.per.reducer=256000000;
+set hive.exec_script.reducers.bytes.per.reducer=256000000;
 set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;
-set hive.exec.parallel=true;
+set hive.exec_script.parallel=true;
 """

@@ -26,12 +26,12 @@ class HiveNoSqlDB(BaseDB):
             # "mapreduce.map.java.opts": "-Xmx7200m",
             # "mapreduce.reduce.memory.mb": "8000",
             # "mapreduce.reduce.java.opts": "-Xmx7200m",
-            # "hive.exec.parallel": "true",
-            # "hive.exec.parallel.thread.number": "3",
+            # "hive.exec_script.parallel": "true",
+            # "hive.exec_script.parallel.thread.number": "3",
             # "mapred.max.split.size": "256000000",
             # "mapred.min.split.size.per.node": "256000000",
             # "mapred.min.split.size.per.rack": "256000000",
-            # "hive.exec.reducers.bytes.per.reducer": "256000000",
+            # "hive.exec_script.reducers.bytes.per.reducer": "256000000",
             # "hive.input.format": "org.apache.hadoop.hive.ql.io.CombineHiveInputFormat"
             # "mapreduce.job.max.split.locations": "50"
         }
@@ -64,12 +64,12 @@ class HiveNoSqlDB(BaseDB):
                 #"mapreduce.map.java.opts": "-Xmx7200m",
                 #"mapreduce.reduce.memory.mb": "8000",
                 #"mapreduce.reduce.java.opts": "-Xmx7200m",
-                #"hive.exec.parallel": "true",
-                #"hive.exec.parallel.thread.number": "3",
+                #"hive.exec_script.parallel": "true",
+                #"hive.exec_script.parallel.thread.number": "3",
                 #"mapred.max.split.size": "256000000",
                 #"mapred.min.split.size.per.node": "256000000",
                 #"mapred.min.split.size.per.rack": "256000000",
-                #"hive.exec.reducers.bytes.per.reducer": "256000000",
+                #"hive.exec_script.reducers.bytes.per.reducer": "256000000",
                 #"hive.input.format": "org.apache.hadoop.hive.ql.io.CombineHiveInputFormat"
                 #"mapreduce.job.max.split.locations": "50"
             }
@@ -166,7 +166,7 @@ class HiveNoSqlDB(BaseDB):
            if ok and len(get_row) > 0:
                result = True
         except Exception as e:
-            print("hive exec sql Error:" + sql)
+            print("hive exec_script sql Error:" + sql)
             print(e)
             return result
         return result
