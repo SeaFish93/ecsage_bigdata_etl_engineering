@@ -20,7 +20,7 @@ class SparkNoSqlDB(BaseDB):
         super().__init__(host=host, port=port, user=user)
         self.metastore_uris = host
         self.app_name = app_name
-        print("SparkNoSqlDB : " + self.metastore_uris + ", appName:" + self.app_name,",port:"+self.port)
+        print("SparkNoSqlDB : " + self.metastore_uris + ", appName:" + self.app_name,",port:"+str(self.port))
         self.conn = SparkSession.builder.master("yarn").appName(app_name) \
              .config("spark.submit.deployMode", "client") \
              .config("hive.metastore.uris", "thrift://%s:%s"%(self.metastore_uris,self.port)) \
