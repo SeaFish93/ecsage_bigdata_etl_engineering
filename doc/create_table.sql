@@ -10,9 +10,9 @@ create table metadb.conn_db_handle
 ;
 insert into metadb.conn_db_handle
 select
- 1,'etl_metadb' handle_code
-  ,'元数据' handle_name
-   ,'conn_etl_metadb' handle_conn_code
+ 2,'hive' handle_code
+  ,'hive连接' handle_name
+   ,'conn_hive' handle_conn_code
 from dual
 ;
 create table metadb.conn_db_info
@@ -43,12 +43,13 @@ insert into metadb.conn_db_info
   ,password
   ,db_name
  )
- select 'conn_etl_metadb','元数据连接池','mysql','192.168.237.129',3306,'mysql','bXlzcWw=','metadb'
+ select 'conn_hive','hive连接池','hive','222.186.30.14',10000,'hive2','aGl2ZUBZaw==','default'
  ;
  insert into metadb.dags_info
 (dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
 select 'day_metadb_etl_scripts_01','etl','etl','day',3,'30 16 * * *',1,1
 ;
+
 create table metadb.dags_info(
 id                  int not null AUTO_INCREMENT COMMENT '自增主键',
 dag_id              varchar(32) not null COMMENT 'dag唯一标识',
@@ -57,14 +58,14 @@ owner               varchar(64) not null COMMENT 'dag所有者',
 batch_type          varchar(30) not null comment '批次频率：【hour|day】',
 retries             int(4) DEFAULT 0  not null COMMENT 'dag失败时重试次数',
 schedule_interval   varchar(16) not null COMMENT '调度周期，crontab表达式',
-depends_on_past     int(2)      not null COMMENT '是否依赖上一次周期调度结果，1：是，0：否',
+depends_on_past     int(2)  default 1    not null COMMENT '是否依赖上一次周期调度结果，1：是，0：否',
 priority_weight     int(2)      DEFAULT 1 not null COMMENT 'dag中task的优先级',
 queue               varchar(32) COMMENT 'dag提交队列',
 pool                varchar(32) COMMENT 'dag运行池',
 status              int(2) DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效',
 comments            varchar(512) COMMENT '备注',
-create_user         varchar(32) not null COMMENT '创建者',
-update_user         varchar(32) not null COMMENT '最后更新者',
+create_user         varchar(32)  COMMENT '创建者',
+update_user         varchar(32)   COMMENT '最后更新者',
 create_time         datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
 update_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
 CONSTRAINT sync_dags_info_dags_PK PRIMARY KEY (id),
@@ -83,24 +84,24 @@ granularity           char(1) not null COMMENT '抽取粒度：F-全量，D-增�
 inc_column            varchar(30)    comment '增量抽取字段',
 inc_date_type         varchar(30) null COMMENT '增量抽取时间类型；【TimeStamp|Date|DateTime】',
 inc_date_format       varchar(30) null COMMENT '增量抽取时间格式；0：不带杠，1：横杠，2：斜杠',
-unique_column         varchar(65) not null COMMENT '源表唯一键，用于row_number(partition by)。如：uid, line_id',
-no_run_time           varchar(30) not null COMMENT '错开高峰时间点，格式：0,1,2,3,4,5,6',
+unique_column         varchar(65)   COMMENT '源表唯一键，用于row_number(partition by)。如：uid, line_id',
+no_run_time           varchar(30)   COMMENT '错开高峰时间点，格式：0,1,2,3,4,5,6',
 fields_terminated     varchar(30)  DEFAULT '/001'  not null COMMENT 'hive表字段间分隔符；默认/001',
 life_cycle            bigint  DEFAULT 0 COMMENT '表生命周期，需要保留数据天数，默认为0，则永久保留',
 is_snap               int(2) DEFAULT 1 not null COMMENT '是否生成snap表,0为不生成snap表，则落地sensitive',
 is_history            int(2) DEFAULT 0 not null COMMENT '是否生成回溯表,默认0为不生成回溯表',
-depends_on_past       int(2) DEFAULT 0 not null COMMENT '是否依赖上一次周期调度结果，1：是，0：否',
+depends_on_past       int(2) DEFAULT 1 not null COMMENT '是否依赖上一次周期调度结果，1：是，0：否',
 yarn_queue            varchar(32) null COMMENT 'task提交到yarn队列',
 hive_config_parameter varchar(500) null COMMENT 'hive配置参数',
 execution_timeout     int(8) null COMMENT 'task运行超时时长（分钟）',
 description           varchar(1024)  null COMMENT 'task的描述信息',
 status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效',
 last_run_date         varchar(30) COMMENT '任务调度截止北京日期，格式：2019-12-03，大于此日期后，任务将变为无效，不在调度，默认为空，则永久调度',
-petitioner            varchar(32) not null COMMENT '需求提出方，邮箱@前缀',
-operator              varchar(32) not null COMMENT '任务负责人，邮箱@前缀',
-comments              varchar(512)null COMMENT '备注',
-create_user           varchar(32) not null COMMENT '创建者，邮箱@前缀',
-update_user           varchar(32) not null COMMENT '最后更新者，邮箱@前缀',
+petitioner            varchar(32)   COMMENT '需求提出方，邮箱@前缀',
+operator              varchar(32)   COMMENT '任务负责人，邮箱@前缀',
+comments              varchar(512)  COMMENT '备注',
+create_user           varchar(32)   COMMENT '创建者，邮箱@前缀',
+update_user           varchar(32)   COMMENT '最后更新者，邮箱@前缀',
 create_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
 update_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
 CONSTRAINT sync_tasks_model_tasks_PK PRIMARY KEY (task_id)
@@ -305,15 +306,15 @@ create table metadb.etl_tasks_info
 id                    int  not null AUTO_INCREMENT COMMENT '自增主键',
 task_id               varchar(100) not null COMMENT 'task唯一标识，格式：【f|d】_【目标表】',
 dag_id                varchar(50) not null COMMENT 'dag唯一标识，格式：【hour|day】_【业务名】_【auto】_【dag】',
-business              varchar(16)  not null COMMENT '所属业务',
-dw_level              varchar(16)  not null COMMENT '任务所属dw层级',
+business              varchar(200) not null null COMMENT '所属项目',
+dw_level              varchar(16)  not null  COMMENT '任务所属dw层级',
 granularity           char(1) not null COMMENT '抽取粒度：F-全量，D-增量',
 target_db              varchar(32)  not null COMMENT '目标db',
 target_table           varchar(100)  not null COMMENT '目标表',
-unique_column         varchar(65) not null COMMENT '目标表唯一键',
-no_run_time           varchar(30) not null COMMENT '错开高峰时间点，格式：0,1,2,3,4,5,6',
+unique_column         varchar(65)  COMMENT '目标表唯一键',
+no_run_time           varchar(30)   COMMENT '错开高峰时间点，格式：0,1,2,3,4,5,6',
 life_cycle            bigint  DEFAULT 0 COMMENT '表生命周期，需要保留数据天数，默认为0，则永久保留',
-depends_on_past       int(2) not null COMMENT '是否依赖上一次周期调度结果，1：是，0：否',
+depends_on_past       int(2) default 1 COMMENT '是否依赖上一次周期调度结果，1：是，0：否',
 engine_type           varchar(32) null COMMENT '计算引擎：beeline、hive、spark、presto',
 yarn_queue            varchar(32) null COMMENT 'task提交到yarn队列',
 hive_config_parameter varchar(500) null COMMENT 'hive配置参数',
@@ -324,18 +325,19 @@ spark_executor_memory  varchar(32) null COMMENT 'executors内存',
 spark_driver_memory    varchar(32) null COMMENT 'driver内存',
 spark_sql_shuffle_partitions varchar(32) null COMMENT 'shuffle partition个数',
 execution_timeout     int(8) null COMMENT 'task运行超时时长（分钟）',
-petitioner             varchar(32) not null COMMENT '需求提出方',
-operator               varchar(32) not null COMMENT '任务负责人',
+petitioner             varchar(32)  COMMENT '需求提出方',
+operator               varchar(32)  COMMENT '任务负责人',
 status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效',
 comments              varchar(512)null COMMENT '备注',
-create_user           varchar(32) not null COMMENT '创建者',
-update_user           varchar(32) not null COMMENT '最后更新者',
+create_user           varchar(32)   COMMENT '创建者',
+update_user           varchar(32)   COMMENT '最后更新者',
 create_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
 update_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
 CONSTRAINT etl_tasks_info_tasks_PK PRIMARY KEY (id),
 UNIQUE KEY etl_tasks_info_unique_ind_task_id (task_id)
 )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='etl作业信息表'
 ;
+
 insert into metadb.etl_tasks_info
 (
 task_id
@@ -348,8 +350,10 @@ task_id
 ,depends_on_past
 ,engine_type
 ,status
+,dw_level
+,business
 )
-select 'dw_test_02','day_metadb_etl_scripts_01','D','dw','test_02','id','0',1,'hive',1
+select 'dw_test_02','day_metadb_etl_scripts_01','D','dw','test','id','0',1,'hive',1,'dw','yk_bigdata_etl_sql'
 
 insert into metadb.sync_tasks_model
 (

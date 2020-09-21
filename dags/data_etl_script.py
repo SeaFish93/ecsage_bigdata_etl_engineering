@@ -6,17 +6,15 @@
 #function info：etl跑批
 
 import datetime
-from etl_main.common.exec_script_sql_new import run as etl_main
+from yk_bigdata_etl_engineering.common.exec_script.bat.exec_script_sql import run as etl_main
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import DAG
 import airflow
-#from common.send_msg import hour_failure_callback
-from etl_main.common.conn_metadb import EtlMetadata
-from etl_main.common.alert_info import get_create_dag_alert
-from etl_main.common.set_process_exit import set_exit
-from etl_main.common.dep_task import dep_task_main
-from etl_main.common.check_data_quality import check_data_quality_main
+from yk_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
+from yk_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
+from yk_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from yk_bigdata_etl_engineering.common.base.dep_task import dep_task_main
 import os
 
 etl_md = EtlMetadata()
@@ -112,12 +110,13 @@ for dag_info in get_dags:
                                                       op_args=(tasks_info,no_run_date),
                                                       dag=dag)
           elif batch_type == "day" and task_type == 'check':
-              task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                                      #pool='check_a',
-                                                      python_callable=check_data_quality_main,
-                                                      provide_context=True,
-                                                      op_args=(tasks_info, "unique", dag_id + "." + task_id),
-                                                      dag=dag)
+             pass
+             ## task['%s' % (task_id)] = PythonOperator(task_id=task_id,
+             ##                                         #pool='check_a',
+             ##                                         python_callable=check_data_quality_main,
+             ##                                         provide_context=True,
+             ##                                         op_args=(tasks_info, "unique", dag_id + "." + task_id),
+             ##                                         dag=dag)
           else:
               pass
        for task_name in tasks:

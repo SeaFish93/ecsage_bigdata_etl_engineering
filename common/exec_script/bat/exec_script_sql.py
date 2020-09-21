@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/1/23 19:30
 # @Author  : wangsong
-# @FileName: exec_script_sql_new.py
+# @FileName: exec_script_sql.py
 # @Software: PyCharm
 import time
 import datetime
@@ -9,10 +9,10 @@ import importlib
 import pendulum
 
 
-from etl_main.common.airflow_instance import Airflow
-from etl_main.common.db_session import set_db_session
-from etl_main.common.alert_info import get_alert_info_d
-from etl_main.common.set_process_exit import set_exit
+from yk_bigdata_etl_engineering.common.base.airflow_instance import Airflow
+from yk_bigdata_etl_engineering.common.session.db_session import set_db_session
+from yk_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from yk_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 
 
 def run(jd,no_run_date, **kwargs):
@@ -21,16 +21,19 @@ def run(jd,no_run_date, **kwargs):
     airflow = Airflow(kwargs)
     # 打印airflow task信息到日志
     engine_type = jd[11]
+    business = jd[2]
+    dw_level = jd[3]
     target_db= jd[5]
     target_table = jd[6]
-    if engine_type == "beeline":
-        session = set_db_session(SessionType="beeline", SessionHandler="hive",AppName=airflow.dag + "." + airflow.task)
-    elif engine_type == "hive":
-        session = set_db_session(SessionType="hive", SessionHandler="hive",AppName=airflow.dag + "." + airflow.task)
-    elif engine_type == "spark":
-        session = set_db_session(SessionType="spark", SessionHandler="spark",AppName=airflow.dag + "." + airflow.task)
+    #if engine_type == "beeline":
+    #    session = set_db_session(SessionType="beeline", SessionHandler="hive",AppName=airflow.dag + "." + airflow.task)
+    #elif engine_type == "hive":
+    #    session = set_db_session(SessionType="hive", SessionHandler="hive",AppName=airflow.dag + "." + airflow.task)
+    #elif engine_type == "spark":
+    #    session = set_db_session(SessionType="spark", SessionHandler="spark",AppName=airflow.dag + "." + airflow.task)
+    session = set_db_session(SessionType=engine_type, SessionHandler=engine_type, AppName=airflow.dag + "." + airflow.task)
     #执行sql
-    task_module = get_task_module(DB=target_db, Table=target_table)
+    task_module = get_task_module(Business=business,DWLevel=dw_level, DB=target_db, Table=target_table)
     sql_list = task_module.SQL_LIST
     ok = True
     for sql in sql_list:
@@ -85,13 +88,13 @@ def replace_placeholder(txt):
         .replace("${trx_next_date}", str(trx_next_date))\
         .replace("${trx_next_dt}", str(trx_next_dt)) \
         .replace("${trx_yesterday_yyyy_mm_dd}", str(trx_yesterday_yyyy_mm_dd))
-def get_task_module(DB="",Table=""):
+def get_task_module(Business="",DWLevel="",DB="",Table=""):
+#Business：所属项目名称,DWLevel：所属项目的包名,DB：目标数据库,Table：目标表名
     try:
-        pkg = ".bi_etl.%s.%s" % (DB, Table)
-        module = importlib.import_module(pkg, package="etl_main")
+        pkg = ".%s.%s.%s.%s" % (DWLevel, DB, Table, Table)
+        module = importlib.import_module(pkg, package=Business)
         return module
     except Exception as e:
         msg = "|**** Error: 获取SQL文件失败 %s" % e
         #set_error_msg(msg)
         raise Exception("获取SQL文件失败!")
-    return None

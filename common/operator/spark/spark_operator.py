@@ -6,24 +6,24 @@
 
 import os
 import sys
-from etl_main.common.base_operator import BaseDB
+from yk_bigdata_etl_engineering.common.base.base_operator import BaseDB
 
-os.environ['SPARK_HOME'] = "/root/spark/spark-2.3.0-bin-hadoop2.7"
+os.environ['SPARK_HOME'] = "/opt/spark"
 os.environ['PYSPARK_SUBMIT_ARGS'] = "--master yarn pyspark-shell"
 sys.path.append(os.path.join(os.environ['SPARK_HOME'], "python"))
-sys.path.append(os.path.join(os.environ['SPARK_HOME'], "python/lib/py4j-0.10.6-src.zip"))
+sys.path.append(os.path.join(os.environ['SPARK_HOME'], "python/lib/py4j-0.10.7-src.zip"))
 from pyspark.sql import SparkSession
 
 
 class SparkNoSqlDB(BaseDB):
     def __init__(self, host=None, port=None, user=None, metastore_uris=None, app_name="etl"):
         super().__init__(host=host, port=port, user=user)
-        self.metastore_uris = metastore_uris
+        self.metastore_uris = host
         self.app_name = app_name
         print("SparkNoSqlDB : " + self.metastore_uris + ", appName:" + self.app_name)
         self.conn = SparkSession.builder.master("yarn").appName(app_name) \
              .config("spark.submit.deployMode", "client") \
-             .config("hive.metastore.uris", "thrift://master:9083") \
+             .config("hive.metastore.uris", "thrift://%s:%s"%(self.metastore_uris,self.port)) \
              .config("spark.sql.hive.convertMetastoreParquet", "false") \
              .config("spark.sql.crossJoin.enabled", "true") \
              .config("spark.num.executors", "2") \
