@@ -4,7 +4,7 @@
 # @FileName: hive_operator.py
 # @Software: PyCharm
 
-from etl_main.common.base_operator import BaseDB
+from yk_bigdata_etl_engineering.common.base.base_operator import BaseDB
 from pyhive import hive
 
 
@@ -36,9 +36,9 @@ class HiveNoSqlDB(BaseDB):
             # "mapreduce.job.max.split.locations": "50"
         }
         print(conf)
-        #self.conn = hive.Connection(host=self.host, port=self.port, username=self.user, database=self.default_db,
-        #                            password=self.password, configuration=conf, auth='CUSTOM')
-        self.conn = hive.Connection(host='master', port=10000, username="hive",password='11@', auth='CUSTOM')
+        self.conn = hive.Connection(host=self.host, port=self.port, username=self.user, database=self.default_db,
+                                    password=self.password, configuration=conf, auth='CUSTOM')
+        #self.conn = hive.Connection(host='master', port=10000, username="hive",password='11@', auth='CUSTOM')
 
     def __del__(self):
         print("HiveNoSqlDB %s __del__ : do cursor.close()" % self.host)

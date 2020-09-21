@@ -6,7 +6,7 @@
 
 import os
 import sys
-from etl_main.common.base_operator import BaseDB
+from yk_bigdata_etl_engineering.common.base.base_operator import BaseDB
 
 os.environ['SPARK_HOME'] = "/root/spark/spark-2.3.0-bin-hadoop2.7"
 os.environ['PYSPARK_SUBMIT_ARGS'] = "--master yarn pyspark-shell"
