@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/1/30 16:34
-# @Author  : luoyh
+# @Author  : wangsong
 # @FileName: etl_thread.py
 # @Software: PyCharm
 

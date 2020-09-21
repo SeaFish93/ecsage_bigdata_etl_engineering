@@ -9,11 +9,10 @@ import importlib
 import pendulum
 
 
-from etl_main.common.airflow_instance import Airflow
-from etl_main.common.db_session import set_db_session
-from etl_main.common.alert_info import get_alert_info_d
-from etl_main.common.set_process_exit import set_exit
-from etl_main.common.conn_metadb import EtlMetadata
+from yk_bigdata_etl_engineering.common.base.airflow_instance import Airflow
+from yk_bigdata_etl_engineering.common.session.db_session import set_db_session
+from yk_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from yk_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 
 
 def run(jd, **kwargs):
@@ -52,15 +51,7 @@ def run(jd, **kwargs):
                if get_data[0][0] == 0:
                   etl_md.execute_sql(sqlName="insert_depend_sql", Parameter={"task_id": target_db+"_"+target_table,"dep_task_id":dep_task_id}, IsReturnData="N")
         if ok is False:
-            msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                                   SourceTable="",
-                                   TargetTable="%s.%s" % (jd[5], jd[6]),
-                                   BeginExecDate="",
-                                   EndExecDate="",
-                                   Status="Error",
-                                   Log="执行sql失败！！！",
-                                   Developer="test")
-            set_exit(LevelStatu="red", MSG=msg)
+            set_exit(LevelStatu="red", MSG="")
 
 def replace_placeholder(txt):
     trx_dt = airflow.ds_nodash_utc8

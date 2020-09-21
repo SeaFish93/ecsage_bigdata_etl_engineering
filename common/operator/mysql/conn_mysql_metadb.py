@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020/5/26 15:28
 # @Author  : wangsong12
-# @FileName: etl_metadata.py
+# @FileName: conn_mysql_metadb.py
 # @Software: PyCharm
 
-from common.base.get_config import Conf
-from common.operator.mysql.mysql_operator import MysqlDB
-from sql.etl_meta.etl_metadata import get_sql
+from yk_bigdata_etl_engineering.common.base.get_config import Conf
+from yk_bigdata_etl_engineering.common.operator.mysql.mysql_operator import MysqlDB
+from yk_bigdata_etl_engineering.sql.etl_meta.etl_metadata import get_sql
 
 
 class EtlMetadata:

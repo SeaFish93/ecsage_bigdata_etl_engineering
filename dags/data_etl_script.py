@@ -6,15 +6,15 @@
 #function info：etl跑批
 
 import datetime
-from common.exec_script.bat.exec_script_sql import run as etl_main
+from yk_bigdata_etl_engineering.common.exec_script.bat.exec_script_sql import run as etl_main
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import DAG
 import airflow
-from common.operator.mysql.conn_mysql_metadb import EtlMetadata
-from common.alert.alert_info import get_create_dag_alert
-from common.base.set_process_exit import set_exit
-from common.base.dep_task import dep_task_main
+from yk_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
+from yk_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
+from yk_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from yk_bigdata_etl_engineering.common.base.dep_task import dep_task_main
 import os
 
 etl_md = EtlMetadata()
