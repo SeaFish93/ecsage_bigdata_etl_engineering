@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/2/21 16:19
-# @Author  : luoyh
+# @Author  : wangsong
 # @FileName: beeline_operator.py
 # @Software: PyCharm
 
@@ -12,10 +12,11 @@ import time
 class BeelineNoSqlDB(BaseDB):
     def __init__(self, host=None, port=None, user=None, password=None, metastore_uris=None):
         super().__init__(host=host, port=port, user=user, password=password)
+        metastore_uris = "jdbc:hive2://%s/default;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2_zk"%(host)
         self.metastore_uris = metastore_uris
         print("beeline NoSql DB:" + self.metastore_uris)
         #modify by wangsong（source /etc/profile）
-        self.conn = "/root/hive/apache-hive-2.3.7-bin/bin/beeline -u 'jdbc:hive2://%s/' -n %s -d org.apache.hive.jdbc.HiveDriver -p '%s'" % (self.metastore_uris, self.user, self.password)
+        self.conn = "beeline -u '%s' -n %s -d org.apache.hive.jdbc.HiveDriver -p '%s'" % (self.metastore_uris, self.user, self.password)
         # self.conn = "/usr/bin/beeline -u 'jdbc:hive2://%s/' -n %s " % (self.metastore_uris, self.user)
 
     def execute_sql(self, sql, task_name=""):
@@ -38,7 +39,6 @@ class BeelineNoSqlDB(BaseDB):
             return False
         else:
             return True
-        # os.system("beeline -u 'jdbc:hive2://cdh-master2:10000/' -n hive -d org.apache.hive.jdbc.HiveDriver -f %s" % sql_file)
 
     def get_password(self):
         return self.password
