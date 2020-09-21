@@ -337,6 +337,7 @@ CONSTRAINT etl_tasks_info_tasks_PK PRIMARY KEY (id),
 UNIQUE KEY etl_tasks_info_unique_ind_task_id (task_id)
 )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='etl作业信息表'
 ;
+
 insert into metadb.etl_tasks_info
 (
 task_id
