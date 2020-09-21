@@ -30,7 +30,7 @@ def set_db_session(SessionType="",SessionHandler="",AppName=""):
       session = SparkNoSqlDB(port=get_handle[0][1],
                               host=get_handle[0][0],
                               user=get_handle[0][2],
-                              metastore_uris="master:10000",
+                              metastore_uris="",
                               app_name=AppName)
     elif SessionType == "mysql":
       from yk_bigdata_etl_engineering.common.operator.mysql.mysql_operator import MysqlDB
