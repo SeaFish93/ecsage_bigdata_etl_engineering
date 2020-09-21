@@ -18,7 +18,8 @@ class BaseDB(object):
         # 没有给定password时，给一个默认值，以防下面报错
         password = "WmFHVm1rWVhWc2RBPT0s" if password is None else password
         try:
-            self.password = str(base64.decodestring(bytes(password, 'utf-8'))).replace("b'","").replace("'","")
+            #self.password = str(base64.decodestring(bytes(password, 'utf-8'))).replace("b'","").replace("'","")
+            self.password = str(base64.b64decode(password).decode("utf-8"))
         except Exception as e:
             self.password = ""
             print("获取密码出错。" + e)
