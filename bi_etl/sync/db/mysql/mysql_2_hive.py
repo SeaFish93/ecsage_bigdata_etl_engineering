@@ -81,7 +81,7 @@ def main(TaskInfo, Level,**kwargs):
           if not os.path.exists(data_home):
               # 如果目录不存在，则创建
               os.makedirs(data_home)
-          data_file = """%s/%s""" % (data_home, target_table + ".file")
+          data_file = """%s/%s/%s/%s""" % (data_home,airflow.dag,airflow.task, target_table + ".file")
           # hdfs存储临时数据文件目录
           hdfs_dir = "/tmp/datafolder_new"
           #保存MySQL主键，提供下游表使用
@@ -345,6 +345,8 @@ def set_load_file_to_hive(HiveSession="",MysqlSession="",SourceDB="",SourceTable
                             TargetDB=TmpDB, TargetTable=TmpTable)
     #上传本地数据文件至HDFS
     print("""hdfs dfs -moveFromLocal -f %s %s"""% (DataFile,HDFSDir),"************************************")
+    exit(1)
+    #################################################################################
     ok = os.system("hdfs dfs -moveFromLocal -f %s %s" % (DataFile,HDFSDir))
     if ok != 0:
         # 删除数据文件
