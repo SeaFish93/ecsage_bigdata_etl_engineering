@@ -91,7 +91,7 @@ def replace_placeholder(txt):
 def get_task_module(Business="",DWLevel="",DB="",Table=""):
 #Business：所属项目名称,DWLevel：所属项目的包名,DB：目标数据库,Table：目标表名
     try:
-        pkg = ".%s.%s.%s.%s" % (DWLevel, DB, Table, Table)
+        pkg = ".%s.%s.%s" % (DWLevel, DB, Table)
         module = importlib.import_module(pkg, package=Business)
         return module
     except Exception as e:
