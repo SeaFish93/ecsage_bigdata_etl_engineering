@@ -1,27 +1,24 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/11/12 18:04
 # @Author  : wangsong
-# @FileName: hive_2_hive.py
+# @FileName: mysql_2_hive.py
 # @Software: PyCharm
 # function info：用于同步mysql库数据到hive ods\snap\backtrace表
-#20191218 优化统计结果条数策略 by wangsong
-#20191219 修复snap增量抽取结果条数校验逻辑问题，问题：增量抽取时，校验数据为全量，应修改为增量  by wangsong
-#20191220 添加校验落地文件行数与ods增量条数对比 by wangsong
-#20191223 修复校验落地文件行数与ods增量条数对比逻辑--添加过滤条件为源表 by wangsong
 
-from etl_main.common.get_config import Conf
-from etl_main.common.airflow_instance import Airflow
-from etl_main.common.sync_method import get_mysql_hive_table_column
-from etl_main.common.sync_method import get_create_mysql_table_columns
-from etl_main.common.sync_method import get_table_columns_info
-from etl_main.common.sync_method import set_sync_rows
-from etl_main.common.sync_method import get_mysql_table_index
-from etl_main.common.set_process_exit import set_exit
-from etl_main.common.alert_info import get_alert_info_d
-from etl_main.common.db_session import set_db_session
-from etl_main.config.column_type import MYSQL_2_HIVE
-from etl_main.common.etl_thread import EtlThread
-from etl_main.common.conn_metadb import EtlMetadata
+
+from yk_bigdata_etl_engineering.common.base.get_config import Conf
+from yk_bigdata_etl_engineering.common.base.airflow_instance import Airflow
+from yk_bigdata_etl_engineering.common.base.sync_method import get_mysql_hive_table_column
+from yk_bigdata_etl_engineering.common.base.sync_method import get_create_mysql_table_columns
+from yk_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
+from yk_bigdata_etl_engineering.common.base.sync_method import set_sync_rows
+from yk_bigdata_etl_engineering.common.base.sync_method import get_mysql_table_index
+from yk_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from yk_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from yk_bigdata_etl_engineering.common.session.db_session import set_db_session
+from yk_bigdata_etl_engineering.config.column_type import MYSQL_2_HIVE
+from yk_bigdata_etl_engineering.common.base.etl_thread import EtlThread
+from yk_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 
 import datetime
 import math
@@ -456,7 +453,7 @@ def get_source_data_sql(MysqlSession="",HiveSession="",SourceDB="",SourceTable="
       if "BIT" in str(column[2]).upper():
           source_data_sql = source_data_sql + """,ifnull(cast(%s as decimal(34,0)),'')""" % (column[1])
       elif (not str(column[2]).upper() in MYSQL_2_HIVE and "INT" not in str(column[2]).upper()) or column[0]:
-          source_data_sql = source_data_sql + """,REPLACE( REPLACE( REPLACE( ifnull(%s,''), '|', ' '), '\\n', ' '), '\\r', ' ')""" % (column[1])
+          source_data_sql = source_data_sql + """,REPLACE( REPLACE( REPLACE( ifnull(%s,''), '|', '|'), '\\n', ' '), '\\r', ' ')""" % (column[1])
       else:
           source_data_sql = source_data_sql + """,ifnull(%s,'')""" % (column[1])
     source_data_sql = """select CONCAT_WS('%s', %s)"""%("\001",source_data_sql.replace(",","",1))
