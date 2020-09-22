@@ -77,7 +77,7 @@ def main(TaskInfo, Level,**kwargs):
 
         elif Level == "ods":
           #定义数据文件路径及文件命名
-          data_home = conf.get("Airflow_New", "data_home") + "/" + airflow.ds_nodash_utc8
+          data_home = conf.get("Airflow_New", "data_home") + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,airflow.task)
           if not os.path.exists(data_home):
               # 如果目录不存在，则创建
               os.makedirs(data_home)
