@@ -365,18 +365,12 @@ insert into metadb.sync_tasks_model
  ,inc_date_format
  ,unique_column
  ,no_run_time
- ,fields_terminated
  ,life_cycle
- ,is_snap
- ,is_history
  ,depends_on_past
  ,yarn_queue
- ,hive_config_parameter
  ,execution_timeout
  ,description
  ,status
- ,last_run_date
- ,petitioner
  ,`operator`
  ,comments
  ,create_user
@@ -395,22 +389,17 @@ select 'd_etl_metadb_conn_db_info' as task_id
  ,null as inc_date_format
 ,'id' as unique_column
 ,'0' as no_run_time
-,null as fields_terminated
 ,null as life_cycle
-,1 as is_snap
-,1 as is_history
 ,1 as depends_on_past
 ,null as yarn_queue
-,null as hive_config_parameter
 ,null as execution_timeout
 ,null as description
 ,1 as status
-,null as last_run_date
- ,null as petitioner
- ,null as operator
- ,null as comments
- ,null as create_user
- ,null as update_user
+ ,'' as operator
+ ,'' as comments
+ ,'' as create_user
+ ,'' as update_user
+
 
 create table metadb.check_table_unique
 (
