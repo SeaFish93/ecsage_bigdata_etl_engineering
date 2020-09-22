@@ -77,11 +77,11 @@ def main(TaskInfo, Level,**kwargs):
 
         elif Level == "ods":
           #定义数据文件路径及文件命名
-          data_home = conf.get("Airflow_New", "data_home") + "/" + airflow.ds_nodash_utc8
+          data_home = conf.get("Airflow_New", "data_home") + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,airflow.task)
           if not os.path.exists(data_home):
               # 如果目录不存在，则创建
               os.makedirs(data_home)
-          data_file = """%s/%s/%s/%s""" % (data_home,airflow.dag,airflow.task, target_table + ".file")
+          data_file = """%s/%s""" % (data_home, target_table + ".file")
           # hdfs存储临时数据文件目录
           hdfs_dir = "/tmp/datafolder_new"
           #保存MySQL主键，提供下游表使用
