@@ -12,6 +12,7 @@ import time
 class BeelineNoSqlDB(BaseDB):
     def __init__(self, host=None, port=None, user=None, password=None, metastore_uris=None):
         super().__init__(host=host, port=port, user=user, password=password)
+        host = "bd37-dnode4:2181,bd19-dnode2:2181,bd26-dnode3:2181"
         metastore_uris = "jdbc:hive2://%s/default;serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2_zk"%(host)
         self.metastore_uris = metastore_uris
         print("beeline NoSql DB:" + self.metastore_uris)
