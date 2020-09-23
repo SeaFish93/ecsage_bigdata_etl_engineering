@@ -5,7 +5,7 @@
 # @Software: PyCharm
 
 
-from yk_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
+from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 
 etl_md = EtlMetadata()
 

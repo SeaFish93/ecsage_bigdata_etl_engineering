@@ -4,9 +4,9 @@
 # @FileName: conn_mysql_metadb.py
 # @Software: PyCharm
 
-from yk_bigdata_etl_engineering.common.base.get_config import Conf
-from yk_bigdata_etl_engineering.common.operator.mysql.mysql_operator import MysqlDB
-from yk_bigdata_etl_engineering.sql.etl_meta.etl_metadata import get_sql
+from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
+from ecsage_bigdata_etl_engineering.common.operator.mysql.mysql_operator import MysqlDB
+from ecsage_bigdata_etl_engineering.sql.etl_meta.etl_metadata import get_sql
 
 
 class EtlMetadata:
