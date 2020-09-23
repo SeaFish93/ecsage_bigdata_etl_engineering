@@ -9,7 +9,7 @@ from datetime import datetime
 from croniter import croniter
 from airflow.sensors.external_task_sensor import ExternalTaskSensor
 import airflow
-from yk_bigdata_etl_engineering.common.base.airflow_instance import Airflow
+from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from airflow.models import DAG
 import pendulum
 

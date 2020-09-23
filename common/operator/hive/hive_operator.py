@@ -4,7 +4,7 @@
 # @FileName: hive_operator.py
 # @Software: PyCharm
 
-from yk_bigdata_etl_engineering.common.base.base_operator import BaseDB
+from ecsage_bigdata_etl_engineering.common.base.base_operator import BaseDB
 from pyhive import hive
 
 
