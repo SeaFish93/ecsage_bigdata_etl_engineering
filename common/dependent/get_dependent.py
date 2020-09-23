@@ -26,6 +26,7 @@ def run(jd, **kwargs):
     target_table = jd[6]
     business = jd[2]
     dw_level = jd[3]
+    dw_granularity = jd[4]
     if engine_type == "beeline":
         session = set_db_session(SessionType="beeline", SessionHandler="hive",AppName=airflow.dag + "." + airflow.task)
     elif engine_type == "hive":
@@ -48,7 +49,7 @@ def run(jd, **kwargs):
                if db_name in ["ods","snap","history","sensitive"]:
                    dep_task_id = db_name+"_d_" + table_name
                else:
-                   dep_task_id = db_name + "_" + table_name
+                   dep_task_id = db_name + "_" + dw_granularity + "_" + table_name
                ok,get_data = etl_md.execute_sql(sqlName="get_depend_sql",Parameter={"task_id": target_db+"_"+target_table, "dep_task_id": dep_task_id},IsReturnData="Y")
                if get_data[0][0] == 0:
                   etl_md.execute_sql(sqlName="insert_depend_sql", Parameter={"task_id": target_db+"_"+target_table,"dep_task_id":dep_task_id}, IsReturnData="N")
