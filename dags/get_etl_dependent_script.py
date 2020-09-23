@@ -83,6 +83,7 @@ for dag_info in get_dags:
         set_exit(LevelStatu="red", MSG=msg)
     tasks = ""
     dags = {}
+    print(get_tasks,"=======================================@@@@@@@@@@@@@@@@@@@@@")
     if len(get_tasks) > 0:
        for tasks_info in get_tasks:
           #配置跑批任务属性

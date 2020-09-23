@@ -47,7 +47,7 @@ insert into metadb.conn_db_info
  ;
  insert into metadb.dags_info
 (dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
-select 'day_sync_etl_metadb','load','etl','day',3,'30 16 * * *',1,1
+select 'day_sql_dependent_metadb','dependent','etl','hour',3,'*/2 * * * *',111111,1
 ;
 
 create table metadb.dags_info(
