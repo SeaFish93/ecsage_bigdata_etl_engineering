@@ -21,7 +21,7 @@ def run(jd, **kwargs):
     etl_md = EtlMetadata()
     airflow = Airflow(kwargs)
     # 打印airflow task信息到日志
-    engine_type = jd[11]
+    engine_type = "hive" #jd[11]
     target_db= jd[5]
     target_table = jd[6]
     if engine_type == "beeline":
