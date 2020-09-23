@@ -16,6 +16,7 @@ from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb impo
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.dependent.dep_task import dep_task_main
+from airflow.utils.dates import days_ago
 import os
 
 etl_md = EtlMetadata()
@@ -37,7 +38,7 @@ for dag_info in get_dags:
     retries = int(dag_info[2])
     batch_type = dag_info[3]
     if batch_type == "hour":
-        start_date = datetime.datetime.now() + datetime.timedelta(hours=-2)
+        start_date = airflow.utils.dates.days_ago(2)
     elif batch_type == "day":
         start_date = airflow.utils.dates.days_ago(2)
     else:
@@ -61,7 +62,7 @@ for dag_info in get_dags:
         'priority_weight': priority_weight,
         'retries': retries,
         'retry_delay': datetime.timedelta(minutes=2),
-        'start_date': start_date,
+        'start_date': days_ago(1),
         #'on_failure_callback': hour_failure_callback
     }
     names = locals()
