@@ -24,6 +24,8 @@ def run(jd, **kwargs):
     engine_type = "hive" #jd[11]
     target_db= jd[5]
     target_table = jd[6]
+    business = jd[2]
+    dw_level = jd[3]
     if engine_type == "beeline":
         session = set_db_session(SessionType="beeline", SessionHandler="hive",AppName=airflow.dag + "." + airflow.task)
     elif engine_type == "hive":
@@ -31,7 +33,7 @@ def run(jd, **kwargs):
     elif engine_type == "spark":
         session = set_db_session(SessionType="spark", SessionHandler="spark",AppName=airflow.dag + "." + airflow.task)
     #执行sql
-    task_module = get_task_module(DB=target_db, Table=target_table)
+    task_module = get_task_module(Business=business,DWLevel=dw_level, DB=target_db, Table=target_table)
     sql_list = task_module.SQL_LIST
     ok = True
     for sql in sql_list:
@@ -91,13 +93,13 @@ def replace_placeholder(txt):
         .replace("${trx_next_date}", str(trx_next_date))\
         .replace("${trx_next_dt}", str(trx_next_dt)) \
         .replace("${trx_yesterday_yyyy_mm_dd}", str(trx_yesterday_yyyy_mm_dd))
-def get_task_module(DB="",Table=""):
+def get_task_module(Business="",DWLevel="",DB="",Table=""):
+#Business：所属项目名称,DWLevel：所属项目的包名,DB：目标数据库,Table：目标表名
     try:
-        pkg = ".bi_etl.%s.%s" % (DB, Table)
-        module = importlib.import_module(pkg, package="etl_main")
+        pkg = ".%s.%s.%s" % (DWLevel, DB, Table)
+        module = importlib.import_module(pkg, package=Business)
         return module
     except Exception as e:
         msg = "|**** Error: 获取SQL文件失败 %s" % e
         #set_error_msg(msg)
         raise Exception("获取SQL文件失败!")
-    return None
