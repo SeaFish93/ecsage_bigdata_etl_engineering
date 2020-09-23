@@ -85,6 +85,7 @@ for dag_info in get_dags:
     dags = {}
     print(get_tasks,"=======================================@@@@@@@@@@@@@@@@@@@@@")
     if len(get_tasks) > 0:
+       num = 0
        for tasks_info in get_tasks:
           #配置跑批任务属性
           task_id = tasks_info[0]
@@ -110,6 +111,10 @@ for dag_info in get_dags:
                                                   provide_context=True,
                                                   op_args=(tasks_info,),
                                                   dag=dag)
+          if num == 0:
+              start_etl_task.set_upstream(task['%s' % (task_id)])
+          num = num + 1
+          end_etl_task.set_upstream(task['%s' % (task_id)])
           #else:
           #    pass
        ##task_list = tasks.replace(",", "", 1)
