@@ -102,37 +102,16 @@ for dag_info in get_dags:
           task = locals()
           print(batch_type,task_id, "!!!!!!!!#########=======================================@@@@@@@@@@@@@@@@@@@@@")
           #定义task对象
-          if batch_type == "hour":
-             pass
-          elif batch_type == "day":
-              task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                                      python_callable=etl_main,
-                                                      provide_context=True,
-                                                      op_args=(tasks_info,),
-                                                      dag=dag)
-              #设置task依赖
-              task_list = tasks.replace(",", "", 1)
-              ok, task_deps = etl_md.execute_sql(sqlName="get_task_dep_sql", Parameter={"task_id": task_list},IsReturnData="Y")
-              if 1 == 2:
-                for task_dep in task_deps:
-                    if task_dep[0] == task_dep[3]:
-                        task[task_dep[2]].set_upstream(task[task_dep[1]])
-                        task[task_dep[1]].set_upstream(start_etl_task)
-                    else:
-                        external_task = PythonOperator(task_id='external_%s_%s' % (task_dep[0], task_dep[1]),
-                                                       python_callable=dep_task_main,
-                                                       provide_context=True,
-                                                       op_args=(task_dep[0], task_dep[1], task_dep[4],),
-                                                       dag=dag)
-                        task[task_dep[2]].set_upstream(external_task)
-                        external_task.set_upstream(start_etl_task)
-              else:
-                task['%s' % (task_id)].set_upstream(start_etl_task)
-              end_etl_task.set_upstream(task['%s' % (task_id)])
-
-
-          else:
-              pass
+          ## if batch_type == "hour":
+          ##    pass
+          ## elif batch_type == "day":
+          task['%s' % (task_id)] = PythonOperator(task_id=task_id,
+                                                  python_callable=etl_main,
+                                                  provide_context=True,
+                                                  op_args=(tasks_info,),
+                                                  dag=dag)
+          #else:
+          #    pass
        ##task_list = tasks.replace(",", "", 1)
        ##ok, task_deps = etl_md.execute_sql(sqlName="get_task_dep_sql",Parameter={"task_id":task_list},IsReturnData="Y")
        ##for task_dep in task_deps:
