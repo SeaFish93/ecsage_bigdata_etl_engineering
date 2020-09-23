@@ -100,6 +100,7 @@ for dag_info in get_dags:
           #  for date_no in (tasks_info[15]).split(","):
           #    no_run_date.append(str(int(date_no)))
           task = locals()
+          print(batch_type,task_id, "!!!!!!!!#########=======================================@@@@@@@@@@@@@@@@@@@@@")
           #定义task对象
           if batch_type == "hour":
              pass
