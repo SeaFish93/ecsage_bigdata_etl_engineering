@@ -112,7 +112,7 @@ for dag_info in get_dags:
                                                   op_args=(tasks_info,),
                                                   dag=dag)
           if num == 0:
-              start_etl_task.set_upstream(task['%s' % (task_id)])
+              task['%s' % (task_id)].set_upstream(start_etl_task)
           num = num + 1
           end_etl_task.set_upstream(task['%s' % (task_id)])
           #else:
