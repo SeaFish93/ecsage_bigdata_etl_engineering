@@ -26,7 +26,7 @@ def run(jd, **kwargs):
     target_table = jd[6]
     business = jd[2]
     dw_level = jd[3]
-    dw_granularity = jd[4]
+    dw_granularity = str(jd[4]).lower()
     if engine_type == "beeline":
         session = set_db_session(SessionType="beeline", SessionHandler="hive",AppName=airflow.dag + "." + airflow.task)
     elif engine_type == "hive":
