@@ -47,9 +47,9 @@ def run(jd, **kwargs):
                table_name = str(table["tablename"]).split("@")[1]
                db_name = str(table["tablename"]).split("@")[0]
                if db_name in ["ods","snap","history","sensitive"]:
-                   dep_task_id = db_name+"_d_" + table_name
+                   dep_task_id = db_name+"_" + table_name
                else:
-                   dep_task_id = db_name + "_" + dw_granularity + "_" + table_name
+                   dep_task_id = db_name + "_" + table_name
                ok,get_data = etl_md.execute_sql(sqlName="get_depend_sql",Parameter={"task_id": target_db+"_"+target_table, "dep_task_id": dep_task_id},IsReturnData="Y")
                if get_data[0][0] == 0:
                   etl_md.execute_sql(sqlName="insert_depend_sql", Parameter={"task_id": target_db+"_"+target_table,"dep_task_id":dep_task_id}, IsReturnData="N")

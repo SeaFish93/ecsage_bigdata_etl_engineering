@@ -73,7 +73,7 @@ CONSTRAINT sync_dags_info_dags_PK PRIMARY KEY (id),
 )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='Dag作业配置表'
 ;
 create table metadb.sync_tasks_model(
-task_id               varchar(100) not null COMMENT 'task唯一标识，格式：【f|d】_【业务名】_【源库名】_【源表名】,字母则为小写',
+task_id               varchar(100) not null COMMENT 'task唯一标识，格式：【业务名】_【源库名】_【源表名】,字母则为小写',
 dag_id                varchar(50) not null COMMENT 'dag唯一标识，格式：【hour|day】_【业务名】_【auto】',
 business              varchar(16)  not null COMMENT '业务名',
 source_platform       varchar(30)  not null comment '来源端平台',
