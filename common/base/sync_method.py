@@ -5,9 +5,9 @@
 # @Software: PyCharm
 #function info：数据采集方法
 
-from yk_bigdata_etl_engineering.common.base.sensitive_column import sensitive_column
-from yk_bigdata_etl_engineering.config.column_type import get_column_hive_type
-from yk_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from ecsage_bigdata_etl_engineering.common.base.sensitive_column import sensitive_column
+from ecsage_bigdata_etl_engineering.config.column_type import get_column_hive_type
+from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 
 # 处理mysql2ods表
 def get_mysql_hive_table_column(HiveSession="",MysqlSession="",ETLMysqlSession="",SourceDB="",SourceTable="",TargetDB="", TargetTable="",IsTargetPartition=""):

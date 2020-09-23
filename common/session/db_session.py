@@ -7,11 +7,11 @@
 
 #创建DB会话
 def set_db_session(SessionType="",SessionHandler="",AppName=""):
-    from yk_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
+    from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
     etl_meta = EtlMetadata()
     ok, get_handle = etl_meta.execute_sql(sqlName="get_handle_sql", Parameter={"handle_code": SessionHandler},IsReturnData="Y")
     if SessionType == "hive":
-      from yk_bigdata_etl_engineering.common.operator.hive.hive_operator import HiveNoSqlDB
+      from ecsage_bigdata_etl_engineering.common.operator.hive.hive_operator import HiveNoSqlDB
       # 创建hive连接session
       session = HiveNoSqlDB(port=get_handle[0][1],
                             host=get_handle[0][0],
@@ -19,21 +19,21 @@ def set_db_session(SessionType="",SessionHandler="",AppName=""):
                             password=get_handle[0][3],
                             default_db=get_handle[0][4])
     elif SessionType == "beeline":
-      from yk_bigdata_etl_engineering.common.operator.beeline.beeline_operator import BeelineNoSqlDB
+      from ecsage_bigdata_etl_engineering.common.operator.beeline.beeline_operator import BeelineNoSqlDB
       session = BeelineNoSqlDB(port=get_handle[0][1],
                                host=get_handle[0][0],
                                user=get_handle[0][2],
                                password=get_handle[0][3],
                                metastore_uris="")
     elif SessionType == "spark":
-      from yk_bigdata_etl_engineering.common.operator.spark.spark_operator import SparkNoSqlDB
+      from ecsage_bigdata_etl_engineering.common.operator.spark.spark_operator import SparkNoSqlDB
       session = SparkNoSqlDB(port=get_handle[0][1],
                               host=get_handle[0][0],
                               user=get_handle[0][2],
                               metastore_uris="",
                               app_name=AppName)
     elif SessionType == "mysql":
-      from yk_bigdata_etl_engineering.common.operator.mysql.mysql_operator import MysqlDB
+      from ecsage_bigdata_etl_engineering.common.operator.mysql.mysql_operator import MysqlDB
       session = MysqlDB(port=get_handle[0][1],
                         host=get_handle[0][0],
                         user=get_handle[0][2],

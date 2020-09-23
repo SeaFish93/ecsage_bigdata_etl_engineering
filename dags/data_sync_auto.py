@@ -6,17 +6,17 @@
 #function info：数据采集
 
 import datetime
-from yk_bigdata_etl_engineering.bi_etl.sync.db.mysql.mysql_2_hive import main as sync_hive_main
-from yk_bigdata_etl_engineering.bi_etl.sync.db.mysql.mysql_2_hive import main as sync_mysql_main
+from ecsage_bigdata_etl_engineering.bi_etl.sync.db.mysql.mysql_2_hive import main as sync_hive_main
+from ecsage_bigdata_etl_engineering.bi_etl.sync.db.mysql.mysql_2_hive import main as sync_mysql_main
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import DAG
 import airflow
 #from common.send_msg import hour_failure_callback
-from yk_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
-from yk_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
-from yk_bigdata_etl_engineering.common.base.set_process_exit import set_exit
-from yk_bigdata_etl_engineering.common.base.dep_task import dep_task_main
+from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
+from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
+from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from ecsage_bigdata_etl_engineering.common.base.dep_task import dep_task_main
 import os
 
 etl_meta = EtlMetadata()
