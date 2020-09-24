@@ -376,7 +376,7 @@ insert into metadb.sync_tasks_model
  ,create_user
  ,update_user
 )
-select 'd_etl_metadb_conn_db_info' as task_id
+select 'etl_metadb_conn_db_info' as task_id
 ,'day_sync_etl_metadb_auto'  as  dag_id
 ,'etl' as business
 ,'mysql'  as source_platform

@@ -41,7 +41,7 @@ begin
      ,update_user
     )
     VALUES (
-    concat('ods','_',NEW.task_id),
+    concat_ws('_','ods',NEW.business,NEW.source_db,NEW.source_table),
     NEW.dag_id,
     NEW.business,
     NEW.source_platform,
@@ -111,7 +111,7 @@ begin
      ,update_user
     )
     VALUES (
-    concat('snap','_',NEW.task_id), -- task_id
+    concat_ws('_','snap',NEW.business,NEW.source_db,NEW.source_table), -- task_id
     NEW.dag_id,
     NEW.business,
     'hive', -- source_platform
@@ -146,7 +146,7 @@ begin
     );
 	insert into metadb.etl_job_dep
     (task_id,dep_task_id,status)
-    select concat('snap','_',NEW.task_id),concat('ods','_',NEW.task_id),1
+    select concat_ws('_','snap',NEW.business,NEW.source_db,NEW.source_table),concat_ws('_','ods',NEW.business,NEW.source_db,NEW.source_table),1
     ;
 END; //
 DELIMITER ;
@@ -159,12 +159,12 @@ FOR EACH ROW
 begin
   -- 删除作业
   delete from metadb.sync_tasks_info
-  where task_id in(concat('snap','_',OLD.task_id),concat('ods','_',OLD.task_id))
+  where task_id in(concat_ws('_','snap',OLD.business,OLD.source_db,OLD.source_table),concat_ws('_','ods',OLD.business,OLD.source_db,OLD.source_table))
   ;
   -- 删除依赖
-  delete from metadb.etl_job_dep where task_id = concat('snap','_',OLD.task_id);
-  delete from metadb.etl_job_dep where dep_task_id = concat('ods','_',OLD.task_id);
-  delete from metadb.etl_job_dep where dep_task_id = concat('snap','_',OLD.task_id);
+  delete from metadb.etl_job_dep where task_id = concat_ws('_','snap',OLD.business,OLD.source_db,OLD.source_table);
+  delete from metadb.etl_job_dep where dep_task_id = concat_ws('_','ods',OLD.business,OLD.source_db,OLD.source_table);
+  delete from metadb.etl_job_dep where dep_task_id = concat_ws('_','snap',OLD.business,OLD.source_db,OLD.source_table);
 END; //
 DELIMITER ;
 
@@ -175,7 +175,7 @@ AFTER UPDATE ON metadb.sync_tasks_model
 FOR EACH ROW
 begin
    delete from metadb.sync_tasks_info
-   where task_id in(concat('snap','_',OLD.task_id),concat('ods','_',OLD.task_id))
+   where task_id in(concat_ws('_','snap',OLD.business,OLD.source_db,OLD.source_table),concat_ws('_','ods',OLD.business,OLD.source_db,OLD.source_table))
    ;
    -- 写入ods作业记录
   INSERT INTO metadb.sync_tasks_info
@@ -214,7 +214,7 @@ begin
      ,update_user
     )
     VALUES (
-    concat('ods','_',NEW.task_id),
+    concat_ws('_','ods',NEW.business,NEW.source_db,NEW.source_table),
     NEW.dag_id,
     NEW.business,
     NEW.source_platform,
@@ -284,7 +284,7 @@ begin
      ,update_user
     )
     VALUES (
-    concat('snap','_',NEW.task_id), -- task_id
+    concat_ws('_','snap',NEW.business,NEW.source_db,NEW.source_table), -- task_id
     NEW.dag_id,
     NEW.business,
     'hive', -- source_platform
@@ -319,9 +319,9 @@ begin
     );
 
    -- 更新依赖
-   update metadb.etl_job_dep set task_id = concat('snap','_',NEW.task_id) where task_id = concat('snap','_',OLD.task_id);
-   update metadb.etl_job_dep set dep_task_id = concat('ods','_',NEW.task_id) where dep_task_id = concat('ods','_',OLD.task_id);
-   update metadb.etl_job_dep set dep_task_id = concat('snap','_',NEW.task_id) where dep_task_id = concat('snap','_',OLD.task_id);
+   update metadb.etl_job_dep set task_id = concat_ws('_','snap',NEW.business,NEW.source_db,NEW.source_table) where task_id = concat_ws('_','snap',OLD.business,OLD.source_db,OLD.source_table);
+   update metadb.etl_job_dep set dep_task_id = concat_ws('_','ods',NEW.business,NEW.source_db,NEW.source_table) where dep_task_id = concat_ws('_','ods',OLD.business,OLD.source_db,OLD.source_table);
+   update metadb.etl_job_dep set dep_task_id = concat_ws('_','snap',NEW.business,NEW.source_db,NEW.source_table) where dep_task_id = concat_ws('_','snap',OLD.business,OLD.source_db,OLD.source_table);
 
 END; //
 DELIMITER ;
