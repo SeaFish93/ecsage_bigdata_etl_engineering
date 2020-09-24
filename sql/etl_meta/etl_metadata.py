@@ -308,7 +308,7 @@ class EtlMetaDataSQL():
   """%("##{task_id}##","##{dep_task_id}##")
   #判断依赖是否在采集任务配置表或ETL任务配置表
   get_is_task_sql = """
-     select 1 from metadb.etl_tasks_info where task_id = '%s'
+     select 1 from metadb.etl_tasks_info where task_id = '%s' and 1=2
         union all
      select 1 from metadb.sync_tasks_info where task_id = '%s'
   """%("##{task_id}##","##{task_id}##")
