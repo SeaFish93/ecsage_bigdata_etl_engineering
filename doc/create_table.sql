@@ -256,7 +256,7 @@ create table metadb.etl_job_dep
 id                      int  not null AUTO_INCREMENT COMMENT '自增主键'
 ,task_id                varchar(100)  COMMENT'任务名称'
 ,dep_task_id            varchar(100)  COMMENT'依赖任务名称'
-,status                 int          COMMENT'状态'
+,status                 int          COMMENT'状态1启用，0停用'
 ,create_time            datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳'
 ,update_time            datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳'
 ,CONSTRAINT etl_job_dep_PK PRIMARY KEY (id)
@@ -436,6 +436,7 @@ create table metadb.check_table_unique
 create table metadb.interface_tasks_model(
 task_id               varchar(100)  not null COMMENT 'task唯一标识，格式：【业务名】_【源库名】_【源表名】,字母则为小写'
 ,dag_id                varchar(50)   not null COMMENT 'dag唯一标识，格式：【hour|day】_【业务名】_【auto】'
+,interface_acount_type int COMMENT '101腾讯、102微信、2巨量'
 ,interface_url         varchar(200)  not null comment '接口url'
 ,interface_level       varchar(200)  comment '接口level'
 ,interface_time_line   varchar(200)  comment '接口time_line'
@@ -449,15 +450,16 @@ task_id               varchar(100)  not null COMMENT 'task唯一标识，格式�
 ,CONSTRAINT interface_tasks_model_tasks_PK PRIMARY KEY (task_id)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='接口作业模板表'
 ;
+
  insert into metadb.dags_info
 (dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
 select 'day_tc_interface_auto','interface','etl','day',3,'30 16 * * *',1,1
 ;
 
 insert into metadb.interface_tasks_model
-(task_id,dag_id,interface_url,interface_level,interface_time_line,group_by,is_run_date,status)
+(task_id,dag_id,interface_acount_type,interface_url,interface_level,interface_time_line,group_by,is_run_date,status)
 select 'tc_interface_adcreatives'
-       ,'day_tc_interface_auto'
+       ,'day_tc_interface_auto',101
        ,'http://dtapi.ecsage.net/internal/gdt/getAdcreatives',
 'REPORT_LEVEL_MATERIAL_IMAGE','REQUEST_TIME','date,ad_id',1,1
 

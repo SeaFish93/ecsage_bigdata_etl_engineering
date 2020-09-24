@@ -67,6 +67,7 @@ class EtlMetaDataSQL():
   get_interface_sync_tasks_sql = """
     select  task_id
             ,dag_id
+            ,interface_acount_type
             ,interface_url
             ,interface_level
             ,interface_time_line

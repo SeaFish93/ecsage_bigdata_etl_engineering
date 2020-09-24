@@ -33,18 +33,38 @@ def main(TaskInfo, Level,**kwargs):
     global developer
     airflow = Airflow(kwargs)
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    interface_url = TaskInfo[2]
-    interface_level = TaskInfo[3]
-    interface_time_line = TaskInfo[4]
-    group_by = TaskInfo[5]
-    is_run_date = TaskInfo[6]
+    interface_acount_type = TaskInfo[2]
+    interface_url = TaskInfo[3]
+    interface_level = TaskInfo[4]
+    interface_time_line = TaskInfo[5]
+    group_by = TaskInfo[6]
+    is_run_date = TaskInfo[7]
     start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
+    data_dir = conf.get("Interface", "interface_data_home") + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,airflow.task)
+    data_host = conf.get("Interface", "data_host")
 
     #分支执行
-    if interface_level is None:
-      print("!@@@@@@@@@@@@@@@@@@@@@@@@@@###########################################")
+    if interface_acount_type is not None and interface_level is not None and interface_time_line is not None and group_by is not None and is_run_date == 1:
+      get_level_time_line_date_group(StartDate=start_date,EndDate=end_date,InterfaceAcountType=interface_acount_type,
+                                     InterfaceUrl=interface_url,InterfaceLevel=interface_level
+                                     ,InterfaceTimeLine=interface_time_line,DataDir=data_dir,DataHost=data_host)
 
-def get_level_time_line_date_group(InterfaceUrl="",InterfaceLevel="",InterfaceTimeLine=""):
+#含有level、time_line、date、group接口
+def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
+                                   InterfaceTimeLine="",Group_Column="",DataDir="",DataHost=""):
+    file_name = "%s/"
+    data = {"ec_fn":"$file_name",
+            "mt":InterfaceAcountType,
+            "level":["%s"%(InterfaceLevel)],
+            "start_date":"%s"%(StartDate),
+            "end_date":"%s"%(EndDate),
+            "group_by":Group_Column.split(","),
+            "time_line":"%s"%(InterfaceTimeLine)
+           }
+    curl_shell = """
+          curl - X POST - H 'Content-Type: application/json' - i '%s' - -data "%s"
+    """%(InterfaceUrl,data)
+
     pass
 
