@@ -41,6 +41,6 @@ def main(TaskInfo, Level,**kwargs):
     interval = int(str(params.split(',')[0]))
     action = int(str(params.split(',')[1]))
     print(interval, "=============================")
-    ok = os.system("sh  %s/%s.sh %s %s %s %s") % (shell_path, shell_name,start_date,end_date,interval,action)
+    ok = os.system("sh  %s/%s %s %s %s %s") % (shell_path, shell_name+".sh",start_date,end_date,interval,action)
     #if ok != 0:
      # pass
