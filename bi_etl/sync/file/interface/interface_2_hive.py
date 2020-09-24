@@ -33,3 +33,18 @@ def main(TaskInfo, Level,**kwargs):
     global developer
     airflow = Airflow(kwargs)
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    interface_url = TaskInfo[2]
+    interface_level = TaskInfo[3]
+    interface_time_line = TaskInfo[4]
+    group_by = TaskInfo[5]
+    is_run_date = TaskInfo[6]
+    start_date = airflow.execution_date_utc8_str[0:10]
+    end_date = airflow.execution_date_utc8_str[0:10]
+
+    #分支执行
+    if interface_level is None:
+      print("!@@@@@@@@@@@@@@@@@@@@@@@@@@###########################################")
+
+def get_level_time_line_date_group(InterfaceUrl="",InterfaceLevel="",InterfaceTimeLine=""):
+    pass
+
