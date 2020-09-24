@@ -60,6 +60,7 @@ def main(TaskInfo, Level,**kwargs):
     source_platform = TaskInfo[20]
     # airflow运行北京时间
     exec_date = airflow.execution_date_utc8_str[0:10].replace("-", "")
+    exec_date = airflow.execution_date_utc8_str[0:10]
     #创建连接session
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=hive_handler)
@@ -128,7 +129,7 @@ def set_ods_partition_table(HiveSession="",MysqlSession="",SourceDB="",SourceTab
                                                   TargetDB=TargetDB, TargetTable=TargetTable,IsTargetPartition=IsTargetPartition)
     sql = """
      insert overwrite table %s.%s
-     partition(sys_date = '%s')
+     partition(etl_date = '%s')
      select %s
      from %s.%s a
     """%(TargetDB,TargetTable,ExecDate,get_select_info[3],TmpDB,TmpTable)
@@ -136,7 +137,7 @@ def set_ods_partition_table(HiveSession="",MysqlSession="",SourceDB="",SourceTab
     ok = HiveSession.execute_sql(sql)
     end_system_time = (datetime.datetime.now() + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
     get_rows = get_sync_rows(DB=SourceDB, Table=SourceTable, ExecDate=ExecDate, SyncType="sync_inc")
-    sql = """desc formatted %s.%s partition(sys_date='%s')"""%(TargetDB,TargetTable,ExecDate)
+    sql = """desc formatted %s.%s partition(etl_date='%s')"""%(TargetDB,TargetTable,ExecDate)
     desc_formatted = HiveSession.get_all_rows(sql)
     target_rows = 0
     for desc_info in desc_formatted[1]:
@@ -144,7 +145,7 @@ def set_ods_partition_table(HiveSession="",MysqlSession="",SourceDB="",SourceTab
          target_rows = int(str(desc_info[2]).strip())
          break;
     if target_rows <= 0 and int(get_rows[0]) > 0:
-      sql = """select count(1) from %s.%s where sys_date='%s'"""%(TargetDB,TargetTable,ExecDate)
+      sql = """select count(1) from %s.%s where etl_date='%s'"""%(TargetDB,TargetTable,ExecDate)
       target_rows = int(HiveSession.get_all_rows(sql)[1][0][0])
     # 记录数据日志
     set_sync_rows(MysqlSession=etl_md, SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB,
@@ -175,7 +176,7 @@ def set_snap_sensitive_table(HiveSession="",BeelineSession="",SourceDB="",Source
     assign_table_columns = get_select_columns[1]
     #获取主键及表关联
     get_key_column,get_table_join = get_important_column_info(KeyColumn=KeyColumn,DB=SourceDB,Table=SourceTable)
-    ok, count = HiveSession.get_all_rows("""show partitions %s.%s partition(sys_date='%s')""" % (SourceDB, SourceTable, airflow.yesterday_ds_nodash_utc8))
+    ok, count = HiveSession.get_all_rows("""show partitions %s.%s partition(etl_date='%s')""" % (SourceDB, SourceTable, airflow.yesterday_ds_nodash_utc8_str))
     if get_key_column == "" or Granularity == "F" or (Granularity == 'D' and ok and len(count) == 0):
         is_condition = "N"
         if Granularity == "F" or (Granularity == 'D' and ok and len(count) == 0):
@@ -183,7 +184,7 @@ def set_snap_sensitive_table(HiveSession="",BeelineSession="",SourceDB="",Source
                     insert overwrite table {target_db}.{target_table}
                     select {source_select_column}
                     from {source_db}.{source_table}
-                    where sys_date = '{exec_date}'
+                    where etl_date = '{exec_date}'
                     """.format(target_db=TargetDB, target_table=TargetTable, source_db=SourceDB,
                                source_table=SourceTable,source_select_column=source_table_columns,exec_date=ExecDate
                                )
@@ -192,11 +193,11 @@ def set_snap_sensitive_table(HiveSession="",BeelineSession="",SourceDB="",Source
             insert overwrite table {target_db}.{target_table}
             select {source_select_column}
             from {source_db}.{source_table}
-            where sys_date = '{exec_date}'
+            where etl_date = '{exec_date}'
                 union all
             select {target_select_column}
             from {target_db}.{target_table} a
-            where a.sys_date != '{exec_date}'
+            where a.etl_date != '{exec_date}'
             """.format(target_db=TargetDB,target_table=TargetTable,source_db=SourceDB,source_table=SourceTable,
                        source_select_column=source_table_columns,target_select_column = assign_table_columns,exec_date=ExecDate
                        )
@@ -207,15 +208,15 @@ def set_snap_sensitive_table(HiveSession="",BeelineSession="",SourceDB="",Source
            insert overwrite table {target_db}.{target_table}
            select {source_select_column}
            from {source_db}.{source_table}
-           where sys_date = '{exec_date}'
+           where etl_date = '{exec_date}'
               union all
            select {target_select_column}
            from {target_db}.{target_table} a
            left join {source_db}.{source_table} b
            {table_join}
-           and b.sys_date = '{exec_date}'
+           and b.etl_date = '{exec_date}'
            where b.{key_column} is null
-             and a.sys_date != '{exec_date}'
+             and a.etl_date != '{exec_date}'
         """.format(source_db=SourceDB,source_table=SourceTable,source_select_column=source_table_columns,target_db=TargetDB,
                    target_table=TargetTable,target_select_column=assign_table_columns,table_join=get_table_join,
                    key_column=get_key_column.split(",")[0],exec_date=ExecDate)
@@ -257,7 +258,7 @@ def set_backtrace_table(HiveSession="",SourceDB="",SourceTable="",TargetDB="",Ta
     assign_table_columns = get_select_columns[3]
     sql = """
     insert overwrite table %s.%s
-    partition(sys_date='%s')
+    partition(etl_date='%s')
     select %s
     from %s.%s a
     """%(TargetDB,TargetTable,ExecDate,assign_table_columns,SourceDB,SourceTable)
@@ -292,10 +293,10 @@ def get_table_or_partition_rows(HiveSession="",DB="",Table="",IsPartition="",IsC
           sql_count = """select count(1) from %s.%s""" % (DB, Table)
        else:
           sql = """select 1"""
-          sql_count = """select count(1) from %s.%s where sys_date='%s'""" % (DB, Table, ExecDate)
+          sql_count = """select count(1) from %s.%s where etl_date='%s'""" % (DB, Table, ExecDate)
     else:
-       sql = """desc formatted %s.%s partition(sys_date='%s')""" % (DB, Table,ExecDate)
-       sql_count = """select count(1) from %s.%s where sys_date='%s'""" % (DB, Table,ExecDate)
+       sql = """desc formatted %s.%s partition(etl_date='%s')""" % (DB, Table,ExecDate)
+       sql_count = """select count(1) from %s.%s where etl_date='%s'""" % (DB, Table,ExecDate)
     desc_formatted = HiveSession.get_all_rows(sql)
     rows = 0
     for desc_info in desc_formatted[1]:
@@ -462,7 +463,7 @@ def get_source_data_sql(MysqlSession="",HiveSession="",SourceDB="",SourceTable="
     ok_01,table_count = HiveSession.get_all_rows("""show tables in %s like '%s'"""%(TargetDB,TargetTable))
     #查询分区表是否有前一天分区，若是没有则认为该表为第一次同步，即全量同步
     if ok_01 and len(table_count) > 0:
-      ok, count = HiveSession.get_all_rows("""show partitions %s.%s partition(sys_date='%s')"""%(TargetDB,TargetTable,airflow.yesterday_ds_nodash_utc8))
+      ok, count = HiveSession.get_all_rows("""show partitions %s.%s partition(etl_date='%s')"""%(TargetDB,TargetTable,airflow.yesterday_ds_nodash_utc8_str))
     else:
       ok = False
       count = 0
@@ -641,12 +642,12 @@ def set_data_row(HiveSession="",SourceDB="",SourceTable="",TargetDB="",TargetTab
                  ExecDate="",BeginSystemTime="",EndSystemTime=""):
     # 增量条数
     if SourceTableIsCondition == "Y":
-       sql = """select count(1) from %s.%s where sys_date='%s'""" % (SourceDB, SourceTable, ExecDate)
+       sql = """select count(1) from %s.%s where etl_date='%s'""" % (SourceDB, SourceTable, ExecDate)
     else:
        sql = """select count(1) from %s.%s""" % (SourceDB, SourceTable)
     source_rows = int(HiveSession.get_all_rows(sql)[1][0][0])
     if TargetTableIsCondition == "Y":
-       sql = """select count(1) from %s.%s where sys_date='%s'""" % (TargetDB, TargetTable, ExecDate)
+       sql = """select count(1) from %s.%s where etl_date='%s'""" % (TargetDB, TargetTable, ExecDate)
     else:
        sql = """select count(1) from %s.%s""" % (TargetDB, TargetTable, ExecDate)
     target_rows = int(HiveSession.get_all_rows(sql)[1][0][0])

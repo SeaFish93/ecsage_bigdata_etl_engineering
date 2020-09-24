@@ -306,10 +306,46 @@ class EtlMetaDataSQL():
      select count(1) from metadb.etl_job_dep where task_id = '%s'
      and dep_task_id = '%s'
   """%("##{task_id}##","##{dep_task_id}##")
+  #删除多余依赖
+  get_delete_depend_sql = """
+     delete from metadb.etl_job_dep where task_id = '%s' and dep_task_id = '%s'
+  """%("##{task_id}##","##{dep_task_id}##")
+  #查找所有依赖
+  get_list_depend_sql = """
+     select distinct dep_task_id from metadb.etl_job_dep where task_id = '%s'
+  """%("##{task_id}##")
+  #判断依赖是否在采集任务配置表或ETL任务配置表
+  get_is_task_sql = """
+     select 1 from metadb.etl_tasks_info where task_id = '%s'
+        union all
+     select 1 from metadb.sync_tasks_info where task_id = '%s'
+  """%("##{task_id}##","##{task_id}##")
   #查找上游依赖
   get_upstream_depend_sql = """
      select * from metadb.etl_job_dep where dep_task_id = '%s'
   """%("##{dep_task_id}##")
+
+
+# 采集查找上游依赖
+  get_ods_upstream_depend_sql = """
+   select 1 
+   from (select b.dag_id from(
+   select task_id,dep_task_id 
+   from metadb.etl_job_dep a
+   where dep_task_id = '%s'
+   ) a
+   inner join metadb.sync_tasks_info b
+   on a.task_id = b.task_id) a
+   inner join(
+   select b.dag_id from(
+   select task_id,dep_task_id 
+   from metadb.etl_job_dep a
+   where dep_task_id = '%s'
+   ) a
+   inner join metadb.sync_tasks_info b
+   on a.dep_task_id = b.task_id
+   ) b
+  """ % ("##{dep_task_id}##","##{dep_task_id}##")
   # 查找上游依赖
   get_downstream_depend_sql = """
     select * from metadb.etl_job_dep where task_id = '%s'

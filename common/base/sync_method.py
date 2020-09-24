@@ -85,8 +85,8 @@ def get_mysql_hive_table_column(HiveSession="",MysqlSession="",ETLMysqlSession="
          create_table_sql = """
             create table %s.%s(
                  %s
-                 ,etl_time  string
-            ) partitioned by(sys_date string)
+                 ,extract_system_time  string
+            ) partitioned by(etl_date string)
             row format delimited fields terminated by '\\001' 
             stored as parquet
          """ % (TargetDB, TargetTable, source_columns_type.replace(",", "", 1))
@@ -164,17 +164,17 @@ def get_table_columns_info(HiveSession="",SourceDB="",SourceTable="",TargetDB=""
         if IsTargetPartition == "Y":
             get_table_columns = get_create_hive_table_columns(HiveSession=HiveSession, DB=SourceDB, Table=SourceTable)
             source_columns_type = get_table_columns[1]
-            etl_time_column = ",etl_time  string"
-            if """`etl_time`""" in source_columns_type:
+            etl_time_column = ",extract_system_time  string"
+            if """`extract_system_time`""" in source_columns_type:
                 etl_time_column = ""
             create_table_sql = """
                  create table %s.%s(
                    %s
                    %s
-                 ) partitioned by(sys_date string)
+                 ) partitioned by(etl_date string)
                  row format delimited fields terminated by '\\001' 
                  stored as parquet
-            """ % (TargetDB, TargetTable, source_columns_type.replace(",", "", 1).replace(""",`sys_date`  string""",""),etl_time_column)
+            """ % (TargetDB, TargetTable, source_columns_type.replace(",", "", 1).replace(""",`etl_date`  string""",""),etl_time_column)
             HiveSession.execute_sql(create_table_sql)
         else:
             get_table_columns = get_create_hive_table_columns(HiveSession=HiveSession, DB=SourceDB, Table=SourceTable)
@@ -237,7 +237,7 @@ def get_create_hive_table_columns(HiveSession="",DB="",Table="",IsPartition=""):
             break;
         columns_list.append(column[0])
         columns_type_list.append(column)
-        if IsPartition == "Y" and str(column[0]).strip() not in ["etl_time","sys_date"]:
+        if IsPartition == "Y" and str(column[0]).strip() not in ["extract_system_time","etl_date"]:
             create_columns = create_columns + """,`%s`  %s""" % (column[0], column[1]) + "\n"
         else:
             create_columns = create_columns + """,`%s`  %s""" % (column[0], column[1]) + "\n"
@@ -255,12 +255,12 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
     select_source_columns = ""
     assign_source_columns = ""
     for target_table_column in target_table_columns:
-        if target_table_column in diff_target_source_column and target_table_column == "etl_time":
-            select_target_columns = select_target_columns + """,%s as etl_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
-            assign_target_columns = assign_target_columns + """,%s as etl_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
-            select_source_columns = select_source_columns + """,%s as etl_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
-            assign_source_columns = assign_source_columns + """,%s as etl_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
-        elif IsTargetPartition == "Y" and target_table_column == "sys_date":
+        if target_table_column in diff_target_source_column and target_table_column == "extract_system_time":
+            select_target_columns = select_target_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
+            assign_target_columns = assign_target_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
+            select_source_columns = select_source_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
+            assign_source_columns = assign_source_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
+        elif IsTargetPartition == "Y" and target_table_column == "etl_date":
             pass
         elif target_table_column in diff_target_source_column:
             select_target_columns = select_target_columns + """,`%s`""" % (target_table_column)
