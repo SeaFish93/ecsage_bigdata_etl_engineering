@@ -39,7 +39,8 @@ def main(TaskInfo, Level,**kwargs):
     interface_time_line = TaskInfo[5]
     group_by = TaskInfo[6]
     is_run_date = TaskInfo[7]
-    start_date = airflow.execution_date_utc8_str[0:10]
+    start_date = airflow.tomorrow_ds_nodash_utc8
+    print(start_date,"========================================")
     end_date = airflow.execution_date_utc8_str[0:10]
     data_dir = conf.get("Interface", "interface_data_home") + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,airflow.task)
     data_host = conf.get("Interface", "data_host")

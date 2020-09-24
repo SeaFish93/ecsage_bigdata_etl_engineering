@@ -343,7 +343,15 @@ class EtlMetaDataSQL():
      select * from metadb.etl_job_dep where dep_task_id = '%s'
   """%("##{dep_task_id}##")
 
-
+  get_day_tc_interface_auto = """
+    select  id
+            ,dag_id
+            ,shell_name
+            ,shell_path
+            ,params
+    from metadb.get_day_tc_interface
+    where dag_id = '%s'
+  """ % ("##{dag_id}##")
 # 采集查找上游依赖
   get_ods_upstream_depend_sql = """
    select 1 
