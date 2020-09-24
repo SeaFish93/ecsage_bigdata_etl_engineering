@@ -26,6 +26,7 @@ class Airflow:
                                         "Asia/Shanghai")
             self.ds_nodash_utc8 = self.dt.to_date_string().replace("-", "")
             self.yesterday_ds_nodash_utc8 = self.dt.subtract(days=1).to_date_string().replace("-", "")
+            self.yesterday_ds_nodash_utc8_str = self.dt.subtract(days=1).to_date_string()
             self.tomorrow_ds_nodash_utc8 = self.dt.add(days=1).to_date_string().replace("-", "")
 
             tz = timezone('Asia/Shanghai')
