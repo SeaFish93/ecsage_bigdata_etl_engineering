@@ -127,7 +127,7 @@ for dag_info in get_dags:
               else:
                   task['%s' % (task_name["task_id"])].set_upstream(start_sync_task)
               ok, task_upstream_deps = etl_meta.execute_sql(sqlName="get_ods_upstream_depend_sql",Parameter={"dep_task_id": task_name["task_id"]}, IsReturnData="Y")
-              print(task_name,"===========================@@@@@@@@@@@@@@@@@@@@@@")
+              print(task_upstream_deps,"===========================@@@@@@@@@@@@@@@@@@@@@@")
               if len(task_upstream_deps) == 0:
                   end_sync_task.set_upstream(task['%s' % (task_name["task_id"])])
     else:
