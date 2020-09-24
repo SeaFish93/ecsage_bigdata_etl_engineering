@@ -324,6 +324,28 @@ class EtlMetaDataSQL():
   get_upstream_depend_sql = """
      select * from metadb.etl_job_dep where dep_task_id = '%s'
   """%("##{dep_task_id}##")
+
+
+# 采集查找上游依赖
+  get_ods_upstream_depend_sql = """
+   select 1 
+   from (select b.dag_id from(
+   select task_id,dep_task_id 
+   from metadb.etl_job_dep a
+   where dep_task_id = '%s'
+   ) a
+   inner join metadb.sync_tasks_info b
+   on a.task_id = b.task_id) a
+   inner join(
+   select b.dag_id from(
+   select task_id,dep_task_id 
+   from metadb.etl_job_dep a
+   where dep_task_id = '%s'
+   ) a
+   inner join metadb.sync_tasks_info b
+   on a.dep_task_id = b.task_id
+   ) b
+  """ % ("##{dep_task_id}##","##{dep_task_id}##")
   # 查找上游依赖
   get_downstream_depend_sql = """
     select * from metadb.etl_job_dep where task_id = '%s'
