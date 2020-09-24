@@ -176,7 +176,7 @@ def set_snap_sensitive_table(HiveSession="",BeelineSession="",SourceDB="",Source
     assign_table_columns = get_select_columns[1]
     #获取主键及表关联
     get_key_column,get_table_join = get_important_column_info(KeyColumn=KeyColumn,DB=SourceDB,Table=SourceTable)
-    ok, count = HiveSession.get_all_rows("""show partitions %s.%s partition(etl_date='%s')""" % (SourceDB, SourceTable, airflow.yesterday_ds_nodash_utc8))
+    ok, count = HiveSession.get_all_rows("""show partitions %s.%s partition(etl_date='%s')""" % (SourceDB, SourceTable, airflow.yesterday_ds_nodash_utc8_str))
     if get_key_column == "" or Granularity == "F" or (Granularity == 'D' and ok and len(count) == 0):
         is_condition = "N"
         if Granularity == "F" or (Granularity == 'D' and ok and len(count) == 0):
@@ -463,7 +463,7 @@ def get_source_data_sql(MysqlSession="",HiveSession="",SourceDB="",SourceTable="
     ok_01,table_count = HiveSession.get_all_rows("""show tables in %s like '%s'"""%(TargetDB,TargetTable))
     #查询分区表是否有前一天分区，若是没有则认为该表为第一次同步，即全量同步
     if ok_01 and len(table_count) > 0:
-      ok, count = HiveSession.get_all_rows("""show partitions %s.%s partition(etl_date='%s')"""%(TargetDB,TargetTable,airflow.yesterday_ds_nodash_utc8))
+      ok, count = HiveSession.get_all_rows("""show partitions %s.%s partition(etl_date='%s')"""%(TargetDB,TargetTable,airflow.yesterday_ds_nodash_utc8_str))
     else:
       ok = False
       count = 0
