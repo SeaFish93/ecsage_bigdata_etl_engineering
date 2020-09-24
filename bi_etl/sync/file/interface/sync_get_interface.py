@@ -36,8 +36,8 @@ def main(TaskInfo, Level,**kwargs):
     shell_name = TaskInfo[2]
     shell_path = TaskInfo[3]
     params = TaskInfo[4]
-    start_date = airflow.execution_date_utc8_str[0:10]
-    end_date = airflow.execution_date_utc8_str[0:10]
+    start_date = airflow.tomorrow_ds_nodash_utc8
+    end_date = airflow.tomorrow_ds_nodash_utc8
     interval = int(str(params.split(',')[0]))
     action = int(str(params.split(',')[1]))
     print(end_date,"----------------------------")
