@@ -40,7 +40,8 @@ def main(TaskInfo, Level,**kwargs):
     end_date = airflow.execution_date_utc8_str[0:10]
     interval = int(str(params.split(',')[0]))
     action = int(str(params.split(',')[1]))
+    print(end_date,"----------------------------")
     print(interval, "=============================")
-    ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action)) 
-    #if ok != 0:
-     # pass
+    ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
+    if ok != 0:
+      pass
