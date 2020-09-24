@@ -62,7 +62,8 @@ def run(jd, **kwargs):
     if len(task_list) > 0:
        #任务所有的依赖
        ok, get_list_depend_data = etl_md.execute_sql(sqlName="get_list_depend_sql", Parameter={"task_id": target_db + "_" + target_table},IsReturnData="Y")
-       print(get_list_depend_data,"=================################################")
+       if len(get_list_depend_data) > 0:
+         print(get_list_depend_data[0],"=================################################")
 
 def replace_placeholder(txt):
     trx_dt = airflow.ds_nodash_utc8

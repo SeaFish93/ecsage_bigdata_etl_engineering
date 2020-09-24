@@ -308,7 +308,7 @@ class EtlMetaDataSQL():
   """%("##{task_id}##","##{dep_task_id}##")
   #查找依赖
   get_list_depend_sql = """
-     select distinct dep_task_id from metadb.etl_job_dep where task_id = '%s' and 1=2
+     select distinct dep_task_id from metadb.etl_job_dep where task_id = '%s'
   """%("##{task_id}##")
   #判断依赖是否在采集任务配置表或ETL任务配置表
   get_is_task_sql = """
