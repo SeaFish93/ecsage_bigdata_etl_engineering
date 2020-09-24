@@ -43,6 +43,6 @@ def main(TaskInfo, Level,**kwargs):
     data_dir = conf.get("Interface", "interface_data_home") + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,airflow.task)
     data_host = conf.get("Interface", "data_host")
 
-    ok = os.system("sh  %s/%s.sh %s %s %s %s" % (shell_path, shell_name,start_date,end_date,interval,action)
+    ok = os.system("sh  %s/%s.sh %s %s %s %s") % (shell_path, shell_name,start_date,end_date,interval,action)
     if ok != 0:
       pass
