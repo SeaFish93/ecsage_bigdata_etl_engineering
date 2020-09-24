@@ -40,8 +40,6 @@ def main(TaskInfo, Level,**kwargs):
     end_date = airflow.execution_date_utc8_str[0:10]
     interval = params.split(',')[0]
     action = params.split(',')[1]
-    data_dir = conf.get("Interface", "interface_data_home") + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,airflow.task)
-    data_host = conf.get("Interface", "data_host")
 
     ok = os.system("sh  %s/%s.sh %s %s %s %s") % (shell_path, shell_name,start_date,end_date,interval,action)
     if ok != 0:
