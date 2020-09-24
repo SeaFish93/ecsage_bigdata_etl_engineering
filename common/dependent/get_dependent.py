@@ -66,7 +66,7 @@ def run(jd, **kwargs):
          get_list_depends = []
          for get_list_depend in get_list_depend_data:
            get_list_depends.append(get_list_depend[0])
-         print(get_list_depends,"=================################################")
+         print(get_list_depends,"=================################################",task_list)
 
 def replace_placeholder(txt):
     trx_dt = airflow.ds_nodash_utc8
