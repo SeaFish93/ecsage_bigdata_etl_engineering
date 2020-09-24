@@ -306,7 +306,11 @@ class EtlMetaDataSQL():
      select count(1) from metadb.etl_job_dep where task_id = '%s'
      and dep_task_id = '%s'
   """%("##{task_id}##","##{dep_task_id}##")
-  #查找依赖
+  #删除多余依赖
+  get_delete_depend_sql = """
+     delete from metadb.etl_job_dep where task_id = '%s' and dep_task_id = '%s'
+  """%("##{task_id}##","##{dep_task_id}##")
+  #查找所有依赖
   get_list_depend_sql = """
      select distinct dep_task_id from metadb.etl_job_dep where task_id = '%s'
   """%("##{task_id}##")

@@ -67,6 +67,7 @@ def run(jd, **kwargs):
          for get_list_depend in get_list_depend_data:
            get_list_depends.append(get_list_depend[0])
          for difference_data in set(get_list_depends).difference(set(task_list)):
+             ok, get_delete_sql = etl_md.execute_sql(sqlName="get_depend_sql",Parameter={"task_id": target_db + "_" + target_table,"dep_task_id": difference_data}, IsReturnData="N")
              print(difference_data,"==============================================")
 
 def replace_placeholder(txt):
