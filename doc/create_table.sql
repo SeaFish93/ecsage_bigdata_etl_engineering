@@ -47,7 +47,7 @@ insert into metadb.conn_db_info
  ;
  insert into metadb.dags_info
 (dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
-select 'day_sql_dependent_metadb','dependent','etl','hour',3,'*/2 * * * *',111111,1
+select 'day_tc_interface_auto','interface','etl','day',3,'30 16 * * *',1,1
 ;
 
 create table metadb.dags_info(
@@ -432,3 +432,37 @@ create table metadb.check_table_unique
   ,CONSTRAINT check_table_unique_PK PRIMARY KEY (id)
 )ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='表字段唯一性检测配置表'
 ;
+
+create table metadb.interface_tasks_model(
+task_id               varchar(100)  not null COMMENT 'task唯一标识，格式：【业务名】_【源库名】_【源表名】,字母则为小写'
+,dag_id                varchar(50)   not null COMMENT 'dag唯一标识，格式：【hour|day】_【业务名】_【auto】'
+,interface_url         varchar(200)  not null comment '接口url'
+,interface_level       varchar(200)  comment '接口level'
+,interface_time_line   varchar(200)  comment '接口time_line'
+,group_by              varchar(200)  comment '接口指定聚合字段'
+,is_run_date           int DEFAULT 1 not null comment '是否需要指定日期过滤，1是，0否'
+,status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效'
+,create_user           varchar(32)   COMMENT '创建者，邮箱@前缀'
+,update_user           varchar(32)   COMMENT '最后更新者，邮箱@前缀'
+,create_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳'
+,update_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳'
+,CONSTRAINT interface_tasks_model_tasks_PK PRIMARY KEY (task_id)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='接口作业模板表'
+;
+ insert into metadb.dags_info
+(dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
+select 'day_tc_interface_auto','interface','etl','day',3,'30 16 * * *',1,1
+;
+
+insert into metadb.interface_tasks_model
+(task_id,dag_id,interface_url,interface_level,interface_time_line,group_by,is_run_date,status)
+select 'tc_interface_adcreatives'
+       ,'day_tc_interface_auto'
+       ,'http://dtapi.ecsage.net/internal/gdt/getAdcreatives',
+'REPORT_LEVEL_MATERIAL_IMAGE','REQUEST_TIME','date,ad_id',1,1
+
+
+
+
+
+
