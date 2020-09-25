@@ -9,6 +9,8 @@
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
+from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
+from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 
 import subprocess
 import os
@@ -35,4 +37,6 @@ def main(TaskInfo, Level,**kwargs):
     (ok, output) = subprocess.getstatusoutput("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
     print("日志打印：",output)
     if ok != 0:
-      pass
+        msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
+                                   Developer="蒋杰")
+        set_exit(LevelStatu="red", MSG=msg)
