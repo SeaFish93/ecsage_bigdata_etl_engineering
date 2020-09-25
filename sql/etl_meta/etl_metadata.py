@@ -337,8 +337,6 @@ class EtlMetaDataSQL():
      select 1 from metadb.etl_tasks_info where task_id = '%s'
         union all
      select 1 from metadb.sync_tasks_info where task_id = '%s'
-        union all
-     select 1 from metadb.get_day_tc_interface where shell_name = '%s'
   """%("##{task_id}##","##{task_id}##")
   #查找上游依赖
   get_upstream_depend_sql = """
