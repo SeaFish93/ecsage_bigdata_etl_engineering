@@ -8,11 +8,20 @@
 
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
-from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
-from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
+from ecsage_bigdata_etl_engineering.common.base.sync_method import get_mysql_hive_table_column
+from ecsage_bigdata_etl_engineering.common.base.sync_method import get_create_mysql_table_columns
+from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
+from ecsage_bigdata_etl_engineering.common.base.sync_method import set_sync_rows
+from ecsage_bigdata_etl_engineering.common.base.sync_method import get_mysql_table_index
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+from ecsage_bigdata_etl_engineering.config.column_type import MYSQL_2_HIVE
+from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
+from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 
-import subprocess
+import datetime
+import math
 import os
 
 conf = Conf().conf
@@ -33,10 +42,6 @@ def main(TaskInfo, Level,**kwargs):
     action = int(str(params.split(',')[1]))
     print(end_date,"----------------------------")
     print(interval, "=============================")
-    #ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
-    (ok, output) = subprocess.getstatusoutput("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
-    print("日志打印：",output)
+    ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
     if ok != 0:
-        msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
-                                   Developer="蒋杰")
-        set_exit(LevelStatu="red", MSG=msg)
+      pass
