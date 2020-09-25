@@ -55,7 +55,7 @@ def run(jd, **kwargs):
                ok, get_is_task_data = etl_md.execute_sql(sqlName="get_is_task_sql",Parameter={"task_id": target_db + "_" + target_table}, IsReturnData="Y")
                if len(get_is_task_data) > 0:
                    task_list.append(dep_task_id)
-               if get_data[0][0] == 0 and len(get_is_task_data) > 0:
+               if get_data[0][0] == 0 and len(get_is_task_data) > 0 and target_db+"_"+target_table != dep_task_id:
                   etl_md.execute_sql(sqlName="insert_depend_sql", Parameter={"task_id": target_db+"_"+target_table,"dep_task_id":dep_task_id}, IsReturnData="N")
         if ok is False:
             set_exit(LevelStatu="red", MSG="")
