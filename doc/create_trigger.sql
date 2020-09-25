@@ -326,3 +326,28 @@ begin
 END; //
 DELIMITER ;
 
+
+-- 删除
+DELIMITER //
+CREATE TRIGGER metadb.etl_tasks_info_delete_trigger
+AFTER DELETE ON metadb.etl_tasks_info
+FOR EACH ROW
+begin
+  -- 删除依赖
+  delete from metadb.etl_job_dep where task_id = OLD.task_id;
+  delete from metadb.etl_job_dep where dep_task_id = OLD.task_id;
+END; //
+DELIMITER ;
+
+-- 更改
+DELIMITER //
+CREATE TRIGGER metadb.etl_tasks_info_update_trigger
+AFTER UPDATE ON metadb.etl_tasks_info
+FOR EACH ROW
+begin
+   -- 更新依赖
+   update metadb.etl_job_dep set task_id = NEW.task_id where task_id = OLD.task_id;
+   update metadb.etl_job_dep set dep_task_id = NEW.task_id where dep_task_id = OLD.task_id;
+
+END; //
+DELIMITER ;
