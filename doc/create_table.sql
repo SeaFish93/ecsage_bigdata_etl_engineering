@@ -279,6 +279,14 @@ where b.status = 1
   and a.status = 1
   union all
 select a.dag_id
+       ,a.shell_name as task_id
+       ,b.schedule_interval
+from metadb.get_day_tc_interface a
+inner join metadb.dags_info b
+on a.dag_id = b.dag_id
+where b.status = 1
+  union all
+select a.dag_id
        ,a.task_id
        ,b.schedule_interval
 from metadb.etl_tasks_info a
@@ -463,7 +471,14 @@ select 'tc_interface_adcreatives'
        ,'http://dtapi.ecsage.net/internal/gdt/getAdcreatives',
 'REPORT_LEVEL_MATERIAL_IMAGE','REQUEST_TIME','date,ad_id',1,1
 
-
+CREATE TABLE `get_day_tc_interface` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `dag_id` varchar(100) DEFAULT NULL,
+  `shell_name` varchar(1000) DEFAULT NULL,
+  `shell_path` varchar(500) DEFAULT NULL,
+  `params` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='接口任务配置'
 
 
 
