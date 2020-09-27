@@ -14,6 +14,7 @@ from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb impo
 import datetime
 import math
 import os
+import time
 
 conf = Conf().conf
 etl_md = EtlMetadata()
@@ -32,8 +33,7 @@ def main(TaskInfo, Level,**kwargs):
     is_run_date = TaskInfo[7]
     start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
-    file_name = "%s_%s_%s"%(airflow.dag,airflow.task,airflow.ds_nodash_utc8)
-    data_dir = conf.get("Interface", "interface_data_home") + "/" + file_name
+    data_dir = conf.get("Interface", "interface_data_home")
 
     #分支执行
     if interface_acount_type is not None and interface_level is not None and interface_time_line is not None and group_by is not None and is_run_date == 1:
@@ -44,7 +44,8 @@ def main(TaskInfo, Level,**kwargs):
 #含有level、time_line、date、group接口
 def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
                                    InterfaceTimeLine="",Group_Column="",DataDir=""):
-    file_name = "%s"%(DataDir)
+    now_time = time.strftime("%H_%M_%S", time.localtime())
+    file_name = "%s"%(DataDir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s_%s_%s"%(airflow.dag,airflow.task,EndDate,now_time)
     print(file_name,"===========================================")
     exit(0)
     data = {"ec_fn":file_name,
@@ -56,4 +57,8 @@ def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="
             "time_line":"%s"%(InterfaceTimeLine)
            }
     exec_interface_data_curl(URL=InterfaceUrl,Data=data)
+    #判断文件是否已生成
+
+    #落地hdfs
+
 
