@@ -45,7 +45,7 @@ def main(TaskInfo, Level,**kwargs):
 def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
                                    InterfaceTimeLine="",Group_Column="",DataDir=""):
     now_time = time.strftime("%H_%M_%S", time.localtime())
-    file_name = "%s"%(DataDir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s_%s_%s"%(airflow.dag,airflow.task,EndDate,now_time)
+    file_name = "%s"%(DataDir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s_%s_%s_%s"%(airflow.dag,airflow.task,InterfaceAcountType,EndDate,now_time)
     print(file_name,"===========================================")
     exit(0)
     data = {"ec_fn":file_name,
