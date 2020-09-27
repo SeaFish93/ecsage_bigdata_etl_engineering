@@ -146,3 +146,6 @@ class SparkNoSqlDB(BaseDB):
             print(e)
         finally:
             return state
+    #处理文本
+    def text(self):
+        print(self.conn.read.text().rdd.foreach(lambda x:x))
