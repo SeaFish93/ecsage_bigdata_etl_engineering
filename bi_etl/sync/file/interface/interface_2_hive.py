@@ -32,15 +32,15 @@ def main(TaskInfo, Level,**kwargs):
     is_run_date = TaskInfo[7]
     start_date = airflow.execution_date_utc8_str[0:10]
     print(start_date,"========================================")
+    exit(0)
     end_date = airflow.execution_date_utc8_str[0:10]
     data_dir = conf.get("Interface", "interface_data_home") + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,airflow.task)
-    data_host = conf.get("Interface", "data_host")
 
     #分支执行
     if interface_acount_type is not None and interface_level is not None and interface_time_line is not None and group_by is not None and is_run_date == 1:
       get_level_time_line_date_group(StartDate=start_date,EndDate=end_date,InterfaceAcountType=interface_acount_type,
                                      InterfaceUrl=interface_url,InterfaceLevel=interface_level
-                                     ,InterfaceTimeLine=interface_time_line,DataDir=data_dir,DataHost=data_host)
+                                     ,InterfaceTimeLine=interface_time_line,DataDir=data_dir)
 
 #含有level、time_line、date、group接口
 def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
