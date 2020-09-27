@@ -10,17 +10,20 @@ from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.base.curl import exec_interface_data_curl
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
+from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 
 import datetime
 import math
 import os
 import time
+import subprocess
 
 conf = Conf().conf
 etl_md = EtlMetadata()
 
 #入口方法
 def main(TaskInfo, Level,**kwargs):
+    time.sleep(2)
     global airflow
     global developer
     airflow = Airflow(kwargs)
@@ -33,21 +36,20 @@ def main(TaskInfo, Level,**kwargs):
     is_run_date = TaskInfo[7]
     start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
-    data_dir = conf.get("Interface", "interface_data_home")
 
     #分支执行
     if interface_acount_type is not None and interface_level is not None and interface_time_line is not None and group_by is not None and is_run_date == 1:
       get_level_time_line_date_group(StartDate=start_date,EndDate=end_date,InterfaceAcountType=interface_acount_type,
                                      InterfaceUrl=interface_url,InterfaceLevel=interface_level
-                                     ,InterfaceTimeLine=interface_time_line,DataDir=data_dir)
+                                     ,InterfaceTimeLine=interface_time_line)
 
 #含有level、time_line、date、group接口
 def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
-                                   InterfaceTimeLine="",Group_Column="",DataDir=""):
+                                   InterfaceTimeLine="",Group_Column=""):
     now_time = time.strftime("%H_%M_%S", time.localtime())
-    file_name = "%s"%(DataDir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s_%s_%s_%s"%(airflow.dag,airflow.task,InterfaceAcountType,EndDate,now_time)
+    data_dir = conf.get("Interface", "interface_data_home")
+    file_name = "%s"%(data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s_%s_%s_%s"%(airflow.dag,airflow.task,InterfaceAcountType,EndDate,now_time)
     print(file_name,"===========================================")
-    exit(0)
     data = {"ec_fn":file_name,
             "mt":InterfaceAcountType,
             "level":["%s"%(InterfaceLevel)],
@@ -58,7 +60,15 @@ def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="
            }
     exec_interface_data_curl(URL=InterfaceUrl,Data=data)
     #判断文件是否已生成
-
+    sshpasswdy_home = conf.get("Interface", "sshpasswdy_home")
+    check_script_home = conf.get("Interface", "check_script_home")
+    sshpass_shell = """
+     sshpass -f %s  ssh admin@192.168.30.7 "sudo %s %s"
+    """%(sshpasswdy_home,check_script_home,file_name)
+    (ok, output) = subprocess.getstatusoutput(sshpass_shell)
+    print("日志打印：", output)
+    if ok != 0:
+        set_exit(LevelStatu="red", MSG="接口执行异常！！！")
     #落地hdfs
 
 
