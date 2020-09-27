@@ -73,7 +73,7 @@ def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="
     #转换为json文件
     check_script_home = conf.get("Interface", "json_python_home")
     json_shell = """
-      sshpass -f %s  ssh %s "sudo python %s %s"
+      sshpass -f %s  ssh %s "sudo python %s %s accountId"
     """%(sshpasswdy_home,ssh_host,check_script_home,file_name)
     (ok, output) = subprocess.getstatusoutput(json_shell)
     print("日志打印：", output)
