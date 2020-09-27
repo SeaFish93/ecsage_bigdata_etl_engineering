@@ -31,8 +31,6 @@ def main(TaskInfo, Level,**kwargs):
     group_by = TaskInfo[6]
     is_run_date = TaskInfo[7]
     start_date = airflow.execution_date_utc8_str[0:10]
-    print(start_date,"========================================")
-    exit(0)
     end_date = airflow.execution_date_utc8_str[0:10]
     data_dir = conf.get("Interface", "interface_data_home") + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,airflow.task)
 
@@ -46,6 +44,7 @@ def main(TaskInfo, Level,**kwargs):
 def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
                                    InterfaceTimeLine="",Group_Column="",DataDir=""):
     file_name = "%s/"%(DataDir)
+    print(file_name,"===========================================")
     data = {"ec_fn":file_name,
             "mt":InterfaceAcountType,
             "level":["%s"%(InterfaceLevel)],
