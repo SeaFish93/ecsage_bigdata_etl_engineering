@@ -461,13 +461,13 @@ task_id               varchar(100)  not null COMMENT 'task唯一标识，格式�
 
  insert into metadb.dags_info
 (dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
-select 'day_tc_interface_auto','interface','etl','day',3,'30 16 * * *',1,1
+select 'day_tc_interface_auto_test','interface','etl','day',3,'30 16 * * *',1,1
 ;
 
 insert into metadb.interface_tasks_model
 (task_id,dag_id,interface_acount_type,interface_url,interface_level,interface_time_line,group_by,is_run_date,status)
 select 'tc_interface_adcreatives'
-       ,'day_tc_interface_auto',101
+       ,'day_tc_interface_auto_test',101
        ,'http://dtapi.ecsage.net/internal/gdt/getAdcreatives',
 'REPORT_LEVEL_MATERIAL_IMAGE','REQUEST_TIME','date,ad_id',1,1
 
