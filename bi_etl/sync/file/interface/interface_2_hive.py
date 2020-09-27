@@ -69,9 +69,26 @@ def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="
     (ok, output) = subprocess.getstatusoutput(sshpass_shell)
     print("日志打印：", output)
     if ok != 0:
-        set_exit(LevelStatu="red", MSG="接口执行异常！！！")
+        set_exit(LevelStatu="red", MSG="接口检测文件出现异常！！！")
     #转换为json文件
-
+    check_script_home = conf.get("Interface", "json_python_home")
+    json_shell = """
+      sshpass -f %s  ssh %s "sudo python %s %s"
+    """%(sshpasswdy_home,ssh_host,check_script_home,file_name)
+    (ok, output) = subprocess.getstatusoutput(json_shell)
+    print("日志打印：", output)
+    if ok != 0:
+        set_exit(LevelStatu="red", MSG="接口转换为json文件出现异常！！！")
     #落地hdfs
-
+    check_script_home = conf.get("Interface", "hdfs_client_home")
+    hdfs_shell = """
+     sshpass -f %s  ssh %s "sudo python %s %s.txt"
+    """%(sshpasswdy_home,ssh_host,check_script_home,file_name)
+    (ok, output) = subprocess.getstatusoutput(hdfs_shell)
+    print("日志打印：", output)
+    if ok != 0:
+        set_exit(LevelStatu="red", MSG="接口转换为json文件出现异常！！！")
+    #落地hive临时表
+    #创建临时表
+    #数据落地hive
 
