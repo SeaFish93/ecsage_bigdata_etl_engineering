@@ -62,13 +62,16 @@ def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="
     #判断文件是否已生成
     sshpasswdy_home = conf.get("Interface", "sshpasswdy_home")
     check_script_home = conf.get("Interface", "check_script_home")
+    ssh_host = conf.get("Interface", "ssh_host")
     sshpass_shell = """
-     sshpass -f %s  ssh admin@192.168.30.7 "sudo %s %s"
-    """%(sshpasswdy_home,check_script_home,file_name)
+     sshpass -f %s  ssh %s "sudo %s %s"
+    """%(sshpasswdy_home,ssh_host,check_script_home,file_name)
     (ok, output) = subprocess.getstatusoutput(sshpass_shell)
     print("日志打印：", output)
     if ok != 0:
         set_exit(LevelStatu="red", MSG="接口执行异常！！！")
+    #转换为json文件
+
     #落地hdfs
 
 
