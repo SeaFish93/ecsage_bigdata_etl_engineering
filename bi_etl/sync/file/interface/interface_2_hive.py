@@ -45,6 +45,7 @@ def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="
                                    InterfaceTimeLine="",Group_Column="",DataDir=""):
     file_name = "%s/"%(DataDir)
     print(file_name,"===========================================")
+    exit(0)
     data = {"ec_fn":file_name,
             "mt":InterfaceAcountType,
             "level":["%s"%(InterfaceLevel)],
