@@ -73,6 +73,9 @@ class EtlMetaDataSQL():
             ,interface_time_line
             ,group_by
             ,is_run_date
+            ,target_handle
+            ,target_db
+            ,target_table
             ,status
             ,create_user
             ,update_user

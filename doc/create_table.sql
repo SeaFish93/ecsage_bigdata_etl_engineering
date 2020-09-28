@@ -450,6 +450,9 @@ task_id               varchar(100)  not null COMMENT 'task唯一标识，格式�
 ,interface_time_line   varchar(200)  comment '接口time_line'
 ,group_by              varchar(200)  comment '接口指定聚合字段'
 ,is_run_date           int DEFAULT 1 not null comment '是否需要指定日期过滤，1是，0否'
+,target_handle         varchar(200) not null comment'连接目标平台handle'
+,target_db             varchar(200) not null comment'目标库'
+,target_table          varchar(200) not null comment'目标表'
 ,status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效'
 ,create_user           varchar(32)   COMMENT '创建者，邮箱@前缀'
 ,update_user           varchar(32)   COMMENT '最后更新者，邮箱@前缀'
@@ -460,16 +463,20 @@ task_id               varchar(100)  not null COMMENT 'task唯一标识，格式�
 ;
 
  insert into metadb.dags_info
-(dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
+(dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status
+)
 select 'day_tc_interface_auto_test','interface','etl','day',3,'30 16 * * *',1,1
 ;
 
 insert into metadb.interface_tasks_model
-(task_id,dag_id,interface_acount_type,interface_url,interface_level,interface_time_line,group_by,is_run_date,status)
+(task_id,dag_id,interface_acount_type,interface_url,interface_level,interface_time_line,group_by,is_run_date,status
+,target_handle,
+target_db,target_table
+)
 select 'tc_interface_adcreatives'
        ,'day_tc_interface_auto_test',101
        ,'http://dtapi.ecsage.net/internal/gdt/getAdcreatives',
-'REPORT_LEVEL_MATERIAL_IMAGE','REQUEST_TIME','date,ad_id',1,1
+'REPORT_LEVEL_MATERIAL_IMAGE','REQUEST_TIME','date,ad_id',1,1,'beeline','etl_mid','tc_interface_adcreatives'
 
 CREATE TABLE `get_day_tc_interface` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',

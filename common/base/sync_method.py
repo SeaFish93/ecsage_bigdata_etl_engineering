@@ -277,3 +277,18 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
     select_source_columns = select_source_columns.replace(",", "", 1)
     assign_source_columns = assign_source_columns.replace(",", "", 1)
     return select_target_columns, assign_target_columns,select_source_columns, assign_source_columns
+
+def get_interface_2_hive_table_sql(DB="",Table="",InterfaceAcountType=""):
+    if InterfaceAcountType is not None:
+      sql = """
+         drop table if exists %s.%s;
+         create table %s.%s(data string)
+         partitioned by(etl_date string,type string)
+      """%(DB,Table,DB,Table)
+    else:
+      sql = """
+         drop table if exists %s.%s;
+         create table %s.%s(data string)
+         partitioned by(etl_date string)
+      """%(DB,Table,DB,Table)
+    return sql

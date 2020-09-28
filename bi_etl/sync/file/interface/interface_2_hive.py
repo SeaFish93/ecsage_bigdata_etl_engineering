@@ -11,6 +11,8 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.base.curl import exec_interface_data_curl
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from ecsage_bigdata_etl_engineering.common.base.sync_method import get_interface_2_hive_table_sql
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 
 import datetime
 import math
@@ -34,18 +36,29 @@ def main(TaskInfo, Level,**kwargs):
     interface_time_line = TaskInfo[5]
     group_by = TaskInfo[6]
     is_run_date = TaskInfo[7]
+    source_db = ""
+    source_table = ""
+    target_db = TaskInfo[9]
+    target_table = TaskInfo[10]
+    hive_handler = TaskInfo[8]
     start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
 
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler=hive_handler)
     #分支执行
     if interface_acount_type is not None and interface_level is not None and interface_time_line is not None and group_by is not None and is_run_date == 1:
-      get_level_time_line_date_group(StartDate=start_date,EndDate=end_date,InterfaceAcountType=interface_acount_type,
+      get_level_time_line_date_group(BeelineSession=beeline_session,StartDate=start_date,EndDate=end_date,
+                                     InterfaceAcountType=interface_acount_type,
                                      InterfaceUrl=interface_url,InterfaceLevel=interface_level
-                                     ,InterfaceTimeLine=interface_time_line)
+                                     ,InterfaceTimeLine=interface_time_line
+                                     , Group_Column=group_by, DB=target_db, Table=target_table
+                                     )
 
 #含有level、time_line、date、group接口
-def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
-                                   InterfaceTimeLine="",Group_Column=""):
+def get_level_time_line_date_group(BeelineSession="",StartDate="",EndDate="",
+                                   InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
+                                   InterfaceTimeLine="",Group_Column="",DB="",Table=""
+                                   ):
     now_time = time.strftime("%H_%M_%S", time.localtime())
     data_dir = conf.get("Interface", "interface_data_home")
     file_name = "%s"%(data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s_%s_%s_%s"%(airflow.dag,airflow.task,InterfaceAcountType,EndDate,now_time)
@@ -62,8 +75,9 @@ def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="
     #处理落地文件及上传hdfs
     exec_file(FileName=file_name, params="accountId")
     #落地hive临时表
-    #创建临时表
-    #数据落地hive
+    exec_file_2_hive_table(BeelineSession=BeelineSession, DB=DB, Table=Table,
+                           FileName=file_name, InterfaceAcountType=InterfaceAcountType,
+                           ExecDate=EndDate)
 
 def exec_file(FileName="",params=""):
     # 判断文件是否已生成
@@ -99,8 +113,20 @@ def exec_shell(ShellCommand="",MSG=""):
     if ok != 0:
         set_exit(LevelStatu="red", MSG=MSG)
 
-def create_file_2_hive_table(HiveSession="",DB="",Table="",InterfaceAcountType=""):
-
-    pass
+def exec_file_2_hive_table(BeelineSession="",DB="",Table="",FileName="",InterfaceAcountType="",ExecDate=""):
+    sql = get_interface_2_hive_table_sql(DB=DB,Table=Table,InterfaceAcountType=InterfaceAcountType)
+    BeelineSession.execute_sql(sql)
+    inpath = "%s/%s.txt"%("/tmp/sync",FileName)
+    if InterfaceAcountType is not None:
+      load_sql = """
+         load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s',mt='%s');
+      """%(inpath,DB,Table,ExecDate,InterfaceAcountType)
+    else:
+       load_sql = """
+          load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s');
+              """%(inpath,DB,Table,ExecDate)
+    ok = BeelineSession.execute_sql(load_sql)
+    if ok is False:
+        set_exit(LevelStatu="red", MSG="接口写入hive表【%s.%s】出现异常"%(DB,Table))
 
 
