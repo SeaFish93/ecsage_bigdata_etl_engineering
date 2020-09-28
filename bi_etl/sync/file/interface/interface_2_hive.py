@@ -121,7 +121,7 @@ def exec_file_2_hive_table(BeelineSession="",DB="",Table="",FileName="",Interfac
     print(inpath,"========================@@@@@@@@@@@@@@@@@@@@@")
     if InterfaceAcountType is not None:
       load_sql = """
-         load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s',mt='%s');
+         load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s',type='%s');
       """%(inpath,DB,Table,ExecDate,InterfaceAcountType)
     else:
        load_sql = """
