@@ -72,9 +72,9 @@ def get_level_time_line_date_group(BeelineSession="",StartDate="",EndDate="",
             "group_by":Group_Column.split(","),
             "time_line":"%s"%(InterfaceTimeLine)
            }
-    exec_interface_data_curl(URL=InterfaceUrl,Data=data)
+    #exec_interface_data_curl(URL=InterfaceUrl,Data=data)
     #处理落地文件及上传hdfs
-    exec_file(FileName=file_dir_name, params="accountId")
+    #exec_file(FileName=file_dir_name, params="accountId")
     #落地hive临时表
     exec_file_2_hive_table(BeelineSession=BeelineSession, DB=DB, Table=Table,
                            FileName=file_name, InterfaceAcountType=InterfaceAcountType,
@@ -118,6 +118,7 @@ def exec_file_2_hive_table(BeelineSession="",DB="",Table="",FileName="",Interfac
     sql = get_interface_2_hive_table_sql(DB=DB,Table=Table,InterfaceAcountType=InterfaceAcountType)
     BeelineSession.execute_sql(sql)
     inpath = "%s%s.txt"%("/tmp/sync",FileName)
+    print(inpath,"========================@@@@@@@@@@@@@@@@@@@@@")
     if InterfaceAcountType is not None:
       load_sql = """
          load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s',mt='%s');
