@@ -81,7 +81,7 @@ def exec_file(FileName="",params=""):
             sshpass -f %s  ssh %s "sudo python %s %s %s"
           """ % (sshpasswdy_home, ssh_host, check_script_home, FileName,params)
     else:
-      check_script_home = conf.get("Interface", "json_params_python_home")
+      check_script_home = conf.get("Interface", "json_python_home")
       json_shell = """                                                    
               sshpass -f %s  ssh %s "sudo python %s %s"           
          """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
