@@ -49,7 +49,7 @@ def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="
     now_time = time.strftime("%H_%M_%S", time.localtime())
     data_dir = conf.get("Interface", "interface_data_home")
     file_name = "%s"%(data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s_%s_%s_%s"%(airflow.dag,airflow.task,InterfaceAcountType,EndDate,now_time)
-    print(file_name,"===========================================")
+    print("接口落地文件："+file_name)
     data = {"ec_fn":file_name,
             "mt":InterfaceAcountType,
             "level":["%s"%(InterfaceLevel)],
@@ -59,36 +59,48 @@ def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="
             "time_line":"%s"%(InterfaceTimeLine)
            }
     exec_interface_data_curl(URL=InterfaceUrl,Data=data)
-    #判断文件是否已生成
+    #处理落地文件及上传hdfs
+    exec_file(FileName=file_name, params="accountId")
+    #落地hive临时表
+    #创建临时表
+    #数据落地hive
+
+def exec_file(FileName="",params=""):
+    # 判断文件是否已生成
     sshpasswdy_home = conf.get("Interface", "sshpasswdy_home")
     check_script_home = conf.get("Interface", "check_script_home")
     ssh_host = conf.get("Interface", "ssh_host")
     sshpass_shell = """
-     sshpass -f %s  ssh %s "sudo %s %s"
-    """%(sshpasswdy_home,ssh_host,check_script_home,file_name)
-    (ok, output) = subprocess.getstatusoutput(sshpass_shell)
-    print("日志打印：", output)
-    if ok != 0:
-        set_exit(LevelStatu="red", MSG="接口检测文件出现异常！！！")
-    #转换为json文件
-    check_script_home = conf.get("Interface", "json_python_home")
-    json_shell = """
-      sshpass -f %s  ssh %s "sudo python %s %s accountId"
-    """%(sshpasswdy_home,ssh_host,check_script_home,file_name)
-    (ok, output) = subprocess.getstatusoutput(json_shell)
-    print("日志打印：", output)
-    if ok != 0:
-        set_exit(LevelStatu="red", MSG="接口转换为json文件出现异常！！！")
-    #落地hdfs
+         sshpass -f %s  ssh %s "sudo %s %s"
+        """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
+    exec_shell(ShellCommand=sshpass_shell, MSG="接口检测文件出现异常！！！")
+    # 转换为json文件
+    if params is not None:
+      check_script_home = conf.get("Interface", "json_params_python_home")
+      json_shell = """
+            sshpass -f %s  ssh %s "sudo python %s %s %s"
+          """ % (sshpasswdy_home, ssh_host, check_script_home, FileName,params)
+    else:
+      check_script_home = conf.get("Interface", "json_params_python_home")
+      json_shell = """                                                    
+              sshpass -f %s  ssh %s "sudo python %s %s"           
+         """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
+    exec_shell(ShellCommand=json_shell, MSG="接口转换为json文件出现异常！！！")
+    # 落地hdfs
     check_script_home = conf.get("Interface", "hdfs_client_home")
     hdfs_shell = """
-     sshpass -f %s  ssh %s "sudo python %s %s.txt"
-    """%(sshpasswdy_home,ssh_host,check_script_home,file_name)
-    (ok, output) = subprocess.getstatusoutput(hdfs_shell)
+         sshpass -f %s  ssh %s "sudo python %s %s.txt"
+        """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
+    exec_shell(ShellCommand=hdfs_shell, MSG="接口上传hdfs文件出现异常！！！")
+
+def exec_shell(ShellCommand="",MSG=""):
+    (ok, output) = subprocess.getstatusoutput(ShellCommand)
     print("日志打印：", output)
     if ok != 0:
-        set_exit(LevelStatu="red", MSG="接口转换为json文件出现异常！！！")
-    #落地hive临时表
-    #创建临时表
-    #数据落地hive
+        set_exit(LevelStatu="red", MSG=MSG)
+
+def create_file_2_hive_table(HiveSession="",DB="",Table="",InterfaceAcountType=""):
+
+    pass
+
 
