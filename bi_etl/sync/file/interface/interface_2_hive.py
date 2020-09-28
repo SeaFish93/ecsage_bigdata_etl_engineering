@@ -117,7 +117,7 @@ def exec_shell(ShellCommand="",MSG=""):
 def exec_file_2_hive_table(BeelineSession="",DB="",Table="",FileName="",InterfaceAcountType="",ExecDate=""):
     sql = get_interface_2_hive_table_sql(DB=DB,Table=Table,InterfaceAcountType=InterfaceAcountType)
     BeelineSession.execute_sql(sql)
-    inpath = "%s/%s.txt"%("/tmp/sync",FileName)
+    inpath = "%s%s.txt"%("/tmp/sync",FileName)
     if InterfaceAcountType is not None:
       load_sql = """
          load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s',mt='%s');
