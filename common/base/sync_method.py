@@ -278,17 +278,41 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
     assign_source_columns = assign_source_columns.replace(",", "", 1)
     return select_target_columns, assign_target_columns,select_source_columns, assign_source_columns
 
-def get_interface_2_hive_table_sql(DB="",Table="",InterfaceAcountType=""):
-    if InterfaceAcountType is not None:
+def get_interface_2_hive_table_sql(DB="",Table="",InterfaceAcountType="",ISDelete="",HDFSDir="",ExecDate=""):
+    if InterfaceAcountType is not None and ISDelete != 0:
+      sql = """
+         drop table if exists %s.%s;
+         create table %s.%s(data string)
+         partitioned by(etl_date string,type string,delete_type string)
+      """%(DB,Table,DB,Table)
+      load_sql = """
+         load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s',type='%s',delete_type='%s');
+      """%(HDFSDir,DB,Table,ExecDate,InterfaceAcountType,ISDelete)
+    elif InterfaceAcountType is not None and ISDelete == 0:
       sql = """
          drop table if exists %s.%s;
          create table %s.%s(data string)
          partitioned by(etl_date string,type string)
       """%(DB,Table,DB,Table)
+      load_sql = """
+               load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s',type='%s');
+            """ % (HDFSDir, DB, Table, ExecDate, InterfaceAcountType)
+    elif InterfaceAcountType is None and ISDelete != 0:
+      sql = """
+         drop table if exists %s.%s;
+         create table %s.%s(data string)
+         partitioned by(etl_date string,delete_type string)
+      """%(DB,Table,DB,Table)
+      load_sql = """
+          load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s',delete_type='%s');
+      """ % (HDFSDir, DB, Table, ExecDate, ISDelete)
     else:
       sql = """
          drop table if exists %s.%s;
          create table %s.%s(data string)
          partitioned by(etl_date string)
       """%(DB,Table,DB,Table)
-    return sql
+      load_sql = """
+           load data  inpath '%s' overwrite into table %s.%s partition(etl_date='%s');
+        """ % (HDFSDir, DB, Table, ExecDate)
+    return sql,load_sql
