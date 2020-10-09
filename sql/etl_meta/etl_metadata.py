@@ -73,10 +73,18 @@ class EtlMetaDataSQL():
             ,interface_time_line
             ,group_by
             ,is_run_date
+            ,target_handle
+            ,target_db
+            ,target_table
+            ,is_delete
+            ,sync_level
+            ,source_handle
+            ,source_db
+            ,source_table
             ,status
             ,create_user
             ,update_user
-    from metadb.interface_tasks_model
+    from metadb.interface_tasks_info
     where status = 1
       and dag_id = '%s'
   """ % ("##{dag_id}##")

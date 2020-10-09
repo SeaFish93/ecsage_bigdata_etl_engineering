@@ -47,7 +47,7 @@ insert into metadb.conn_db_info
  ;
  insert into metadb.dags_info
 (dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
-select 'day_tc_interface_auto','interface','etl','day',3,'30 16 * * *',1,1
+select 'day_tc_etl_dw','etl','etl','day',3,'30 20 * * *',1,1
 ;
 
 create table metadb.dags_info(
@@ -279,6 +279,14 @@ where b.status = 1
   and a.status = 1
   union all
 select a.dag_id
+       ,a.shell_name as task_id
+       ,b.schedule_interval
+from metadb.get_day_tc_interface a
+inner join metadb.dags_info b
+on a.dag_id = b.dag_id
+where b.status = 1
+  union all
+select a.dag_id
        ,a.task_id
        ,b.schedule_interval
 from metadb.etl_tasks_info a
@@ -442,6 +450,10 @@ task_id               varchar(100)  not null COMMENT 'task唯一标识，格式�
 ,interface_time_line   varchar(200)  comment '接口time_line'
 ,group_by              varchar(200)  comment '接口指定聚合字段'
 ,is_run_date           int DEFAULT 1 not null comment '是否需要指定日期过滤，1是，0否'
+,is_delete             int DEFAULT 0 not null comment '0：接口不需传参，1：true，2：false'
+,target_handle         varchar(200) not null comment'连接目标平台handle'
+,target_db             varchar(200) not null comment'目标库'
+,target_table          varchar(200) not null comment'目标表'
 ,status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效'
 ,create_user           varchar(32)   COMMENT '创建者，邮箱@前缀'
 ,update_user           varchar(32)   COMMENT '最后更新者，邮箱@前缀'
@@ -451,19 +463,56 @@ task_id               varchar(100)  not null COMMENT 'task唯一标识，格式�
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='接口作业模板表'
 ;
 
+create table metadb.interface_tasks_info(
+task_id               varchar(100)  not null COMMENT 'task唯一标识，格式：【业务名】_【源库名】_【源表名】,字母则为小写'
+,dag_id                varchar(50)   not null COMMENT 'dag唯一标识，格式：【hour|day】_【业务名】_【auto】'
+,interface_acount_type int COMMENT '101腾讯、102微信、2巨量'
+,interface_url         varchar(200)  not null comment '接口url'
+,interface_level       varchar(200)  comment '接口level'
+,interface_time_line   varchar(200)  comment '接口time_line'
+,group_by              varchar(200)  comment '接口指定聚合字段'
+,is_run_date           int DEFAULT 1 not null comment '是否需要指定日期过滤，1是，0否'
+,is_delete             int DEFAULT 0 not null comment '0：接口不需传参，1：true，2：false'
+,sync_level            varchar(20) not null comment'同步层级：file：文件落地至hive，ods：落地至ods库，snap：落地至snap库'
+,source_handle         varchar(200) not null comment'连接来源平台handle'
+,source_db             varchar(200) not null comment'来源库'
+,source_table          varchar(200) not null comment'来源表'
+,target_handle         varchar(200) not null comment'连接目标平台handle'
+,target_db             varchar(200) not null comment'目标库'
+,target_table          varchar(200) not null comment'目标表'
+,status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效'
+,create_user           varchar(32)   COMMENT '创建者，邮箱@前缀'
+,update_user           varchar(32)   COMMENT '最后更新者，邮箱@前缀'
+,create_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳'
+,update_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳'
+,CONSTRAINT interface_tasks_model_tasks_PK PRIMARY KEY (task_id)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='接口作业配置表'
+;
+
  insert into metadb.dags_info
-(dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
-select 'day_tc_interface_auto','interface','etl','day',3,'30 16 * * *',1,1
+(dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status
+)
+select 'day_tc_interface_auto_test','interface','etl','day',3,'30 16 * * *',1,1
 ;
 
 insert into metadb.interface_tasks_model
-(task_id,dag_id,interface_acount_type,interface_url,interface_level,interface_time_line,group_by,is_run_date,status)
+(task_id,dag_id,interface_acount_type,interface_url,interface_level,interface_time_line,group_by,is_run_date,status
+,target_handle,
+target_db,target_table,is_delete
+)
 select 'tc_interface_adcreatives'
-       ,'day_tc_interface_auto',101
+       ,'day_tc_interface_auto_test',101
        ,'http://dtapi.ecsage.net/internal/gdt/getAdcreatives',
-'REPORT_LEVEL_MATERIAL_IMAGE','REQUEST_TIME','date,ad_id',1,1
+'REPORT_LEVEL_MATERIAL_IMAGE','REQUEST_TIME','date,ad_id',1,1,'beeline','etl_mid','tc_getadcreatives_adcreatives',0
 
-
+CREATE TABLE `get_day_tc_interface` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `dag_id` varchar(100) DEFAULT NULL,
+  `shell_name` varchar(1000) DEFAULT NULL,
+  `shell_path` varchar(500) DEFAULT NULL,
+  `params` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='接口任务配置'
 
 
 

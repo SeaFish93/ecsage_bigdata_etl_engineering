@@ -8,27 +8,24 @@
 
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
-from ecsage_bigdata_etl_engineering.common.base.sync_method import get_mysql_hive_table_column
-from ecsage_bigdata_etl_engineering.common.base.sync_method import get_create_mysql_table_columns
-from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
-from ecsage_bigdata_etl_engineering.common.base.sync_method import set_sync_rows
-from ecsage_bigdata_etl_engineering.common.base.sync_method import get_mysql_table_index
-from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
-from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
-from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
-from ecsage_bigdata_etl_engineering.config.column_type import MYSQL_2_HIVE
-from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
+from ecsage_bigdata_etl_engineering.common.base.curl import exec_interface_data_curl
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
+from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from ecsage_bigdata_etl_engineering.common.base.sync_method import get_interface_2_hive_table_sql
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 
 import datetime
 import math
 import os
+import time
+import subprocess
 
 conf = Conf().conf
 etl_md = EtlMetadata()
 
 #入口方法
 def main(TaskInfo, Level,**kwargs):
+    time.sleep(2)
     global airflow
     global developer
     airflow = Airflow(kwargs)
@@ -39,33 +36,126 @@ def main(TaskInfo, Level,**kwargs):
     interface_time_line = TaskInfo[5]
     group_by = TaskInfo[6]
     is_run_date = TaskInfo[7]
-    start_date = airflow.tomorrow_ds_nodash_utc8
-    print(start_date,"========================================")
+    source_db = TaskInfo[14]
+    source_table = TaskInfo[15]
+    target_db = TaskInfo[9]
+    target_table = TaskInfo[10]
+    hive_handler = TaskInfo[8]
+    is_delete = TaskInfo[11]
+    start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
-    data_dir = conf.get("Interface", "interface_data_home") + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,airflow.task)
-    data_host = conf.get("Interface", "data_host")
 
-    #分支执行
-    if interface_acount_type is not None and interface_level is not None and interface_time_line is not None and group_by is not None and is_run_date == 1:
-      get_level_time_line_date_group(StartDate=start_date,EndDate=end_date,InterfaceAcountType=interface_acount_type,
-                                     InterfaceUrl=interface_url,InterfaceLevel=interface_level
-                                     ,InterfaceTimeLine=interface_time_line,DataDir=data_dir,DataHost=data_host)
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler=hive_handler)
+    hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
+    if Level == "file":
+      #数据文件落地至临时表
+      get_level_time_line_date_group(BeelineSession=beeline_session,StartDate=start_date,EndDate=end_date,
+                                       InterfaceAcountType=interface_acount_type,
+                                       InterfaceUrl=interface_url,InterfaceLevel=interface_level
+                                       ,InterfaceTimeLine=interface_time_line
+                                       , Group_Column=group_by, DB=target_db, Table=target_table
+                                       ,ISRunDate=is_run_date,ISDelete=is_delete
+                                       )
+    elif Level == "ods":
+      exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
+                          TargetDB=target_db, TargetTable=target_table,ExecDate=end_date)
+    elif Level == "snap":
+      exec_snap_hive_table(HiveSession="", BeelineSession="", SourceDB="", SourceTable="",
+                          TargetDB="", TargetTable="", ExecDate="")
 
 #含有level、time_line、date、group接口
-def get_level_time_line_date_group(StartDate="",EndDate="",InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
-                                   InterfaceTimeLine="",Group_Column="",DataDir="",DataHost=""):
-    file_name = "%s/"
-    data = {"ec_fn":"$file_name",
-            "mt":InterfaceAcountType,
-            "level":["%s"%(InterfaceLevel)],
-            "start_date":"%s"%(StartDate),
-            "end_date":"%s"%(EndDate),
-            "group_by":Group_Column.split(","),
-            "time_line":"%s"%(InterfaceTimeLine)
-           }
-    curl_shell = """
-          curl - X POST - H 'Content-Type: application/json' - i '%s' - -data "%s"
-    """%(InterfaceUrl,data)
+def get_level_time_line_date_group(HiveSession="",BeelineSession="",StartDate="",EndDate="",
+                                   InterfaceAcountType="",InterfaceUrl="",InterfaceLevel="",
+                                   InterfaceTimeLine="",Group_Column="",DB="",Table="",ISRunDate=""
+                                   ,ISDelete=""
+                                   ):
+    now_time = time.strftime("%H_%M_%S", time.localtime())
+    data_dir = conf.get("Interface", "interface_data_home")
+    file_name = "/%s_%s_%s_%s_%s"%(airflow.dag,airflow.task,InterfaceAcountType,EndDate,now_time)
+    file_dir_name = "%s"%(data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,file_name)
+    print("接口落地文件："+file_dir_name)
+    if InterfaceAcountType is not None and InterfaceLevel is not None and InterfaceTimeLine is not None and Group_Column is not None and ISRunDate == 1 and ISDelete != 0:
+       data = {"ec_fn":file_dir_name,
+               "mt":InterfaceAcountType,
+               "level":["%s"%(InterfaceLevel)],
+               "start_date":"%s"%(StartDate),
+               "end_date":"%s"%(EndDate),
+               "group_by":Group_Column.split(","),
+               "time_line":"%s"%(InterfaceTimeLine),
+               "is_deleted": "%s" % (ISDelete)
+              }
+       file_name = "/%s_%s_%s_%s_%s_%s" % (airflow.dag, airflow.task, InterfaceAcountType, ISDelete, EndDate, now_time)
+       file_dir_name = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag, file_name)
+    elif InterfaceAcountType is not None and InterfaceLevel is not None and InterfaceTimeLine is not None and Group_Column is not None and ISRunDate == 1 and ISDelete == 0:
+        data = {"ec_fn": file_dir_name,
+                "mt": InterfaceAcountType,
+                "level": ["%s" % (InterfaceLevel)],
+                "start_date": "%s" % (StartDate),
+                "end_date": "%s" % (EndDate),
+                "group_by": Group_Column.split(","),
+                "time_line": "%s" % (InterfaceTimeLine)
+                }
+    exec_interface_data_curl(URL=InterfaceUrl,Data=data)
+    #处理落地文件及上传hdfs
+    exec_file(FileName=file_dir_name, params="accountId")
+    #落地hive临时表
+    exec_file_2_hive_table(BeelineSession=BeelineSession, DB=DB, Table=Table,
+                           FileName=file_name, InterfaceAcountType=InterfaceAcountType,
+                           ExecDate=EndDate,ISDelete=ISDelete)
 
-    pass
+def exec_file(FileName="",params=""):
+    # 判断文件是否已生成
+    sshpasswdy_home = conf.get("Interface", "sshpasswdy_home")
+    check_script_home = conf.get("Interface", "check_script_home")
+    ssh_host = conf.get("Interface", "ssh_host")
+    sshpass_shell = """
+         sshpass -f %s  ssh %s "sudo %s %s"
+        """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
+    exec_shell(ShellCommand=sshpass_shell, MSG="接口检测文件出现异常！！！")
+    # 转换为json文件
+    if params is not None:
+      check_script_home = conf.get("Interface", "json_params_python_home")
+      json_shell = """
+            sshpass -f %s  ssh %s "sudo python %s %s %s"
+          """ % (sshpasswdy_home, ssh_host, check_script_home, FileName,params)
+    else:
+      check_script_home = conf.get("Interface", "json_python_home")
+      json_shell = """                                                    
+              sshpass -f %s  ssh %s "sudo python %s %s"           
+         """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
+    exec_shell(ShellCommand=json_shell, MSG="接口转换为json文件出现异常！！！")
+    # 落地hdfs
+    check_script_home = conf.get("Interface", "hdfs_client_home")
+    hdfs_shell = """
+         sshpass -f %s  ssh %s "sudo python %s %s.txt"
+        """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
+    exec_shell(ShellCommand=hdfs_shell, MSG="接口上传hdfs文件出现异常！！！")
+
+def exec_shell(ShellCommand="",MSG=""):
+    (ok, output) = subprocess.getstatusoutput(ShellCommand)
+    print("日志打印：", output)
+    if ok != 0:
+        set_exit(LevelStatu="red", MSG=MSG)
+
+#落地至临时表
+def exec_file_2_hive_table(BeelineSession="",DB="",Table="",FileName="",InterfaceAcountType="",ExecDate="",ISDelete=""):
+    inpath = "%s%s.txt" % ("/tmp/sync", FileName)
+    sql,load_sql = get_interface_2_hive_table_sql(DB=DB,Table=Table,InterfaceAcountType=InterfaceAcountType,ISDelete=ISDelete,HDFSDir=inpath,ExecDate=ExecDate)
+    BeelineSession.execute_sql(sql)
+    print(inpath,"========================@@@@@@@@@@@@@@@@@@@@@")
+    ok = BeelineSession.execute_sql(load_sql)
+    if ok is False:
+        set_exit(LevelStatu="red", MSG="接口写入hive表【%s.%s】出现异常"%(DB,Table))
+
+#落地至ods
+def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
+                        TargetDB="", TargetTable="",ExecDate=""):
+   get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
+   print(get_ods_column)
+
+#落地至snap
+def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
+                        TargetDB="", TargetTable="",ExecDate=""):
+   get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
+   print(get_ods_column,"@@###########################################")
 
