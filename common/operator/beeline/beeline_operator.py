@@ -16,6 +16,7 @@ class BeelineNoSqlDB(BaseDB):
         print("beeline NoSql DB:" + self.metastore_uris)
         #modify by wangsong（source /etc/profile）
         self.conn = "/opt/cloudera/parcels/CDH/lib/hive/bin/beeline -u 'jdbc:hive2://%s/' -n %s -d org.apache.hive.jdbc.HiveDriver -p '%s'" % (self.metastore_uris, self.user, self.password)
+        print(self.conn,"#########################################=======================")
         # self.conn = "/usr/bin/beeline -u 'jdbc:hive2://%s/' -n %s " % (self.metastore_uris, self.user)
 
     def execute_sql(self, sql, task_name=""):
