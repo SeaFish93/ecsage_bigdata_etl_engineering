@@ -345,8 +345,8 @@ def set_load_file_to_hive(HiveSession="",MysqlSession="",SourceDB="",SourceTable
                             SourceTable=SourceTable,
                             TargetDB=TmpDB, TargetTable=TmpTable)
     #上传本地数据文件至HDFS
-    print("""hdfs dfs -moveFromLocal -f %s %s"""% (DataFile,HDFSDir),"************************************")
-    ok = os.system("hdfs dfs -moveFromLocal -f %s %s" % (DataFile,HDFSDir))
+    print("""hadoop fs -moveFromLocal -f %s %s"""% (DataFile,HDFSDir),"************************************")
+    ok = os.system("hadoop fs -moveFromLocal -f %s %s" % (DataFile,HDFSDir))
     if ok != 0:
         # 删除数据文件
         os.system("rm -f %s" % DataFile)
