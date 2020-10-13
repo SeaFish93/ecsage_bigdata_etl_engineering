@@ -33,7 +33,7 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                                               Developer="工程维护")
                    set_exit(LevelStatu="red", MSG=msg)
                else:
-                   pass
+                   print("等待数据文件生成：【%s】"%(File))
           time.sleep(120)
         return response.status_code
     except Exception as e:
