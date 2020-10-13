@@ -92,7 +92,7 @@ def get_level_time_line_date_group(StartDate="",EndDate="",
     data_json = ast.literal_eval(json.loads(DataJson))
     now_time = time.strftime("%H_%M_%S", time.localtime())
     data_dir = conf.get("Interface", InterfaceModule)
-    file_name = "/%s_%s_%s_%s"%(airflow.dag,airflow.task,EndDate,now_time)
+    file_name = "%s_%s_%s_%s"%(airflow.dag,airflow.task,EndDate,now_time)
     file_dir_name = "%s"%(data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s"%(airflow.dag,file_name)
     data_json["%s"%(FileDirName)] = file_dir_name
     print("接口url："+InterfaceUrl)
