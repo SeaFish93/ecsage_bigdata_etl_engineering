@@ -54,13 +54,15 @@ def main(TaskInfo, Level,**kwargs):
     start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
     if is_init_data == 0:
-      data_json["%s"%(start_date_name)] = start_date
-      data_json["%s" % (end_date_name)] = end_date
+      if start_date_name is not None and len(start_date_name)>0 and end_date_name is not None and len(end_date_name)>0:
+         data_json["%s"%(start_date_name)] = start_date
+         data_json["%s" % (end_date_name)] = end_date
     else:
-      start_date = TaskInfo[11]
-      end_date = TaskInfo[12]
-      data_json["%s" % (start_date_name)] = start_date
-      data_json["%s" % (end_date_name)] = end_date
+        if start_date_name is not None and len(start_date_name) > 0 and end_date_name is not None and len(end_date_name) > 0:
+           start_date = TaskInfo[11]
+           end_date = TaskInfo[12]
+           data_json["%s" % (start_date_name)] = start_date
+           data_json["%s" % (end_date_name)] = end_date
     beeline_session = "" #set_db_session(SessionType="beeline", SessionHandler=hive_handler)
     hive_session = "" #set_db_session(SessionType="hive", SessionHandler=hive_handler)
     if Level == "file":
