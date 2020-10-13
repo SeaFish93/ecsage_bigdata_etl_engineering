@@ -18,6 +18,7 @@ import datetime
 import math
 import os
 import json
+import ast
 import time
 import subprocess
 
@@ -89,7 +90,7 @@ def get_level_time_line_date_group(StartDate="",EndDate="",
                                    ,DB="", Table=""
                                    ):
     print(type(DataJson))
-    data_json = json.loads(DataJson) #json.dumps(DataJson)
+    data_json = ast.literal_eval(json.loads(DataJson)) #json.dumps(DataJson)
     print(type(data_json),data_json,"&&&&&&&&&&&&&&&&&&&&&")
     now_time = time.strftime("%H_%M_%S", time.localtime())
     data_dir = conf.get("Interface", InterfaceModule)
