@@ -89,7 +89,7 @@ def get_level_time_line_date_group(StartDate="",EndDate="",
                                    ,DB="", Table=""
                                    ):
     print(type(DataJson))
-    data_json = json.dumps(DataJson)
+    data_json = json.loads(DataJson) #json.dumps(DataJson)
     print(type(data_json),"&&&&&&&&&&&&&&&&&&&&&")
     now_time = time.strftime("%H_%M_%S", time.localtime())
     data_dir = conf.get("Interface", InterfaceModule)
