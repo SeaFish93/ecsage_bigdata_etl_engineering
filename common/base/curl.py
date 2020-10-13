@@ -25,13 +25,15 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                file_md5_value = file_md5.read().split()[0]
                md5_file_md5 = os.popen("cat %s.md5"%(File))
                md5_file_md5_value = md5_file_md5.read().split()[0]
-               if file_md5_value != md5_file_md5_value:
+               #if file_md5_value != md5_file_md5_value:
+               if is_file:
+                   exit(0)
                    msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
                                               Log="执行数据接口采集出现异常！！！",
                                               Developer="工程维护")
                    set_exit(LevelStatu="red", MSG=msg)
                else:
-                   exit(0)
+                   pass
           time.sleep(120)
         return response.status_code
     except Exception as e:
