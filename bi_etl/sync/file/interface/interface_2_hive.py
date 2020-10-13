@@ -50,6 +50,7 @@ def main(TaskInfo, Level,**kwargs):
     partition_07 = TaskInfo[10]
     is_init_data = TaskInfo[15]
     file_dir_name = TaskInfo[24]
+    print(file_dir_name,"==================")
     interface_module = TaskInfo[25]
     start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
