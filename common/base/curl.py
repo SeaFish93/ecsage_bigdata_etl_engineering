@@ -17,7 +17,8 @@ def exec_interface_data_curl(URL="",Data={},File=""):
     headers = {'Content-Type': "application/json"}
     try:
         response = requests.post(URL, data=json.dumps(Data), headers=headers)
-        while True:
+        exit_while = True
+        while exit_while:
           is_md5 = os.path.exists("%s.md5"%(File))
           if is_md5:
             is_file = os.path.exists("%s"%(File))
@@ -26,16 +27,21 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                file_md5_value = file_md5.read().split()[0]
                md5_file_md5 = os.popen("cat %s.md5"%(File))
                md5_file_md5_value = md5_file_md5.read().split()[0]
-               #if file_md5_value != md5_file_md5_value:
-               print(is_file,"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-               if is_file:
-                   exit(0)
+               print(file_md5_value,md5_file_md5_value,"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+               if file_md5_value != md5_file_md5_value:
                    msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
-                                              Log="执行数据接口采集出现异常！！！",
+                                              Log="执行数据接口采集生成数据文件md5对不上！！！",
                                               Developer="工程维护")
                    set_exit(LevelStatu="red", MSG=msg)
                else:
-                   print("等待数据文件生成：【%s】"%(File))
+                   exit_while = False
+            else:
+                msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
+                                           Log="执行数据接口采集生成数据文件出现异常！！！",
+                                           Developer="工程维护")
+                set_exit(LevelStatu="red", MSG=msg)
+          else:
+            print("等待数据文件md5生成：【%s】"%(File))
           time.sleep(120)
         return response.status_code
     except Exception as e:
