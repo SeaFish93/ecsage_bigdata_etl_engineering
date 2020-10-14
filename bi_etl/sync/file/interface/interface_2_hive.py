@@ -41,7 +41,7 @@ def main(TaskInfo, Level,**kwargs):
     start_date_name = TaskInfo[11]
     end_date_name = TaskInfo[12]
     data_json = TaskInfo[3]
-    data_json = json.dumps(data_json)
+    data_json = ast.literal_eval(json.loads(data_json))
     partition_01 = TaskInfo[4]
     partition_02 = TaskInfo[5]
     partition_03 = TaskInfo[6]
@@ -51,10 +51,12 @@ def main(TaskInfo, Level,**kwargs):
     partition_07 = TaskInfo[10]
     is_init_data = TaskInfo[15]
     file_dir_name = TaskInfo[24]
-    print(file_dir_name,"==================")
     interface_module = TaskInfo[25]
+    filter_modify_time_name = TaskInfo[26]
     start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
+    if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
+        data_json["%s" % (filter_modify_time_name)] = end_date
     if is_init_data == 0:
       if start_date_name is not None and len(start_date_name)>0 and end_date_name is not None and len(end_date_name)>0:
          data_json["%s"%(start_date_name)] = start_date
@@ -98,7 +100,9 @@ def get_level_time_line_date_group(StartDate="",EndDate="",
     print("接口url："+InterfaceUrl)
     print("接口参数："+str(data_json))
     print("接口落地文件：" + file_dir_name)
+    print("开始执行调用接口")
     exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name)
+    print("结束执行调用接口")
     #处理落地文件及上传hdfs
     #exec_file(FileName=file_dir_name, params="accountId")
     #落地hive临时表
@@ -107,32 +111,10 @@ def get_level_time_line_date_group(StartDate="",EndDate="",
     #                       ExecDate=EndDate,ISDelete=ISDelete)
 
 def exec_file(FileName="",params=""):
-    # 判断文件是否已生成
-    sshpasswdy_home = conf.get("Interface", "sshpasswdy_home")
-    check_script_home = conf.get("Interface", "check_script_home")
-    ssh_host = conf.get("Interface", "ssh_host")
-    sshpass_shell = """
-         sshpass -f %s  ssh %s "sudo %s %s"
-        """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
-    exec_shell(ShellCommand=sshpass_shell, MSG="接口检测文件出现异常！！！")
     # 转换为json文件
-    if params is not None:
-      check_script_home = conf.get("Interface", "json_params_python_home")
-      json_shell = """
-            sshpass -f %s  ssh %s "sudo python %s %s %s"
-          """ % (sshpasswdy_home, ssh_host, check_script_home, FileName,params)
-    else:
-      check_script_home = conf.get("Interface", "json_python_home")
-      json_shell = """                                                    
-              sshpass -f %s  ssh %s "sudo python %s %s"           
-         """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
-    exec_shell(ShellCommand=json_shell, MSG="接口转换为json文件出现异常！！！")
+
     # 落地hdfs
-    check_script_home = conf.get("Interface", "hdfs_client_home")
-    hdfs_shell = """
-         sshpass -f %s  ssh %s "sudo python %s %s.txt"
-        """ % (sshpasswdy_home, ssh_host, check_script_home, FileName)
-    exec_shell(ShellCommand=hdfs_shell, MSG="接口上传hdfs文件出现异常！！！")
+    pass
 
 def exec_shell(ShellCommand="",MSG=""):
     (ok, output) = subprocess.getstatusoutput(ShellCommand)

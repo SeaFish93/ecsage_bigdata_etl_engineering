@@ -509,6 +509,7 @@ task_id                varchar(100)  not null COMMENT 'task唯一标识，格式
 ,end_date_name         varchar(50) comment'开始日期字段名称'
 ,init_start_date       varchar(50) comment'初始开始日期'
 ,init_end_date         varchar(50) comment'初始结束日期'
+,filter_modify_time_name varchar(50) comment'过滤更新日期字段名称'
 ,is_init_data          int comment'是否初始数据，1是，0否'
 ,sync_level            varchar(20) not null comment'同步层级：file：文件落地至hive，ods：落地至ods库，snap：落地至snap库'
 ,source_handle         varchar(200)   comment'连接来源平台handle'
@@ -525,6 +526,30 @@ task_id                varchar(100)  not null COMMENT 'task唯一标识，格式
 ,CONSTRAINT interface_tasks_model_tasks_PK PRIMARY KEY (task_id)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='接口作业配置表'
 ;
+
+insert into metadb.interface_tasks_info_bak
+(
+task_id
+,tasks_model_id
+,dag_id
+,interface_module
+,interface_url
+,data_json
+,file_dir_name
+,partition_01
+,start_date_name
+,end_date_name
+,init_start_date
+,init_end_date
+,is_init_data
+,sync_level
+,status
+)
+select 'test','test','day_tc_interface_auto_test','oceanengine','http://dtapi.ecsage.net/internal/oe/getCampaign',
+'{"mt":2,"ec_fn":"/home/server/logs/abc.log"}','ec_fn','mt=2','','','',''
+,0,'file',1
+;
+
 
  insert into metadb.dags_info
 (dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status
