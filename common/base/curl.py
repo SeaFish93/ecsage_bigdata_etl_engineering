@@ -19,13 +19,13 @@ def exec_interface_data_curl(URL="",Data={},File=""):
         exit_while = True
         while exit_while:
           is_md5 = os.path.exists("%s.md5"%(File))
-          if is_md5:
+          if is_md5 is False:
             is_file = os.path.exists("%s"%(File))
             if is_file:
                file_md5 = os.popen("md5sum %s"%(File))
                file_md5_value = file_md5.read().split()[0]
                md5_file_md5 = os.popen("cat %s.md5"%(File))
-               md5_file_md5_value = md5_file_md5.read().split()[0]+"1"
+               md5_file_md5_value = md5_file_md5.read().split()[0]
                print("MD5：【%s,%s】"%(file_md5_value,md5_file_md5_value))
                if file_md5_value != md5_file_md5_value:
                    msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
