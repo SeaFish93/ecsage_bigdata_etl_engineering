@@ -34,7 +34,7 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                                               Developer="工程维护")
                    set_exit(LevelStatu="red", MSG=msg)
                else:
-                   print("数据文件已生成且MD5已对上：【%s】"%(File))
+                   print("数据文件已生成且MD5已对上：【%s,%s.md5】"%(File,File))
                    exit_while = False
             else:
                 msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
