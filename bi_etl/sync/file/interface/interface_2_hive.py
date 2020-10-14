@@ -41,7 +41,7 @@ def main(TaskInfo, Level,**kwargs):
     start_date_name = TaskInfo[11]
     end_date_name = TaskInfo[12]
     data_json = TaskInfo[3]
-    data_json = json.loads(data_json)
+    data_json = json.dumps(data_json)
     partition_01 = TaskInfo[4]
     partition_02 = TaskInfo[5]
     partition_03 = TaskInfo[6]
