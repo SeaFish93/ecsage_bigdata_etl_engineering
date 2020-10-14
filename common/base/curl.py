@@ -34,6 +34,7 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                                               Developer="工程维护")
                    set_exit(LevelStatu="red", MSG=msg)
                else:
+                   print("数据文件已生成且MD5已对上：【%s】"%(File))
                    exit_while = False
             else:
                 msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
@@ -42,7 +43,7 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                 set_exit(LevelStatu="red", MSG=msg)
           else:
             print("等待数据文件md5生成：【%s】"%(File))
-          time.sleep(120)
+            time.sleep(120)
         return response.status_code
     except Exception as e:
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行数据接口采集出现异常！！！",
