@@ -15,13 +15,13 @@ select
    ,'conn_hive' handle_conn_code
 from dual
 ;
-create table metadb.conn_db_info
+create table metadb.conn_db_info_bak
 (
  id                int not null AUTO_INCREMENT COMMENT '自增主键',
  handle_conn_code  varchar(100) COMMENT '句柄连接池编码',
  handle_conn_name  varchar(500) COMMENT '句柄连接池名称',
  handle_type  varchar(500) COMMENT '句柄连接池类型',
- host         varchar(500) COMMENT '数据库ip',
+ host         varchar(3000) COMMENT '数据库ip',
  port         int          COMMENT '数据库端口',
  user_name    varchar(500) COMMENT '数据库用户名',
  password     varchar(500) COMMENT '数据库加密后密码',
