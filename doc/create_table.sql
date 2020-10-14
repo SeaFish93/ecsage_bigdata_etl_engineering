@@ -545,8 +545,8 @@ task_id
 ,sync_level
 ,status
 )
-select 'test','test','day_tc_interface_auto_test','oceanengine','http://dtapi.ecsage.net/internal/oe/getCampaign',
-'{"mt":2,"ec_fn":"/home/server/logs/abc.log"}','ec_fn','mt=2','','','',''
+select 'test','test','day_tc_interface_auto_test','oceanengine','http://bd.ec.net/internal/oe/getCampaign',
+'{"mt":2,"ec_fn":"/home/server/cloud/dataserver/logs/abc111.log","account_id":"111450835384","filtering":{"ids": ["1652139318003755"]}}','ec_fn','mt=2','','','',''
 ,0,'file',1
 ;
 
