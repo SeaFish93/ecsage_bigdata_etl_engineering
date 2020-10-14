@@ -18,7 +18,6 @@ def exec_interface_data_curl(URL="",Data={},File=""):
         response = requests.post(URL, data=json.dumps(Data), headers=headers)
         exit_while = True
         while exit_while:
-          print(("%s.md5"%(File)),"======================================")
           is_md5 = os.path.exists("%s.md5"%(File))
           if is_md5:
             is_file = os.path.exists("%s"%(File))
