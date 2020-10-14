@@ -19,7 +19,7 @@ def exec_interface_data_curl(URL="",Data={},File=""):
         exit_while = True
         while exit_while:
           is_md5 = os.path.exists("%s.md5"%(File))
-          if is_md5 is False:
+          if is_md5:
             is_file = os.path.exists("%s"%(File))
             if is_file:
                file_md5 = os.popen("md5sum %s"%(File))
@@ -45,8 +45,6 @@ def exec_interface_data_curl(URL="",Data={},File=""):
             time.sleep(120)
         return response.status_code
     except Exception as e:
-        msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
-                                   Log="执行数据接口采集出现异常！！！",
-                                   Developer="工程维护")
+        msg = ""
         set_exit(LevelStatu="red", MSG=msg)
         return None
