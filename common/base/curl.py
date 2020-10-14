@@ -13,6 +13,7 @@ import os
 import time
 
 def exec_interface_data_curl(URL="",Data={},File=""):
+    print(File,"==================================================")
     headers = {'Content-Type': "application/json"}
     try:
         response = requests.post(URL, data=json.dumps(Data), headers=headers)
@@ -26,6 +27,7 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                md5_file_md5 = os.popen("cat %s.md5"%(File))
                md5_file_md5_value = md5_file_md5.read().split()[0]
                #if file_md5_value != md5_file_md5_value:
+               print(is_file,"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
                if is_file:
                    exit(0)
                    msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
