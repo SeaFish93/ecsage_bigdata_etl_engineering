@@ -15,16 +15,19 @@ import time
 def exec_interface_data_curl(URL="",Data={},File=""):
     headers = {'Content-Type': "application/json"}
     try:
-        response = requests.post(URL, data=json.dumps(Data), headers=headers)
+        requests.post(URL, data=json.dumps(Data), headers=headers)
         exit_while = True
+        data_file = File
+        param_file = "%s.param"%(File)
+        md5_file = "%s.md5"%(File)
         while exit_while:
-          is_md5 = os.path.exists("%s.md5"%(File))
+          is_md5 = os.path.exists(md5_file)
           if is_md5:
-            is_file = os.path.exists("%s"%(File))
+            is_file = os.path.exists(data_file)
             if is_file:
-               file_md5 = os.popen("md5sum %s"%(File))
+               file_md5 = os.popen("md5sum %s"%(data_file))
                file_md5_value = file_md5.read().split()[0]
-               md5_file_md5 = os.popen("cat %s.md5"%(File))
+               md5_file_md5 = os.popen("cat %s"%(md5_file))
                md5_file_md5_value = md5_file_md5.read().split()[0]
                print("MD5：【%s,%s】"%(file_md5_value,md5_file_md5_value))
                if file_md5_value != md5_file_md5_value:
@@ -33,8 +36,8 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                                               Developer="工程维护")
                    set_exit(LevelStatu="red", MSG=msg)
                else:
-                   print("数据文件已生成且MD5已对上：【%s,%s.md5】"%(File,File))
-                   os.system("""echo %s>>%s.data"""%(Data,File))
+                   print("数据文件已生成且MD5已对上：【%s,%s】"%(data_file,md5_file))
+                   os.system("""echo %s>>%s"""%(Data,param_file))
                    exit_while = False
             else:
                 msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
@@ -42,9 +45,9 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                                            Developer="工程维护")
                 set_exit(LevelStatu="red", MSG=msg)
           else:
-            print("等待数据文件md5生成：【%s】"%(File))
+            print("等待数据文件md5生成：【%s】"%(md5_file))
             time.sleep(120)
-        return response.status_code
+        return param_file
     except Exception as e:
         msg = ""
         set_exit(LevelStatu="red", MSG=msg)
