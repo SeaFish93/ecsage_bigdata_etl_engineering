@@ -13,6 +13,7 @@ import os
 import time
 
 def exec_interface_data_curl(URL="",Data={},File=""):
+    print("""echo @@the file is finish %s process exits@@>>%s""" % (Data, File),"=====================================================")
     headers = {'Content-Type': "application/json"}
     try:
         response = requests.post(URL, data=json.dumps(Data), headers=headers)
@@ -34,6 +35,7 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                    set_exit(LevelStatu="red", MSG=msg)
                else:
                    print("数据文件已生成且MD5已对上：【%s,%s.md5】"%(File,File))
+                   print("""echo @@the file is finish %s process exits@@>>%s"""%(Data,File),"=====================================================")
                    os.system("""echo @@the file is finish %s process exits@@>>%s"""%(Data,File))
                    exit_while = False
             else:
