@@ -14,6 +14,7 @@ import time
 
 def exec_interface_data_curl(URL="",Data={},File=""):
     headers = {'Content-Type': "application/json"}
+    param_md5 = ""
     try:
         requests.post(URL, data=json.dumps(Data), headers=headers)
         exit_while = True
@@ -37,7 +38,8 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                    set_exit(LevelStatu="red", MSG=msg)
                else:
                    print("数据文件已生成且MD5已对上：【%s,%s】"%(data_file,md5_file))
-                   os.system("""echo "%s">>%s"""%(Data,param_file))
+                   param_md5 = os.popen("""echo "%s"|md5sum|awk '{print $1}'"""%(Data))
+                   os.system("""echo `echo "%s"|md5sum|awk '{print $1}'` %s>>%s"""%(Data,Data,param_file))
                    exit_while = False
             else:
                 msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
@@ -47,7 +49,7 @@ def exec_interface_data_curl(URL="",Data={},File=""):
           else:
             print("等待数据文件md5生成：【%s】"%(md5_file))
             time.sleep(120)
-        return param_file
+        return param_md5,param_file
     except Exception as e:
         msg = ""
         set_exit(LevelStatu="red", MSG=msg)
