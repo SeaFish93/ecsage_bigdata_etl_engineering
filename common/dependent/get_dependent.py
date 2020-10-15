@@ -39,7 +39,7 @@ def run(jd, **kwargs):
     ok = True
     task_list = []
     for sql in sql_list:
-        sql_str = "EXPLAIN DEPENDENCY " + re.sub("set .*","",replace_placeholder(sql["sql"]))
+        sql_str = "EXPLAIN DEPENDENCY " + re.sub(";$","",re.sub("set .*","",replace_placeholder(sql["sql"])))
         ok,data = session.get_all_rows(sql_str) #.execute_sql(sql=sql_str)
         get_depend_table = data[0][0]
         for table in eval(get_depend_table)["input_tables"]:
