@@ -13,7 +13,7 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
-
+import re
 
 def run(jd, **kwargs):
     # 开始处理从hive加工数据到dws层
@@ -39,7 +39,7 @@ def run(jd, **kwargs):
     ok = True
     task_list = []
     for sql in sql_list:
-        sql_str = "EXPLAIN DEPENDENCY " + replace_placeholder(sql["sql"])
+        sql_str = "EXPLAIN DEPENDENCY " + re.sub("set .*","",replace_placeholder(sql["sql"]))
         ok,data = session.get_all_rows(sql_str) #.execute_sql(sql=sql_str)
         get_depend_table = data[0][0]
         for table in eval(get_depend_table)["input_tables"]:
