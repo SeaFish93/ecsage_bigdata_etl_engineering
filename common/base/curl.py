@@ -38,8 +38,10 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                    set_exit(LevelStatu="red", MSG=msg)
                else:
                    print("数据文件已生成且MD5已对上：【%s,%s】"%(data_file,md5_file))
-                   param_md5 = os.popen("""echo "%s"|md5sum|awk '{print $1}'"""%(Data))
-                   os.system("""echo `echo "%s"|md5sum|awk '{print $1}'` %s>>%s"""%(Data,Data,param_file))
+                   dir_json = Data
+                   dir_json["ec_fn"] = ""
+                   param_md5 = os.popen("""echo "%s"|md5sum|awk '{print $1}'"""%(dir_json))
+                   os.system("""echo `echo "%s"|md5sum|awk '{print $1}'` %s>>%s"""%(dir_json,dir_json,param_file))
                    exit_while = False
             else:
                 msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
