@@ -498,13 +498,6 @@ task_id                varchar(100)  not null COMMENT 'task唯一标识，格式
 ,interface_url         varchar(200)  not null comment '接口url'
 ,data_json             varchar(2000) comment'接口访问参数'
 ,file_dir_name         varchar(50) comment'文件目录参数名称'
-,partition_01          varchar(50) comment'数据类型1'
-,partition_02          varchar(50) comment'数据类型2'
-,partition_03          varchar(50) comment'数据类型3'
-,partition_04          varchar(50) comment'数据类型4'
-,partition_05          varchar(50) comment'数据类型5'
-,partition_06          varchar(50) comment'数据类型6'
-,partition_07          varchar(50) comment'数据类型7'
 ,start_date_name       varchar(50) comment'开始日期字段名称'
 ,end_date_name         varchar(50) comment'开始日期字段名称'
 ,init_start_date       varchar(50) comment'初始开始日期'
@@ -536,7 +529,6 @@ task_id
 ,interface_url
 ,data_json
 ,file_dir_name
-,partition_01
 ,start_date_name
 ,end_date_name
 ,init_start_date
@@ -544,10 +536,11 @@ task_id
 ,is_init_data
 ,sync_level
 ,status
+,target_handle
 )
 select 'test','test','day_tc_interface_auto_test','oceanengine','http://bd.ec.net/internal/oe/getCampaign',
-'{"mt":2,"ec_fn":"/home/server/cloud/dataserver/logs/abc111.log"}','ec_fn','mt=2','','','',''
-,0,'file',1
+'{"mt":2,"ec_fn":"/home/server/cloud/dataserver/logs/abc111.log"}','ec_fn','','','',''
+,0,'file',1,'hive'
 ;
 
 

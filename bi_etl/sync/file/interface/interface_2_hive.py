@@ -13,6 +13,7 @@ from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb impo
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_interface_2_hive_table_sql
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 
 import datetime
 import math
@@ -42,13 +43,6 @@ def main(TaskInfo, Level,**kwargs):
     end_date_name = TaskInfo[12]
     data_json = TaskInfo[3]
     data_json = json.dumps(data_json)
-    partition_01 = TaskInfo[4]
-    partition_02 = TaskInfo[5]
-    partition_03 = TaskInfo[6]
-    partition_04 = TaskInfo[7]
-    partition_05 = TaskInfo[8]
-    partition_06 = TaskInfo[9]
-    partition_07 = TaskInfo[10]
     is_init_data = TaskInfo[15]
     file_dir_name = TaskInfo[24]
     interface_module = TaskInfo[25]
@@ -68,15 +62,14 @@ def main(TaskInfo, Level,**kwargs):
            data_json["%s" % (start_date_name)] = start_date
            data_json["%s" % (end_date_name)] = end_date
     beeline_session = "" #set_db_session(SessionType="beeline", SessionHandler=hive_handler)
-    hive_session = "" #set_db_session(SessionType="hive", SessionHandler=hive_handler)
+    hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     if Level == "file":
       #数据文件落地至临时表
-      get_level_time_line_date_group(StartDate=start_date,EndDate=end_date,
-                                      InterfaceUrl=interface_url,DataJson=data_json
-                                      ,FileDirName = file_dir_name
-                                      ,InterfaceModule = interface_module
-                                      ,DB=target_db, Table=target_table
-                                    )
+      get_file_2_hive(HiveSession=hive_session,InterfaceUrl=interface_url,DataJson=data_json
+                      ,FileDirName = file_dir_name
+                      ,InterfaceModule = interface_module
+                      ,DB=target_db, Table=target_table,ExecData=end_date
+                     )
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
                           TargetDB=target_db, TargetTable=target_table,ExecDate=end_date)
@@ -85,16 +78,15 @@ def main(TaskInfo, Level,**kwargs):
                           TargetDB="", TargetTable="", ExecDate="")
 
 #含有level、time_line、date、group接口
-def get_level_time_line_date_group(StartDate="",EndDate="",
-                                   InterfaceUrl="",DataJson={}
+def get_file_2_hive(HiveSession="",InterfaceUrl="",DataJson={}
                                    ,FileDirName = ""
                                    ,InterfaceModule = ""
-                                   ,DB="", Table=""
+                                   ,DB="", Table="",ExecData=""
                                    ):
     data_json = ast.literal_eval(json.loads(DataJson))
     now_time = time.strftime("%H_%M_%S", time.localtime())
     data_dir = conf.get("Interface", InterfaceModule)
-    file_name = "%s_%s_%s_%s.log"%(airflow.dag,airflow.task,EndDate,now_time)
+    file_name = "%s_%s_%s_%s.log"%(airflow.dag,airflow.task,ExecData,now_time)
     file_dir = "%s"%(data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s"%(airflow.dag)
     file_dir_name = "%s/%s"%(file_dir,file_name)
     if os.path.exists(file_dir) is False:
@@ -106,44 +98,77 @@ def get_level_time_line_date_group(StartDate="",EndDate="",
     print("开始执行调用接口")
     param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name)
     print("结束执行调用接口")
-    #创建data临时表
-    sql = """
-      create table etl_mid.%s_%s_param
-      (
-       md5_id   string
-       ,request_param string
-      )partitioned by(etl_date string)
-      row format delimited fields terminated by '\\001' 
-      stored as parquet
-    """
-    #处理落地文件及上传hdfs
-    #exec_file(FileName=file_dir_name, params="accountId")
-    #落地hive临时表
-    #exec_file_2_hive_table(BeelineSession=BeelineSession, DB=DB, Table=Table,
-    #                       FileName=file_name, InterfaceAcountType=InterfaceAcountType,
-    #                       ExecDate=EndDate,ISDelete=ISDelete)
+    #落地临时表
+    exec_file_2_hive(HiveSession=HiveSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
 
-def exec_file(FileName="",params=""):
-    # 转换为json文件
-
-    # 落地hdfs
-    pass
-
-def exec_shell(ShellCommand="",MSG=""):
-    (ok, output) = subprocess.getstatusoutput(ShellCommand)
-    print("日志打印：", output)
-    if ok != 0:
-        set_exit(LevelStatu="red", MSG=MSG)
-
-#落地至临时表
-def exec_file_2_hive_table(BeelineSession="",DB="",Table="",FileName="",InterfaceAcountType="",ExecDate="",ISDelete=""):
-    inpath = "%s%s.txt" % ("/tmp/sync", FileName)
-    sql,load_sql = get_interface_2_hive_table_sql(DB=DB,Table=Table,InterfaceAcountType=InterfaceAcountType,ISDelete=ISDelete,HDFSDir=inpath,ExecDate=ExecDate)
-    BeelineSession.execute_sql(sql)
-    print(inpath,"========================@@@@@@@@@@@@@@@@@@@@@")
-    ok = BeelineSession.execute_sql(load_sql)
-    if ok is False:
-        set_exit(LevelStatu="red", MSG="接口写入hive表【%s.%s】出现异常"%(DB,Table))
+def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table="",ExecDate=""):
+    param_table = """etl_mid.%s_%s_param"""%(DB,Table)
+    mid_table = """etl_mid.%s_%s""" % (DB, Table)
+    param_file = """%s.param""" % (LocalFileName)
+    local_file = """%s""" % (LocalFileName)
+    # 创建data临时表
+    param_sql = """
+          create table %s
+          (
+           md5_id   string
+           ,request_param string
+          )partitioned by(etl_date string)
+          row format delimited fields terminated by '\\001' 
+        """%(param_table)
+    mid_sql = """
+              create table %s
+              (
+               request_data string
+              )partitioned by(etl_date string,md5_id string)
+              row format delimited fields terminated by '\\001' 
+            """%(mid_table)
+    HiveSession.execute_sql("""drop table if exists table %s"""%(param_table))
+    HiveSession.execute_sql("""drop table if exists table %s""" % (mid_table))
+    HiveSession.execute_sql(param_sql)
+    HiveSession.execute_sql(mid_sql)
+    # 上传本地数据文件至HDFS
+    hdfs_dir = "/tmp/datafolder_new"
+    #上传param文件
+    print("""hadoop fs -moveFromLocal -f %s %s""" % (param_file, hdfs_dir), "************************************")
+    ok_param = os.system("hadoop fs -moveFromLocal -f %s %s" % (param_file, hdfs_dir))
+    # 上传数据文件
+    print("""hadoop fs -moveFromLocal -f %s %s""" % (local_file, hdfs_dir), "************************************")
+    ok_data = os.system("hadoop fs -moveFromLocal -f %s %s" % (local_file, hdfs_dir))
+    if ok_param != 0 and ok_data != 0:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (DB, Table),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="上传本地数据文件至HDFS出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    #落地param表
+    load_table_sql = """
+            load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
+            partition(etl_date='{exec_date}')
+        """.format(hdfs_dir=hdfs_dir, file_name=param_file.split("/")[-1], table_name=param_table,exec_date=ExecDate)
+    ok_param = HiveSession.execute_sql(load_table_sql)
+    # 落地mid表
+    load_table_sql = """
+                load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
+                partition(etl_date='{exec_date}',md5_id='{md5_id}')
+            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate,md5_id=ParamsMD5)
+    ok_data = HiveSession.execute_sql(load_table_sql)
+    if ok_param is False and ok_data is False:
+        # 删除临时表
+        HiveSession.execute_sql("""drop table if exists table %s""" % (param_table))
+        HiveSession.execute_sql("""drop table if exists table %s""" % (mid_table))
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (DB, Table),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="HDFS数据文件load入仓临时表出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
