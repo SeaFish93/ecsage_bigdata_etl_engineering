@@ -537,10 +537,12 @@ task_id
 ,sync_level
 ,status
 ,target_handle
+,target_db
+,target_table
 )
 select 'test','test','day_tc_interface_auto_test','oceanengine','http://bd.ec.net/internal/oe/getCampaign',
 '{"mt":2,"ec_fn":"/home/server/cloud/dataserver/logs/abc111.log"}','ec_fn','','','',''
-,0,'file',1,'hive'
+,0,'file',1,'hive','etl_mid','oe_getcampaign'
 ;
 
 
