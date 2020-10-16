@@ -122,53 +122,53 @@ def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table=""
               )partitioned by(etl_date string,md5_id string)
               row format delimited fields terminated by '\\001' 
             """%(mid_table)
-    HiveSession.execute_sql("""drop table if exists table %s"""%(param_table))
-    HiveSession.execute_sql("""drop table if exists table %s""" % (mid_table))
+    HiveSession.execute_sql("""drop table if exists %s"""%(param_table))
+    HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
     HiveSession.execute_sql(param_sql)
     HiveSession.execute_sql(mid_sql)
     # 上传本地数据文件至HDFS
     hdfs_dir = "/tmp/datafolder_new"
     #上传param文件
     print("""hadoop fs -moveFromLocal -f %s %s""" % (param_file, hdfs_dir), "************************************")
-    #ok_param = os.system("hadoop fs -moveFromLocal -f %s %s" % (param_file, hdfs_dir))
+    ok_param = os.system("hadoop fs -moveFromLocal -f %s %s" % (param_file, hdfs_dir))
     # 上传数据文件
     print("""hadoop fs -moveFromLocal -f %s %s""" % (local_file, hdfs_dir), "************************************")
-    #ok_data = os.system("hadoop fs -moveFromLocal -f %s %s" % (local_file, hdfs_dir))
-    #######if ok_param != 0 and ok_data != 0:
-    #######    msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-    #######                           SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-    #######                           TargetTable="%s.%s" % (DB, Table),
-    #######                           BeginExecDate=ExecDate,
-    #######                           EndExecDate=ExecDate,
-    #######                           Status="Error",
-    #######                           Log="上传本地数据文件至HDFS出现异常！！！",
-    #######                           Developer="developer")
-    #######    set_exit(LevelStatu="red", MSG=msg)
-    ########落地param表
-    #######load_table_sql = """
-    #######        load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
-    #######        partition(etl_date='{exec_date}')
-    #######    """.format(hdfs_dir=hdfs_dir, file_name=param_file.split("/")[-1], table_name=param_table,exec_date=ExecDate)
-    #######ok_param = HiveSession.execute_sql(load_table_sql)
-    ######## 落地mid表
-    #######load_table_sql = """
-    #######            load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
-    #######            partition(etl_date='{exec_date}',md5_id='{md5_id}')
-    #######        """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate,md5_id=ParamsMD5)
-    #######ok_data = HiveSession.execute_sql(load_table_sql)
-    #######if ok_param is False and ok_data is False:
-    #######    # 删除临时表
-    #######    HiveSession.execute_sql("""drop table if exists table %s""" % (param_table))
-    #######    HiveSession.execute_sql("""drop table if exists table %s""" % (mid_table))
-    #######    msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-    #######                           SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-    #######                           TargetTable="%s.%s" % (DB, Table),
-    #######                           BeginExecDate=ExecDate,
-    #######                           EndExecDate=ExecDate,
-    #######                           Status="Error",
-    #######                           Log="HDFS数据文件load入仓临时表出现异常！！！",
-    #######                           Developer="developer")
-    #######    set_exit(LevelStatu="red", MSG=msg)
+    ok_data = os.system("hadoop fs -moveFromLocal -f %s %s" % (local_file, hdfs_dir))
+    if ok_param != 0 and ok_data != 0:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (DB, Table),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="上传本地数据文件至HDFS出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    #落地param表
+    load_table_sql = """
+            load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
+            partition(etl_date='{exec_date}')
+        """.format(hdfs_dir=hdfs_dir, file_name=param_file.split("/")[-1], table_name=param_table,exec_date=ExecDate)
+    ok_param = HiveSession.execute_sql(load_table_sql)
+    # 落地mid表
+    load_table_sql = """
+                load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
+                partition(etl_date='{exec_date}',md5_id='{md5_id}')
+            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate,md5_id=ParamsMD5)
+    ok_data = HiveSession.execute_sql(load_table_sql)
+    if ok_param is False and ok_data is False:
+        # 删除临时表
+        HiveSession.execute_sql("""drop table if exists %s""" % (param_table))
+        HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (DB, Table),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="HDFS数据文件load入仓临时表出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
