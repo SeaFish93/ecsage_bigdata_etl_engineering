@@ -102,8 +102,8 @@ def get_file_2_hive(HiveSession="",InterfaceUrl="",DataJson={}
     exec_file_2_hive(HiveSession=HiveSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
 
 def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table="",ExecDate=""):
-    param_table = """etl_mid.%s_%s_param"""%(DB,Table)
-    mid_table = """etl_mid.%s_%s""" % (DB, Table)
+    param_table = """%s.%s_param"""%(DB,Table)
+    mid_table = """%s.%s""" % (DB, Table)
     param_file = """%s.param""" % (LocalFileName)
     local_file = """%s""" % (LocalFileName)
     # 创建data临时表
