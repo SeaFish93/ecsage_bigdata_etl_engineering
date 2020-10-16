@@ -104,8 +104,18 @@ def get_level_time_line_date_group(StartDate="",EndDate="",
     print("接口参数："+str(data_json))
     print("接口落地文件：" + file_dir_name)
     print("开始执行调用接口")
-    print(exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name))
+    param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name)
     print("结束执行调用接口")
+    #创建data临时表
+    sql = """
+      create table etl_mid.%s_%s_param
+      (
+       md5_id   string
+       ,request_param string
+      )partitioned by(etl_date string)
+      row format delimited fields terminated by '\\001' 
+      stored as parquet
+    """
     #处理落地文件及上传hdfs
     #exec_file(FileName=file_dir_name, params="accountId")
     #落地hive临时表
