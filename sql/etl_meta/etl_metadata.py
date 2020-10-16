@@ -69,13 +69,13 @@ class EtlMetaDataSQL():
             ,dag_id               
             ,interface_url        
             ,data_json            
-            ,partition_01         
-            ,partition_02         
-            ,partition_03         
-            ,partition_04         
-            ,partition_05         
-            ,partition_06         
-            ,partition_07         
+            ,'' as partition_01         
+            ,'' as partition_02         
+            ,'' as partition_03         
+            ,'' as partition_04         
+            ,'' as partition_05         
+            ,'' as partition_06         
+            ,'' as partition_07         
             ,start_date_name      
             ,end_date_name        
             ,init_start_date      
