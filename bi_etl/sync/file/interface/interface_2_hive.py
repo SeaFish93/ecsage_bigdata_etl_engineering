@@ -201,6 +201,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    print(json_tuple_column,"#######################################")
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
+        insert overwrite table %s.%s
+        partition(etl_date = '%s')
         select %s,%s
 from (
 select returns_colums,data__num_colums,request_colums
@@ -215,7 +217,7 @@ select returns_colums,data__num_colums,request_colums
                        inner join etl_mid.oe_getcampaign_param b
                        on a.etl_date = b.etl_date
                        and a.md5_id = b.md5_id
-                       where a.etl_date = '2020-10-16'
+                       where a.etl_date = '%s'
                       ) a
              ) b
         ) c
@@ -224,7 +226,7 @@ select returns_colums,data__num_colums,request_colums
 lateral view json_tuple(data__num_colums,%s) b
 as %s
 ;
-"""%(select_json_tuple_column,select_system_table_column,json_tuple_columns,json_tuple_column)
+"""%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,ExecDate,json_tuple_columns,json_tuple_column)
    BeelineSession.execute_sql(sql)
 
 #落地至snap
