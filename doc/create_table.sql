@@ -545,6 +545,27 @@ select 'test','test','day_tc_interface_auto_test','oceanengine','http://bd.ec.ne
 ,0,'file',1,'hive','etl_mid','oe_getcampaign'
 ;
 
+ insert into metadb.interface_tasks_info_bak
+(
+task_id
+,tasks_model_id
+,dag_id
+,is_init_data
+,sync_level
+,status
+,source_handle
+,source_db
+,source_table
+,target_handle
+,target_db
+,target_table
+,interface_module
+,interface_url
+)
+select 'ods_test','test','day_tc_interface_auto_test',0,'ods',1,'beeline','etl_mid','oe_getcampaign','hive','etl_mid','oe_getcampaign','oceanengine'
+,''
+;
+
 
  insert into metadb.dags_info
 (dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status
