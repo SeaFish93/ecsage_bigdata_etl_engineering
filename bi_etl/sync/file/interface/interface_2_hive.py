@@ -176,7 +176,9 @@ def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table=""
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",SelectExcludeColumns="",ExecDate=""):
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
+   system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_colums,request_colums,extract_system_time,etl_date"
+   select_system_table_column = "returns_colums,request_colums,'%s' as extract_system_time"%(system_time)
    select_exclude_columns = SelectExcludeColumns
    if select_exclude_columns is None or len(select_exclude_columns) == 0:
        select_exclude_columns = "000000"
@@ -194,11 +196,12 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
           json_tuple_columns = json_tuple_columns + "," + "'%s'"%(get_json_tuple_column)
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
+   select_json_tuple_column = json_tuple_columns.replace("'", "`")
    print(json_tuple_columns,"#######################################")
    print(json_tuple_column,"#######################################")
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
-        select %s
+        select %s,%s
 from (
 select returns_colums,data__num_colums,request_colums
         from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
@@ -222,7 +225,7 @@ select returns_colums,data__num_colums,request_colums
 lateral view json_tuple(data__num_colums,%s) b
 as %s
 ;
-"""%(columns,json_tuple_columns,json_tuple_column)
+"""%(select_json_tuple_column,select_system_table_column,json_tuple_columns,json_tuple_column)
    BeelineSession.execute_sql(sql)
 
 #落地至snap
