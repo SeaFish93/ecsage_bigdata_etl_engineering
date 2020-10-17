@@ -39,6 +39,7 @@ def main(TaskInfo, Level,**kwargs):
     target_db = TaskInfo[21]
     target_table = TaskInfo[22]
     hive_handler = TaskInfo[20]
+    beeline_handler = TaskInfo[17]
     start_date_name = TaskInfo[11]
     end_date_name = TaskInfo[12]
     data_json = TaskInfo[3]
@@ -61,7 +62,7 @@ def main(TaskInfo, Level,**kwargs):
            end_date = TaskInfo[12]
            data_json["%s" % (start_date_name)] = start_date
            data_json["%s" % (end_date_name)] = end_date
-    beeline_session = "" #set_db_session(SessionType="beeline", SessionHandler=hive_handler)
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     if Level == "file":
       #数据文件落地至临时表
@@ -174,6 +175,7 @@ def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table=""
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",ExecDate=""):
    get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
+   print(get_ods_column,"=================================")
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         select a.returns_colums,budget_mode,landing_type,name
