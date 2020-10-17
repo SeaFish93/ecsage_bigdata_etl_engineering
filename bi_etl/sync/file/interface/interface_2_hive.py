@@ -174,8 +174,14 @@ def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table=""
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",ExecDate=""):
-   get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
+   ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    print(get_ods_column,"=================================")
+   columns = ""
+   for column in get_ods_column:
+      columns = columns + "," + column[0]
+      if column[0] == "etl_date":
+          break;
+   print(columns,"#######################################")
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         select a.returns_colums,budget_mode,landing_type,name
