@@ -213,8 +213,8 @@ select returns_colums,data__num_colums,request_colums
                   from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
                               ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums
                               ,b.request_param
-                       from etl_mid.oe_getcampaign a
-                       inner join etl_mid.oe_getcampaign_param b
+                       from %s.%s a
+                       inner join %s.%s_param b
                        on a.etl_date = b.etl_date
                        and a.md5_id = b.md5_id
                        where a.etl_date = '%s'
@@ -226,8 +226,10 @@ select returns_colums,data__num_colums,request_colums
 lateral view json_tuple(data__num_colums,%s) b
 as %s
 ;
-"""%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,ExecDate,json_tuple_columns,json_tuple_column)
+"""%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,json_tuple_columns,json_tuple_column)
    BeelineSession.execute_sql(sql)
+   BeelineSession.execute_sql("drop table if exists %s.%s"%(SourceDB,SourceTable))
+   BeelineSession.execute_sql("drop table if exists %s.%s_param"%(SourceDB,SourceTable))
 
 #落地至snap
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
