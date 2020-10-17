@@ -205,7 +205,7 @@ as budget_mode,landing_type,name
 
 
    """
-   print(sql)
+   BeelineSession.execute_sql(sql)
 
 #落地至snap
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
