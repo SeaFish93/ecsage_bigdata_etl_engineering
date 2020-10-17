@@ -176,7 +176,9 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
-        select returns_colums,data__num_colums,request_colums
+        select a.returns_colums,budget_mode,landing_type,name
+from (
+select returns_colums,data__num_colums,request_colums
         from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
                     ,split(data_colums,'@@####@@')[1] as data_colums
                     ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
@@ -188,13 +190,18 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                        inner join etl_mid.oe_getcampaign_param b
                        on a.etl_date = b.etl_date
                        and a.md5_id = b.md5_id
-                       where a.etl_date = '2020-10-15'
+                       where a.etl_date = '2020-10-16'
                       ) a
              ) b
         ) c
         lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
-        limit 3
-        ;
+        -- limit 3
+) a
+lateral view json_tuple(data__num_colums,'budget_mode','landing_type','name') b
+as budget_mode,landing_type,name
+;
+
+
    """
    print(sql)
 
