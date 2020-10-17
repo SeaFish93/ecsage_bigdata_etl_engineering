@@ -219,10 +219,10 @@ select returns_colums,data__num_colums,request_colums
         lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
         -- limit 3
 ) a
-lateral view json_tuple(data__num_colums,{json_tuple_columns}) b
-as {json_tuple_column}
+lateral view json_tuple(data__num_colums,%s) b
+as %s
 ;
-""".format(json_tuple_columns=json_tuple_columns,json_tuple_column=json_tuple_column)
+"""%(json_tuple_columns,json_tuple_column)
    BeelineSession.execute_sql(sql)
 
 #落地至snap
