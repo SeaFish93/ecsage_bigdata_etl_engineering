@@ -208,8 +208,8 @@ select returns_colums,data__num_colums,request_colums
                     ,split(data_colums,'@@####@@')[1] as data_colums
                     ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
              from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                  from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\{\\"code\\":0,\\"message\\":\\"OK\\")',1),'\\{\\"code\\":0,\\"message\\":\\"OK\\"','') as returns_colums
-                              ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\{\\"code\\":0,\\"message\\":\\"OK\\".*)',1),'$.data'),'$.list') as data_colums
+                  from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
+                              ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums
                               ,b.request_param
                        from etl_mid.oe_getcampaign a
                        inner join etl_mid.oe_getcampaign_param b
@@ -220,7 +220,6 @@ select returns_colums,data__num_colums,request_colums
              ) b
         ) c
         lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
-        -- limit 3
 ) a
 lateral view json_tuple(data__num_colums,%s) b
 as %s
