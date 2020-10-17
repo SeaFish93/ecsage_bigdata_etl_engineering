@@ -63,7 +63,6 @@ def main(TaskInfo, Level,**kwargs):
            end_date = TaskInfo[12]
            data_json["%s" % (start_date_name)] = start_date
            data_json["%s" % (end_date_name)] = end_date
-    beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     if Level == "file":
       #数据文件落地至临时表
@@ -73,6 +72,7 @@ def main(TaskInfo, Level,**kwargs):
                       ,DB=target_db, Table=target_table,ExecData=end_date
                      )
     elif Level == "ods":
+      beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
                           TargetDB=target_db, TargetTable=target_table,SelectExcludeColumns=select_exclude_columns,  ExecDate=end_date)
     elif Level == "snap":
