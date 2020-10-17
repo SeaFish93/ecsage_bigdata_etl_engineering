@@ -48,6 +48,7 @@ def main(TaskInfo, Level,**kwargs):
     file_dir_name = TaskInfo[24]
     interface_module = TaskInfo[25]
     filter_modify_time_name = TaskInfo[26]
+    select_exclude_columns = TaskInfo[27]
     start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
     if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
@@ -73,7 +74,7 @@ def main(TaskInfo, Level,**kwargs):
                      )
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
-                          TargetDB=target_db, TargetTable=target_table,ExecDate=end_date)
+                          TargetDB=target_db, TargetTable=target_table,SelectExcludeColumns=select_exclude_columns,  ExecDate=end_date)
     elif Level == "snap":
       exec_snap_hive_table(HiveSession="", BeelineSession="", SourceDB="", SourceTable="",
                           TargetDB="", TargetTable="", ExecDate="")
@@ -173,7 +174,7 @@ def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table=""
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",ExecDate=""):
+                        TargetDB="", TargetTable="",SelectExcludeColumns="",ExecDate=""):
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    print(get_ods_column,"=================================")
    columns = ""
@@ -181,7 +182,16 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
       columns = columns + "," + column[0]
       if column[0] == "etl_date":
           break;
-   print(columns.replace(",", "", 1),"#######################################")
+   columns = columns.replace(",", "", 1)
+   print(columns,"#######################################")
+   json_tuple_columns = ""
+   for get_json_tuple_column in columns.split(","):
+       if get_json_tuple_column not in SelectExcludeColumns.split(","):
+          json_tuple_columns = json_tuple_columns + "," + "'%s'"%(get_json_tuple_column)
+   json_tuple_columns = json_tuple_columns.replace(",", "", 1)
+   json_tuple_column = json_tuple_columns.replace(",", "", 1).replace("'", "")
+   print(json_tuple_columns,"#######################################")
+   print(json_tuple_column,"#######################################")
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         select a.returns_colums,budget_mode,landing_type,name
