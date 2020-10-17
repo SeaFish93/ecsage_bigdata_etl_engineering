@@ -198,7 +198,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    print(json_tuple_column,"#######################################")
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
-        select columns
+        select %s
 from (
 select returns_colums,data__num_colums,request_colums
         from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
@@ -222,7 +222,7 @@ select returns_colums,data__num_colums,request_colums
 lateral view json_tuple(data__num_colums,%s) b
 as %s
 ;
-"""%(json_tuple_columns,json_tuple_column)
+"""%(columns,json_tuple_columns,json_tuple_column)
    BeelineSession.execute_sql(sql)
 
 #落地至snap
