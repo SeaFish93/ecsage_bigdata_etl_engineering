@@ -181,7 +181,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
       columns = columns + "," + column[0]
       if column[0] == "etl_date":
           break;
-   print(columns,"#######################################")
+   print(columns.replace(",", "", 1),"#######################################")
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         select a.returns_colums,budget_mode,landing_type,name
