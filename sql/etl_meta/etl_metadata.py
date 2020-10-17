@@ -91,7 +91,8 @@ class EtlMetaDataSQL():
             ,status   
             ,file_dir_name 
             ,interface_module 
-            ,filter_modify_time_name          
+            ,filter_modify_time_name 
+            ,select_exclude_columns         
             ,create_user          
             ,update_user          
     from metadb.interface_tasks_info_bak
