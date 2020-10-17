@@ -176,7 +176,7 @@ def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table=""
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",SelectExcludeColumns="",ExecDate=""):
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
-   system_table_columns = "returns_param_colums,request_param_colums,extract_system_time,etl_date"
+   system_table_columns = "returns_colums,request_colums,extract_system_time,etl_date"
    select_exclude_columns = SelectExcludeColumns
    if select_exclude_columns is None or len(select_exclude_columns) == 0:
        select_exclude_columns = "000000"
