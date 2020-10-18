@@ -226,7 +226,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                                Status="Error",
                                Log="校验执行失败！！！",
                                Developer="developer")
-        set_exit(LevelStatu="red", MSG=msg) 
+       set_exit(LevelStatu="red", MSG=msg) 
     ok,data = HiveSession.get_all_rows("select * from %s_check_request"%(mid_table))
     print(data,"=========================================================")
 
