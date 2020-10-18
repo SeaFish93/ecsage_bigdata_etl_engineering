@@ -220,7 +220,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                     group by returns_colums,total_number
                 ) tmp1
         on tmp.returns_colums = tmp1.returns_colums
-        where tmp.`num` <> cast(tmp1.total_number as int)
+        where tmp.`num` = cast(tmp1.total_number as int)
     """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,mid_table,param_table,ExecDate,ParamsMD5)
     ok = BeelineSession.execute_sql(sql)
     if ok is False:
