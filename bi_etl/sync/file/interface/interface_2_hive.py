@@ -233,8 +233,18 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                                Log="校验执行失败！！！",
                                Developer="developer")
        set_exit(LevelStatu="red", MSG=msg) 
-    ok,data = HiveSession.get_all_rows("select * from %s_check_request"%(mid_table))
-    print(data,"=========================================================")
+    ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
+    print("采集接口异常数据："+data)
+    if ok is False or len(data) > 0:
+       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (DB, Table),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="采集接口数据出现异常，源与目标文件对不上！！！",
+                               Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg) 
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
