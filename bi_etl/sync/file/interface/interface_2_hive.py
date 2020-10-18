@@ -39,7 +39,7 @@ def main(TaskInfo, Level,**kwargs):
     target_db = TaskInfo[21]
     target_table = TaskInfo[22]
     hive_handler = TaskInfo[20]
-    beeline_handler = TaskInfo[17]
+    beeline_handler = "beeline"
     start_date_name = TaskInfo[11]
     end_date_name = TaskInfo[12]
     data_json = TaskInfo[3]
@@ -64,15 +64,15 @@ def main(TaskInfo, Level,**kwargs):
            data_json["%s" % (start_date_name)] = start_date
            data_json["%s" % (end_date_name)] = end_date
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
     if Level == "file":
       #数据文件落地至临时表
-      get_file_2_hive(HiveSession=hive_session,InterfaceUrl=interface_url,DataJson=data_json
+      get_file_2_hive(HiveSession=hive_session,BeelineSession=beeline_session,InterfaceUrl=interface_url,DataJson=data_json
                       ,FileDirName = file_dir_name
                       ,InterfaceModule = interface_module
                       ,DB=target_db, Table=target_table,ExecData=end_date
                      )
     elif Level == "ods":
-      beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
                           TargetDB=target_db, TargetTable=target_table,SelectExcludeColumns=select_exclude_columns,  ExecDate=end_date)
     elif Level == "snap":
@@ -80,7 +80,7 @@ def main(TaskInfo, Level,**kwargs):
                           TargetDB="", TargetTable="", ExecDate="")
 
 #含有level、time_line、date、group接口
-def get_file_2_hive(HiveSession="",InterfaceUrl="",DataJson={}
+def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ,FileDirName = ""
                                    ,InterfaceModule = ""
                                    ,DB="", Table="",ExecData=""
@@ -103,7 +103,7 @@ def get_file_2_hive(HiveSession="",InterfaceUrl="",DataJson={}
     #落地临时表
     exec_file_2_hive(HiveSession=HiveSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
 
-def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table="",ExecDate=""):
+def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5="",DB="",Table="",ExecDate=""):
     param_table = """%s.%s_param"""%(DB,Table)
     mid_table = """%s.%s""" % (DB, Table)
     param_file = """%s.param""" % (LocalFileName)
@@ -171,6 +171,64 @@ def exec_file_2_hive(HiveSession="",LocalFileName="",ParamsMD5="",DB="",Table=""
                                Log="HDFS数据文件load入仓临时表出现异常！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
+    #校验接口数据是否一致
+    sql = """
+        add file hdfs:///tmp/airflow/get_arrary.py;
+        drop table if exists %s_check_request;
+        create table %s_check_request as
+        select *
+        from(select count(request_id) as num,returns_colums
+             from (select returns_colums,data__num_colums,request_colums,request_id
+                   from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
+                               ,split(data_colums,'@@####@@')[1] as data_colums
+                               ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
+                               ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_id
+                   from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param,request_id),data_colums) ) USING 'python get_arrary.py' as (data_colums)
+                        from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
+                                    ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums
+                                    ,b.request_param
+                                    ,get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.request_id') as request_id
+                             from %s a
+                             inner join %s b
+                             on a.etl_date = b.etl_date
+                             and a.md5_id = b.md5_id
+                             where a.etl_date = '%s'
+                               and a.md5_id = '%s'
+                            ) a
+                        ) b
+                    ) c
+                    lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
+                ) a
+                group by returns_colums
+            ) tmp
+        inner join(select returns_colums,total_number 
+                   from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
+                               ,get_json_object(get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.page_info'),'$.total_number') as total_number
+                       from %s a
+                       inner join %s b
+                       on a.etl_date = b.etl_date
+                       and a.md5_id = b.md5_id
+                       where a.etl_date = '%s'
+                         and a.md5_id = '%s'
+                      ) a
+                    group by returns_colums,total_number
+                ) tmp1
+        on tmp.returns_colums = tmp1.returns_colums
+        where tmp.`num` <> cast(tmp1.total_number as int)
+    """%(mid_table,mid_tablemid_table,param_table,ExecDate,ParamsMD5,mid_table,param_table,ExecDate,ParamsMD5)
+    ok = BeelineSession.execute_sql(sql)
+    if ok is False:
+       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (DB, Table),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="校验执行失败！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg) 
+    ok,data = HiveSession.get_all_rows("select * from %s_check_request"%(mid_table))
+    print(data,"=========================================================")
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
