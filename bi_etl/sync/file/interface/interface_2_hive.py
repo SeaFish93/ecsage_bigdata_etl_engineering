@@ -215,7 +215,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                 ) tmp1
         on tmp.returns_colums = tmp1.returns_colums
         where tmp.`num` <> cast(tmp1.total_number as int)
-    """%(mid_table,mid_tablemid_table,param_table,ExecDate,ParamsMD5,mid_table,param_table,ExecDate,ParamsMD5)
+    """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,mid_table,param_table,ExecDate,ParamsMD5)
     ok = BeelineSession.execute_sql(sql)
     if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
