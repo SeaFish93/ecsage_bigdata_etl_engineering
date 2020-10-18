@@ -182,7 +182,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
         add file hdfs:///tmp/airflow/get_arrary.py;
         drop table if exists %s_check_request;
         create table %s_check_request as
-        select 'ok' as col_name
+        select tmp.returns_colums,tmp.`num` ,cast(tmp1.total_number as int) as num_1
         from(select count(request_id) as num,returns_colums
              from (select returns_colums,data__num_colums,request_colums,request_id
                    from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
