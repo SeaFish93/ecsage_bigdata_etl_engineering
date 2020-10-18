@@ -98,9 +98,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     print("接口参数："+str(data_json))
     print("接口落地文件：" + file_dir_name)
     print("开始执行调用接口")
-    ################param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name)
-    param_md5 = "f17e8c5369d652b9338d4a5314b61468"
-    param_file = "/home/ecsage_data/oceanengine/20201017/day_tc_interface_auto_test/day_tc_interface_auto_test_test_2020-10-17_15_37_39.log.param"
+    param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name)
     print("结束执行调用接口")
     #落地临时表
     exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
@@ -126,20 +124,18 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
               )partitioned by(etl_date string,md5_id string)
               row format delimited fields terminated by '\\001' 
             """%(mid_table)
-    #############HiveSession.execute_sql("""drop table if exists %s"""%(param_table))
-    #############HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
-    #############HiveSession.execute_sql(param_sql)
-    #############HiveSession.execute_sql(mid_sql)
+    HiveSession.execute_sql("""drop table if exists %s"""%(param_table))
+    HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
+    HiveSession.execute_sql(param_sql)
+    HiveSession.execute_sql(mid_sql)
     # 上传本地数据文件至HDFS
     hdfs_dir = "/tmp/datafolder_new"
     #上传param文件
     print("""hadoop fs -moveFromLocal -f %s %s""" % (param_file, hdfs_dir), "************************************")
-    #############ok_param = os.system("hadoop fs -moveFromLocal -f %s %s" % (param_file, hdfs_dir))
+    ok_param = os.system("hadoop fs -moveFromLocal -f %s %s" % (param_file, hdfs_dir))
     # 上传数据文件
     print("""hadoop fs -moveFromLocal -f %s %s""" % (local_file, hdfs_dir), "************************************")
-    #############ok_data = os.system("hadoop fs -moveFromLocal -f %s %s" % (local_file, hdfs_dir))
-    ok_param = 0
-    ok_data = 0
+    ok_data = os.system("hadoop fs -moveFromLocal -f %s %s" % (local_file, hdfs_dir))
     if ok_param != 0 and ok_data != 0:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
@@ -155,15 +151,13 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
             load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
             partition(etl_date='{exec_date}')
         """.format(hdfs_dir=hdfs_dir, file_name=param_file.split("/")[-1], table_name=param_table,exec_date=ExecDate)
-    ###################ok_param = HiveSession.execute_sql(load_table_sql)
+    ok_param = HiveSession.execute_sql(load_table_sql)
     # 落地mid表
     load_table_sql = """
                 load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
                 partition(etl_date='{exec_date}',md5_id='{md5_id}')
             """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate,md5_id=ParamsMD5)
-    ##############ok_data = HiveSession.execute_sql(load_table_sql)
-    ok_param = True
-    ok_data = True
+    ok_data = HiveSession.execute_sql(load_table_sql)
     if ok_param is False and ok_data is False:
         # 删除临时表
         HiveSession.execute_sql("""drop table if exists %s""" % (param_table))
@@ -234,8 +228,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                                Developer="developer")
        set_exit(LevelStatu="red", MSG=msg) 
     ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
-    print("采集接口异常数据："+ str(data))
     if ok is False or len(data) > 0:
+       print("采集接口异常数据："+ str(data))
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
                                TargetTable="%s.%s" % (DB, Table),
