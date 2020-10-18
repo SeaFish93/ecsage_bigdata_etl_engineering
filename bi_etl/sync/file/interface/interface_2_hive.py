@@ -101,7 +101,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name)
     print("结束执行调用接口")
     #落地临时表
-    exec_file_2_hive(HiveSession=HiveSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
+    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
 
 def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5="",DB="",Table="",ExecDate=""):
     param_table = """%s.%s_param"""%(DB,Table)
