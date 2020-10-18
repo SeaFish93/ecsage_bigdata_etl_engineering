@@ -63,7 +63,7 @@ def main(TaskInfo, Level,**kwargs):
     exec_date = airflow.execution_date_utc8_str[0:10]
     #创建连接session
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
-    beeline_session = set_db_session(SessionType="beeline", SessionHandler=hive_handler)
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if source_platform == "mysql":
       mysql_session = set_db_session(SessionType="mysql", SessionHandler=mysql_handler)
     try:
