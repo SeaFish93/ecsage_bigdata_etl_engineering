@@ -259,7 +259,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    print(columns,"#######################################")
    json_tuple_columns = ""
    for get_json_tuple_column in columns.split(","):
-       if get_json_tuple_column not in SelectExcludeColumns.split(",") and get_json_tuple_column not in system_table_columns.split(","):
+       if get_json_tuple_column not in select_exclude_columns.split(",") and get_json_tuple_column not in system_table_columns.split(","):
           json_tuple_columns = json_tuple_columns + "," + "'%s'"%(get_json_tuple_column)
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
