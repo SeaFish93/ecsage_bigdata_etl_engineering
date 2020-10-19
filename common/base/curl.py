@@ -12,7 +12,7 @@ from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 import os
 import time
 
-def exec_interface_data_curl(URL="",Data={},File=""):
+def exec_interface_data_curl(URL="",Data={},File="",DataJsonRequest=""):
     headers = {'Content-Type': "application/json"}
     param_md5 = ""
     try:
@@ -38,10 +38,8 @@ def exec_interface_data_curl(URL="",Data={},File=""):
                    set_exit(LevelStatu="red", MSG=msg)
                else:
                    print("数据文件已生成且MD5已对上：【%s,%s】"%(data_file,md5_file))
-                   dir_json = Data
-                   dir_json["ec_fn"] = ""
-                   param_md5 = os.popen("""echo "%s"|md5sum|awk '{print $1}'"""%(dir_json)).read().split()[0]
-                   os.system("""echo `echo "%s"|md5sum|awk '{print $1}'`\001"%s">>%s"""%(dir_json,Data,param_file))
+                   param_md5 = os.popen("""echo %s|md5sum|awk '{print $1}'"""%(DataJsonRequest)).read().split()[0]
+                   os.system("""echo `echo %s|md5sum|awk '{print $1}'`\001"%s">>%s"""%(DataJsonRequest,DataJsonRequest,param_file))
                    exit_while = False
             else:
                 msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),

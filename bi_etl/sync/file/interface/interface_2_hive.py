@@ -43,6 +43,7 @@ def main(TaskInfo, Level,**kwargs):
     start_date_name = TaskInfo[11]
     end_date_name = TaskInfo[12]
     data_json = TaskInfo[3]
+    data_json_request = data_json
     data_json = json.dumps(data_json)
     is_init_data = TaskInfo[15]
     file_dir_name = TaskInfo[24]
@@ -70,7 +71,7 @@ def main(TaskInfo, Level,**kwargs):
     if Level == "file":
       #数据文件落地至临时表
       get_file_2_hive(HiveSession=hive_session,BeelineSession=beeline_session,InterfaceUrl=interface_url,DataJson=data_json
-                      ,FileDirName = file_dir_name
+                      ,FileDirName = file_dir_name,DataJsonRequest=data_json_request
                       ,InterfaceModule = interface_module
                       ,DB=target_db, Table=target_table,ExecData=end_date
                      )
@@ -82,7 +83,7 @@ def main(TaskInfo, Level,**kwargs):
                              TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=end_date)
 
 #含有level、time_line、date、group接口
-def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
+def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={},DataJsonRequest=""
                                    ,FileDirName = ""
                                    ,InterfaceModule = ""
                                    ,DB="", Table="",ExecData=""
@@ -100,7 +101,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     print("接口参数："+str(data_json))
     print("接口落地文件：" + file_dir_name)
     print("开始执行调用接口")
-    param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name)
+    param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name,DataJsonRequest=DataJsonRequest)
     print("结束执行调用接口")
     #落地临时表
     exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
