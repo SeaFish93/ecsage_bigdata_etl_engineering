@@ -110,7 +110,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
     local_file = """%s""" % (LocalFileName)
     # 创建data临时表
     param_sql = """
-          create table %s
+          create table if not exists %s
           (
            md5_id   string
            ,request_param string
@@ -118,14 +118,12 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
           row format delimited fields terminated by '\\001' 
         """%(param_table)
     mid_sql = """
-              create table %s
+              create table if not exists %s
               (
                request_data string
               )partitioned by(etl_date string,md5_id string)
               row format delimited fields terminated by '\\001' 
             """%(mid_table)
-    HiveSession.execute_sql("""drop table if exists %s"""%(param_table))
-    HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
     HiveSession.execute_sql(param_sql)
     HiveSession.execute_sql(mid_sql)
     # 上传本地数据文件至HDFS
@@ -304,8 +302,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                               Log="ods入库失败！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
-   BeelineSession.execute_sql("drop table if exists %s.%s"%(SourceDB,SourceTable))
-   BeelineSession.execute_sql("drop table if exists %s.%s_param"%(SourceDB,SourceTable))
    #校验ods与临时数据条数是否一致
    sql = """
        select a.total_number as total_number_mid,b.total_number as total_number_ods
@@ -339,10 +335,20 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
    print(data,"=====================================================================")
+   #BeelineSession.execute_sql("drop table if exists %s.%s" % (SourceDB, SourceTable))
+   #BeelineSession.execute_sql("drop table if exists %s.%s_param" % (SourceDB, SourceTable))
 
 #落地至snap
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",ExecDate=""):
+                        TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate=""):
    get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    print(get_ods_column,"@@###########################################")
+   if IsReport == 0:
+       sql = """
+           insert overwrite table %s.%s
+           select *
+           from 
+       """
+   else:
+       sql = ""
 
