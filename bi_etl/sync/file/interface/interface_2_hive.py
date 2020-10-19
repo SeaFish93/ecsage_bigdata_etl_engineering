@@ -386,11 +386,11 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        HiveSession.execute_sql(create_snap_sql)
        #获取snap表字段
        ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
-       print(snap_table_columns,"===========================================")
        snap_columns = ""
        for column in snap_table_columns:
            snap_columns = snap_columns + "," + "a.`%s`"%(column)
        snap_columns = snap_columns.replace(",", "", 1)
+       print(snap_columns, "===========================================")
        sql = """
            drop table if exists %s.%s_tmp;
            create table %s.%s_tmp as(
@@ -401,7 +401,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
            and etl_date = '%s'
            where b.%s is null
               union all
-           select * from %s.%s where etl_date = '%s'
+           select %s from %s.%s where etl_date = '%s'
        """%(TargetDB,TargetTable,TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,SourceDB,SourceTable,
             key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
             )
