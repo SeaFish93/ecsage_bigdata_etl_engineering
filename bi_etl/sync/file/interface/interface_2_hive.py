@@ -106,9 +106,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
     param_sql = """
           create table if not exists %s
           (
-           md5_id   string
-           ,request_param string
-          )partitioned by(etl_date string)
+           request_param string
+          )partitioned by(etl_date string,md5_id string)
           row format delimited fields terminated by '\\001' 
         """%(param_table)
     mid_sql = """
@@ -141,8 +140,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
     #落地param表
     load_table_sql = """
             load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
-            partition(etl_date='{exec_date}')
-        """.format(hdfs_dir=hdfs_dir, file_name=param_file.split("/")[-1], table_name=param_table,exec_date=ExecDate)
+            partition(etl_date='{exec_date}',md5_id='{md5_id}')
+        """.format(hdfs_dir=hdfs_dir, file_name=param_file.split("/")[-1], table_name=param_table,exec_date=ExecDate,md5_id=ParamsMD5)
     ok_param = HiveSession.execute_sql(load_table_sql)
     # 落地mid表
     load_table_sql = """
