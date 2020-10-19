@@ -418,6 +418,29 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
                               Log="snap入库失败！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
+   sql_check = """
+               select a.source_cnt,b.target_cnt
+               from(select count(1) as source_cnt
+                    from %s.%s where etl_date = '%s'
+                   ) a
+               inner join (
+                    select count(1) as target_cnt
+                    from %s.%s where etl_date = '%s'
+               ) b
+               on 1 = 1
+               where a.source_cnt <> b.target_cnt
+               """%(SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
+   ok, data = HiveSession.get_all_rows(sql_check)
+   if ok is False or len(data) > 0:
+       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                              SourceTable="%s.%s" % (SourceDB, SourceTable),
+                              TargetTable="%s.%s" % (TargetDB, TargetTable),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="snap入库数据对比不上！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
 
 
 
