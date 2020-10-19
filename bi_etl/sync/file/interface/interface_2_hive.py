@@ -398,10 +398,10 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
            from %s.%s a
            left join %s.%s b
            %s
-           and etl_date = '%s'
+           and b.etl_date = '%s'
            where b.%s is null
               union all
-           select %s from %s.%s where etl_date = '%s'
+           select %s from %s.%s a where etl_date = '%s'
        """%(TargetDB,TargetTable,TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,SourceDB,SourceTable,
             key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
             )
