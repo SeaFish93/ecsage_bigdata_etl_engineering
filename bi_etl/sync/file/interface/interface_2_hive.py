@@ -368,8 +368,15 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
            key_columns_joins = key_columns_joins + " " + key_columns_join
        print(key_columns_joins,"=====================================")
        #判断snap表是否存在
-       ods_table_columns = HiveSession.get_column_info(SourceDB,SourceTable)
-       print(ods_table_columns,"==========================================")
+       ok,ods_table_columns = HiveSession.get_column_info(SourceDB,SourceTable)
+       ods_columns = ""
+       for column in get_ods_column:
+           create_col = """,`%s`  %s commnet'%s' \n"""%(column[0],column[1],column[2])
+           ods_columns = ods_columns + create_col
+           if column[0] == "etl_date":
+               break;
+       ods_columns = ods_columns.replace(",", "", 1)
+       print(ods_columns,"==========================================")
        create_snap_sql = """
        create table if not exists %s.%s(
          %s
