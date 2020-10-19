@@ -387,16 +387,14 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        #获取snap表字段
        ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
        print(snap_table_columns,"===========================================")
-       #####snap_columns = ""
-       #####for column in ods_table_columns:
-       #####    select_snap_col = snap_columns
-       #####    if column[0] == "etl_date":
-       #####        break;
-       #####snap_table_columns = snap_table_columns.replace(",", "", 1)
+       snap_columns = ""
+       for column in ods_table_columns:
+           snap_columns = snap_columns + "," + "a.`%s`"%column
+       snap_columns = snap_columns.replace(",", "", 1)
        sql = """
            drop table if exists %s.%s_tmp;
            create table %s.%s_tmp as(
-           select *
+           select %s
            from %s.%s a
            left join %s.%s b
            %s
@@ -404,10 +402,10 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
            where b.%s is null
               union all
            select * from %s.%s where etl_date = '%s'
-       """%(TargetDB,TargetTable,TargetDB,TargetTable,TargetDB,TargetTable,SourceDB,SourceTable,
-            key_columns_joins,ExecDate,is_null_col,SourceDB, SourceTable,ExecDate
+       """%(TargetDB,TargetTable,TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,SourceDB,SourceTable,
+            key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
             )
    else:
        sql = ""
-   #print(sql)
+   print(sql)
 
