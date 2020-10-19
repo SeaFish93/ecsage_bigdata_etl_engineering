@@ -367,6 +367,16 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
                key_columns_join = "and a.`%s` = b.`%s`" % (key, key)
            key_columns_joins = key_columns_joins + " " + key_columns_join
        print(key_columns_joins,"=====================================")
+       #判断snap表是否存在
+       ods_table_columns = HiveSession.get_column_info(SourceDB,SourceTable)
+       print(ods_table_columns,"==========================================")
+       create_snap_sql = """
+       create table if not exists %s.%s(
+         %s
+       )
+       row format delimited fields terminated by '\\001' 
+       stored as parquet
+       """%(ods_table_columns)
        sql = """
            drop table if exists %s.%s_tmp;
            create table %s.%s_tmp as(
