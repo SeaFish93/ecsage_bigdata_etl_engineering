@@ -324,9 +324,10 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
        where a.total_number <> b.total_number
    """%(SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
    ok,data = HiveSession.get_all_rows(sql)
-   if ok is False:
+   if ok is False or len(data) > 0:
+       print("ods入库异常数据：" + str(data))
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                              SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                              SourceTable="%s.%s" % (SourceDB, SourceTable),
                               TargetTable="%s.%s" % (TargetDB, TargetTable),
                               BeginExecDate=ExecDate,
                               EndExecDate=ExecDate,
@@ -334,7 +335,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                               Log="ods校验失败！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
-   print(data,"=====================================================================")
    #BeelineSession.execute_sql("drop table if exists %s.%s" % (SourceDB, SourceTable))
    #BeelineSession.execute_sql("drop table if exists %s.%s_param" % (SourceDB, SourceTable))
 
@@ -347,8 +347,9 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        sql = """
            insert overwrite table %s.%s
            select *
-           from 
-       """
+           from %s.%s
+           where etl_date = '%s'
+       """%()
    else:
        sql = ""
 
