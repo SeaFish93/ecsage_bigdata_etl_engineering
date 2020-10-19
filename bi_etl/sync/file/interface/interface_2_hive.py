@@ -250,7 +250,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    select_exclude_columns = SelectExcludeColumns
    if select_exclude_columns is None or len(select_exclude_columns) == 0:
        select_exclude_columns = "000000"
-   print(get_ods_column,"=================================")
    columns = ""
    for column in get_ods_column:
       columns = columns + "," + column[0]
@@ -272,32 +271,74 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         insert overwrite table %s.%s
         partition(etl_date = '%s')
         select %s,%s
-from (
-select returns_colums,data__num_colums,request_colums
-        from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
-                    ,split(data_colums,'@@####@@')[1] as data_colums
-                    ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
-             from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                  from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
-                              ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums
-                              ,b.request_param
-                       from %s.%s a
-                       inner join %s.%s_param b
-                       on a.etl_date = b.etl_date
-                       and a.md5_id = b.md5_id
-                       where a.etl_date = '%s'
-                      ) a
-             ) b
-        ) c
-        lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
-) a
-lateral view json_tuple(data__num_colums,%s) b
-as %s
-;
-"""%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,json_tuple_columns,json_tuple_column)
-   BeelineSession.execute_sql(sql)
+        from (select returns_colums,data__num_colums,request_colums
+              from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
+                          ,split(data_colums,'@@####@@')[1] as data_colums
+                          ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
+                   from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param),data_colums)) USING 'python get_arrary.py' as (data_colums)
+                        from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
+                                    ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums
+                                    ,b.request_param
+                             from %s.%s a
+                             inner join %s.%s_param b
+                             on a.etl_date = b.etl_date
+                             and a.md5_id = b.md5_id
+                             where a.etl_date = '%s'
+                            ) a
+                        ) b
+                   ) c
+                   lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
+              ) a
+              lateral view json_tuple(data__num_colums,%s) b
+              as %s
+               ;
+        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,json_tuple_columns,json_tuple_column)
+   ok = BeelineSession.execute_sql(sql)
+   if ok is False:
+       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                              SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                              TargetTable="%s.%s" % (TargetDB, TargetTable),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="ods入库失败！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
    BeelineSession.execute_sql("drop table if exists %s.%s"%(SourceDB,SourceTable))
    BeelineSession.execute_sql("drop table if exists %s.%s_param"%(SourceDB,SourceTable))
+   #校验ods与临时数据条数是否一致
+   sql = """
+       select a.total_number as total_number_mid,b.total_number as total_number_ods
+       from(
+            select sum(cast(tmp1.total_number as int)) as total_number
+            from(select returns_colums,total_number 
+                 from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
+                             ,get_json_object(get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.page_info'),'$.total_number') as total_number
+                      from %s.%s a
+                      inner join %s.%s_param b
+                      on a.etl_date = b.etl_date
+                      and a.md5_id = b.md5_id
+                      where a.etl_date = '%s'
+                      ) a
+                 group by returns_colums,total_number
+                ) tmp1
+            ) a
+       inner join (select count(1) as total_number from %s.%s where etl_date = '%s') b
+       on 1 = 1
+       where a.total_number <> b.total_number
+   """%(SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
+   ok,data = HiveSession.get_all_rows(sql)
+   if ok is False:
+       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                              SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                              TargetTable="%s.%s" % (TargetDB, TargetTable),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="ods校验失败！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
+   print(data,"=====================================================================")
 
 #落地至snap
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
