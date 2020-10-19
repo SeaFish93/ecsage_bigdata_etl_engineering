@@ -382,7 +382,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        )
        row format delimited fields terminated by '\\001' 
        stored as parquet
-       """%(ods_columns,TargetDB,TargetTable)
+       """%(TargetDB,TargetTable,ods_columns)
        print(create_snap_sql, "==========================================")
        sql = """
            drop table if exists %s.%s_tmp;
