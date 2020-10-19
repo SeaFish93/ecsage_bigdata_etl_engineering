@@ -218,6 +218,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
     """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,mid_table,param_table,ExecDate,ParamsMD5)
     ok = BeelineSession.execute_sql(sql)
     if ok is False:
+       sql = """drop table if exists %s_check_request"""%(mid_table)
+       HiveSession.execute_sql(sql)
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
                                TargetTable="%s.%s" % (DB, Table),
@@ -228,6 +230,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                                Developer="developer")
        set_exit(LevelStatu="red", MSG=msg) 
     ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
+    sql = """drop table if exists %s_check_request""" % (mid_table)
+    HiveSession.execute_sql(sql)
     if ok is False or len(data) > 0:
        print("采集接口异常数据："+ str(data))
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
