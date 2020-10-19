@@ -390,7 +390,6 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        for column in snap_table_columns:
            snap_columns = snap_columns + "," + "a.`%s`"%(column[0])
        snap_columns = snap_columns.replace(",", "", 1)
-       print(snap_columns, "===========================================")
        sql = """
            drop table if exists %s.%s_tmp;
            create table %s.%s_tmp row format delimited fields terminated by '\\001' stored as parquet
@@ -408,5 +407,15 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
             )
    else:
        sql = ""
-   print(sql)
+   ok = HiveSession.execute_sql(sql)
+   if ok is False:
+       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                              SourceTable="%s.%s" % (SourceDB, SourceTable),
+                              TargetTable="%s.%s" % (TargetDB, TargetTable),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="snap入库失败！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
 
