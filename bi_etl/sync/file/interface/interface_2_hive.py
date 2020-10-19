@@ -49,6 +49,8 @@ def main(TaskInfo, Level,**kwargs):
     interface_module = TaskInfo[25]
     filter_modify_time_name = TaskInfo[26]
     select_exclude_columns = TaskInfo[27]
+    is_report = TaskInfo[28]
+    key_columns = TaskInfo[29]
     start_date = airflow.execution_date_utc8_str[0:10]
     end_date = airflow.execution_date_utc8_str[0:10]
     if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
@@ -76,8 +78,8 @@ def main(TaskInfo, Level,**kwargs):
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
                           TargetDB=target_db, TargetTable=target_table,SelectExcludeColumns=select_exclude_columns,  ExecDate=end_date)
     elif Level == "snap":
-      exec_snap_hive_table(HiveSession="", BeelineSession="", SourceDB="", SourceTable="",
-                          TargetDB="", TargetTable="", ExecDate="")
+      exec_snap_hive_table(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
+                             TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=end_date)
 
 #含有level、time_line、date、group接口
 def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
@@ -341,15 +343,45 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
 #落地至snap
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate=""):
-   get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
+   get_ods_column = HiveSession.execute_sql("select 1")
    print(get_ods_column,"@@###########################################")
    if IsReport == 0:
+       if KeyColumns is None or len(KeyColumns) == 0:
+           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                  SourceTable="%s.%s" % (SourceDB, SourceTable),
+                                  TargetTable="%s.%s" % (TargetDB, TargetTable),
+                                  BeginExecDate=ExecDate,
+                                  EndExecDate=ExecDate,
+                                  Status="Error",
+                                  Log="请确认配置表指定主键字段是否正确！！！",
+                                  Developer="developer")
+           set_exit(LevelStatu="red", MSG=msg)
+       key_column_list = KeyColumns.split(",")
+       is_null_col = "`"+key_column_list[0]+"`"
+       key_columns_joins = ""
+       num = 0
+       for key in key_column_list:
+           if num == 0:
+              key_columns_join = "on a.`%s` = b.`%s`"%(key,key)
+           else:
+               key_columns_join = "and a.`%s` = b.`%s`" % (key, key)
+           key_columns_joins = key_columns_joins + " " + key_columns_join
+       print(key_columns_joins,"=====================================")
        sql = """
-           insert overwrite table %s.%s
+           drop table if exists %s.%s_tmp;
+           create table %s.%s_tmp as(
            select *
-           from %s.%s
-           where etl_date = '%s'
-       """%()
+           from %s.%s a
+           left join %s.%s b
+           %s
+           and etl_date = '%s'
+           where b.%s is null
+              union all
+           select * from %s.%s where etl_date = '%s'
+       """%(TargetDB,TargetTable,TargetDB,TargetTable,TargetDB,TargetTable,SourceDB,SourceTable,
+            key_columns_joins,ExecDate,is_null_col,SourceDB, SourceTable,ExecDate
+            )
    else:
        sql = ""
+   print(sql)
 
