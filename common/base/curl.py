@@ -41,7 +41,7 @@ def exec_interface_data_curl(URL="",Data={},File="",DataJsonRequest=""):
                    dir_json = Data
                    dir_json["ec_fn"] = ""
                    param_md5 = os.popen("""echo '%s'|md5sum|awk '{print $1}'"""%(DataJsonRequest)).read().split()[0]
-                   os.system("""echo `echo '%s'|md5sum|awk '{print $1}'`\001'%s'>>%s"""%(DataJsonRequest,DataJsonRequest,param_file))
+                   os.system("""echo '%s'>>%s"""%(DataJsonRequest,param_file))
                    exit_while = False
             else:
                 msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
