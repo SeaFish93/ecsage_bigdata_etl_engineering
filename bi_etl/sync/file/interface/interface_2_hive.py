@@ -431,6 +431,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
                where a.source_cnt <> b.target_cnt
                """%(SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
    ok, data = HiveSession.get_all_rows(sql_check)
+   data = []
    if ok is False or len(data) > 0:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                               SourceTable="%s.%s" % (SourceDB, SourceTable),
