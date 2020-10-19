@@ -367,7 +367,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
                key_columns_join = "and a.`%s` = b.`%s`" % (key, key)
            key_columns_joins = key_columns_joins + " " + key_columns_join
        print(key_columns_joins,"=====================================")
-       #判断snap表是否存在
+       #获取ods表字段
        ok,ods_table_columns = HiveSession.get_column_info(SourceDB,SourceTable)
        ods_columns = ""
        for column in ods_table_columns:
@@ -383,7 +383,16 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        row format delimited fields terminated by '\\001' 
        stored as parquet
        """%(TargetDB,TargetTable,ods_columns)
-       print(create_snap_sql, "==========================================")
+       HiveSession.execute_sql(create_snap_sql)
+       #获取snap表字段
+       ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
+       print(snap_table_columns,"===========================================")
+       #####snap_columns = ""
+       #####for column in ods_table_columns:
+       #####    select_snap_col = snap_columns
+       #####    if column[0] == "etl_date":
+       #####        break;
+       #####snap_table_columns = snap_table_columns.replace(",", "", 1)
        sql = """
            drop table if exists %s.%s_tmp;
            create table %s.%s_tmp as(
@@ -400,5 +409,5 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
             )
    else:
        sql = ""
-   print(sql)
+   #print(sql)
 
