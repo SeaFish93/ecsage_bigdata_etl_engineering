@@ -45,27 +45,18 @@ def main(TaskInfo, Level,**kwargs):
     data_json = TaskInfo[3]
     data_json_request = data_json
     data_json = json.dumps(data_json)
-    is_init_data = TaskInfo[15]
     file_dir_name = TaskInfo[24]
     interface_module = TaskInfo[25]
     filter_modify_time_name = TaskInfo[26]
     select_exclude_columns = TaskInfo[27]
     is_report = TaskInfo[28]
     key_columns = TaskInfo[29]
-    start_date = airflow.execution_date_utc8_str[0:10]
-    end_date = airflow.execution_date_utc8_str[0:10]
+    exec_date = airflow.execution_date_utc8_str[0:10]
     if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
-        data_json["%s" % (filter_modify_time_name)] = end_date
-    if is_init_data == 0:
-      if start_date_name is not None and len(start_date_name)>0 and end_date_name is not None and len(end_date_name)>0:
-         data_json["%s"%(start_date_name)] = start_date
-         data_json["%s" % (end_date_name)] = end_date
-    else:
-        if start_date_name is not None and len(start_date_name) > 0 and end_date_name is not None and len(end_date_name) > 0:
-           start_date = TaskInfo[11]
-           end_date = TaskInfo[12]
-           data_json["%s" % (start_date_name)] = start_date
-           data_json["%s" % (end_date_name)] = end_date
+        data_json["%s" % (filter_modify_time_name)] = exec_date
+    if start_date_name is not None and len(start_date_name)>0 and end_date_name is not None and len(end_date_name)>0:
+         data_json["%s"%(start_date_name)] = exec_date
+         data_json["%s" % (end_date_name)] = exec_date
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
     if Level == "file":
@@ -73,14 +64,14 @@ def main(TaskInfo, Level,**kwargs):
       get_file_2_hive(HiveSession=hive_session,BeelineSession=beeline_session,InterfaceUrl=interface_url,DataJson=data_json
                       ,FileDirName = file_dir_name,DataJsonRequest=data_json_request
                       ,InterfaceModule = interface_module
-                      ,DB=target_db, Table=target_table,ExecData=end_date
+                      ,DB=target_db, Table=target_table,ExecData=exec_date
                      )
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
-                          TargetDB=target_db, TargetTable=target_table,SelectExcludeColumns=select_exclude_columns,  ExecDate=end_date)
+                          TargetDB=target_db, TargetTable=target_table,SelectExcludeColumns=select_exclude_columns,  ExecDate=exec_date)
     elif Level == "snap":
       exec_snap_hive_table(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
-                             TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=end_date)
+                             TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=exec_date)
 
 #含有level、time_line、date、group接口
 def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={},DataJsonRequest=""
@@ -348,8 +339,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
 #落地至snap
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate=""):
-   get_ods_column = HiveSession.execute_sql("select 1")
-   print(get_ods_column,"@@###########################################")
+   #设置snap查询字段
+   snap_columns = ""
    if IsReport == 0:
        if KeyColumns is None or len(KeyColumns) == 0:
            msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -371,7 +362,6 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
            else:
                key_columns_join = "and a.`%s` = b.`%s`" % (key, key)
            key_columns_joins = key_columns_joins + " " + key_columns_join
-       print(key_columns_joins,"=====================================")
        #获取ods表字段
        ok,ods_table_columns = HiveSession.get_column_info(SourceDB,SourceTable)
        ods_columns = ""
@@ -391,7 +381,6 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        HiveSession.execute_sql(create_snap_sql)
        #获取snap表字段
        ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
-       snap_columns = ""
        for column in snap_table_columns:
            snap_columns = snap_columns + "," + "a.`%s`"%(column[0])
        snap_columns = snap_columns.replace(",", "", 1)
@@ -409,7 +398,15 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
             key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
             )
    else:
-       sql = ""
+       sql = """
+        insert overwrite table %s.%s
+        select %s
+        from %s.%s
+        where etl_date != '%s'
+           union all
+        select %s
+        from %s.%s where etl_date = '%s'   
+       """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,ExecDate,snap_columns,SourceDB,SourceTable,ExecDate)
    ok = HiveSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
