@@ -393,7 +393,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        print(snap_columns, "===========================================")
        sql = """
            drop table if exists %s.%s_tmp;
-           create table %s.%s_tmp as(
+           create table %s.%s_tmp as
            select %s
            from %s.%s a
            left join %s.%s b
