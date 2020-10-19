@@ -370,7 +370,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        #判断snap表是否存在
        ok,ods_table_columns = HiveSession.get_column_info(SourceDB,SourceTable)
        ods_columns = ""
-       for column in get_ods_column:
+       for column in ods_table_columns:
            create_col = """,`%s`  %s commnet'%s' \n"""%(column[0],column[1],column[2])
            ods_columns = ods_columns + create_col
            if column[0] == "etl_date":
