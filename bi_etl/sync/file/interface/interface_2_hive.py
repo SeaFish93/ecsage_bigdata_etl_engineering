@@ -376,14 +376,14 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
            if column[0] == "etl_date":
                break;
        ods_columns = ods_columns.replace(",", "", 1)
-       print(ods_columns,"==========================================")
        create_snap_sql = """
        create table if not exists %s.%s(
          %s
        )
        row format delimited fields terminated by '\\001' 
        stored as parquet
-       """%(ods_table_columns,"","")
+       """%(ods_columns,TargetDB,TargetTable)
+       print(create_snap_sql, "==========================================")
        sql = """
            drop table if exists %s.%s_tmp;
            create table %s.%s_tmp as(
