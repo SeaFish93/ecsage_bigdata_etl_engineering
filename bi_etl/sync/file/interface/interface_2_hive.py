@@ -391,9 +391,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
            snap_columns = snap_columns + "," + "a.`%s`"%(column[0])
        snap_columns = snap_columns.replace(",", "", 1)
        sql = """
-           drop table if exists %s.%s_tmp;
-           create table %s.%s_tmp row format delimited fields terminated by '\\001' stored as parquet
-           as
+           insert overwrite table %s.%s
            select %s
            from %s.%s a
            left join %s.%s b
@@ -402,12 +400,12 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
            where b.%s is null
               union all
            select %s from %s.%s a where etl_date = '%s'
-       """%(TargetDB,TargetTable,TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,SourceDB,SourceTable,
+       """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,SourceDB,SourceTable,
             key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
             )
    else:
        sql = ""
-   ok = BeelineSession.execute_sql(sql)
+   ok = HiveSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                               SourceTable="%s.%s" % (SourceDB, SourceTable),
@@ -418,4 +416,6 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
                               Log="snap入库失败！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
+
+
 
