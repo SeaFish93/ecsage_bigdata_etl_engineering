@@ -388,7 +388,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
        snap_columns = ""
        for column in snap_table_columns:
-           snap_columns = snap_columns + "," + "a.`%s`"%(column)
+           snap_columns = snap_columns + "," + "a.`%s`"%(column[0])
        snap_columns = snap_columns.replace(",", "", 1)
        print(snap_columns, "===========================================")
        sql = """
