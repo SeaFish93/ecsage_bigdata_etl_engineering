@@ -321,7 +321,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
        where a.total_number <> b.total_number
    """%(SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
    ok,data = HiveSession.get_all_rows(sql)
-   data = 0
+   data = ["1"]
    if ok is False or len(data) > 0:
        print("ods入库异常数据：" + str(data))
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
