@@ -405,7 +405,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
         where etl_date != '%s'
            union all
         select %s
-        from %s.%s where etl_date = '%s'   
+        from %s.%s where etl_date = '%s' 
        """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,ExecDate,snap_columns,SourceDB,SourceTable,ExecDate)
    ok = HiveSession.execute_sql(sql)
    if ok is False:
@@ -441,6 +441,3 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
                               Log="snap入库数据对比不上！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
-
-
-
