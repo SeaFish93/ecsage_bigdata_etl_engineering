@@ -388,8 +388,8 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
        print(snap_table_columns,"===========================================")
        snap_columns = ""
-       for column in ods_table_columns:
-           snap_columns = snap_columns + "," + "a.`%s`"%column
+       for column in snap_table_columns:
+           snap_columns = snap_columns + "," + "a.`%s`"%(column)
        snap_columns = snap_columns.replace(",", "", 1)
        sql = """
            drop table if exists %s.%s_tmp;
