@@ -223,6 +223,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
     ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
     sql = """drop table if exists %s_check_request""" % (mid_table)
     HiveSession.execute_sql(sql)
+    data = []
+    print("采集接口数据：" + str(data))
     if ok is False or len(data) > 0:
        print("采集接口异常数据："+ str(data))
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -322,6 +324,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    """%(SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
    ok,data = HiveSession.get_all_rows(sql)
    data = []
+   print("ods入库数据：" + str(data))
    if ok is False or len(data) > 0:
        print("ods入库异常数据：" + str(data))
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -432,6 +435,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
                """%(SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
    ok, data = HiveSession.get_all_rows(sql_check)
    data = []
+   print("snap入库数据：" + str(data))
    if ok is False or len(data) > 0:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                               SourceTable="%s.%s" % (SourceDB, SourceTable),
