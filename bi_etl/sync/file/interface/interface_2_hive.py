@@ -52,10 +52,10 @@ def main(TaskInfo, Level,**kwargs):
     is_report = TaskInfo[28]
     key_columns = TaskInfo[29]
     exec_date = airflow.execution_date_utc8_str[0:10]
+    data_json = ast.literal_eval(json.loads(data_json))
     if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
         data_json["%s" % (filter_modify_time_name)] = exec_date
     if start_date_name is not None and len(start_date_name)>0 and end_date_name is not None and len(end_date_name)>0:
-         print("======================="+start_date_name)
          data_json["%s"%(start_date_name)] = exec_date
          data_json["%s" % (end_date_name)] = exec_date
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
