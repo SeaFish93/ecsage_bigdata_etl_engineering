@@ -80,7 +80,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ,InterfaceModule = ""
                                    ,DB="", Table="",ExecData=""
                                    ):
-    data_json = ast.literal_eval(json.loads(DataJson))
+    data_json = DataJson
     now_time = time.strftime("%H_%M_%S", time.localtime())
     data_dir = conf.get("Interface", InterfaceModule)
     file_name = "%s_%s_%s_%s.log"%(airflow.dag,airflow.task,ExecData,now_time)
