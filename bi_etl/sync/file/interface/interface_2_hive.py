@@ -190,7 +190,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                                     and a.md5_id = '%s'
                              ) a
                         ) b
-                        where data_col like '\\%##@@\\%'
+                        where data_col like '%s'
                         ) b
                     ) c
                     lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
@@ -211,7 +211,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                 ) tmp1
         on tmp.returns_colums = tmp1.returns_colums
         where tmp.`num` <> cast(tmp1.total_number as int)
-    """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,mid_table,param_table,ExecDate,ParamsMD5)
+    """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,"""%##@@%""",mid_table,param_table,ExecDate,ParamsMD5)
     print(sql,"=====================================================")
     ok = BeelineSession.execute_sql(sql)
     if ok is False:
