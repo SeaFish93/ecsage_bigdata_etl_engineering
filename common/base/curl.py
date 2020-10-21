@@ -52,7 +52,8 @@ def exec_interface_data_curl(URL="",Data={},File="",DataJsonRequest=""):
                 set_exit(LevelStatu="red", MSG=msg)
           else:
             print("等待数据文件md5生成：【%s】"%(md5_file))
-            time.sleep(120)
+            exit_while = False
+            #time.sleep(120)
         return param_md5,param_file
     except Exception as e:
         msg = ""

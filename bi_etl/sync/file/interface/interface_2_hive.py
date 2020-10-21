@@ -86,8 +86,23 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ,DB="", Table="",ExecData=""
                                    ):
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-    ok,data = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = 2""")
-    print(data,"==========================")
+    ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = 2""")
+    print(data_list,"==========================")
+    num = 1
+    nums = 0
+    request_params = []
+    for data in data_list:
+       request_params.append(data)
+       if num == 50 or nums == len(data_list):
+          os.system("""echo "=======================================================">>/home/ecsage_data/oceanengine/20201020/test.test """)
+          for request_num in request_params:
+              account_id = request_num[0]
+              mt = request_num[1]
+              service_code = request_num[2]
+              os.system("""echo "%s %s %s">>/home/ecsage_data/oceanengine/20201020/test.test"""%(account_id,mt,service_code))
+          num = 0
+       num = num + 1
+       nums = nums + 1
     exit(0)
     data_json = DataJson
     now_time = time.strftime("%H_%M_%S", time.localtime())
