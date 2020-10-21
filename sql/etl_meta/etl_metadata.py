@@ -94,7 +94,8 @@ class EtlMetaDataSQL():
             ,filter_modify_time_name 
             ,select_exclude_columns   
             ,is_report
-            ,key_columns      
+            ,key_columns
+            ,regexp_extract_column      
             ,create_user          
             ,update_user          
     from metadb.interface_tasks_info_bak

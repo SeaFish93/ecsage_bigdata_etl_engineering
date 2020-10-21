@@ -31,6 +31,7 @@ def main(TaskInfo, Level,**kwargs):
     time.sleep(2)
     global airflow
     global developer
+    global regexp_extract_column
     airflow = Airflow(kwargs)
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     interface_url = TaskInfo[2]
@@ -51,6 +52,9 @@ def main(TaskInfo, Level,**kwargs):
     select_exclude_columns = TaskInfo[27]
     is_report = TaskInfo[28]
     key_columns = TaskInfo[29]
+    #regexp_extract_column = TaskInfo[30]
+    #if regexp_extract_column is None or len(regexp_extract_column) == 0:
+    #    regexp_extract_column = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list')"""
     exec_date = airflow.execution_date_utc8_str[0:10]
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
@@ -212,7 +216,6 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
         on tmp.returns_colums = tmp1.returns_colums
         where tmp.`num` <> cast(tmp1.total_number as int)
     """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,"""%##@@%""",mid_table,param_table,ExecDate,ParamsMD5)
-    print(sql,"=====================================================")
     ok = BeelineSession.execute_sql(sql)
     if ok is False:
        sql = """drop table if exists %s_check_request"""%(mid_table)
@@ -295,7 +298,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               lateral view json_tuple(data__num_colums,%s) b
               as %s
                ;
-        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,json_tuple_columns,json_tuple_column)
+        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
