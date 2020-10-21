@@ -87,7 +87,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ):
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
     ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = 2""")
-    print(data_list,"==========================")
+    #print(data_list,"==========================")
     num = 1
     nums = 0
     request_params = []
@@ -104,6 +104,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
           request_params.clear()
        num = num + 1
        nums = nums + 1
+    print(nums,len(data_list),"=============================================")
     exit(0)
     data_json = DataJson
     now_time = time.strftime("%H_%M_%S", time.localtime())
