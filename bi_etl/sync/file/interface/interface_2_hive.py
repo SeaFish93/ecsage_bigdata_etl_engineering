@@ -190,7 +190,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                                     and a.md5_id = '%s'
                              ) a
                         ) b
-                        where data_col like '%##@@%'
+                        where data_col like '\\%##@@\\%'
                         ) b
                     ) c
                     lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
