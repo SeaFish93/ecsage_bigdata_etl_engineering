@@ -52,16 +52,16 @@ def main(TaskInfo, Level,**kwargs):
     is_report = TaskInfo[28]
     key_columns = TaskInfo[29]
     exec_date = airflow.execution_date_utc8_str[0:10]
-    if Level == "file":
-      data_json = ast.literal_eval(json.loads(data_json))
-    if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
-        data_json["%s" % (filter_modify_time_name)] = exec_date
-    if start_date_name is not None and len(start_date_name)>0 and end_date_name is not None and len(end_date_name)>0:
-         data_json["%s"%(start_date_name)] = exec_date
-         data_json["%s" % (end_date_name)] = exec_date
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
     if Level == "file":
+      data_json = ast.literal_eval(json.loads(data_json))
+      if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
+          data_json["%s" % (filter_modify_time_name)] = exec_date
+      if start_date_name is not None and len(start_date_name) > 0 and end_date_name is not None and len(
+              end_date_name) > 0:
+          data_json["%s" % (start_date_name)] = exec_date
+          data_json["%s" % (end_date_name)] = exec_date
       #数据文件落地至临时表
       get_file_2_hive(HiveSession=hive_session,BeelineSession=beeline_session,InterfaceUrl=interface_url,DataJson=data_json
                       ,FileDirName = file_dir_name,DataJsonRequest=data_json_request
@@ -223,7 +223,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                                Log="校验执行失败！！！",
                                Developer="developer")
        set_exit(LevelStatu="red", MSG=msg) 
-    ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
+    # ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
+    ok = True
     sql = """drop table if exists %s_check_request""" % (mid_table)
     HiveSession.execute_sql(sql)
     data = []
