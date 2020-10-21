@@ -90,6 +90,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     num = 1
     nums = 1
     request_params = []
+    print("开始执行调用接口")
     for data in data_list:
        request_params.append(data)
        if num == 50 or nums == len(data_list):
@@ -99,11 +100,30 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
               mt = request_num[1]
               service_code = request_num[2]
               os.system("""echo "%s %s %s">>/home/ecsage_data/oceanengine/20201020/test.test"""%(account_id,mt,service_code))
+              data_json = DataJson
+              now_time = time.strftime("%H_%M_%S", time.localtime())
+              data_dir = conf.get("Interface", InterfaceModule)
+              file_name = "%s_%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task, mt,account_id,ExecData, now_time)
+              file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s" % (airflow.dag)
+              file_dir_name = "%s/%s" % (file_dir, file_name)
+              if os.path.exists(file_dir) is False:
+                  os.system("mkdir -p %s" % (file_dir))
+              data_json["%s" % (FileDirName)] = file_dir_name
+              data_json["advertiser_list"] = [{"serviceCode":service_code,"accountId":account_id}]
+              """
+              "advertiser_list":[{"serviceCode":"tt-hnhd-03","accountId":"1678138991760398"},{"serviceCode":"tt-hnhd-03","accountId":"1676619864058891"}]
+              """
+              print("接口url：" + InterfaceUrl)
+              print("接口参数：" + str(data_json))
+              print("接口落地文件：" + file_dir_name)
+              # 分子账户开启进程
+              #param_md5, param_file = exec_interface_data_curl(URL=InterfaceUrl, Data=data_json, File=file_dir_name,
+                                                               #DataJsonRequest=DataJsonRequest)
+
           num = 0
           request_params.clear()
        num = num + 1
        nums = nums + 1
-    print(nums,len(data_list),"=============================================")
     exit(0)
     data_json = DataJson
     now_time = time.strftime("%H_%M_%S", time.localtime())
