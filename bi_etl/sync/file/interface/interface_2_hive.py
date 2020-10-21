@@ -93,7 +93,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     print("开始执行调用接口")
     for data in data_list:
        request_params.append(data)
-       if num == 50 or nums == len(data_list):
+       if num == 100 or nums == len(data_list):
           os.system("""echo "=======================================================">>/home/ecsage_data/oceanengine/20201020/test.test """)
           for request_num in request_params:
               account_id = request_num[0]
