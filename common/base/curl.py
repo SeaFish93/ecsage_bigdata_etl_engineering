@@ -28,10 +28,10 @@ def exec_interface_data_curl(URL="",Data={},File="",DataJsonRequest=""):
             is_file = os.path.exists(data_file)
             is_file = True
             if is_file:
-               file_md5 = os.popen("md5sum %s"%(data_file))
-               file_md5_value = file_md5.read().split()[0]
-               md5_file_md5 = os.popen("cat %s"%(md5_file))
-               md5_file_md5_value = ""##########md5_file_md5.read().split()[0]
+               #file_md5 = os.popen("md5sum %s"%(data_file))
+               #file_md5_value = file_md5.read().split()[0]
+               #md5_file_md5 = os.popen("cat %s"%(md5_file))
+               #md5_file_md5_value = ""##########md5_file_md5.read().split()[0]
                print("MD5：【%s,%s】"%(file_md5_value,md5_file_md5_value))
                file_md5_value = "md5"
                md5_file_md5_value = "md5"
