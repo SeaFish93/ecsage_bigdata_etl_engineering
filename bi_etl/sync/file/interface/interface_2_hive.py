@@ -117,32 +117,32 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
               print("接口参数：" + str(data_json))
               print("接口落地文件：" + file_dir_name)
               # 分子账户开启进程
-              #param_md5, param_file = exec_interface_data_curl(URL=InterfaceUrl, Data=data_json, File=file_dir_name,
-                                                               #DataJsonRequest=DataJsonRequest)
+              param_md5, param_file = exec_interface_data_curl(URL=InterfaceUrl, Data=data_json, File=file_dir_name,
+                                                               DataJsonRequest=DataJsonRequest)
 
           num = 0
           request_params.clear()
        num = num + 1
        nums = nums + 1
-    exit(0)
-    data_json = DataJson
-    now_time = time.strftime("%H_%M_%S", time.localtime())
-    data_dir = conf.get("Interface", InterfaceModule)
-    file_name = "%s_%s_%s_%s.log"%(airflow.dag,airflow.task,ExecData,now_time)
-    file_dir = "%s"%(data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s"%(airflow.dag)
-    file_dir_name = "%s/%s"%(file_dir,file_name)
-    if os.path.exists(file_dir) is False:
-        os.system("mkdir -p %s"%(file_dir))
-    data_json["%s"%(FileDirName)] = file_dir_name
-    print("接口url："+InterfaceUrl)
-    print("接口参数："+str(data_json))
-    print("接口落地文件：" + file_dir_name)
-    print("开始执行调用接口")
+    #exit(0)
+    #data_json = DataJson
+    #now_time = time.strftime("%H_%M_%S", time.localtime())
+    #data_dir = conf.get("Interface", InterfaceModule)
+    #file_name = "%s_%s_%s_%s.log"%(airflow.dag,airflow.task,ExecData,now_time)
+    #file_dir = "%s"%(data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s"%(airflow.dag)
+    #file_dir_name = "%s/%s"%(file_dir,file_name)
+    #if os.path.exists(file_dir) is False:
+    #    os.system("mkdir -p %s"%(file_dir))
+    #data_json["%s"%(FileDirName)] = file_dir_name
+    #print("接口url："+InterfaceUrl)
+    #print("接口参数："+str(data_json))
+    #print("接口落地文件：" + file_dir_name)
+    #print("开始执行调用接口")
     #分子账户开启进程
-    param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name,DataJsonRequest=DataJsonRequest)
+    #param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name,DataJsonRequest=DataJsonRequest)
     print("结束执行调用接口")
     #落地临时表
-    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
+    #exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
 
 def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5="",DB="",Table="",ExecDate=""):
     param_table = """%s.%s_param"""%(DB,Table)
