@@ -98,15 +98,15 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     for data in data_list:
        request_params.append(data)
        if num == 100 or nums == len(data_list):
-          os.system("""echo "=======================================================">>/home/ecsage_data/oceanengine/20201020/test.test """)
+          #os.system("""echo "=======================================================">>/home/ecsage_data/oceanengine/20201020/test.test """)
           for request_num in request_params:
               account_id = request_num[0]
               mt = request_num[1]
               service_code = request_num[2]
-              os.system("""echo "%s %s %s">>/home/ecsage_data/oceanengine/20201020/test.test"""%(account_id,mt,service_code))
+              #os.system("""echo "%s %s %s">>/home/ecsage_data/oceanengine/20201020/test.test"""%(account_id,mt,service_code))
               now_time = time.strftime("%H_%M_%S", time.localtime())
               #data_dir = conf.get("Interface", InterfaceModule)
-              file_name = "%s_%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task, mt,account_id,ExecData, now_time)
+              file_name = "%s_%s_%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task, mt,account_id,service_code,ExecData, now_time)
               #file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,data_json["mt"])
               file_dir_name = "%s/%s" % (file_dir, file_name)
               #os.system("rm -rf %s" % (file_dir))
