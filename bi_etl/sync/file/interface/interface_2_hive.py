@@ -92,6 +92,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     nums = 1
     request_params = []
     print("开始执行调用接口")
+    data_dir = conf.get("Interface", InterfaceModule)
+    file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,data_json["mt"])
+    os.system("rm -rf %s" % (file_dir))
     for data in data_list:
        request_params.append(data)
        if num == 100 or nums == len(data_list):
@@ -102,11 +105,11 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
               service_code = request_num[2]
               os.system("""echo "%s %s %s">>/home/ecsage_data/oceanengine/20201020/test.test"""%(account_id,mt,service_code))
               now_time = time.strftime("%H_%M_%S", time.localtime())
-              data_dir = conf.get("Interface", InterfaceModule)
+              #data_dir = conf.get("Interface", InterfaceModule)
               file_name = "%s_%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task, mt,account_id,ExecData, now_time)
-              file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,data_json["mt"])
+              #file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,data_json["mt"])
               file_dir_name = "%s/%s" % (file_dir, file_name)
-              os.system("rm -rf %s" % (file_dir))
+              #os.system("rm -rf %s" % (file_dir))
               if os.path.exists(file_dir) is False:
                   os.system("mkdir -p %s" % (file_dir))
               data_json["%s" % (FileDirName)] = file_dir_name
