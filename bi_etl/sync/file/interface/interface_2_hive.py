@@ -101,6 +101,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
               service_code = request_num[2]
               os.system("""echo "%s %s %s">>/home/ecsage_data/oceanengine/20201020/test.test"""%(account_id,mt,service_code))
           num = 0
+       request_params.clear()
        num = num + 1
        nums = nums + 1
     exit(0)
