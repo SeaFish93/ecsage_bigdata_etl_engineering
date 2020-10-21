@@ -403,6 +403,11 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
             key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
             )
    else:
+       # 获取snap表字段
+       ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
+       for column in snap_table_columns:
+           snap_columns = snap_columns + "," + "a.`%s`" % (column[0])
+       snap_columns = snap_columns.replace(",", "", 1)
        sql = """
         insert overwrite table %s.%s
         select %s
