@@ -209,8 +209,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
         on tmp.returns_colums = tmp1.returns_colums
         where tmp.`num` <> cast(tmp1.total_number as int)
     """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,mid_table,param_table,ExecDate,ParamsMD5)
-    #ok = BeelineSession.execute_sql(sql)
-    ok = True
+    ok = BeelineSession.execute_sql(sql)
     if ok is False:
        sql = """drop table if exists %s_check_request"""%(mid_table)
        HiveSession.execute_sql(sql)
@@ -223,8 +222,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                                Log="校验执行失败！！！",
                                Developer="developer")
        set_exit(LevelStatu="red", MSG=msg) 
-    # ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
-    ok = True
+    ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
     sql = """drop table if exists %s_check_request""" % (mid_table)
     HiveSession.execute_sql(sql)
     data = []
