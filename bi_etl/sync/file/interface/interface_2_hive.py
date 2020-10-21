@@ -176,7 +176,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                                ,split(data_colums,'@@####@@')[1] as data_colums
                                ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
                                ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_id
-                   from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param,request_id),data_colums) ) USING 'python get_arrary.py' as (data_colums)
+                   from(select transform(data_col) USING 'python get_arrary.py' as (data_colums)
+                        from(select concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param,request_id),data_colums) as data_col
                         from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
                                     ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums
                                     ,b.request_param
@@ -188,6 +189,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
                              where a.etl_date = '%s'
                                and a.md5_id = '%s'
                             ) a
+                        ) b
                         ) b
                     ) c
                     lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
