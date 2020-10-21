@@ -43,8 +43,9 @@ insert into metadb.conn_db_info
   ,password
   ,db_name
  )
- select 'conn_hive','hive连接池','hive','222.186.30.14',10000,'hive2','aGl2ZUBZaw==','default'
+ select 'conn_mysql_big_data_mdg','子账户数据连接池','mysql','192.168.30.186',3306,'mdgopr','dWpoZUA5MyNvQDhl','big_data_mdg'
  ;
+
  insert into metadb.dags_info
 (dag_id,exec_type,owner,batch_type,retries,schedule_interval,priority_weight,status)
 select 'day_tc_etl_dw','etl','etl','day',3,'30 20 * * *',1,1

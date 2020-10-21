@@ -85,6 +85,10 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ,InterfaceModule = ""
                                    ,DB="", Table="",ExecData=""
                                    ):
+    mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
+    ok,data = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = 2""")
+    print(data,"==========================")
+    exit(0)
     data_json = DataJson
     now_time = time.strftime("%H_%M_%S", time.localtime())
     data_dir = conf.get("Interface", InterfaceModule)
@@ -98,6 +102,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     print("接口参数："+str(data_json))
     print("接口落地文件：" + file_dir_name)
     print("开始执行调用接口")
+    #分子账户开启进程
     param_md5,param_file = exec_interface_data_curl(URL=InterfaceUrl,Data=data_json,File=file_dir_name,DataJsonRequest=DataJsonRequest)
     print("结束执行调用接口")
     #落地临时表
