@@ -403,6 +403,23 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
             key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
             )
    else:
+       # 获取ods表字段
+       ok, ods_table_columns = HiveSession.get_column_info(SourceDB, SourceTable)
+       ods_columns = ""
+       for column in ods_table_columns:
+           create_col = """,`%s`  %s comment'%s' \n""" % (column[0], column[1], column[2])
+           ods_columns = ods_columns + create_col
+           if column[0] == "etl_date":
+               break;
+       ods_columns = ods_columns.replace(",", "", 1)
+       create_snap_sql = """
+              create table if not exists %s.%s(
+                %s
+              )
+              row format delimited fields terminated by '\\001' 
+              stored as parquet
+              """ % (TargetDB, TargetTable, ods_columns)
+       HiveSession.execute_sql(create_snap_sql)
        # 获取snap表字段
        ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
        for column in snap_table_columns:
