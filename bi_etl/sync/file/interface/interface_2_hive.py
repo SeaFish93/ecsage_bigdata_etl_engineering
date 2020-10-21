@@ -209,7 +209,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5
         on tmp.returns_colums = tmp1.returns_colums
         where tmp.`num` <> cast(tmp1.total_number as int)
     """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,mid_table,param_table,ExecDate,ParamsMD5)
-    ok = BeelineSession.execute_sql(sql)
+    #ok = BeelineSession.execute_sql(sql)
+    ok = True
     if ok is False:
        sql = """drop table if exists %s_check_request"""%(mid_table)
        HiveSession.execute_sql(sql)
@@ -428,11 +429,11 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
        sql = """
         insert overwrite table %s.%s
         select %s
-        from %s.%s
+        from %s.%s a
         where etl_date != '%s'
            union all
         select %s
-        from %s.%s where etl_date = '%s' 
+        from %s.%s a where etl_date = '%s' 
        """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,ExecDate,snap_columns,SourceDB,SourceTable,ExecDate)
    ok = HiveSession.execute_sql(sql)
    if ok is False:
