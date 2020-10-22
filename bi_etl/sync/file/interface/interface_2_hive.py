@@ -90,6 +90,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = %s"""%(int(data_json["mt"])))
     num = 1
     nums = 1
+    run_num = 0
     request_params = []
     print("开始执行调用接口")
     data_dir = conf.get("Interface", InterfaceModule)
@@ -98,6 +99,8 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     for data in data_list:
        request_params.append(data)
        if num == 5000 or nums == len(data_list):
+          run_num = run_num + 1
+          print("第%s批正在提交！"%run_num)
           for request_num in request_params:
               account_id = request_num[0]
               mt = request_num[1]
