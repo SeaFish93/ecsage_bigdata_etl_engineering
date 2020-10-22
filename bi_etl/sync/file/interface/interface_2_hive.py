@@ -161,7 +161,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
        advertiser_list.append({"serviceCode":str(data[2]),"accountId":str(data[1])})
        if num == 10 or nums == len(data_list):
           run_num = run_num + 1
-          print("第%s批正在提交！%s"%run_num,advertiser_list)
+          print("第%s批正在提交！%s"%(run_num,advertiser_list))
           #######for request_num in request_params:
           #######    account_id = request_num[0]
           #######    mt = int(request_num[1])
