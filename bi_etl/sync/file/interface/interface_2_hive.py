@@ -144,8 +144,8 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
 ,'1677142102917134'
 ,'54830807065'
     """
-    #ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = %s"""%(int(data_json["mt"])))
-    ok, data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media =2 and account_id in (%s)""" % (data))
+    ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = %s"""%(int(data_json["mt"])))
+    #ok, data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media =2 and account_id in (%s)""" % (data))
     num = 1
     nums = 1
     run_num = 0
@@ -159,7 +159,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     for data in data_list:
        request_params.append(data)
        advertiser_list.append({"serviceCode":str(data[2]),"accountId":str(data[0])})
-       if num == 5 or nums == len(data_list):
+       if num == 1000 or nums == len(data_list):
           run_num = run_num + 1
           print("第%s批正在提交！%s"%(run_num,advertiser_list))
           #######for request_num in request_params:
