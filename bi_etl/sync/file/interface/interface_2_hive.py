@@ -177,8 +177,8 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
           data_json["advertiser_list"] = advertiser_list
           print(InterfaceUrl,"================================================")
           print(data_json,"================================================")
-          #######    # 分子账户开启进程
-          #######    #exec_interface_data_curl(URL=InterfaceUrl, Data=data_json, File=file_dir_name,DataJsonRequest=DataJsonRequest)
+          # 分子账户开启进程
+          exec_interface_data_curl(URL=InterfaceUrl, Data=data_json, File=file_dir_name,DataJsonRequest=DataJsonRequest)
           time.sleep(10)
           num = 0
           #request_params.clear()
