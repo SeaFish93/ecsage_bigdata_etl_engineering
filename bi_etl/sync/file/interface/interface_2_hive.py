@@ -166,15 +166,17 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
           #######    account_id = request_num[0]
           #######    mt = int(request_num[1])
           #######    service_code = request_num[2]
-          #######    now_time = time.strftime("%H_%M_%S", time.localtime())
-          #######    file_name = "%s_%s_%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task, mt,account_id,service_code,ExecData, now_time)
-          #######    file_dir_name = "%s/%s" % (file_dir, file_name)
-          #######    if os.path.exists(file_dir) is False:
-          #######        os.system("mkdir -p %s" % (file_dir))
-          #######    file_dir_name_list.append((file_dir_name,mt,account_id))
-          #######    data_json["%s" % (FileDirName)] = file_dir_name
-          #######    data_json["mt"] = mt
-          #######    data_json["advertiser_list"] = [{"serviceCode":service_code,"accountId":account_id}]
+          now_time = time.strftime("%H_%M_%S", time.localtime())
+          file_name = "%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task,run_num,ExecData, now_time)
+          file_dir_name = "%s/%s" % (file_dir, file_name)
+          if os.path.exists(file_dir) is False:
+              os.system("mkdir -p %s" % (file_dir))
+          ######file_dir_name_list.append((file_dir_name,mt,account_id))
+          data_json["%s" % (FileDirName)] = file_dir_name
+          #############data_json["mt"] = mt
+          data_json["advertiser_list"] = advertiser_list
+          print(InterfaceUrl,"================================================")
+          print(data_json,"================================================")
           #######    # 分子账户开启进程
           #######    #exec_interface_data_curl(URL=InterfaceUrl, Data=data_json, File=file_dir_name,DataJsonRequest=DataJsonRequest)
           time.sleep(60)
