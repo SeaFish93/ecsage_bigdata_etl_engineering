@@ -154,6 +154,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     data_dir = conf.get("Interface", InterfaceModule)
     file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,"test")#data_json["mt"])
     os.system("rm -rf %s" % (file_dir))
+    file_dir_name_list = []
     for data in data_list:
        request_params.append(data)
        if num == 5000 or nums == len(data_list):
@@ -168,6 +169,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
               file_dir_name = "%s/%s" % (file_dir, file_name)
               if os.path.exists(file_dir) is False:
                   os.system("mkdir -p %s" % (file_dir))
+              file_dir_name_list.append((file_dir_name,mt,account_id))
               data_json["%s" % (FileDirName)] = file_dir_name
               data_json["mt"] = mt
               data_json["advertiser_list"] = [{"serviceCode":service_code,"accountId":account_id}]
@@ -179,6 +181,44 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
        num = num + 1
        nums = nums + 1
     print("结束执行调用接口")
+    md5_file_false = []
+    md5_file_true = []
+    md5_file_empty = []
+    set_md5_file_true = True
+    sleep_num = 1
+    for file in file_dir_name_list:
+        print(file[0],"=======================================")
+        #判断md5文件是否存在
+        is_md5_file = os.path.exists(file[0]+".md5")
+        if is_md5_file is False:
+            md5_file_false.append(file)
+        else:
+            if os.path.getsize(file[0]+".md5") > 0:
+               md5_file_true.append(file[0])
+            else:
+               md5_file_empty.append(file)
+    #判断是否没有md5的文件
+    while set_md5_file_true:
+       for md5_file_falses in md5_file_false:
+           if os.path.exists(md5_file_falses) is False:
+               pass
+           else:
+               if os.path.getsize(md5_file_falses) > 0:
+                   md5_file_true.append(md5_file_falses)
+               else:
+                   md5_file_empty.append(md5_file_falses)
+               md5_file_false.remove(md5_file_falses)
+       if len(md5_file_false) > 0:
+           print("等待MD5文件生成。5分钟，5分钟！！！")
+           if sleep_num == 1:
+              time.sleep(300)
+           else:
+              set_md5_file_true = False
+       else:
+           set_md5_file_true = False
+       sleep_num = sleep_num + 1
+
+
     #落地临时表
     #exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
 
