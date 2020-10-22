@@ -34,18 +34,18 @@ def exec_interface_data_curl(URL="",Data={},File="",DataJsonRequest=""):
                #md5_file_md5_value = ""##########md5_file_md5.read().split()[0]
                file_md5_value = "md5"
                md5_file_md5_value = "md5"
-               print("MD5：【%s,%s】"%(file_md5_value,md5_file_md5_value))
+               #print("MD5：【%s,%s】"%(file_md5_value,md5_file_md5_value))
                if file_md5_value != md5_file_md5_value:
                    msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
                                               Log="执行数据接口采集生成数据文件md5对不上！！！",
                                               Developer="工程维护")
                    set_exit(LevelStatu="red", MSG=msg)
                else:
-                   print("数据文件已生成且MD5已对上：【%s,%s】"%(data_file,md5_file))
+                   #print("数据文件已生成且MD5已对上：【%s,%s】"%(data_file,md5_file))
                    dir_json = Data
                    dir_json["ec_fn"] = ""
-                   param_md5 = os.popen("""echo '%s'|md5sum|awk '{print $1}'"""%(DataJsonRequest)).read().split()[0]
-                   os.system("""echo '%s'>>%s"""%(DataJsonRequest,param_file))
+                   #param_md5 = os.popen("""echo '%s'|md5sum|awk '{print $1}'"""%(DataJsonRequest)).read().split()[0]
+                   #os.system("""echo '%s'>>%s"""%(DataJsonRequest,param_file))
                    exit_while = False
             else:
                 msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
@@ -53,7 +53,7 @@ def exec_interface_data_curl(URL="",Data={},File="",DataJsonRequest=""):
                                            Developer="工程维护")
                 set_exit(LevelStatu="red", MSG=msg)
           else:
-            print("等待数据文件md5生成：【%s】"%(md5_file))
+            #print("等待数据文件md5生成：【%s】"%(md5_file))
             exit_while = False
             #time.sleep(120)
         return param_md5,param_file
