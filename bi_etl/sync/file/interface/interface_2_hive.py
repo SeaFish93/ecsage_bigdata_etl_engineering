@@ -295,11 +295,11 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",SelectExcludeColumns="",ExecDate=""):
+                        TargetDB="", TargetTable="",IsReport=1,SelectExcludeColumns="",ExecDate=""):
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-   system_table_columns = "returns_colums,request_colums,extract_system_time,etl_date"
-   select_system_table_column = "returns_colums,request_colums,'%s' as extract_system_time"%(system_time)
+   system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
+   select_system_table_column = "returns_account_id,returns_colums,request_type,'%s' as extract_system_time"%(system_time)
    select_exclude_columns = SelectExcludeColumns
    if select_exclude_columns is None or len(select_exclude_columns) == 0:
        select_exclude_columns = "000000"
@@ -319,6 +319,13 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
    print(json_tuple_columns,"#######################################")
    print(json_tuple_column,"#######################################")
+   if IsReport == 0:
+      regexp_extract = """ """
+   else:
+      regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\".*)',1),'$.data'),'$.list') as data_colums"""
+      return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\")',1),'\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\"','') as returns_colums"""
+   print(regexp_extract,"================================")
+   print(return_regexp_extract,"==================================================")
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         insert overwrite table %s.%s
@@ -329,8 +336,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                           ,split(data_colums,'@@####@@')[1] as data_colums
                           ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
                    from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                        from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
-                                    ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums
+                        from(select %s
+                                    ,%s
                                     ,b.request_param
                              from %s.%s a
                              inner join %s.%s_param b
@@ -345,7 +352,9 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               lateral view json_tuple(data__num_colums,%s) b
               as %s
                ;
-        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
+        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
+   print(sql)
+   exit(0)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
