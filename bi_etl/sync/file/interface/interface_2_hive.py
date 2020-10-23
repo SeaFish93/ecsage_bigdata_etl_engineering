@@ -103,7 +103,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     for data in data_list:
        request_params.append(data)
        advertiser_list.append({"serviceCode":str(data[2]),"accountId":str(data[0])})
-       if num == 15000 or nums == len(data_list):
+       if num == 1000 or nums == len(data_list):
           run_num = run_num + 1
           print("第%s批正在提交！%s"%(run_num,advertiser_list))
           now_time = time.strftime("%H_%M_%S", time.localtime())
