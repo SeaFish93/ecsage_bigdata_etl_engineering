@@ -11,7 +11,7 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.base.curl import exec_interface_data_curl
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
-from ecsage_bigdata_etl_engineering.common.base.sync_method import get_interface_2_hive_table_sql
+from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 
@@ -89,14 +89,15 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
     ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = %s"""%(int(data_json["mt"])))
     #ok, data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media =2 and account_id in (%s)""" % (data))
+    request_type = data_json["mt"]
     num = 1
     nums = 1
     run_num = 0
     request_params = []
     print("开始执行调用接口")
     data_dir = conf.get("Interface", InterfaceModule)
-    file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,data_json["mt"])
-    #os.system("rm -rf %s" % (file_dir))
+    file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,request_type)
+    #数据文件绝对路径
     file_dir_name_list = []
     advertiser_list = []
     for data in data_list:
@@ -105,72 +106,57 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
        if num == 15000 or nums == len(data_list):
           run_num = run_num + 1
           print("第%s批正在提交！%s"%(run_num,advertiser_list))
-          #######for request_num in request_params:
-          #######    account_id = request_num[0]
-          #######    mt = int(request_num[1])
-          #######    service_code = request_num[2]
           now_time = time.strftime("%H_%M_%S", time.localtime())
           file_name = "%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task,run_num,ExecData, now_time)
           file_dir_name = "%s/%s" % (file_dir, file_name)
           if os.path.exists(file_dir) is False:
               os.system("mkdir -p %s" % (file_dir))
-          ######file_dir_name_list.append((file_dir_name,mt,account_id))
+          file_dir_name_list.append((file_dir_name,advertiser_list))
           data_json["%s" % (FileDirName)] = file_dir_name
-          #############data_json["mt"] = mt
           data_json["advertiser_list"] = advertiser_list
-          print(InterfaceUrl,"================================================")
-          print(data_json,"================================================")
+          print("请求接口URL：%s"%(InterfaceUrl))
+          print("请求接口参数：%s"%(data_json))
           # 分子账户开启进程
           exec_interface_data_curl(URL=InterfaceUrl, Data=data_json, File=file_dir_name,DataJsonRequest=DataJsonRequest)
           time.sleep(10)
           num = 0
-          #request_params.clear()
           advertiser_list.clear()
        num = num + 1
        nums = nums + 1
-    print("结束执行调用接口")
-   ####### md5_file_false = []
-   ####### md5_file_true = []
-   ####### md5_file_empty = []
-   ####### set_md5_file_true = True
-   ####### sleep_num = 1
-   ####### for file in file_dir_name_list:
-   #######     print(file[0],"=======================================")
-   #######     #判断md5文件是否存在
-   #######     is_md5_file = os.path.exists(file[0]+".md5")
-   #######     if is_md5_file is False:
-   #######         md5_file_false.append(file)
-   #######     else:
-   #######         if os.path.getsize(file[0]+".md5") > 0:
-   #######            md5_file_true.append(file[0])
-   #######         else:
-   #######            md5_file_empty.append(file)
-   ####### #判断是否没有md5的文件
-   ####### while set_md5_file_true:
-   #######    for md5_file_falses in md5_file_false:
-   #######        if os.path.exists(md5_file_falses) is False:
-   #######            pass
-   #######        else:
-   #######            if os.path.getsize(md5_file_falses) > 0:
-   #######                md5_file_true.append(md5_file_falses)
-   #######            else:
-   #######                md5_file_empty.append(md5_file_falses)
-   #######            md5_file_false.remove(md5_file_falses)
-   #######    if len(md5_file_false) > 0:
-   #######        print("等待MD5文件生成。5分钟，5分钟！！！")
-   #######        if sleep_num == 1:
-   #######           time.sleep(300)
-   #######        else:
-   #######           set_md5_file_true = False
-   #######    else:
-   #######        set_md5_file_true = False
-   #######    sleep_num = sleep_num + 1
-
-
+    print("结束执行调用接口，进行等待MD5文件生成")
+    md5_file_false = []
+    set_md5_file_true = True
+    sleep_num = 1
+    print(file_dir_name_list,"========================================================")
+    # 判断是否没有md5的文件
+    while set_md5_file_true:
+      for file in file_dir_name_list:
+        #判断md5文件是否存在
+        is_md5_file = os.path.exists(file[0]+".md5")
+        if is_md5_file is False:
+           md5_file_false.append(file[0])
+        else:
+           pass
+      if len(md5_file_false) > 0 and sleep_num <= 60:
+              time.sleep(60)
+      else:
+          msg = "等待md5生成超时！！！\n%s"%(md5_file_false)
+          set_md5_file_true = False
+          msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                 SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                 TargetTable="%s.%s" % (DB, Table),
+                                 BeginExecDate=ExecData,
+                                 EndExecDate=ExecData,
+                                 Status="Error",
+                                 Log=msg,
+                                 Developer="developer")
+          set_exit(LevelStatu="red", MSG=msg)
+      md5_file_false.clear()
+      sleep_num = sleep_num + 1
     #落地临时表
-    #exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name,ParamsMD5=param_md5,DB=DB,Table=Table,ExecDate=ExecData)
+    #exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DB=DB,Table=Table,ExecDate=ExecData)
 
-def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",ParamsMD5="",DB="",Table="",ExecDate=""):
+def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DB="",Table="",ExecDate=""):
     param_table = """%s.%s_param"""%(DB,Table)
     mid_table = """%s.%s""" % (DB, Table)
     param_file = """%s.param""" % (LocalFileName)
