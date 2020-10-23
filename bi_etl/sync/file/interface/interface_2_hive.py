@@ -338,7 +338,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                         from(select %s
                                     ,%s
                                     ,%s
-                                    ,'' as request_type
+                                    ,request_type
                              from %s.%s a
                              where a.etl_date = '%s'
                             ) a
