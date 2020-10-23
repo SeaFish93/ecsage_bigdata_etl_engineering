@@ -333,7 +333,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         insert overwrite table %s.%s
         partition(etl_date = '%s')
         select %s,%s
-        from (select returns_colums,data_colums,returns_account_id,request_type
+        from (select returns_colums,data_num_colums,returns_account_id,request_type
               from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
                           ,split(data_colums,'@@####@@')[1] as data_colums
                           ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
@@ -348,7 +348,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                             ) a
                         ) b
                    ) c
-                   lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
+                   lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
               ) a
               lateral view json_tuple(data__num_colums,%s) b
               as %s
