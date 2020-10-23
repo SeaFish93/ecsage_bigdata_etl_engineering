@@ -87,63 +87,6 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ):
     data_json = DataJson
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-    data = """
-    '1653161780156424'
-,'1658498174839822'
-,'1662760699926536'
-,'1665095253439502'
-,'1670709254081550'
-,'1671820444434445'
-,'1673452167837699'
-,'1673522523246599'
-,'1673522564989960'
-,'1673702410299400'
-,'1674170835906568'
-,'1674723663085582'
-,'1675056486514702'
-,'1676052584646663'
-,'1676067208121358'
-,'1676868173806664'
-,'1676868175960071'
-,'1676868192922632'
-,'1677161568497672'
-,'1677503629403143'
-,'1678494892515341'
-,'1679065200287748'
-,'1679072628566023'
-,'1679163834217485'
-,'1680398059963406'
-,'1680492787269640'
-,'1680600914017294'
-,'1680678587074632'
-,'1681055953388558'
-,'1681055986162766'
-,'108322887258'
-,'1637309287436296'
-,'1638551217559559'
-,'1639210111659011'
-,'1642912728245255'
-,'1645016138373134'
-,'1654599060231176'
-,'1654610662027278'
-,'1654962649915399'
-,'1654966498454541'
-,'1655673239814157'
-,'1655865478501389'
-,'1659585572505608'
-,'1660313214458884'
-,'1661576493974540'
-,'1662240551561219'
-,'1663569364328460'
-,'1665196281956360'
-,'1666386257846279'
-,'1669804387488776'
-,'1672905779751950'
-,'1675341144251405'
-,'1675897159417870'
-,'1677142102917134'
-,'54830807065'
-    """
     ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = %s"""%(int(data_json["mt"])))
     #ok, data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media =2 and account_id in (%s)""" % (data))
     num = 1
@@ -152,14 +95,14 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     request_params = []
     print("开始执行调用接口")
     data_dir = conf.get("Interface", InterfaceModule)
-    file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,"test")#data_json["mt"])
+    file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,data_json["mt"])
     os.system("rm -rf %s" % (file_dir))
     file_dir_name_list = []
     advertiser_list = []
     for data in data_list:
        request_params.append(data)
        advertiser_list.append({"serviceCode":str(data[2]),"accountId":str(data[0])})
-       if num == 10000 or nums == len(data_list):
+       if num == 15000 or nums == len(data_list):
           run_num = run_num + 1
           print("第%s批正在提交！%s"%(run_num,advertiser_list))
           #######for request_num in request_params:
