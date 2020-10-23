@@ -350,7 +350,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                    ) c
                    lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
               ) a
-              lateral view json_tuple(data__num_colums,%s) b
+              lateral view json_tuple(data_num_colums,%s) b
               as %s
                ;
         """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
