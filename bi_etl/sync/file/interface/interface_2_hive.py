@@ -321,7 +321,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    print(json_tuple_column,"#######################################")
    if IsReport == 0:
        regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\":\\\\\\\\[\\\\\\\\{\\\\\\\\".*)',1),'$.data'),'$.list') as data_colums"""
-       return_regexp_extract = """regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\")',1)"""
+       return_regexp_extract = """regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\")',1) as returns_colums"""
        returns_account_id = """regexp_replace(regexp_replace(regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\")',1),', \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\"',''),'responseData : accountId: ','') as returns_account_id"""
    else:
       regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\".*)',1),'$.data'),'$.list') as data_colums"""
