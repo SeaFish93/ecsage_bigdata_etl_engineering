@@ -52,6 +52,7 @@ def main(TaskInfo, Level,**kwargs):
     select_exclude_columns = TaskInfo[27]
     is_report = TaskInfo[28]
     key_columns = TaskInfo[29]
+    commit_num = TaskInfo[31]
     #regexp_extract_column = TaskInfo[30]
     #if regexp_extract_column is None or len(regexp_extract_column) == 0:
     #    regexp_extract_column = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list')"""
@@ -69,7 +70,7 @@ def main(TaskInfo, Level,**kwargs):
       #数据文件落地至临时表
       get_file_2_hive(HiveSession=hive_session,BeelineSession=beeline_session,InterfaceUrl=interface_url,DataJson=data_json
                       ,FileDirName = file_dir_name,DataJsonRequest=data_json_request
-                      ,InterfaceModule = interface_module
+                      ,InterfaceModule = interface_module,CommitNum=commit_num
                       ,DB=target_db, Table=target_table,ExecData=exec_date
                      )
     elif Level == "ods":
@@ -82,7 +83,7 @@ def main(TaskInfo, Level,**kwargs):
 #含有level、time_line、date、group接口
 def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={},DataJsonRequest=""
                                    ,FileDirName = ""
-                                   ,InterfaceModule = ""
+                                   ,InterfaceModule = "",CommitNum=""
                                    ,DB="", Table="",ExecData=""
                                    ):
     data_json = DataJson
@@ -103,7 +104,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     for data in data_list:
        request_params.append(data)
        advertiser_list.append({"serviceCode":str(data[2]),"accountId":str(data[0])})
-       if num == 150000 or nums == len(data_list):
+       if num == CommitNum or nums == len(data_list):
           run_num = run_num + 1
           print("第%s批正在提交！%s"%(run_num,advertiser_list))
           now_time = time.strftime("%H_%M_%S", time.localtime())

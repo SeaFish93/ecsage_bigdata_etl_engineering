@@ -95,7 +95,8 @@ class EtlMetaDataSQL():
             ,select_exclude_columns   
             ,is_report
             ,key_columns
-            ,regexp_extract_column      
+            ,regexp_extract_column
+            ,commit_num      
             ,create_user          
             ,update_user          
     from metadb.interface_tasks_info_bak
