@@ -74,7 +74,7 @@ def main(TaskInfo, Level,**kwargs):
                      )
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
-                          TargetDB=target_db, TargetTable=target_table,SelectExcludeColumns=select_exclude_columns,  ExecDate=exec_date)
+                          TargetDB=target_db, TargetTable=target_table,IsReport=is_report,SelectExcludeColumns=select_exclude_columns,  ExecDate=exec_date)
     elif Level == "snap":
       exec_snap_hive_table(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
                              TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=exec_date)
@@ -295,7 +295,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",IsReport=0,SelectExcludeColumns="",ExecDate=""):
+                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",ExecDate=""):
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
