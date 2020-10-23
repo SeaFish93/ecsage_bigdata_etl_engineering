@@ -295,7 +295,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",IsReport=1,SelectExcludeColumns="",ExecDate=""):
+                        TargetDB="", TargetTable="",IsReport=0,SelectExcludeColumns="",ExecDate=""):
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
@@ -309,7 +309,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
       if column[0] == "etl_date":
           break;
    columns = columns.replace(",", "", 1)
-   print(columns,"#######################################")
    json_tuple_columns = ""
    for get_json_tuple_column in columns.split(","):
        if get_json_tuple_column not in select_exclude_columns.split(",") and get_json_tuple_column not in system_table_columns.split(","):
@@ -317,8 +316,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
-   print(json_tuple_columns,"#######################################")
-   print(json_tuple_column,"#######################################")
    if IsReport == 0:
        regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\":\\\\\\\\[\\\\\\\\{\\\\\\\\".*)',1),'$.data'),'$.list') as data_colums"""
        return_regexp_extract = """regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\")',1) as returns_colums"""
