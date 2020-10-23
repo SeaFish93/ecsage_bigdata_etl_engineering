@@ -316,7 +316,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
-   if IsReport == 0:
+   if IsReport == 1:
        regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\":\\\\[\\\\{\\\\".*)',1),'$.data'),'$.list') as data_colums"""
        return_regexp_extract = """regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\")',1) as returns_colums"""
        returns_account_id = """regexp_replace(regexp_replace(regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\")',1),', \\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\"',''),'responseData : accountId: ','') as returns_account_id"""
