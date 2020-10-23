@@ -138,6 +138,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
         else:
            pass
       if len(md5_file_false) > 0 and sleep_num <= 60:
+              print("等待第%s次"%(sleep_num))
               time.sleep(60)
       else:
           msg = "等待md5生成超时！！！\n%s"%(md5_file_false)
