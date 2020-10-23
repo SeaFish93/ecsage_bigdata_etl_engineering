@@ -96,7 +96,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     print("开始执行调用接口")
     data_dir = conf.get("Interface", InterfaceModule)
     file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,data_json["mt"])
-    os.system("rm -rf %s" % (file_dir))
+    #os.system("rm -rf %s" % (file_dir))
     file_dir_name_list = []
     advertiser_list = []
     for data in data_list:
