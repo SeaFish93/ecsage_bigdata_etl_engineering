@@ -93,7 +93,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     request_type = data_json["mt"]
     if "filtering" in data_json.keys():
        if "status" in data_json["filtering"].keys():
-           delete_type = "delete"
+           delete_type = data_json["filtering"]["status"] #"delete"
        else:
            delete_type = "not_delete"
     else:
