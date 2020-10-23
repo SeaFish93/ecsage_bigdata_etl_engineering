@@ -320,7 +320,9 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    print(json_tuple_columns,"#######################################")
    print(json_tuple_column,"#######################################")
    if IsReport == 0:
-      regexp_extract = """ """
+       regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\":\\\\\\\\[\\\\\\\\{\\\\\\\\".*)',1),'$.data'),'$.list') as data_colums"""
+       return_regexp_extract = """regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\")',1)"""
+       returns_account_id = """regexp_replace(regexp_replace(regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\")',1),', \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\"',''),'responseData : accountId: ','') as returns_account_id"""
    else:
       regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\".*)',1),'$.data'),'$.list') as data_colums"""
       return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\")',1),'\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\"','') as returns_colums"""
@@ -331,18 +333,17 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         insert overwrite table %s.%s
         partition(etl_date = '%s')
         select %s,%s
-        from (select returns_colums,data__num_colums,request_colums
+        from (select returns_colums,data_colums,returns_account_id,request_type
               from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
                           ,split(data_colums,'@@####@@')[1] as data_colums
-                          ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
-                   from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param),data_colums)) USING 'python get_arrary.py' as (data_colums)
+                          ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
+                          ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
+                   from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
                         from(select %s
                                     ,%s
-                                    ,b.request_param
+                                    ,%s
+                                    ,request_type
                              from %s.%s a
-                             inner join %s.%s_param b
-                             on a.etl_date = b.etl_date
-                             and a.md5_id = b.md5_id
                              where a.etl_date = '%s'
                             ) a
                         ) b
@@ -352,7 +353,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               lateral view json_tuple(data__num_colums,%s) b
               as %s
                ;
-        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
+        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
    print(sql)
    exit(0)
    ok = BeelineSession.execute_sql(sql)
