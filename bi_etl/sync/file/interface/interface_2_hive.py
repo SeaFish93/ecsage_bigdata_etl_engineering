@@ -326,7 +326,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    else:
       regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
       return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
-      returns_account_id = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_account_id"""
+      returns_account_id = """regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'returns : accountId: ',''),',.*','') as returns_account_id"""
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         insert overwrite table %s.%s
@@ -341,7 +341,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                         from(select %s
                                     ,%s
                                     ,%s
-                                    ,request_type
+                                    ,'' as request_type
                              from %s.%s a
                              where a.etl_date = '%s'
                             ) a
