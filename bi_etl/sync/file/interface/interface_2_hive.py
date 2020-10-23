@@ -324,9 +324,9 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
        return_regexp_extract = """regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\")',1) as returns_colums"""
        returns_account_id = """regexp_replace(regexp_replace(regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\")',1),', \\\\\\\\{\\\\\\\\"data\\\\\\\\":\\\\\\\\{\\\\\\\\"list\\\\\\\\"',''),'responseData : accountId: ','') as returns_account_id"""
    else:
-      regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\".*)',1),'$.data'),'$.list') as data_colums"""
-      return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\")',1),'\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\"','') as returns_colums"""
-      returns_account_id = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\")',1),'\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\"','') as returns_account_id"""
+      regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
+      return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
+      returns_account_id = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_account_id"""
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         insert overwrite table %s.%s
@@ -364,41 +364,41 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                               Log="ods入库失败！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
-   #校验ods与临时数据条数是否一致
-   sql = """
-       select a.total_number as total_number_mid,b.total_number as total_number_ods
-       from(
-            select sum(cast(tmp1.total_number as int)) as total_number
-            from(select returns_colums,total_number 
-                 from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
-                             ,get_json_object(get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.page_info'),'$.total_number') as total_number
-                      from %s.%s a
-                      inner join %s.%s_param b
-                      on a.etl_date = b.etl_date
-                      and a.md5_id = b.md5_id
-                      where a.etl_date = '%s'
-                      ) a
-                 group by returns_colums,total_number
-                ) tmp1
-            ) a
-       inner join (select count(1) as total_number from %s.%s where etl_date = '%s') b
-       on 1 = 1
-       where a.total_number <> b.total_number
-   """%(SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
-   ok,data = HiveSession.get_all_rows(sql)
-   data = []
-   print("ods入库数据：" + str(data))
-   if ok is False or len(data) > 0:
-       print("ods入库异常数据：" + str(data))
-       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                              SourceTable="%s.%s" % (SourceDB, SourceTable),
-                              TargetTable="%s.%s" % (TargetDB, TargetTable),
-                              BeginExecDate=ExecDate,
-                              EndExecDate=ExecDate,
-                              Status="Error",
-                              Log="ods校验失败！！！",
-                              Developer="developer")
-       set_exit(LevelStatu="red", MSG=msg)
+   ######## #校验ods与临时数据条数是否一致
+   ######## sql = """
+   ########     select a.total_number as total_number_mid,b.total_number as total_number_ods
+   ########     from(
+   ########          select sum(cast(tmp1.total_number as int)) as total_number
+   ########          from(select returns_colums,total_number
+   ########               from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
+   ########                           ,get_json_object(get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.page_info'),'$.total_number') as total_number
+   ########                    from %s.%s a
+   ########                    inner join %s.%s_param b
+   ########                    on a.etl_date = b.etl_date
+   ########                    and a.md5_id = b.md5_id
+   ########                    where a.etl_date = '%s'
+   ########                    ) a
+   ########               group by returns_colums,total_number
+   ########              ) tmp1
+   ########          ) a
+   ########     inner join (select count(1) as total_number from %s.%s where etl_date = '%s') b
+   ########     on 1 = 1
+   ########     where a.total_number <> b.total_number
+   ######## """%(SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
+   ######## ok,data = HiveSession.get_all_rows(sql)
+   ######## data = []
+   ######## print("ods入库数据：" + str(data))
+   ######## if ok is False or len(data) > 0:
+   ########     print("ods入库异常数据：" + str(data))
+   ########     msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+   ########                            SourceTable="%s.%s" % (SourceDB, SourceTable),
+   ########                            TargetTable="%s.%s" % (TargetDB, TargetTable),
+   ########                            BeginExecDate=ExecDate,
+   ########                            EndExecDate=ExecDate,
+   ########                            Status="Error",
+   ########                            Log="ods校验失败！！！",
+   ########                            Developer="developer")
+   ########     set_exit(LevelStatu="red", MSG=msg)
    #BeelineSession.execute_sql("drop table if exists %s.%s" % (SourceDB, SourceTable))
    #BeelineSession.execute_sql("drop table if exists %s.%s_param" % (SourceDB, SourceTable))
 
