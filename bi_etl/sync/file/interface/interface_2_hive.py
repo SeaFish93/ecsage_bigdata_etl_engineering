@@ -111,9 +111,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
           file_dir_name = "%s/%s" % (file_dir, file_name)
           if os.path.exists(file_dir) is False:
               os.system("mkdir -p %s" % (file_dir))
-          file_dir_name_list.append((file_dir_name,advertiser_list))
           data_json["%s" % (FileDirName)] = file_dir_name
           data_json["advertiser_list"] = advertiser_list
+          file_dir_name_list.append((file_dir_name, data_json))
           print("请求接口URL：%s"%(InterfaceUrl))
           print("请求接口参数：%s"%(data_json))
           # 分子账户开启进程
