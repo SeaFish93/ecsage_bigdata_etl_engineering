@@ -326,8 +326,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    else:
       regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\".*)',1),'$.data'),'$.list') as data_colums"""
       return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\")',1),'\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\"','') as returns_colums"""
-   print(regexp_extract,"================================")
-   print(return_regexp_extract,"==================================================")
+      returns_account_id = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\")',1),'\\\\\\\\{\\\\\\\\"code\\\\\\\\":0,\\\\\\\\"message\\\\\\\\":\\\\\\\\"OK\\\\\\\\"','') as returns_account_id"""
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         insert overwrite table %s.%s
@@ -354,8 +353,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               as %s
                ;
         """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
-   print(sql)
-   exit(0)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
