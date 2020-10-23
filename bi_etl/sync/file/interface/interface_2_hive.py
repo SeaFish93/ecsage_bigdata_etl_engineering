@@ -139,8 +139,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
            pass
       if len(md5_file_false) > 0:
           if sleep_num <= 60:
-              print("等待第%s次"%(sleep_num))
-              time.sleep(60)
+              min = 60
+              print("等待第%s次%s秒"%(sleep_num,min))
+              time.sleep(min)
           else:
               msg = "等待md5生成超时！！！\n%s" % (md5_file_false)
               msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -157,150 +158,140 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
       md5_file_false.clear()
       sleep_num = sleep_num + 1
     #落地临时表
-    #exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DB=DB,Table=Table,ExecDate=ExecData)
+    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DB=DB,Table=Table,ExecDate=ExecData)
 
 def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DB="",Table="",ExecDate=""):
-    param_table = """%s.%s_param"""%(DB,Table)
     mid_table = """%s.%s""" % (DB, Table)
-    param_file = """%s.param""" % (LocalFileName)
-    local_file = """%s""" % (LocalFileName)
     # 创建data临时表
-    param_sql = """
-          create table if not exists %s
-          (
-           request_param string
-          )partitioned by(etl_date string,md5_id string)
-          row format delimited fields terminated by '\\001' 
-        """%(param_table)
     mid_sql = """
               create table if not exists %s
               (
                request_data string
-              )partitioned by(etl_date string,md5_id string)
+              )partitioned by(etl_date string,request_type string)
               row format delimited fields terminated by '\\001' 
             """%(mid_table)
-    HiveSession.execute_sql(param_sql)
     HiveSession.execute_sql(mid_sql)
-    # 上传本地数据文件至HDFS
-    hdfs_dir = "/tmp/datafolder_new"
-    #上传param文件
-    print("""hadoop fs -moveFromLocal -f %s %s""" % (param_file, hdfs_dir), "************************************")
-    ok_param = os.system("hadoop fs -moveFromLocal -f %s %s" % (param_file, hdfs_dir))
-    # 上传数据文件
-    print("""hadoop fs -moveFromLocal -f %s %s""" % (local_file, hdfs_dir), "************************************")
-    ok_data = os.system("hadoop fs -moveFromLocal -f %s %s" % (local_file, hdfs_dir))
-    if ok_param != 0 and ok_data != 0:
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                               TargetTable="%s.%s" % (DB, Table),
-                               BeginExecDate=ExecDate,
-                               EndExecDate=ExecDate,
-                               Status="Error",
-                               Log="上传本地数据文件至HDFS出现异常！！！",
-                               Developer="developer")
-        set_exit(LevelStatu="red", MSG=msg)
-    #落地param表
-    load_table_sql = """
-            load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
-            partition(etl_date='{exec_date}',md5_id='{md5_id}')
-        """.format(hdfs_dir=hdfs_dir, file_name=param_file.split("/")[-1], table_name=param_table,exec_date=ExecDate,md5_id=ParamsMD5)
-    ok_param = HiveSession.execute_sql(load_table_sql)
-    # 落地mid表
-    load_table_sql = """
+    load_num = 0
+    for data in LocalFileName:
+        local_file = """%s""" % (data[0])
+        # 上传本地数据文件至HDFS
+        hdfs_dir = "/tmp/datafolder_new"
+        # 上传数据文件
+        print("""hadoop fs -moveFromLocal -f %s %s""" % (local_file, hdfs_dir), "************************************")
+        ok_data = os.system("hadoop fs -moveFromLocal -f %s %s" % (local_file, hdfs_dir))
+        if ok_data != 0:
+           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                  TargetTable="%s.%s" % (DB, Table),
+                                  BeginExecDate=ExecDate,
+                                  EndExecDate=ExecDate,
+                                  Status="Error",
+                                  Log="上传本地数据文件至HDFS出现异常！！！",
+                                  Developer="developer")
+           set_exit(LevelStatu="red", MSG=msg)
+       # 落地mid表
+        if load_num == 0:
+           load_table_sql = """
                 load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
-                partition(etl_date='{exec_date}',md5_id='{md5_id}')
-            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate,md5_id=ParamsMD5)
-    ok_data = HiveSession.execute_sql(load_table_sql)
-    if ok_param is False and ok_data is False:
-        # 删除临时表
-        HiveSession.execute_sql("""drop table if exists %s""" % (param_table))
-        HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                               TargetTable="%s.%s" % (DB, Table),
-                               BeginExecDate=ExecDate,
-                               EndExecDate=ExecDate,
-                               Status="Error",
-                               Log="HDFS数据文件load入仓临时表出现异常！！！",
-                               Developer="developer")
-        set_exit(LevelStatu="red", MSG=msg)
+                partition(etl_date='{exec_date}',request_type='{request_type}')
+            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate,request_type=RequestType)
+        else:
+           load_table_sql = """
+                load data inpath '{hdfs_dir}/{file_name}' INTO TABLE {table_name}
+                partition(etl_date='{exec_date}',request_type='{request_type}')
+            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,
+                                   exec_date=ExecDate, request_type=RequestType)
+        ok_data = HiveSession.execute_sql(load_table_sql)
+        if ok_data is False:
+           # 删除临时表
+           HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
+           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                  TargetTable="%s.%s" % (DB, Table),
+                                  BeginExecDate=ExecDate,
+                                  EndExecDate=ExecDate,
+                                  Status="Error",
+                                  Log="HDFS数据文件load入仓临时表出现异常！！！",
+                                  Developer="developer")
+           set_exit(LevelStatu="red", MSG=msg)
+        load_num = load_num + 1
     #校验接口数据是否一致
-    sql = """
-        add file hdfs:///tmp/airflow/get_arrary.py;
-        drop table if exists %s_check_request;
-        create table %s_check_request as
-        select tmp.returns_colums,tmp.`num` ,cast(tmp1.total_number as int) as num_1
-        from(select count(request_id) as num,returns_colums
-             from (select returns_colums,data__num_colums,request_colums,request_id
-                   from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
-                               ,split(data_colums,'@@####@@')[1] as data_colums
-                               ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
-                               ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_id
-                   from(select transform(data_col) USING 'python get_arrary.py' as (data_colums)
-                        from(select concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param,request_id),data_colums) as data_col
-                             from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
-                                    ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums
-                                    ,b.request_param
-                                    ,get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.request_id') as request_id
-                                  from %s a
-                                  inner join %s b
-                                  on a.etl_date = b.etl_date
-                                  and a.md5_id = b.md5_id
-                                  where a.etl_date = '%s'
-                                    and a.md5_id = '%s'
-                             ) a
-                        ) b
-                        where data_col like '%s'
-                        ) b
-                    ) c
-                    lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
-                ) a
-                group by returns_colums
-            ) tmp
-        inner join(select returns_colums,total_number 
-                   from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
-                               ,get_json_object(get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.page_info'),'$.total_number') as total_number
-                       from %s a
-                       inner join %s b
-                       on a.etl_date = b.etl_date
-                       and a.md5_id = b.md5_id
-                       where a.etl_date = '%s'
-                         and a.md5_id = '%s'
-                      ) a
-                    group by returns_colums,total_number
-                ) tmp1
-        on tmp.returns_colums = tmp1.returns_colums
-        where tmp.`num` <> cast(tmp1.total_number as int)
-    """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,"""%##@@%""",mid_table,param_table,ExecDate,ParamsMD5)
-    ok = BeelineSession.execute_sql(sql)
-    if ok is False:
-       sql = """drop table if exists %s_check_request"""%(mid_table)
-       HiveSession.execute_sql(sql)
-       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                               TargetTable="%s.%s" % (DB, Table),
-                               BeginExecDate=ExecDate,
-                               EndExecDate=ExecDate,
-                               Status="Error",
-                               Log="校验执行失败！！！",
-                               Developer="developer")
-       set_exit(LevelStatu="red", MSG=msg) 
-    ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
-    sql = """drop table if exists %s_check_request""" % (mid_table)
-    HiveSession.execute_sql(sql)
-    data = []
-    print("采集接口数据：" + str(data))
-    if ok is False or len(data) > 0:
-       print("采集接口异常数据："+ str(data))
-       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                               TargetTable="%s.%s" % (DB, Table),
-                               BeginExecDate=ExecDate,
-                               EndExecDate=ExecDate,
-                               Status="Error",
-                               Log="采集接口数据出现异常，源与目标文件对不上！！！",
-                               Developer="developer")
-       set_exit(LevelStatu="red", MSG=msg) 
+    ####### sql = """
+    #######     add file hdfs:///tmp/airflow/get_arrary.py;
+    #######     drop table if exists %s_check_request;
+    #######     create table %s_check_request as
+    #######     select tmp.returns_colums,tmp.`num` ,cast(tmp1.total_number as int) as num_1
+    #######     from(select count(request_id) as num,returns_colums
+    #######          from (select returns_colums,data__num_colums,request_colums,request_id
+    #######                from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
+    #######                            ,split(data_colums,'@@####@@')[1] as data_colums
+    #######                            ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as request_colums
+    #######                            ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_id
+    #######                from(select transform(data_col) USING 'python get_arrary.py' as (data_colums)
+    #######                     from(select concat_ws('##@@',concat_ws('##&&##',returns_colums,request_param,request_id),data_colums) as data_col
+    #######                          from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
+    #######                                 ,get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums
+    #######                                 ,b.request_param
+    #######                                 ,get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.request_id') as request_id
+    #######                               from %s a
+    #######                               inner join %s b
+    #######                               on a.etl_date = b.etl_date
+    #######                               and a.md5_id = b.md5_id
+    #######                               where a.etl_date = '%s'
+    #######                                 and a.md5_id = '%s'
+    #######                          ) a
+    #######                     ) b
+    #######                     where data_col like '%s'
+    #######                     ) b
+    #######                 ) c
+    #######                 lateral view explode(split(data_colums, '##@@')) num_line as data__num_colums
+    #######             ) a
+    #######             group by returns_colums
+    #######         ) tmp
+    #######     inner join(select returns_colums,total_number
+    #######                from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
+    #######                            ,get_json_object(get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.page_info'),'$.total_number') as total_number
+    #######                    from %s a
+    #######                    inner join %s b
+    #######                    on a.etl_date = b.etl_date
+    #######                    and a.md5_id = b.md5_id
+    #######                    where a.etl_date = '%s'
+    #######                      and a.md5_id = '%s'
+    #######                   ) a
+    #######                 group by returns_colums,total_number
+    #######             ) tmp1
+    #######     on tmp.returns_colums = tmp1.returns_colums
+    #######     where tmp.`num` <> cast(tmp1.total_number as int)
+    ####### """%(mid_table,mid_table,mid_table,param_table,ExecDate,ParamsMD5,"""%##@@%""",mid_table,param_table,ExecDate,ParamsMD5)
+    ####### ok = BeelineSession.execute_sql(sql)
+    ####### if ok is False:
+    #######    sql = """drop table if exists %s_check_request"""%(mid_table)
+    #######    HiveSession.execute_sql(sql)
+    #######    msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+    #######                            SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+    #######                            TargetTable="%s.%s" % (DB, Table),
+    #######                            BeginExecDate=ExecDate,
+    #######                            EndExecDate=ExecDate,
+    #######                            Status="Error",
+    #######                            Log="校验执行失败！！！",
+    #######                            Developer="developer")
+    #######    set_exit(LevelStatu="red", MSG=msg)
+    ####### ok,data = HiveSession.get_all_rows("select * from %s_check_request limit 1"%(mid_table))
+    ####### sql = """drop table if exists %s_check_request""" % (mid_table)
+    ####### HiveSession.execute_sql(sql)
+    ####### data = []
+    ####### print("采集接口数据：" + str(data))
+    ####### if ok is False or len(data) > 0:
+    #######    print("采集接口异常数据："+ str(data))
+    #######    msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+    #######                            SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+    #######                            TargetTable="%s.%s" % (DB, Table),
+    #######                            BeginExecDate=ExecDate,
+    #######                            EndExecDate=ExecDate,
+    #######                            Status="Error",
+    #######                            Log="采集接口数据出现异常，源与目标文件对不上！！！",
+    #######                            Developer="developer")
+    #######    set_exit(LevelStatu="red", MSG=msg)
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
