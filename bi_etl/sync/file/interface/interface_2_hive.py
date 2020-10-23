@@ -91,6 +91,13 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = %s"""%(int(data_json["mt"])))
     #ok, data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media =2 and account_id in (%s)""" % (data))
     request_type = data_json["mt"]
+    if "filtering" in data_json.keys():
+       if "status" in data_json["filtering"].keys():
+           delete_type = "delete"
+       else:
+           delete_type = "not_delete"
+    else:
+       delete_type = "not_delete"
     num = 1
     nums = 1
     run_num = 0
@@ -159,16 +166,16 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
       md5_file_false.clear()
       sleep_num = sleep_num + 1
     #落地临时表
-    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DB=DB,Table=Table,ExecDate=ExecData)
+    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DeleteType=delete_type,DB=DB,Table=Table,ExecDate=ExecData)
 
-def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DB="",Table="",ExecDate=""):
+def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DeleteType="",DB="",Table="",ExecDate=""):
     mid_table = """%s.%s""" % (DB, Table)
     # 创建data临时表
     mid_sql = """
               create table if not exists %s
               (
                request_data string
-              )partitioned by(etl_date string,request_type string)
+              )partitioned by(etl_date string,request_type string,delete_type string)
               row format delimited fields terminated by '\\001' 
             """%(mid_table)
     HiveSession.execute_sql(mid_sql)
@@ -194,14 +201,14 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
         if load_num == 0:
            load_table_sql = """
                 load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
-                partition(etl_date='{exec_date}',request_type='{request_type}')
-            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate,request_type=RequestType)
+                partition(etl_date='{exec_date}',request_type='{request_type}',delete_type='{delete_type}')
+            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate,request_type=RequestType,delete_type=DeleteType)
         else:
            load_table_sql = """
                 load data inpath '{hdfs_dir}/{file_name}' INTO TABLE {table_name}
-                partition(etl_date='{exec_date}',request_type='{request_type}')
+                partition(etl_date='{exec_date}',request_type='{request_type}',delete_type='{delete_type}')
             """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,
-                                   exec_date=ExecDate, request_type=RequestType)
+                                   exec_date=ExecDate, request_type=RequestType,delete_type=DeleteType)
         ok_data = HiveSession.execute_sql(load_table_sql)
         if ok_data is False:
            # 删除临时表
