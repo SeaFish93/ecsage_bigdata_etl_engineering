@@ -351,3 +351,304 @@ begin
 
 END; //
 DELIMITER ;
+
+
+------------------------------------------------------------------------
+########################################################################
+-- 触发器（写入）
+DELIMITER //
+CREATE trigger metadb.interface_tasks_model_insert_trigger
+AFTER INSERT ON metadb.interface_tasks_model
+FOR EACH ROW
+begin
+  declare num int;
+  -- 写入file作业记录
+  INSERT INTO metadb.interface_tasks_info
+    (
+     task_id
+     ,dag_id
+     ,interface_acount_type
+     ,interface_url
+     ,interface_level
+     ,interface_time_line
+     ,group_by
+     ,is_run_date
+     ,is_delete
+     ,sync_level
+     ,source_handle
+     ,source_db
+     ,source_table
+     ,target_handle
+     ,target_db
+     ,target_table
+     ,status
+     ,create_user
+     ,update_user
+     ,tasks_model_id
+    )
+    VALUES (
+      NEW.task_id
+     ,NEW.dag_id
+     ,NEW.interface_acount_type
+     ,NEW.interface_url
+     ,NEW.interface_level
+     ,NEW.interface_time_line
+     ,NEW.group_by
+     ,NEW.is_run_date
+     ,NEW.is_delete
+     ,'file' -- sync_level
+     ,'hive' -- source_handle
+     ,'' -- source_db
+     ,'' -- source_table
+     ,NEW.target_handle
+     ,NEW.target_db
+     ,NEW.target_table
+     ,NEW.status
+     ,NEW.create_user
+     ,NEW.update_user
+     ,NEW.task_id
+    );
+  set num = (select count(1) from metadb.interface_tasks_info where task_id = concat_ws('_','ods',NEW.target_table));
+  if (num = 0) then
+     -- 写入ods作业记录
+     INSERT INTO metadb.interface_tasks_info
+     (
+      task_id
+      ,dag_id
+      ,interface_acount_type
+      ,interface_url
+      ,interface_level
+      ,interface_time_line
+      ,group_by
+      ,is_run_date
+      ,is_delete
+      ,sync_level
+      ,source_handle
+      ,source_db
+      ,source_table
+      ,target_handle
+      ,target_db
+      ,target_table
+      ,status
+      ,create_user
+      ,update_user
+      ,tasks_model_id
+     )
+     VALUES (
+       concat_ws('_','ods',NEW.target_table)
+      ,NEW.dag_id
+      ,NEW.interface_acount_type
+      ,NEW.interface_url
+      ,NEW.interface_level
+      ,NEW.interface_time_line
+      ,NEW.group_by
+      ,NEW.is_run_date
+      ,NEW.is_delete
+      ,'ods' -- sync_level
+      ,NEW.target_handle -- source_handle
+      ,'etl_mid' -- source_db
+      ,NEW.target_table -- source_table
+      ,NEW.target_handle
+      ,'ods' -- target_db
+      ,NEW.target_table
+      ,NEW.status
+      ,NEW.create_user
+      ,NEW.update_user
+      ,NEW.task_id
+     );
+    -- 写入snap记录
+    INSERT INTO metadb.interface_tasks_info
+    (
+     task_id
+     ,dag_id
+     ,interface_acount_type
+     ,interface_url
+     ,interface_level
+     ,interface_time_line
+     ,group_by
+     ,is_run_date
+     ,is_delete
+     ,sync_level
+     ,source_handle
+     ,source_db
+     ,source_table
+     ,target_handle
+     ,target_db
+     ,target_table
+     ,status
+     ,create_user
+     ,update_user
+     ,tasks_model_id
+    )
+    VALUES (
+     concat_ws('_','snap',NEW.target_table)
+     ,NEW.dag_id
+     ,NEW.interface_acount_type
+     ,NEW.interface_url
+     ,NEW.interface_level
+     ,NEW.interface_time_line
+     ,NEW.group_by
+     ,NEW.is_run_date
+     ,NEW.is_delete
+     ,'snap' -- sync_level
+     ,NEW.target_handle -- source_handle
+     ,'ods' -- source_db
+     ,NEW.target_table -- source_table
+     ,NEW.target_handle
+     ,'snap' -- target_db
+     ,NEW.target_table
+     ,NEW.status
+     ,NEW.create_user
+     ,NEW.update_user
+     ,NEW.task_id
+    );
+    -- snap依赖
+    insert into metadb.etl_job_dep
+    (task_id,dep_task_id,status)
+    select concat_ws('_','snap',NEW.target_table),concat_ws('_','ods',NEW.target_table),1
+    ;
+ end if;
+    -- ods依赖
+    insert into metadb.etl_job_dep
+    (task_id,dep_task_id,status)
+    select concat_ws('_','ods',NEW.target_table),NEW.task_id,1
+    ;
+END; //
+DELIMITER ;
+
+-- 删除
+DELIMITER //
+CREATE TRIGGER metadb.interface_tasks_model_delete_trigger
+AFTER DELETE ON metadb.interface_tasks_model
+FOR EACH ROW
+begin
+  -- 删除作业
+  delete from metadb.interface_tasks_info
+  where task_id in = OLD.task_id
+  ;
+  declare num int;
+  set num = (select count(1) from metadb.interface_tasks_info where target_table = OLD.target_table);
+  -- 删除ods、snap作业
+  if (num = 0) then
+    delete from metadb.interface_tasks_info
+    where task_id = concat_ws('_','ods',OLD.target_table)
+    ;
+    delete from metadb.interface_tasks_info
+    where task_id = concat_ws('_','snap',OLD.target_table)
+    ;
+  end if;
+  -- 删除依赖
+  delete from metadb.etl_job_dep where task_id = concat_ws('_','ods',OLD.target_table);
+  delete from metadb.etl_job_dep where task_id = concat_ws('_','snap',OLD.target_table);
+  delete from metadb.etl_job_dep where dep_task_id = concat_ws('_','ods',OLD.target_table);
+  delete from metadb.etl_job_dep where dep_task_id = concat_ws('_','snap',OLD.target_table);
+END; //
+DELIMITER ;
+
+-- 更改
+DELIMITER //
+CREATE TRIGGER metadb.sync_tasks_model_update_trigger
+AFTER UPDATE ON metadb.sync_tasks_model
+FOR EACH ROW
+begin
+   -- 更新file作业记录
+   update metadb.interface_tasks_info
+   set task_id = concat_ws('_','etl_mid',NEW.target_table)
+     ,dag_id = NEW.dag_id
+     ,interface_acount_type =  NEW.interface_acount_type
+     ,interface_url         =  NEW.interface_url
+     ,interface_level       =  NEW.interface_level
+     ,interface_time_line   =  NEW.interface_time_line
+     ,group_by              =  NEW.group_by
+     ,is_run_date           =  NEW.is_run_date
+     ,is_delete             =  NEW.is_delete
+     ,sync_level            =  'file' -- sync_level
+     ,source_handle         =  'hive' -- source_handle
+     ,source_db             =  '' -- source_db
+     ,source_table          =  '' -- source_table
+     ,target_handle         =  NEW.target_handle
+     ,target_db             =  NEW.target_db
+     ,target_table          =  NEW.target_table
+     ,status                =  NEW.status
+     ,create_user           =  NEW.create_user
+     ,update_user           =  NEW.update_user
+   where task_id = concat_ws('_','etl_mid',OLD.target_table)
+   -- 更新ods作业记录
+   update metadb.interface_tasks_info set
+   task_id                  =    concat_ws('_','ods',NEW.target_table)
+   ,dag_id                  =   ,NEW.dag_id
+   ,interface_acount_type   =   ,NEW.interface_acount_type
+   ,interface_url           =   ,NEW.interface_url
+   ,interface_level         =   ,NEW.interface_level
+   ,interface_time_line     =   ,NEW.interface_time_line
+   ,group_by                =   ,NEW.group_by
+   ,is_run_date             =   ,NEW.is_run_date
+   ,is_delete               =   ,NEW.is_delete
+   ,sync_level              =   ,'ods' -- sync_level
+   ,source_handle           =   ,NEW.target_handle -- source_handle
+   ,source_db               =   ,'etl_mid' -- source_db
+   ,source_table            =   ,NEW.target_table -- source_table
+   ,target_handle           =   ,NEW.target_handle
+   ,target_db               =   ,'ods' -- target_db
+   ,target_table            =   ,NEW.target_table
+   ,status                  =   ,NEW.status
+   ,create_user             =   ,NEW.create_user
+   ,update_user             =   ,NEW.update_user
+   where task_id = concat_ws('_','ods',OLD.target_table)
+   and
+   -- 写入snap记录
+
+    INSERT INTO metadb.interface_tasks_info
+    (
+     task_id
+     ,dag_id
+     ,interface_acount_type
+     ,interface_url
+     ,interface_level
+     ,interface_time_line
+     ,group_by
+     ,is_run_date
+     ,is_delete
+     ,sync_level
+     ,source_handle
+     ,source_db
+     ,source_table
+     ,target_handle
+     ,target_db
+     ,target_table
+     ,status
+     ,create_user
+     ,update_user
+    )
+    VALUES (
+     concat_ws('_','snap',NEW.target_table)
+     ,NEW.dag_id
+     ,NEW.interface_acount_type
+     ,NEW.interface_url
+     ,NEW.interface_level
+     ,NEW.interface_time_line
+     ,NEW.group_by
+     ,NEW.is_run_date
+     ,NEW.is_delete
+     ,'snap' -- sync_level
+     ,NEW.target_handle -- source_handle
+     ,'ods' -- source_db
+     ,NEW.target_table -- source_table
+     ,NEW.target_handle
+     ,'snap' -- target_db
+     ,NEW.target_table
+     ,NEW.status
+     ,NEW.create_user
+     ,NEW.update_user
+    );
+
+   -- 更新依赖
+  update metadb.etl_job_dep set task_id = concat_ws('_','ods',NEW.target_table) where task_id = concat_ws('_','ods',OLD.target_table);
+  update metadb.etl_job_dep set task_id = concat_ws('_','ods',NEW.target_table) where task_id = concat_ws('_','snap',OLD.target_table);
+  update metadb.etl_job_dep set dep_task_id = concat_ws('_','ods',NEW.target_table) where dep_task_id = concat_ws('_','ods',OLD.target_table);
+  update metadb.etl_job_dep set dep_task_id = concat_ws('_','ods',NEW.target_table) where dep_task_id = concat_ws('_','snap',OLD.target_table);
+
+END; //
+DELIMITER ;
+
+

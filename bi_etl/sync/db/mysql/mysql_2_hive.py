@@ -63,7 +63,7 @@ def main(TaskInfo, Level,**kwargs):
     exec_date = airflow.execution_date_utc8_str[0:10]
     #创建连接session
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
-    beeline_session = set_db_session(SessionType="beeline", SessionHandler=hive_handler)
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if source_platform == "mysql":
       mysql_session = set_db_session(SessionType="mysql", SessionHandler=mysql_handler)
     try:
@@ -345,8 +345,8 @@ def set_load_file_to_hive(HiveSession="",MysqlSession="",SourceDB="",SourceTable
                             SourceTable=SourceTable,
                             TargetDB=TmpDB, TargetTable=TmpTable)
     #上传本地数据文件至HDFS
-    print("""hdfs dfs -moveFromLocal -f %s %s"""% (DataFile,HDFSDir),"************************************")
-    ok = os.system("hdfs dfs -moveFromLocal -f %s %s" % (DataFile,HDFSDir))
+    print("""hadoop fs -moveFromLocal -f %s %s"""% (DataFile,HDFSDir),"************************************")
+    ok = os.system("hadoop fs -moveFromLocal -f %s %s" % (DataFile,HDFSDir))
     if ok != 0:
         # 删除数据文件
         os.system("rm -f %s" % DataFile)
