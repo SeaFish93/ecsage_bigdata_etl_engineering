@@ -125,6 +125,7 @@ for dag_info in get_dags:
              ok, task_deps = etl_md.execute_sql(sqlName="get_task_dep_sql", Parameter={"task_id": task_name["task_id"]},
                                                 IsReturnData="Y")
              if len(task_deps) > 0:
+                 num = 1
                  for task_dep in task_deps:
                      if task_dep[0] == task_dep[3]:
                          task[task_dep[2]].set_upstream(task[task_dep[1]])
@@ -132,7 +133,7 @@ for dag_info in get_dags:
                          if len(task_downstream_deps) == 0:
                              task[task_dep[1]].set_upstream(start_etl_task)
                      else:
-                         external_task = PythonOperator(task_id='external_%s_%s' % (task_dep[0], task_dep[1]),
+                         external_task = PythonOperator(task_id='external_%s_%s_for_%s' % (task_dep[0], task_dep[1],task_dep[2]),
                                                         python_callable=dep_task_main,
                                                         provide_context=True,
                                                         op_args=(task_dep[0], task_dep[1], task_dep[4],),
