@@ -35,6 +35,7 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
         # pendulum 2.0.5及以后，可以直接传入execution_date（pendulum类型）
         cron = croniter(DepTaskCrontab, ex_date_datetime)
         cron_prev = cron.get_current(datetime)
+        cron_next = cron.get_next(datetime)
         cron_prev_01 = cron.get_prev(datetime)
         if str(execution_date)[11:19] != str(cron_prev_01)[11:19]:
             cron_prev = cron_prev_01
@@ -45,7 +46,7 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
                                                   cron_prev.minute,
                                                   cron_prev.second,
                                                   cron_prev.microsecond)
-        print(ex_date_datetime,DepTaskCrontab,cron_prev_pendulum,cron_prev,cron_prev_01,"====================================")
+        print(ex_date_datetime,DepTaskCrontab,cron_prev_pendulum,cron_prev,cron_prev_01,cron_next,"====================================")
         return cron_prev_pendulum
     external_task = ExternalTaskSensor(external_task_id=DepTaskID,
                                        external_dag_id=DepDagID,
