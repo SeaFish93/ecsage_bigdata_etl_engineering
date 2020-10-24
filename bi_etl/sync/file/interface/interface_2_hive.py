@@ -146,7 +146,8 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
         else:
            pass
       if len(md5_file_false) > 0:
-          if sleep_num <= 60:
+          wait_mins = 180
+          if sleep_num <= wait_mins:
               min = 60
               print("等待第%s次%s秒"%(sleep_num,min))
               time.sleep(min)
