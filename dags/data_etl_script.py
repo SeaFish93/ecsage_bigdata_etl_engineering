@@ -134,17 +134,19 @@ for dag_info in get_dags:
                              task[task_dep[1]].set_upstream(start_etl_task)
                      else:
                            external_task_id = 'external_%s_%s' % (task_dep[0], task_dep[1])
-                           print(list(external_task.keys()),"@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-                           external_task['%s' % (external_task_id)] = PythonOperator(task_id=external_task_id,
+                           if external_task_id in list(external_task.keys()):
+                              print(list(external_task.keys()),"@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+                           else:
+                              external_task['%s' % (external_task_id)] = PythonOperator(task_id=external_task_id,
                                                         python_callable=dep_task_main,
                                                         provide_context=True,
                                                         op_args=(task_dep[0], task_dep[1], task_dep[4],),
                                                         dag=dag)
-                           task[task_dep[2]].set_upstream(external_task[external_task_id])
-                           external_task[external_task_id].set_upstream(start_etl_task)
-                           if external_task[external_task_id].task_id == "%s" % (external_task_id):
-                               task[task_dep[2]].set_upstream(external_task[external_task_id])
-                               print(task[task_dep[2]],external_task[external_task_id].task_id,task_dep[2],external_task[external_task_id].task_id, "====================================================")
+                              task[task_dep[2]].set_upstream(external_task[external_task_id])
+                              external_task[external_task_id].set_upstream(start_etl_task)
+                           #if external_task[external_task_id].task_id == "%s" % (external_task_id):
+                            #   task[task_dep[2]].set_upstream(external_task[external_task_id])
+                             #  print(task[task_dep[2]],external_task[external_task_id].task_id,task_dep[2],external_task[external_task_id].task_id, "====================================================")
              else:
                  task['%s' % (task_name["task_id"])].set_upstream(start_etl_task)
              ok, task_upstream_deps = etl_md.execute_sql(sqlName="get_upstream_depend_sql", Parameter={"dep_task_id": task_name["task_id"]},IsReturnData="Y")
