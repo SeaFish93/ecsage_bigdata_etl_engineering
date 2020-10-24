@@ -132,7 +132,7 @@ for dag_info in get_dags:
                          if len(task_downstream_deps) == 0:
                              task[task_dep[1]].set_upstream(start_etl_task)
                      else:
-                         external_task = PythonOperator(task_id='external_%s_%s_%s' % (task_dep[0], task_dep[1],task_dep[2]),
+                         external_task = PythonOperator(task_id='external_%s_%s_for_%s' % (task_dep[0], task_dep[1],task_dep[2]),
                                                         python_callable=dep_task_main,
                                                         provide_context=True,
                                                         op_args=(task_dep[0], task_dep[1], task_dep[4],),
