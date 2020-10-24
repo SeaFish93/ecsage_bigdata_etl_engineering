@@ -133,15 +133,17 @@ for dag_info in get_dags:
                              task[task_dep[1]].set_upstream(start_etl_task)
                      else:
                            external_task_name = 'external_%s_%s' % (task_dep[0], task_dep[1])
-                           external_task = PythonOperator(task_id=external_task_name,
+                           if external_task.task_id != "%s" % (external_task_name):
+                              external_task = PythonOperator(task_id=external_task_name,
                                                         python_callable=dep_task_main,
                                                         provide_context=True,
                                                         op_args=(task_dep[0], task_dep[1], task_dep[4],),
                                                         dag=dag)
-                           task[task_dep[2]].set_upstream(external_task)
-                           external_task.set_upstream(start_etl_task)
-                           print(external_task.task_id ,external_task_name,"###############################")
-                           if external_task.task_id == "%s" % (external_task_name):
+                              task[task_dep[2]].set_upstream(external_task)
+                              external_task.set_upstream(start_etl_task)
+                           else:
+                              print(external_task.task_id ,external_task_name,"###############################")
+                              if external_task.task_id == "%s" % (external_task_name):
                                task[task_dep[2]].set_upstream(external_task)
                                print(task_dep[2],external_task.task_id, "====================================================")
              else:
