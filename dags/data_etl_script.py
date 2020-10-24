@@ -135,7 +135,6 @@ for dag_info in get_dags:
                      else:
                            external_task_id = 'external_%s_%s' % (task_dep[0], task_dep[1])
                            if external_task_id in list(external_task.keys()):
-                              print(list(external_task.keys()),"@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
                               task[task_dep[2]].set_upstream(external_task[external_task_id])
                            else:
                               external_task['%s' % (external_task_id)] = PythonOperator(task_id=external_task_id,
