@@ -46,7 +46,7 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
                                                   cron_prev.minute,
                                                   cron_prev.second,
                                                   cron_prev.microsecond)
-        print(ex_date_datetime,DepTaskCrontab,cron_prev_pendulum,cron_prev,cron_prev_01,cron_next,"====================================")
+        print(ex_date_datetime,DepTaskCrontab,cron_prev_pendulum,cron_prev,cron_prev_01,cron_next,str(execution_date)[11:19],str(cron_prev_01)[11:19],"====================================")
         return cron_prev_pendulum
     external_task = ExternalTaskSensor(external_task_id=DepTaskID,
                                        external_dag_id=DepDagID,
