@@ -141,7 +141,7 @@ for dag_info in get_dags:
                                                         dag=dag)
                            task[task_dep[2]].set_upstream(external_task[external_task_id])
                            external_task[external_task_id].set_upstream(start_etl_task)
-                           if external_task[external_task_id].task_id == "%s" % (external_task_name):
+                           if external_task[external_task_id].task_id == "%s" % (external_task_id):
                                #task[task_dep[2]].set_upstream(external_task)
                                print(task[task_dep[2]],external_task[external_task_id].task_id,task_dep[2],externexternal_task[external_task_id].task_idal_task.task_id, "====================================================")
              else:
