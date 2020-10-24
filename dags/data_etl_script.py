@@ -142,7 +142,8 @@ for dag_info in get_dags:
                            external_task.set_upstream(start_etl_task)
                            print(external_task.task_id ,external_task_name,"###############################")
                            if external_task.task_id == "%s" % (external_task_name):
-                               print(task_dep[2],external_task.task_id, "====================================================")
+                               task[task_dep[2]].set_upstream(external_task)
+                               #####print(task_dep[2],external_task.task_id, "====================================================")
              else:
                  task['%s' % (task_name["task_id"])].set_upstream(start_etl_task)
              ok, task_upstream_deps = etl_md.execute_sql(sqlName="get_upstream_depend_sql", Parameter={"dep_task_id": task_name["task_id"]},IsReturnData="Y")
