@@ -24,7 +24,7 @@ def set_db_session(SessionType="",SessionHandler="",AppName=""):
                                host=get_handle[0][0],
                                user=get_handle[0][2],
                                password=get_handle[0][3],
-                               metastore_uris="")
+                               metastore_uris="%s"%(get_handle[0][0]))
     elif SessionType == "spark":
       from ecsage_bigdata_etl_engineering.common.operator.spark.spark_operator import SparkNoSqlDB
       session = SparkNoSqlDB(port=get_handle[0][1],

@@ -65,26 +65,41 @@ class EtlMetaDataSQL():
 
   #获取创建接口tasks
   get_interface_sync_tasks_sql = """
-    select  task_id
-            ,dag_id
-            ,interface_acount_type
-            ,interface_url
-            ,interface_level
-            ,interface_time_line
-            ,group_by
-            ,is_run_date
-            ,target_handle
-            ,target_db
-            ,target_table
-            ,is_delete
-            ,sync_level
-            ,source_handle
-            ,source_db
-            ,source_table
-            ,status
-            ,create_user
-            ,update_user
-    from metadb.interface_tasks_info
+    select  task_id               
+            ,dag_id               
+            ,interface_url        
+            ,data_json            
+            ,'' as partition_01         
+            ,'' as partition_02         
+            ,'' as partition_03         
+            ,'' as partition_04         
+            ,'' as partition_05         
+            ,'' as partition_06         
+            ,'' as partition_07         
+            ,start_date_name      
+            ,end_date_name        
+            ,init_start_date      
+            ,init_end_date        
+            ,is_init_data         
+            ,sync_level           
+            ,source_handle        
+            ,source_db            
+            ,source_table         
+            ,target_handle        
+            ,target_db            
+            ,target_table         
+            ,status   
+            ,file_dir_name 
+            ,interface_module 
+            ,filter_modify_time_name 
+            ,select_exclude_columns   
+            ,is_report
+            ,key_columns
+            ,regexp_extract_column
+            ,commit_num      
+            ,create_user          
+            ,update_user          
+    from metadb.interface_tasks_info_bak
     where status = 1
       and dag_id = '%s'
   """ % ("##{dag_id}##")

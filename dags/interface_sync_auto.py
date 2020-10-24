@@ -83,7 +83,7 @@ for dag_info in get_dags:
           #配置跑批任务属性
           task_id = tasks_info[0]
           print(task_id,"@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!================================")
-          level = tasks_info[12]
+          level = tasks_info[16]
           tasks.append({"task_id": task_id, "batch_type": batch_type})
           task = locals()
           #定义task对象

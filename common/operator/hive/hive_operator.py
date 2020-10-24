@@ -21,6 +21,8 @@ class HiveNoSqlDB(BaseDB):
             "hive.server2.session.check.interval": "7200000",
             "hive.server2.idle.operation.timeout": "7200000",
             "hive.server2.idle.session.timeout": "7200000",
+            "hive.exec.dynamic.partition" : "true",
+            "hive.exec.dynamic.partition.mode" : "nonstrict",
            # "mapreduce.job.queuename": "root.batch.etl",
             # "mapreduce.map.memory.mb": "8000",
             # "mapreduce.map.java.opts": "-Xmx7200m",
