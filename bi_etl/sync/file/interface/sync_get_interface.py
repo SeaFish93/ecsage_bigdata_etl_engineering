@@ -35,10 +35,10 @@ def main(TaskInfo, Level,**kwargs):
     print(Variable.get("baz", default_var=None),"==============================================================")
     print(start_date,end_date,"----------------------------")
     print(interval, "=============================")
-    #ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
-    #(ok, output) = subprocess.getstatusoutput("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
-    #print("日志打印：",output)
-    #if ok != 0:
-    #    msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
-    #                               Developer="蒋杰")
-    #    set_exit(LevelStatu="red", MSG=msg)
+    ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
+    (ok, output) = subprocess.getstatusoutput("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
+    print("日志打印：",output)
+    if ok != 0:
+        msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
+                                   Developer="蒋杰")
+        set_exit(LevelStatu="red", MSG=msg)
