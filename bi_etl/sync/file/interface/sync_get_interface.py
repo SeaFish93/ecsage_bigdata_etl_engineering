@@ -42,5 +42,6 @@ def main(TaskInfo, Level,**kwargs):
                                    Developer="蒋杰")
         set_exit(LevelStatu="red", MSG=msg)
     #删除web页面变量
+    print("删除web页面已定义变量：【%s,%s】"%("%s_start_date"%(airflow.dag),"%s_end_date" % (airflow.dag)))
     Variable.delete("%s_start_date"%(airflow.dag))
     Variable.delete("%s_end_date" % (airflow.dag))
