@@ -34,10 +34,13 @@ def main(TaskInfo, Level,**kwargs):
     action = int(str(params.split(',')[1]))
     print(start_date,end_date,"----------------------------")
     print(interval, "=============================")
-    #ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
-    (ok, output) = subprocess.getstatusoutput("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
-    print("日志打印：",output)
+    #(ok, output) = subprocess.getstatusoutput("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
+    #print("日志打印：",output)
+    ok = 0
     if ok != 0:
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
                                    Developer="蒋杰")
         set_exit(LevelStatu="red", MSG=msg)
+    #删除web页面变量
+    Variable.delete("%s_start_date"%(airflow.dag))
+    Variable.delete("%s_end_date" % (airflow.dag))
