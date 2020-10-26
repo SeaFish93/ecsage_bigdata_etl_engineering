@@ -35,7 +35,7 @@ def main(TaskInfo, Level,**kwargs):
     print(Variable.get("baz", default_var=None),"==============================================================")
     print(start_date,end_date,"----------------------------")
     print(interval, "=============================")
-    ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
+    #ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
     (ok, output) = subprocess.getstatusoutput("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
     print("日志打印：",output)
     if ok != 0:
