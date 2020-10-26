@@ -32,7 +32,6 @@ def main(TaskInfo, Level,**kwargs):
     end_date = Variable.get("%s_end_date"%(airflow.dag), default_var=airflow.tomorrow_ds_nodash_utc8)
     interval = int(str(params.split(',')[0]))
     action = int(str(params.split(',')[1]))
-    print(Variable.get("baz", default_var=None),"==============================================================")
     print(start_date,end_date,"----------------------------")
     print(interval, "=============================")
     #ok = os.system("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
