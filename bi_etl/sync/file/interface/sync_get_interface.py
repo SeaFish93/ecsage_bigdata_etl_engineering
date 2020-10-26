@@ -34,9 +34,8 @@ def main(TaskInfo, Level,**kwargs):
     action = int(str(params.split(',')[1]))
     print(start_date,end_date,"----------------------------")
     print(interval, "=============================")
-    #(ok, output) = subprocess.getstatusoutput("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
-    #print("日志打印：",output)
-    ok = 0
+    (ok, output) = subprocess.getstatusoutput("sh  %s/%s %s %s %s %s" % (shell_path, shell_name+".sh",start_date,end_date,interval,action))
+    print("日志打印：",output)
     if ok != 0:
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
                                    Developer="蒋杰")
