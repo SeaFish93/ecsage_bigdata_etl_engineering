@@ -364,7 +364,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               lateral view json_tuple(data_num_colums,%s) b
               as %s
                ;
-        """%("etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
+        """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -384,7 +384,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         from %s.%s
         ) tmp where rn_row_number = 1
                ;
-        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,select_json_tuple_column,select_system_table_column,row_number_columns,"etl_mid",TargetTable)
+        drop table if exists %s.%s_tmp;
+        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,select_json_tuple_column,select_system_table_column,row_number_columns,"etl_mid",TargetTable,"etl_mid",TargetTable)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
