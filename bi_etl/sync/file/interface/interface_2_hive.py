@@ -311,7 +311,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    select_system_table_column = "returns_account_id,returns_colums,request_type,'%s' as extract_system_time"%(system_time)
    is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB,TargetTable=TargetTable, ExecDate=ExecDate, KeyColumns=KeyColumns)
    row_number_columns = ""
-   for key in KeyColumns:
+   key_column_list = KeyColumns.split(",")
+   for key in key_column_list:
        row_number_columns = row_number_columns + "," + "`" + key + "`"
    row_number_columns = row_number_columns.replace(",", "", 1)
    select_exclude_columns = SelectExcludeColumns
