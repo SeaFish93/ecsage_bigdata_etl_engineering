@@ -13,9 +13,9 @@ MYSQL_2_HIVE = {
     "DOUBLE": "decimal",
     "FLOAT": "decimal",
     "DECIMAL": "decimal",
-    "DATETIME": "timestamp",
-    "TIMESTAMP": "timestamp",
-    "DATE": "date",
+    "DATETIME": "string",
+    "TIMESTAMP": "string",
+    "DATE": "string",
     "OTHER": "string"
 }
 

@@ -62,7 +62,7 @@ def main(TaskInfo, Level,**kwargs):
     if Level == "file":
       data_json = ast.literal_eval(json.loads(data_json))
       if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
-          data_json["%s" % (filter_modify_time_name)] = exec_date
+          data_json["filtering"]["%s" % (filter_modify_time_name)] = exec_date
       if start_date_name is not None and len(start_date_name) > 0 and end_date_name is not None and len(
               end_date_name) > 0:
           data_json["%s" % (start_date_name)] = exec_date
@@ -75,7 +75,7 @@ def main(TaskInfo, Level,**kwargs):
                      )
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
-                          TargetDB=target_db, TargetTable=target_table,IsReport=is_report,SelectExcludeColumns=select_exclude_columns,  ExecDate=exec_date)
+                          TargetDB=target_db, TargetTable=target_table,IsReport=is_report,SelectExcludeColumns=select_exclude_columns,KeyColumns=key_columns,ExecDate=exec_date)
     elif Level == "snap":
       exec_snap_hive_table(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
                              TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=exec_date)
@@ -304,11 +304,17 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",ExecDate=""):
+                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate=""):
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
    select_system_table_column = "returns_account_id,returns_colums,request_type,'%s' as extract_system_time"%(system_time)
+   is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB,TargetTable=TargetTable, ExecDate=ExecDate, KeyColumns=KeyColumns)
+   row_number_columns = ""
+   key_column_list = KeyColumns.split(",")
+   for key in key_column_list:
+       row_number_columns = row_number_columns + "," + "`" + key + "`"
+   row_number_columns = row_number_columns.replace(",", "", 1)
    select_exclude_columns = SelectExcludeColumns
    if select_exclude_columns is None or len(select_exclude_columns) == 0:
        select_exclude_columns = "000000"
@@ -337,7 +343,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         add file hdfs:///tmp/airflow/get_arrary.py;
         insert overwrite table %s.%s
         partition(etl_date = '%s')
-        select %s,%s
+        select %s,%s from(
+        select %s,%s,row_number()over(partition by %s order by 1) as rn_row_number
         from (select returns_colums,data_num_colums,returns_account_id,request_type
               from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
                           ,split(data_colums,'@@####@@')[1] as data_colums
@@ -357,8 +364,9 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               ) a
               lateral view json_tuple(data_num_colums,%s) b
               as %s
+        ) tmp where rn_row_number = 1
                ;
-        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
+        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,select_json_tuple_column,select_system_table_column,row_number_columns,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -414,16 +422,8 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
    #设置snap查询字段
    snap_columns = ""
    if IsReport == 0:
-       if KeyColumns is None or len(KeyColumns) == 0:
-           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                                  SourceTable="%s.%s" % (SourceDB, SourceTable),
-                                  TargetTable="%s.%s" % (TargetDB, TargetTable),
-                                  BeginExecDate=ExecDate,
-                                  EndExecDate=ExecDate,
-                                  Status="Error",
-                                  Log="请确认配置表指定主键字段是否正确！！！",
-                                  Developer="developer")
-           set_exit(LevelStatu="red", MSG=msg)
+       is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB,
+                      TargetTable=TargetTable, ExecDate=ExecDate, KeyColumns=KeyColumns)
        key_column_list = KeyColumns.split(",")
        is_null_col = "`"+key_column_list[0]+"`"
        key_columns_joins = ""
@@ -537,3 +537,15 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
                               Log="snap入库数据对比不上！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
+
+def is_key_columns(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",KeyColumns=""):
+    if KeyColumns is None or len(KeyColumns) == 0:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % (SourceDB, SourceTable),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="请确认配置表指定主键字段是否正确！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
