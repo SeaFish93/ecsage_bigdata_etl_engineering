@@ -341,10 +341,9 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
       returns_account_id = """regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'returns : accountId: ',''),',.*','') as returns_account_id"""
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
-        insert overwrite table %s.%s
-        partition(etl_date = '%s')
-        select %s,%s from(
-        select %s,%s,row_number()over(partition by %s order by 1) as rn_row_number
+        drop table if exists %s.%s_tmp;
+        create table %s.%s_tmp stored as parquet as 
+        select %s,%s
         from (select returns_colums,data_num_colums,returns_account_id,request_type
               from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
                           ,split(data_colums,'@@####@@')[1] as data_colums
@@ -364,9 +363,28 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               ) a
               lateral view json_tuple(data_num_colums,%s) b
               as %s
+               ;
+        """%("etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
+   ok = BeelineSession.execute_sql(sql)
+   if ok is False:
+       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                              SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                              TargetTable="%s.%s" % (TargetDB, TargetTable),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="ods入库-tmp失败！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
+   sql = """
+        insert overwrite table %s.%s
+        partition(etl_date = '%s')
+        select %s,%s from(
+        select %s,%s,row_number()over(partition by %s order by 1) as rn_row_number
+        from %s.%s
         ) tmp where rn_row_number = 1
                ;
-        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,select_json_tuple_column,select_system_table_column,row_number_columns,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
+        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,select_json_tuple_column,select_system_table_column,row_number_columns,"etl_mid",TargetTable)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
