@@ -210,7 +210,8 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
                 partition(etl_date='{exec_date}',request_type='{request_type}',delete_type='{delete_type}')
             """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,
                                    exec_date=ExecDate, request_type=RequestType,delete_type=DeleteType)
-        ok_data = HiveSession.execute_sql(load_table_sql)
+        #ok_data = HiveSession.execute_sql(load_table_sql)
+        ok_data = BeelineSession.execute_sql(load_table_sql)
         if ok_data is False:
            # 删除临时表
            HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
@@ -381,7 +382,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         partition(etl_date = '%s')
         select %s,%s from(
         select %s,%s,row_number()over(partition by %s order by 1) as rn_row_number
-        from %s.%s
+        from %s.%s_tmp
         ) tmp where rn_row_number = 1
                ;
         drop table if exists %s.%s_tmp;
