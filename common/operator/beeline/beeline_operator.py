@@ -7,6 +7,7 @@
 from ecsage_bigdata_etl_engineering.common.base.base_operator import BaseDB
 import os
 import time
+import subprocess
 
 
 class BeelineNoSqlDB(BaseDB):
@@ -31,11 +32,13 @@ class BeelineNoSqlDB(BaseDB):
         # add by wangsong（print sql）
         print(sql_set)
         print("beeline exec sql：\n" + sql)
-        res = os.system("%s -f %s" % (self.conn, sql_file))
+        #res = os.system("%s -f %s" % (self.conn, sql_file))
+        (res, output) = subprocess.getstatusoutput("%s -f %s" % (self.conn, sql_file))
         os.system("rm %s" % sql_file)
         f.close()
         if res != 0:
             print("beeline execute_sql sql Error:" + sql)
+            print("错误日志：%s"%output)
             return False
         else:
             return True
