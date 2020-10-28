@@ -271,7 +271,7 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
             select_target_columns = select_target_columns + """,`%s`""" % (target_table_column)
             assign_target_columns = assign_target_columns + """,a.`%s`""" % (target_table_column)
             select_source_columns = select_source_columns + """,`%s`""" % (target_table_column)
-            assign_source_columns = assign_source_columns + """,%s as %s""" % ("""regexp_replace('a.`%s`','^##None##$',null)"""%(target_table_column),target_table_column)
+            assign_source_columns = assign_source_columns + """,%s as %s""" % ("""regexp_replace(a.`%s`,'^##None##$',null)"""%(target_table_column),target_table_column)
     select_target_columns = select_target_columns.replace(",", "", 1)
     assign_target_columns = assign_target_columns.replace(",", "", 1)
     select_source_columns = select_source_columns.replace(",", "", 1)
