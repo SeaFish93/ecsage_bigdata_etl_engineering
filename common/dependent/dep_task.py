@@ -40,9 +40,9 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
         if str(execution_date)[11:19] != str(cron_prev_01)[11:19]:
             cron_prev = cron_prev_01
             if int(str(cron_prev_01)[11:13]) + 8 <= 23:
-                cron_prev = cron_next
-            else:
                 cron_prev = cron_prev_01
+            else:
+                cron_prev = cron_next
 
         cron_prev_pendulum = pendulum.datetime(cron_prev.year,
                                                   cron_prev.month,
@@ -52,6 +52,9 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
                                                   cron_prev.second,
                                                   cron_prev.microsecond)
         print(ex_date_datetime,DepTaskCrontab,cron_prev_pendulum,cron_prev,cron_prev_01,cron_next,str(execution_date)[11:19],str(cron_prev_01)[11:19],"====================================")
+        """
+        2020-10-28 01:30:00 00 1 * * * 2020-10-29T01:00:00+00:00 2020-10-29 01:00:00 2020-10-28 01:00:00 2020-10-29 01:00:00 01:30:00 01:00:00
+        """
         return cron_prev_pendulum
     external_task = ExternalTaskSensor(external_task_id=DepTaskID,
                                        external_dag_id=DepDagID,
