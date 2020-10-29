@@ -53,7 +53,7 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
                                                   cron_prev.minute,
                                                   cron_prev.second,
                                                   cron_prev.microsecond)
-        print(ex_date_datetime,DepTaskCrontab,cron_prev_pendulum,cron_prev,cron_prev_01,cron_next,str(execution_date)[11:19],str(cron_prev_01)[11:19],"====================================")
+        print(ex_date_datetime,DepTaskCrontab,cron_prev_pendulum,cron_prev,cron_prev_01,cron_next,str(execution_date)[11:19],str(cron_prev_01)[11:19],"######====================================")
         """
         2020-10-28 01:30:00 00 1 * * * 2020-10-29T01:00:00+00:00 2020-10-29 01:00:00 2020-10-28 01:00:00 2020-10-29 01:00:00 01:30:00 01:00:00
         """
