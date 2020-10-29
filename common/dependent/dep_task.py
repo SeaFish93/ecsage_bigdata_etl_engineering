@@ -37,6 +37,7 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
         cron_prev = cron.get_current(datetime)
         cron_next = cron.get_next(datetime)
         cron_prev_01 = cron.get_prev(datetime)
+        print(str(execution_date)[11:19] , str(cron_prev_01)[11:19],int(str(cron_prev_01)[11:13]) + 8, "**************************************")
         if str(execution_date)[11:19] != str(cron_prev_01)[11:19]:
             cron_prev = cron_prev_01
             print(int(str(cron_prev_01)[11:13]) + 8,"**************************************")
