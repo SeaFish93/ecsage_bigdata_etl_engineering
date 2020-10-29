@@ -333,9 +333,10 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    json_tuple_column = json_tuple_columns.replace("'", "")
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
    if IsReport == 1:
-       regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\":\\\\[\\\\{\\\\".*)',1),'$.data'),'$.list') as data_colums"""
-       return_regexp_extract = """regexp_extract(a.request_data,'(accountId: .*, \\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\")',1) as returns_colums"""
-       returns_account_id = """regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId: .*, \\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\")',1),', \\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\"',''),'accountId: ','') as returns_account_id"""
+       """##\\\\{\\\\"accountId\\\\":.*\\\\}## """
+       regexp_extract = """get_json_object(get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data'),'$.list') as data_colums"""
+       return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
+       returns_account_id = """regexp_replace(regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}## )',1),'##.*:\\\\"',''),'\\\\"}##','') as returns_account_id"""
    else:
       regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
       return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
