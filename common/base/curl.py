@@ -13,7 +13,7 @@ import os
 import time
 
 def exec_interface_data_curl(URL="",Data={},File="",DataJsonRequest=""):
-    headers = {'Content-Type': "application/json"}
+    headers = {'Content-Type': "application/json","Connection":"close"}
     param_md5 = ""
     try:
         requests.post(URL, data=json.dumps(Data), headers=headers)
