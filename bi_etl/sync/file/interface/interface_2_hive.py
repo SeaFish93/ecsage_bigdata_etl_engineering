@@ -139,7 +139,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml %s"""%(yml_file)
     os.system(cp_yml)
     print(file_dir_name,"=========================================#####################################")
-    sed_cat = """echo '%s'|sed 's/\//\\\\\//g'"""%(file_dir_name)
+    filebeat_name = "%s_%s*_%s.log" % (airflow.dag, airflow.task, ExecData)
+    filebeat_name = "%s/%s" % (file_dir, filebeat_name)
+    sed_cat = """echo '%s'|sed 's/\//\\\\\//g'"""%(filebeat_name)
     sed_cat = os.popen(sed_cat)
     get_sed_cat = sed_cat.read().split()[0]
     sed_file_dir = """ sed -i "s/##file_dir##/%s/g" %s"""%(get_sed_cat,yml_file)
