@@ -138,7 +138,6 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     os.system(tmplate_yml_shell)
     cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml %s"""%(yml_file)
     os.system(cp_yml)
-    print(file_dir_name,"=========================================#####################################")
     filebeat_name = "%s_%s*_%s*.log" % (airflow.dag, airflow.task, ExecData)
     filebeat_name = "%s/%s" % (file_dir, filebeat_name)
     sed_cat = """echo '%s'|sed 's/\//\\\\\//g'"""%(filebeat_name)
@@ -146,10 +145,8 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     get_sed_cat = sed_cat.read().split()[0]
     sed_file_dir = """ sed -i "s/##file_dir##/%s/g" %s"""%(get_sed_cat,yml_file)
     os.system(sed_file_dir)
-    """echo '%s'|sed 's/\//\\\//g'"""
-
-    print(sed_cat,"#################################################################",get_sed_cat)
-    #sed_file_dir = """ sed -i "s/##file_dir##/\/tmp/g" %s"""%(file_dir_name)
+    sed_file_dir = """sed -i "s/##file_name##/testfile/g" %s """%(yml_file)
+    os.system(sed_file_dir)
     exit(0)
     print("结束执行调用接口，进行等待MD5文件生成")
     md5_file_false = []
