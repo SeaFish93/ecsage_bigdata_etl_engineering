@@ -137,6 +137,10 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     os.system(tmplate_yml_shell)
     cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml /tmp/tmplate_yml/%s.yml"""%(file_name)
     os.system(cp_yml)
+    print(file_dir_name,"=========================================#####################################")
+    sed_cat = """echo '%s'|sed 's/\//\\\//g'"""%(file_dir_name)
+    print(sed_cat,"#################################################################")
+    #sed_file_dir = """ sed -i "s/##file_dir##/\/tmp/g" %s"""%(file_dir_name)
     exit(0)
     print("结束执行调用接口，进行等待MD5文件生成")
     md5_file_false = []
