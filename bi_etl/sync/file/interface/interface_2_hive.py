@@ -134,13 +134,19 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     #设置数据采集
     tmplate_yml_file = """/root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml"""
     tmplate_yml_shell = """mkdir -p /tmp/tmplate_yml"""
+    yml_file = """/tmp/tmplate_yml/%s.yml"""%(file_name)
     os.system(tmplate_yml_shell)
-    cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml /tmp/tmplate_yml/%s.yml"""%(file_name)
+    cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml %s"""%(yml_file)
     os.system(cp_yml)
     print(file_dir_name,"=========================================#####################################")
     sed_cat = """echo '%s'|sed 's/\//\\\\\//g'"""%(file_dir_name)
+    sed_cat = os.popen(sed_cat)
+    get_sed_cat = sed_cat.read().split()[0]
+    sed_file_dir = """ sed -i "s/##file_dir##/%s/g" %s"""%(get_sed_cat,yml_file)
+    os.system(sed_file_dir)
     """echo '%s'|sed 's/\//\\\//g'"""
-    print(sed_cat,"#################################################################")
+
+    print(sed_cat,"#################################################################",get_sed_cat)
     #sed_file_dir = """ sed -i "s/##file_dir##/\/tmp/g" %s"""%(file_dir_name)
     exit(0)
     print("结束执行调用接口，进行等待MD5文件生成")
