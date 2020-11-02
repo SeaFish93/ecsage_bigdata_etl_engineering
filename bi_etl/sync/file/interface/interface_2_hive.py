@@ -147,7 +147,8 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     os.system(sed_file_dir)
     sed_file_dir = """sed -i "s/##file_name##/testfile/g" %s """%(yml_file)
     os.system(sed_file_dir)
-    exit(0)
+    scp = """ scp %s root@bd127-node:/etc/filebeat/inputs.d/ """%(yml_file)
+    os.system(scp)
     print("结束执行调用接口，进行等待MD5文件生成")
     md5_file_false = []
     set_md5_file_true = True
