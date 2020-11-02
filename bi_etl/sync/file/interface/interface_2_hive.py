@@ -60,11 +60,6 @@ def main(TaskInfo, Level,**kwargs):
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
     if Level == "file":
-      yml_file = """pwd"""
-      file_md5 = os.popen(yml_file)
-      file_md5_value = file_md5.read().split()[0]
-      print(file_md5_value, "==================================================")
-      exit(0)
       data_json = ast.literal_eval(json.loads(data_json))
       if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
           data_json["filtering"]["%s" % (filter_modify_time_name)] = exec_date
@@ -130,17 +125,19 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
           print("请求接口URL：%s"%(InterfaceUrl))
           print("请求接口参数：%s"%(data_json))
           # 分子账户开启进程
-          exec_interface_data_curl(URL=InterfaceUrl, Data=data_json, File=file_dir_name,DataJsonRequest=DataJsonRequest)
+          ##############exec_interface_data_curl(URL=InterfaceUrl, Data=data_json, File=file_dir_name,DataJsonRequest=DataJsonRequest)
           #time.sleep(10)
           num = 0
           advertiser_list = []
        num = num + 1
        nums = nums + 1
     #设置数据采集
-    yml_file = """pwd"""
-    file_md5 = os.popen(yml_file)
-    file_md5_value = file_md5.read().split()[0]
-    print(file_md5_value,"==================================================")
+    tmplate_yml_file = """/root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml"""
+    tmplate_yml_shell = """mkdir -p /tmp/tmplate_yml"""
+    os.system(tmplate_yml_shell)
+    cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml /tmp/tmplate_yml/%s.yml"""%(file_name)
+    os.system(cp_yml)
+    exit(0)
     print("结束执行调用接口，进行等待MD5文件生成")
     md5_file_false = []
     set_md5_file_true = True
