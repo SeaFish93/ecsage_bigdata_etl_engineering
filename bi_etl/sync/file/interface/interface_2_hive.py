@@ -138,7 +138,8 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml /tmp/tmplate_yml/%s.yml"""%(file_name)
     os.system(cp_yml)
     print(file_dir_name,"=========================================#####################################")
-    sed_cat = """echo '%s'|sed 's/\//\\\//g'"""%(file_dir_name)
+    sed_cat = """echo '%s'|sed 's/\//\\\\\//g'"""%(file_dir_name)
+    """echo '%s'|sed 's/\//\\\//g'"""
     print(sed_cat,"#################################################################")
     #sed_file_dir = """ sed -i "s/##file_dir##/\/tmp/g" %s"""%(file_dir_name)
     exit(0)
