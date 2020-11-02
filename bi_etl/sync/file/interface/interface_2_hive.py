@@ -105,6 +105,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     print("开始执行调用接口")
     data_dir = conf.get("Interface", InterfaceModule)
     file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,request_type)
+    set_filebeat_yml(DataFile=file_dir, FileName="%s_%s_%s.log" % (airflow.dag, airflow.task,ExecData), ExecDate=ExecData)
     #数据文件绝对路径
     file_dir_name_list = []
     advertiser_list = []
@@ -131,24 +132,6 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
           advertiser_list = []
        num = num + 1
        nums = nums + 1
-    #设置数据采集
-    tmplate_yml_file = """/root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml"""
-    tmplate_yml_shell = """mkdir -p /tmp/tmplate_yml"""
-    yml_file = """/tmp/tmplate_yml/%s.yml"""%(file_name)
-    os.system(tmplate_yml_shell)
-    cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml %s"""%(yml_file)
-    os.system(cp_yml)
-    filebeat_name = "%s_%s*_%s*.log" % (airflow.dag, airflow.task, ExecData)
-    filebeat_name = "%s/%s" % (file_dir, filebeat_name)
-    sed_cat = """echo '%s'|sed 's/\//\\\\\//g'"""%(filebeat_name)
-    sed_cat = os.popen(sed_cat)
-    get_sed_cat = sed_cat.read().split()[0]
-    sed_file_dir = """ sed -i "s/##file_dir##/%s/g" %s"""%(get_sed_cat,yml_file)
-    os.system(sed_file_dir)
-    sed_file_dir = """sed -i "s/##file_name##/testfile/g" %s """%(yml_file)
-    os.system(sed_file_dir)
-    scp = """ scp %s root@bd127-node:/etc/filebeat/inputs.d/ """%(yml_file)
-    os.system(scp)
     print("结束执行调用接口，进行等待MD5文件生成")
     md5_file_false = []
     set_md5_file_true = True
@@ -592,3 +575,23 @@ def is_key_columns(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDat
                                Log="请确认配置表指定主键字段是否正确！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
+
+def set_filebeat_yml(DataFile="",FileName="",ExecDate=""):
+    #设置数据采集
+    tmplate_yml_file = """/root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml"""
+    tmplate_yml_shell = """mkdir -p /tmp/tmplate_yml"""
+    yml_file = """/tmp/tmplate_yml/%s.yml"""%(FileName)
+    os.system(tmplate_yml_shell)
+    cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml %s"""%(yml_file)
+    os.system(cp_yml)
+    filebeat_name = "%s_%s*_%s*.log" % (airflow.dag, airflow.task, ExecDate)
+    filebeat_name = "%s/%s" % (DataFile, filebeat_name)
+    sed_cat = """echo '%s'|sed 's/\//\\\\\//g'"""%(filebeat_name)
+    sed_cat = os.popen(sed_cat)
+    get_sed_cat = sed_cat.read().split()[0]
+    sed_file_dir = """ sed -i "s/##file_dir##/%s/g" %s"""%(get_sed_cat,yml_file)
+    os.system(sed_file_dir)
+    sed_file_dir = """sed -i "s/##file_name##/testfile/g" %s """%(yml_file)
+    os.system(sed_file_dir)
+    scp = """ scp %s root@bd127-node:/etc/filebeat/inputs.d/ """%(yml_file)
+    os.system(scp)
