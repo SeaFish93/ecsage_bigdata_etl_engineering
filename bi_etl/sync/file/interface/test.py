@@ -6,22 +6,25 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 
 mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-def get_account_sql(AccountType=""):
+def get_account_sql(MediaType="",ServiceCode=""):
     #获取子账户
     source_data_sql = """
                    select account_id, media, service_code from(
                    select account_id, media, service_code,@row_num:=@row_num+1 as rn
                    from big_data_mdg.media_advertiser a,(select @row_num:=0) r
-                   where media = %s ) tmp
-                """%(AccountType)
+                   where media = %s 
+                     and service_code = '%s'
+                   ) tmp
+                """%(MediaType,ServiceCode)
     #获取子账户条数
     get_account_count_sql = """
        select count(1),min(rn),max(rn) 
        from(select account_id, media, service_code,@row_num:=@row_num+1 as rn
             from big_data_mdg.media_advertiser a,(select @row_num:=0) r
             where media = %s
+              and service_code = '%s'
            ) tmp
-    """%(AccountType)
+    """%(MediaType,ServiceCode)
     ok,all_rows = mysql_session.get_all_rows(get_account_count_sql)
     fcnt = 0
     sql_list = []
@@ -42,6 +45,8 @@ def get_account_sql(AccountType=""):
             if num_proc > 5:
                 # 最多5个进程同时获取数据
                 num_proc = 5
+            if fcnt > 10000:
+                num_proc = 20
             # 每一个进程查询量的增量
             d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
             i = 0
@@ -54,16 +59,41 @@ def get_account_sql(AccountType=""):
                 sql_list.append(sql)
                 i = i + 1
     return sql_list
-def get_account_token(AccountId="",ServiceCode=""):
+def get_account_token(MediaType="",ServiceCode=""):
+    # 获取子账户
+    source_data_sql = """
+                       select account_id, media, service_code
+                       from(select account_id, media, service_code,@row_num:=@row_num+1 as rn
+                            from big_data_mdg.media_advertiser a,(select @row_num:=0) r
+                            where media = %s 
+                              and service_code = '%s'
+                       ) tmp
+                    """ % (MediaType,ServiceCode)
+    ok, source_data = mysql_session.get_all_rows(source_data_sql)
     headers = {'Content-Type': "application/json", "Connection": "close"}
     token_url = """http://token.ecsage.net/service-media-token/rest/getToken?code=%s""" % (ServiceCode)
-    account_id = AccountId
     service_code = ServiceCode
     token_data_list = requests.post(token_url,headers=headers).json()
     token_data = token_data_list["t"]["token"]
-    return account_id,service_code,token_data
+    return source_data,service_code,token_data
+def get_token(MediaType=""):
+    token = []
+    # 获取service code
+    get_service_code_sql = """
+         select  service_code,count(1)
+         from big_data_mdg.media_advertiser a
+         where media = %s
+         group by service_code
+        """%(MediaType)
+    ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
+    for data in all_rows:
+        source_data,service_code,token_data = get_account_token(MediaType=2,ServiceCode=data[0])
+        sql_list = get_account_sql(MediaType=2, ServiceCode=data[0])
+        token.append((token_data,sql_list))
+        #print(token)
+    return token
 
-def create_task(Sql="",ThreadName="",arg=None):
+def create_task(Sql="",ThreadName="",Token="",arg=None):
     account_id = ""
     token_data = ""
     service_code = ""
@@ -71,22 +101,25 @@ def create_task(Sql="",ThreadName="",arg=None):
     if arg is not None:
        Sql = arg["Sql"]
        ThreadName = arg["ThreadName"]
+       Token = arg["Token"]
        ok, data_list = mysql_session.get_all_rows_thread(Sql)
        for data in data_list:
-           account_id,service_code,token_data = get_account_token(AccountId=data[0], ServiceCode=data[2])
+           account_id = data[0]
+           service_code = data[2]
+           token_data = Token
            open_api_domain = "https://ad.toutiao.com"
            path = "/open_api/2/async_task/create/"
            url = open_api_domain + path
            params = {
-               "advertiser_id": account_id,
-               "task_name": "%s_%s" % (ThreadName,num),
-               "task_type": "REPORT",
-               "task_params": {
-                   "start_date": "2020-11-02",
-                   "end_date": "2020-11-02",
-                   "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
-               }
-           }
+                      "advertiser_id": account_id,
+                      "task_name": "%s_%s" % (ThreadName,num),
+                      "task_type": "REPORT",
+                      "task_params": {
+                            "start_date": "2020-11-02",
+                            "end_date": "2020-11-02",
+                            "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
+                       }
+                     }
            headers = {
                'Content-Type': "application/json",
                'Access-Token': token_data,
@@ -100,23 +133,24 @@ def create_task(Sql="",ThreadName="",arg=None):
            print("**********************************************")
            task_id = resp_data["data"]["task_id"]
            task_name = resp_data["data"]["task_name"]
-           #print(task_id, task_name, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
            os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """%(token_data,service_code,account_id,task_id,task_name))
-def exec_create_task(AccountType=2):
-    sql_list = get_account_sql(AccountType=AccountType)
+def exec_create_task(MediaType=2):
+    sql_list = get_token(MediaType=MediaType)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
         th = []
-        for sql in sql_list:
-            i = i + 1
-            etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
+        for sqls in sql_list:
+            token = sqls[0]
+            for get_sql in sqls[1]:
+                i = i + 1
+                etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
                                    my_run=create_task,
-                                   Sql = sql,ThreadName="Thread%d" % (i)
+                                   Sql = get_sql,ThreadName="Thread%d" % (i),Token=token
                                    )
-            etl_thread.start()
-            import time
-            time.sleep(2)
-            th.append(etl_thread)
+                etl_thread.start()
+                import time
+                time.sleep(2)
+                th.append(etl_thread)
         for etl_th in th:
             etl_th.join()
         os.system("""date >>/tmp/task_status_1.log """)
@@ -124,7 +158,7 @@ if __name__ == '__main__':
     os.system("""rm -f /tmp/task_status_1.log """)
     os.system("""rm -f /tmp/create_task_status_1.log""")
     os.system("""date >>/tmp/task_status_1.log """)
-    exec_create_task(AccountType=2)
+    exec_create_task(MediaType=2)
     ###################import time
     ###################
     ###################time.sleep(30)
