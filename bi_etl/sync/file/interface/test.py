@@ -138,7 +138,7 @@ def create_task(Sql="",ThreadName="",Token="",arg=None):
              task_name = resp_data["data"]["task_name"]
              os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """%(token_data,service_code,account_id,task_id,task_name))
            except Exception as e:
-             print("异常！！！！")
+             print("异常！！！！【%s,%s,%s】"%(token_data,service_code,account_id))
 def exec_create_task(MediaType=2):
     sql_list = get_token(MediaType=MediaType)
     if sql_list is not None and len(sql_list) > 0:
