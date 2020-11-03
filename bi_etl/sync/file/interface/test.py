@@ -83,6 +83,7 @@ def get_token(MediaType=""):
          select  service_code,count(1)
          from big_data_mdg.media_advertiser a
          where media = %s
+           and service_code = 'tt-hnhd-02'
          group by service_code
         """%(MediaType)
     ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
