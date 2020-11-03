@@ -54,6 +54,16 @@ class MysqlDB(BaseDB):
         finally: #add by wangsong
             self.conn.commit()
         return True, cursor.fetchall()
+    def get_all_rows_thread(self, sql):
+        print(sql)
+        cursor = self.get_cursor()
+        try:
+            cursor.execute(sql)
+        except Exception as e:
+            print("mysql get_all_rows sql Error:" + sql)
+            print(e)
+            return False, None
+        return True, cursor.fetchall()
 
     def get_one_row(self, sql):
         print(sql)
