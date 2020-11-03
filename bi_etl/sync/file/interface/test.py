@@ -45,8 +45,8 @@ def get_account_sql(MediaType="",ServiceCode=""):
             if num_proc > 5:
                 # 最多5个进程同时获取数据
                 num_proc = 5
-            if fcnt > 10000:
-                num_proc = 20
+            #if fcnt > 10000:
+            #    num_proc = 20
             # 每一个进程查询量的增量
             d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
             i = 0
@@ -114,6 +114,7 @@ def create_task(Sql="",ThreadName="",Token="",arg=None):
                       "advertiser_id": account_id,
                       "task_name": "%s_%s" % (ThreadName,num),
                       "task_type": "REPORT",
+                      "force": "true",
                       "task_params": {
                             "start_date": "2020-11-02",
                             "end_date": "2020-11-02",
