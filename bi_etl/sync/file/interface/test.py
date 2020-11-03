@@ -55,10 +55,11 @@ def get_account_sql(AccountType=""):
                 i = i + 1
     return sql_list
 def get_account_token(AccountId="",ServiceCode=""):
+    headers = {'Content-Type': "application/json", "Connection": "close"}
     token_url = """http://token.ecsage.net/service-media-token/rest/getToken?code=%s""" % (ServiceCode)
     account_id = AccountId
     service_code = ServiceCode
-    token_data_list = requests.post(token_url).json()
+    token_data_list = requests.post(token_url,headers=headers).json()
     token_data = token_data_list["t"]["token"]
     return account_id,service_code,token_data
 
@@ -71,34 +72,36 @@ def create_task(Sql="",ThreadName="",arg=None):
        Sql = arg["Sql"]
        ThreadName = arg["ThreadName"]
        ok, data_list = mysql_session.get_all_rows_thread(Sql)
-       print(data_list)
-       ########################for data in data_list:
-       ########################    account_id,service_code,token_data = get_account_token(AccountId=data[0], ServiceCode=data[2])
-       ########################    open_api_domain = "https://ad.toutiao.com"
-       ########################    path = "/open_api/2/async_task/create/"
-       ########################    url = open_api_domain + path
-       ########################    params = {
-       ########################        "advertiser_id": account_id,
-       ########################        "task_name": "%s_%s" % (ThreadName,num),
-       ########################        "task_type": "REPORT",
-       ########################        "task_params": {
-       ########################            "start_date": "2020-11-02",
-       ########################            "end_date": "2020-11-02",
-       ########################            "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
-       ########################        }
-       ########################    }
-       ########################    headers = {
-       ########################        'Content-Type': "application/json",
-       ########################        'Access-Token': token_data
-       ########################    }
-       ########################    ###############resp = requests.post(url, json=params, headers=headers)
-       ########################    ###############resp_data = resp.json()
-       ########################    num = num + 1
-       ########################    print(ThreadName,num, "**********************************************")
-           ###############task_id = resp_data["data"]["task_id"]
-           ###############task_name = resp_data["data"]["task_name"]
-           ###############print(task_id, task_name, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-           ###############os.system("""echo "%s %s %s %s %s">>/tmp/task_status.log """%(token_data,service_code,account_id,task_id,task_name))
+       for data in data_list:
+           account_id,service_code,token_data = get_account_token(AccountId=data[0], ServiceCode=data[2])
+           open_api_domain = "https://ad.toutiao.com"
+           path = "/open_api/2/async_task/create/"
+           url = open_api_domain + path
+           params = {
+               "advertiser_id": account_id,
+               "task_name": "%s_%s" % (ThreadName,num),
+               "task_type": "REPORT",
+               "task_params": {
+                   "start_date": "2020-11-02",
+                   "end_date": "2020-11-02",
+                   "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
+               }
+           }
+           headers = {
+               'Content-Type': "application/json",
+               'Access-Token': token_data,
+               'Connection': "close"
+           }
+           resp = requests.post(url, json=params, headers=headers)
+           resp_data = resp.json()
+           num = num + 1
+           print(ThreadName,num, "**********************************************")
+           print(resp_data, "**********************************************")
+           print("**********************************************")
+           task_id = resp_data["data"]["task_id"]
+           task_name = resp_data["data"]["task_name"]
+           #print(task_id, task_name, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+           os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """%(token_data,service_code,account_id,task_id,task_name))
 def exec_create_task(AccountType=2):
     sql_list = get_account_sql(AccountType=AccountType)
     if sql_list is not None and len(sql_list) > 0:
@@ -106,13 +109,21 @@ def exec_create_task(AccountType=2):
         th = []
         for sql in sql_list:
             i = i + 1
-            etl_thread = EtlThread(thread_id=i, thread_name="Thread_%s.%s_%d" % ("airflow.dag", "airflow.task", i),
+            etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
                                    my_run=create_task,
-                                   Sql = sql,ThreadName="Thread_%s.%s_%d" % ("airflow.dag", "airflow.task", i)
+                                   Sql = sql,ThreadName="Thread%d" % (i)
                                    )
             etl_thread.start()
-            #th.append(etl_thread)
+            import time
+            time.sleep(2)
+            th.append(etl_thread)
+        for etl_th in th:
+            etl_th.join()
+        os.system("""date >>/tmp/task_status_1.log """)
 if __name__ == '__main__':
+    os.system("""rm -f /tmp/task_status_1.log """)
+    os.system("""rm -f /tmp/create_task_status_1.log""")
+    os.system("""date >>/tmp/task_status_1.log """)
     exec_create_task(AccountType=2)
     ###################import time
     ###################
