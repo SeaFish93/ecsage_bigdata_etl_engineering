@@ -44,7 +44,7 @@ def get_account_sql(MediaType="",ServiceCode=""):
             num_proc = int(fmax) - int(fmin)
             if num_proc > 5:
                 # 最多5个进程同时获取数据
-                num_proc = 5
+                num_proc = 20
             #if fcnt > 10000:
             #    num_proc = 20
             # 每一个进程查询量的增量
