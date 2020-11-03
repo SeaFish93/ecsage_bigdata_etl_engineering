@@ -103,6 +103,7 @@ def create_task(Sql="",ThreadName="",Token="",arg=None):
        ThreadName = arg["ThreadName"]
        Token = arg["Token"]
        ok, data_list = mysql_session.get_all_rows_thread(Sql)
+       print("线程：%s,长度：%s,=================================="%(ThreadName,len(data_list)))
        for data in data_list:
            account_id = data[0]
            service_code = data[2]
@@ -126,15 +127,18 @@ def create_task(Sql="",ThreadName="",Token="",arg=None):
                'Access-Token': token_data,
                'Connection': "close"
            }
-           resp = requests.post(url, json=params, headers=headers)
-           resp_data = resp.json()
-           num = num + 1
-           print(ThreadName,num, "**********************************************")
-           print(resp_data, "**********************************************")
-           print("**********************************************")
-           task_id = resp_data["data"]["task_id"]
-           task_name = resp_data["data"]["task_name"]
-           os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """%(token_data,service_code,account_id,task_id,task_name))
+           try:
+             resp = requests.post(url, json=params, headers=headers)
+             resp_data = resp.json()
+             num = num + 1
+             print(ThreadName,num, "**********************************************")
+             print(resp_data, "**********************************************")
+             print("**********************************************")
+             task_id = resp_data["data"]["task_id"]
+             task_name = resp_data["data"]["task_name"]
+             os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """%(token_data,service_code,account_id,task_id,task_name))
+           except Exception as e:
+             print("异常！！！！")
 def exec_create_task(MediaType=2):
     sql_list = get_token(MediaType=MediaType)
     if sql_list is not None and len(sql_list) > 0:
