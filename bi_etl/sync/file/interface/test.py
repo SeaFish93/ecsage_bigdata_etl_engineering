@@ -216,9 +216,7 @@ def set_download_content(AccountId="",TaskId="",Token=""):
     }
     resp = requests.get(url, json=params, headers=headers)
     resp_data = resp.content
-    print(resp_data, "=========================================")
-
-    if resp_data == """b'empty result'""":
+    if str(resp_data) == """b'empty result'""":
         os.system("""echo "%s %s %s">>/tmp/empty1.log """%(AccountId,TaskId,Token))
     else:
         os.system("""echo "%s">>/tmp/notempty1.log """%(resp_data))
