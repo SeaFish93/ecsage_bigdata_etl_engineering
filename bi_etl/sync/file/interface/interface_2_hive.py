@@ -91,6 +91,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code 
                                                  from big_data_mdg.media_advertiser 
                                                  where media = %s
+                                                   and service_code = 'tt-hnhd-12'
                                                    and system_status in ('STATUS_ENABLE','STATUS_PENDING_CONFIRM_MODIFY','STATUS_WAIT_FOR_PUBLIC_AUTH')
                                               """%(int(data_json["mt"])))
     #ok, data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media =2 and account_id in (%s)""" % (data))
