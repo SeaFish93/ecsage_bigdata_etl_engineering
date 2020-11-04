@@ -151,7 +151,7 @@ def exec_create_task(MediaType=2):
         for etl_th in th:
             etl_th.join()
         insert_sql = """
-          load data local infile '/tmp/create_task_status_1.log' into table metadb.oe_async_task_interface_bak1 fields terminated by ' ' lines terminated by '\\n' (token_data,service_code,account_id,task_id,task_name)
+          load data local infile '/tmp/create_task_status_2.log' into table metadb.oe_async_task_interface_bak1 fields terminated by ' ' lines terminated by '\\n' (token_data,service_code,account_id,task_id,task_name)
         """
         etl_md.execute_sql("""delete from metadb.oe_async_task_interface_bak1""")
         etl_md.local_file_to_mysql(sql=insert_sql)
@@ -179,7 +179,7 @@ def set_async_tasks(ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
     resp_data = resp.json()
     task_id = resp_data["data"]["task_id"]
     task_name = resp_data["data"]["task_name"]
-    os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """ % (Token, ServiceCode, AccountId, task_id, task_name))
+    os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_2.log """ % (Token, ServiceCode, AccountId, task_id, task_name))
 
 def set_download_content(AccountId="",TaskId="",Token=""):
     open_api_domain = "https://ad.toutiao.com"
@@ -301,16 +301,16 @@ def get_download_sql(ServiceCode=""):
     return sql_list
 
 if __name__ == '__main__':
-    os.system("""rm -f /tmp/task_status_1.log """)
-    os.system("""rm -f /tmp/create_task_status_1.log""")
-    os.system("""date >>/tmp/task_status_1.log """)
+    os.system("""rm -f /tmp/task_status_2.log """)
+    os.system("""rm -f /tmp/create_task_status_2.log""")
+    os.system("""date >>/tmp/task_status_2.log """)
     os.system("""rm -f /tmp/exception_log.log""")
     os.system("""rm -f /tmp/notempty2.log""")
     os.system("""rm -f /tmp/empty2.log""")
     exec_create_task(MediaType=2)
     print("开始启动下载内容!!!!!")
     get_download_task()
-    os.system("""date >>/tmp/task_status_1.log """)
+    os.system("""date >>/tmp/task_status_2.log """)
     ###################import time
     ###################
     ###################time.sleep(30)
