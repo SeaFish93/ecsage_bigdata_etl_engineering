@@ -127,6 +127,7 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",arg=None):
                  set_true = False
                except Exception as e:
                  if n > 3:
+                    os.system("""echo "%s %s %s">>/tmp/create_exception.log """%(token_data,service_code,account_id))
                     set_true = False
                n = n + 1
 
@@ -183,19 +184,22 @@ def set_async_tasks(ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
 
 def set_download_content(AccountId="",TaskId="",Token=""):
     open_api_domain = "https://ad.toutiao.com"
-    path = "/open_api/2/async_task/download/"
+    path = "/open_api/2/async_task/get/"
     url = open_api_domain + path
     params = {
         "advertiser_id": AccountId,
-        "task_id": TaskId
+        "filtering": {
+            "task_ids": [TaskId]
+        }
     }
     headers = {
         'Content-Type': "application/json",
         'Access-Token': Token
     }
     resp = requests.get(url, json=params, headers=headers)
-    resp_data = resp.content
-    if str(resp_data) == """b'empty result'""":
+    resp_data = resp.json()
+    file_size = resp_data["data"]["list"][0]["file_size"]
+    if int(file_size) <= 12:
         os.system("""echo "%s %s %s">>/tmp/empty2.log """%(AccountId,TaskId,Token))
     else:
         os.system("""echo "%s">>/tmp/notempty2.log """%(resp_data))
@@ -223,6 +227,7 @@ def get_download_content(Sql="",arg=None):
                   set_true = False
               except Exception as e:
                   if n > 3:
+                      os.system("""echo "%s %s %s">>/tmp/status_exception.log """ % (token, service_code, account_id))
                       set_true = False
               n = n + 1
 def get_download_task():
@@ -307,6 +312,8 @@ if __name__ == '__main__':
     os.system("""rm -f /tmp/exception_log.log""")
     os.system("""rm -f /tmp/notempty2.log""")
     os.system("""rm -f /tmp/empty2.log""")
+    os.system("""rm -f /tmp/status_exception.log""")
+    os.system("""rm -f /tmp/create_exception.log""")
     exec_create_task(MediaType=2)
     print("开始启动下载内容!!!!!")
     get_download_task()
