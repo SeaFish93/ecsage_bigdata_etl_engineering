@@ -159,23 +159,23 @@ def exec_create_task(MediaType=2):
             token = sqls[0]
             for get_sql in sqls[1]:
                 i = i + 1
-                etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
-                                   my_run=create_task,
-                                   Sql = get_sql,ThreadName="Thread%d" % (i),Token=token,
-                                   MediaType = MediaType
-                                   )
-                etl_thread.start()
-                import time
-                time.sleep(2)
-                th.append(etl_thread)
-        for etl_th in th:
-            etl_th.join()
+                ########## etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
+                ##########                    my_run=create_task,
+                ##########                    Sql = get_sql,ThreadName="Thread%d" % (i),Token=token,
+                ##########                    MediaType = MediaType
+                ##########                    )
+                ########## etl_thread.start()
+                ########## import time
+                ########## time.sleep(2)
+                ########## th.append(etl_thread)
+        ######### for etl_th in th:
+        #########     etl_th.join()
         os.system("""date >>/tmp/task_status_1.log """)
         insert_sql = """
           load data local infile '/tmp/create_task_status_1.log' into table metadb.oe_async_task_interface_bak1 fields terminated by ' ' lines terminated by '\\n' (token_data,service_code,account_id,task_id,task_name)
         """
         etl_md.execute_sql("""delete from metadb.oe_async_task_interface_bak1""")
-        etl_md.execute_sql(insert_sql)
+        etl_md.local_file_to_mysql(sql=insert_sql) #.execute_sql(insert_sql)
 def set_async_tasks(ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
@@ -325,8 +325,8 @@ if __name__ == '__main__':
     ###########os.system("""rm -f /tmp/create_task_status_1.log""")
     ###########os.system("""date >>/tmp/task_status_1.log """)
     ###########os.system("""rm -f /tmp/exception_log.log""")
-    ###########exec_create_task(MediaType=2)
-    get_download_task()
+    exec_create_task(MediaType=2)
+    #get_download_task()
     ###################import time
     ###################
     ###################time.sleep(30)
