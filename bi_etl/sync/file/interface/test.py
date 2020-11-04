@@ -7,6 +7,7 @@ from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 
 mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+
 def get_account_sql(MediaType="",ServiceCode=""):
     #获取子账户
     source_data_sql = """
@@ -111,25 +112,25 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",arg=None):
            account_id = data[0]
            service_code = data[2]
            token_data = Token
-           open_api_domain = "https://ad.toutiao.com"
-           path = "/open_api/2/async_task/create/"
-           url = open_api_domain + path
-           params = {
-                      "advertiser_id": account_id,
-                      "task_name": "%s_%s" % (ThreadName,num),
-                      "task_type": "REPORT",
-                      "force": "true",
-                      "task_params": {
-                            "start_date": "2020-11-02",
-                            "end_date": "2020-11-02",
-                            "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
-                       }
-                     }
-           headers = {
-               'Content-Type': "application/json",
-               'Access-Token': token_data,
-               'Connection': "close"
-           }
+           ####### open_api_domain = "https://ad.toutiao.com"
+           ####### path = "/open_api/2/async_task/create/"
+           ####### url = open_api_domain + path
+           ####### params = {
+           #######            "advertiser_id": account_id,
+           #######            "task_name": "%s_%s" % (ThreadName,num),
+           #######            "task_type": "REPORT",
+           #######            "force": "true",
+           #######            "task_params": {
+           #######                  "start_date": "2020-11-02",
+           #######                  "end_date": "2020-11-02",
+           #######                  "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
+           #######             }
+           #######           }
+           ####### headers = {
+           #######     'Content-Type': "application/json",
+           #######     'Access-Token': token_data,
+           #######     'Connection': "close"
+           ####### }
            try:
              set_async_tasks(ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num, Token=token_data)
              num = num + 1
@@ -170,6 +171,11 @@ def exec_create_task(MediaType=2):
         for etl_th in th:
             etl_th.join()
         os.system("""date >>/tmp/task_status_1.log """)
+        insert_sql = """
+          load data local infile '/tmp/create_task_status_1.log' into table metadb.oe_async_task_interface_bak1 fields terminated by ' ' lines terminated by '\\n' (token_data,service_code,account_id,task_id,task_name)
+        """
+        etl_md.execute_sql("""delete from metadb.oe_async_task_interface_bak1""")
+        etl_md.execute_sql(insert_sql)
 def set_async_tasks(ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
@@ -196,13 +202,45 @@ def set_async_tasks(ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
     task_name = resp_data["data"]["task_name"]
     os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """ % (Token, ServiceCode, AccountId, task_id, task_name))
 
+def set_download_content(AccountId="",TaskId="",Token=""):
+    open_api_domain = "https://ad.toutiao.com"
+    path = "/open_api/2/async_task/download/"
+    url = open_api_domain + path
+    params = {
+        "advertiser_id": AccountId,
+        "task_id": TaskId
+    }
+    headers = {
+        'Content-Type': "application/json",
+        'Access-Token': Token
+    }
+    resp = requests.get(url, json=params, headers=headers)
+    resp_data = resp.content
+    print(resp_data, "=========================================")
+
+    if resp_data == "empty result":
+        os.system("""echo "%s %s %s">>/tmp/empty.log """%(AccountId,TaskId,Token))
+    else:
+        os.system("""echo "%s">>/tmp/notempty.log """%(resp_data))
+
+def get_download_content():
+    ok,datas = etl_md.get_all_rows("select * from metadb.oe_async_task_interface_bak1")
+    for data in datas:
+        token = data[1]
+        service_code = data[2]
+        account_id = data[3]
+        task_id = data[4]
+        task_name = data[5]
+        set_download_content(AccountId=account_id, TaskId=task_id, Token=token)
+
 if __name__ == '__main__':
+    get_download_content()
     #etl_md.execute_sql("""delete from metadb.oe_async_task_interface where dag_id='%s' and dag_task_id = '%s'""" % ("test", "test"))
-    os.system("""rm -f /tmp/task_status_1.log """)
-    os.system("""rm -f /tmp/create_task_status_1.log""")
-    os.system("""date >>/tmp/task_status_1.log """)
-    os.system("""rm -f /tmp/exception_log.log""")
-    exec_create_task(MediaType=2)
+    ##########os.system("""rm -f /tmp/task_status_1.log """)
+    ##########os.system("""rm -f /tmp/create_task_status_1.log""")
+    ##########os.system("""date >>/tmp/task_status_1.log """)
+    ##########os.system("""rm -f /tmp/exception_log.log""")
+    ##########exec_create_task(MediaType=2)
     ###################import time
     ###################
     ###################time.sleep(30)
