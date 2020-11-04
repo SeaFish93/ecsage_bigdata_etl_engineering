@@ -323,11 +323,11 @@ def get_download_sql(ServiceCode=""):
 
 if __name__ == '__main__':
     #etl_md.execute_sql("""delete from metadb.oe_async_task_interface where dag_id='%s' and dag_task_id = '%s'""" % ("test", "test"))
-    os.system("""rm -f /tmp/task_status_1.log """)
-    os.system("""rm -f /tmp/create_task_status_1.log""")
-    os.system("""date >>/tmp/task_status_1.log """)
-    os.system("""rm -f /tmp/exception_log.log""")
-    exec_create_task(MediaType=2)
+    ###########os.system("""rm -f /tmp/task_status_1.log """)
+    ###########os.system("""rm -f /tmp/create_task_status_1.log""")
+    ###########os.system("""date >>/tmp/task_status_1.log """)
+    ###########os.system("""rm -f /tmp/exception_log.log""")
+    ###########exec_create_task(MediaType=2)
     get_download_task()
     ###################import time
     ###################
