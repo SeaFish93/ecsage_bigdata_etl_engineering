@@ -131,32 +131,25 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",arg=None):
                'Connection': "close"
            }
            try:
-             resp = requests.post(url, json=params, headers=headers)
-             resp_data = resp.json()
+             set_async_tasks(ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num, Token=token_data)
              num = num + 1
              print(ThreadName,num, "**********************************************")
-             print(resp_data, "**********************************************")
-             print("**********************************************")
-             task_id = resp_data["data"]["task_id"]
-             task_name = resp_data["data"]["task_name"]
-             os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """%(token_data,service_code,account_id,task_id,task_name))
-             insert_sql = """
-                insert into metadb.oe_async_task_interface_bak
-                (`dag_id`
-                 ,`dag_task_id`
-                 ,`media_type`
-                 ,`token_data`
-                 ,`service_code`
-                 ,`account_id`
-                 ,`task_id`
-                 ,`task_name`)
-                select '%s','%s','%s','%s','%s','%s','%s','%s'
-             """%("test","test",MediaType,token_data,service_code,account_id,task_id,task_name)
-             etl_md.execute_sql(insert_sql)
            except Exception as e:
-             print("异常！！！！【%s,%s,%s】"%(token_data,service_code,account_id))
+             import time
+             set_true = True
+             n = 1
+             while set_true:
+               time.sleep(2)
+               try:
+                 set_async_tasks(ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data)
+                 set_true = False
+               except Exception as e:
+                 if n > 3:
+                    set_true = False
+                    os.system("""echo "%s %s %s">>/tmp/exception_log.log """%(token_data, service_code, account_id))
+               n = n + 1
+
 def exec_create_task(MediaType=2):
-    etl_md.execute_sql("""delete from metadb.oe_async_task_interface_bak where dag_id='%s' and dag_task_id = '%s'""" % ("test", "test"))
     sql_list = get_token(MediaType=MediaType)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
@@ -177,11 +170,38 @@ def exec_create_task(MediaType=2):
         for etl_th in th:
             etl_th.join()
         os.system("""date >>/tmp/task_status_1.log """)
+def set_async_tasks(ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
+    open_api_domain = "https://ad.toutiao.com"
+    path = "/open_api/2/async_task/create/"
+    url = open_api_domain + path
+    params = {
+        "advertiser_id": AccountId,
+        "task_name": "%s_%s" % (ThreadName, Num),
+        "task_type": "REPORT",
+        "force": "true",
+        "task_params": {
+            "start_date": "2020-11-02",
+            "end_date": "2020-11-02",
+            "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
+        }
+    }
+    headers = {
+        'Content-Type': "application/json",
+        'Access-Token': Token,
+        'Connection': "close"
+    }
+    resp = requests.post(url, json=params, headers=headers)
+    resp_data = resp.json()
+    task_id = resp_data["data"]["task_id"]
+    task_name = resp_data["data"]["task_name"]
+    os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """ % (Token, ServiceCode, AccountId, task_id, task_name))
+
 if __name__ == '__main__':
     #etl_md.execute_sql("""delete from metadb.oe_async_task_interface where dag_id='%s' and dag_task_id = '%s'""" % ("test", "test"))
     os.system("""rm -f /tmp/task_status_1.log """)
     os.system("""rm -f /tmp/create_task_status_1.log""")
     os.system("""date >>/tmp/task_status_1.log """)
+    os.system("""rm -f /tmp/exception_log.log""")
     exec_create_task(MediaType=2)
     ###################import time
     ###################
