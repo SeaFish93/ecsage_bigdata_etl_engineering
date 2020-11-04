@@ -188,7 +188,7 @@ def set_async_tasks(ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
         "task_params": {
             "start_date": "2020-11-02",
             "end_date": "2020-11-02",
-            "group_by": ["STAT_GROUP_BY_ADVERTISER_ID"]
+            "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
         }
     }
     headers = {
@@ -322,13 +322,13 @@ def get_download_sql(ServiceCode=""):
     return sql_list
 
 if __name__ == '__main__':
-    get_download_task()
     #etl_md.execute_sql("""delete from metadb.oe_async_task_interface where dag_id='%s' and dag_task_id = '%s'""" % ("test", "test"))
-    ##########os.system("""rm -f /tmp/task_status_1.log """)
-    ##########os.system("""rm -f /tmp/create_task_status_1.log""")
-    ##########os.system("""date >>/tmp/task_status_1.log """)
-    ##########os.system("""rm -f /tmp/exception_log.log""")
-    ##########exec_create_task(MediaType=2)
+    os.system("""rm -f /tmp/task_status_1.log """)
+    os.system("""rm -f /tmp/create_task_status_1.log""")
+    os.system("""date >>/tmp/task_status_1.log """)
+    os.system("""rm -f /tmp/exception_log.log""")
+    exec_create_task(MediaType=2)
+    get_download_task()
     ###################import time
     ###################
     ###################time.sleep(30)
