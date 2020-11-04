@@ -196,9 +196,9 @@ def set_download_content(AccountId="",TaskId="",Token=""):
     resp = requests.get(url, json=params, headers=headers)
     resp_data = resp.content
     if str(resp_data) == """b'empty result'""":
-        os.system("""echo "%s %s %s">>/tmp/empty1.log """%(AccountId,TaskId,Token))
+        os.system("""echo "%s %s %s">>/tmp/empty2.log """%(AccountId,TaskId,Token))
     else:
-        os.system("""echo "%s">>/tmp/notempty1.log """%(resp_data))
+        os.system("""echo "%s">>/tmp/notempty2.log """%(resp_data))
 
 def get_download_content(Sql="",arg=None):
   if arg is not None:
@@ -305,8 +305,8 @@ if __name__ == '__main__':
     os.system("""rm -f /tmp/create_task_status_1.log""")
     os.system("""date >>/tmp/task_status_1.log """)
     os.system("""rm -f /tmp/exception_log.log""")
-    os.system("""rm -f /tmp/notempty1.log""")
-    os.system("""rm -f /tmp/empty1.log""")
+    os.system("""rm -f /tmp/notempty2.log""")
+    os.system("""rm -f /tmp/empty2.log""")
     exec_create_task(MediaType=2)
     print("开始启动下载内容!!!!!")
     get_download_task()
