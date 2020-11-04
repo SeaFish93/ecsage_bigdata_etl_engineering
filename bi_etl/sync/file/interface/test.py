@@ -141,7 +141,7 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",arg=None):
              task_name = resp_data["data"]["task_name"]
              os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """%(token_data,service_code,account_id,task_id,task_name))
              insert_sql = """
-                insert into metadb.oe_async_task_interface
+                insert into metadb.oe_async_task_interface_bak
                 (`dag_id`
                  ,`dag_task_id`
                  ,`media_type`
@@ -152,11 +152,11 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",arg=None):
                  ,`task_name`)
                 select '%s','%s','%s','%s','%s','%s','%s','%s'
              """%("test","test",MediaType,token_data,service_code,account_id,task_id,task_name)
-             etl_md.execute_sql("""delete from metadb.oe_async_task_interface where dag_id='%s' and dag_task_id = '%s'"""%("test","test"))
              etl_md.execute_sql(insert_sql)
            except Exception as e:
              print("异常！！！！【%s,%s,%s】"%(token_data,service_code,account_id))
 def exec_create_task(MediaType=2):
+    etl_md.execute_sql("""delete from metadb.oe_async_task_interface_bak where dag_id='%s' and dag_task_id = '%s'""" % ("test", "test"))
     sql_list = get_token(MediaType=MediaType)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
@@ -178,6 +178,7 @@ def exec_create_task(MediaType=2):
             etl_th.join()
         os.system("""date >>/tmp/task_status_1.log """)
 if __name__ == '__main__':
+    #etl_md.execute_sql("""delete from metadb.oe_async_task_interface where dag_id='%s' and dag_task_id = '%s'""" % ("test", "test"))
     os.system("""rm -f /tmp/task_status_1.log """)
     os.system("""rm -f /tmp/create_task_status_1.log""")
     os.system("""date >>/tmp/task_status_1.log """)
