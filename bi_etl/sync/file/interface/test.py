@@ -234,8 +234,22 @@ def get_download_content(Sql="",arg=None):
         account_id = data[2]
         task_id = data[3]
         task_name = data[4]
-        set_download_content(AccountId=account_id, TaskId=task_id, Token=token)
-
+        try:
+          set_download_content(AccountId=account_id, TaskId=task_id, Token=token)
+        except Exception as e:
+          import time
+          set_true = True
+          n = 1
+          while set_true:
+              time.sleep(2)
+              try:
+                  set_download_content(AccountId=account_id, TaskId=task_id, Token=token)
+                  set_true = False
+              except Exception as e:
+                  if n > 3:
+                      set_true = False
+                      #os.system("""echo "%s %s %s">>/tmp/exception_log.log """ % (token_data, service_code, account_id))
+              n = n + 1
 def get_download_task():
     sql_list = get_download_sql(ServiceCode="tt-hnhd-02")
     if sql_list is not None and len(sql_list) > 0:
