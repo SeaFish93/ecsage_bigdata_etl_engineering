@@ -308,6 +308,7 @@ if __name__ == '__main__':
     os.system("""rm -f /tmp/notempty1.log""")
     os.system("""rm -f /tmp/empty1.log""")
     exec_create_task(MediaType=2)
+    print("开始启动下载内容!!!!!")
     get_download_task()
     os.system("""date >>/tmp/task_status_1.log """)
     ###################import time
