@@ -314,7 +314,7 @@ if __name__ == '__main__':
     os.system("""rm -f /tmp/empty2.log""")
     os.system("""rm -f /tmp/status_exception.log""")
     os.system("""rm -f /tmp/create_exception.log""")
-    exec_create_task(MediaType=2)
+    ###############exec_create_task(MediaType=2)
     print("开始启动下载内容!!!!!")
     get_download_task()
     os.system("""date >>/tmp/task_status_2.log """)
