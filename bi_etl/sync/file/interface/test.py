@@ -182,7 +182,7 @@ def set_async_tasks(ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
         "task_params": {
             "start_date": "2020-11-02",
             "end_date": "2020-11-02",
-            "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
+            "group_by": ["STAT_GROUP_BY_ADVERTISER_ID"]
         }
     }
     headers = {
