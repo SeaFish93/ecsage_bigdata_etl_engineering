@@ -158,7 +158,6 @@ SELECT t.COLUMN_NAME              AS c_name,
 
     def local_file_to_mysql(self, sql=None):
         mysql_conn = "mysql -h'%s' -P%d -u'%s' -p'%s' -Ne " % (self.host, self.port, self.user, self.password)
-        print(mysql_conn + '"%s"' % (sql))
         result = os.system(mysql_conn + '"%s"' % (sql))
         if result == 0:
             return True

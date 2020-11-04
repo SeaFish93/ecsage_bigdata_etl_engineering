@@ -112,25 +112,6 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",arg=None):
            account_id = data[0]
            service_code = data[2]
            token_data = Token
-           ####### open_api_domain = "https://ad.toutiao.com"
-           ####### path = "/open_api/2/async_task/create/"
-           ####### url = open_api_domain + path
-           ####### params = {
-           #######            "advertiser_id": account_id,
-           #######            "task_name": "%s_%s" % (ThreadName,num),
-           #######            "task_type": "REPORT",
-           #######            "force": "true",
-           #######            "task_params": {
-           #######                  "start_date": "2020-11-02",
-           #######                  "end_date": "2020-11-02",
-           #######                  "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
-           #######             }
-           #######           }
-           ####### headers = {
-           #######     'Content-Type': "application/json",
-           #######     'Access-Token': token_data,
-           #######     'Connection': "close"
-           ####### }
            try:
              set_async_tasks(ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num, Token=token_data)
              num = num + 1
@@ -147,7 +128,6 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",arg=None):
                except Exception as e:
                  if n > 3:
                     set_true = False
-                    os.system("""echo "%s %s %s">>/tmp/exception_log.log """%(token_data, service_code, account_id))
                n = n + 1
 
 def exec_create_task(MediaType=2):
@@ -159,23 +139,22 @@ def exec_create_task(MediaType=2):
             token = sqls[0]
             for get_sql in sqls[1]:
                 i = i + 1
-                ########## etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
-                ##########                    my_run=create_task,
-                ##########                    Sql = get_sql,ThreadName="Thread%d" % (i),Token=token,
-                ##########                    MediaType = MediaType
-                ##########                    )
-                ########## etl_thread.start()
-                ########## import time
-                ########## time.sleep(2)
-                ########## th.append(etl_thread)
-        ######### for etl_th in th:
-        #########     etl_th.join()
-        os.system("""date >>/tmp/task_status_1.log """)
+                etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
+                                   my_run=create_task,
+                                   Sql = get_sql,ThreadName="Thread%d" % (i),Token=token,
+                                   MediaType = MediaType
+                                   )
+                etl_thread.start()
+                import time
+                time.sleep(2)
+                th.append(etl_thread)
+        for etl_th in th:
+            etl_th.join()
         insert_sql = """
           load data local infile '/tmp/create_task_status_1.log' into table metadb.oe_async_task_interface_bak1 fields terminated by ' ' lines terminated by '\\n' (token_data,service_code,account_id,task_id,task_name)
         """
         etl_md.execute_sql("""delete from metadb.oe_async_task_interface_bak1""")
-        etl_md.local_file_to_mysql(sql=insert_sql) #.execute_sql(insert_sql)
+        etl_md.local_file_to_mysql(sql=insert_sql)
 def set_async_tasks(ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
@@ -224,7 +203,6 @@ def set_download_content(AccountId="",TaskId="",Token=""):
 def get_download_content(Sql="",arg=None):
   if arg is not None:
     Sql = arg["Sql"]
-    print(Sql,"################################")
     ok,datas = etl_md.get_all_rows(Sql)
     for data in datas:
         token = data[0]
@@ -246,7 +224,6 @@ def get_download_content(Sql="",arg=None):
               except Exception as e:
                   if n > 3:
                       set_true = False
-                      #os.system("""echo "%s %s %s">>/tmp/exception_log.log """ % (token_data, service_code, account_id))
               n = n + 1
 def get_download_task():
     sql_list = get_download_sql(ServiceCode="tt-hnhd-02")
@@ -272,16 +249,20 @@ def get_download_sql(ServiceCode=""):
     source_data_sql = """
                    select token_data,service_code,account_id,task_id,task_name from(
                    select token_data,service_code,account_id,task_id,task_name,@row_num:=@row_num+1 as rn
-                   from metadb.oe_async_task_interface_bak1 a,(select @row_num:=0) r
-                   where service_code = '%s'
+                   from (select distinct token_data,service_code,account_id,task_id,task_name
+                         from metadb.oe_async_task_interface_bak1 
+                         where service_code = '%s'
+                        ) a,(select @row_num:=0) r
                    ) tmp
                 """%(ServiceCode)
     #获取子账户条数
     get_account_count_sql = """
        select count(1),min(rn),max(rn) 
        from(select token_data,service_code,account_id,task_id,task_name,@row_num:=@row_num+1 as rn
-            from metadb.oe_async_task_interface_bak1 a,(select @row_num:=0) r
-            where service_code = '%s'
+            from (select distinct token_data,service_code,account_id,task_id,task_name
+                  from metadb.oe_async_task_interface_bak1 
+                  where service_code = '%s'
+                 ) a,(select @row_num:=0) r
            ) tmp
     """%(ServiceCode)
     ok,all_rows = etl_md.get_all_rows(get_account_count_sql)
@@ -320,13 +301,15 @@ def get_download_sql(ServiceCode=""):
     return sql_list
 
 if __name__ == '__main__':
-    #etl_md.execute_sql("""delete from metadb.oe_async_task_interface where dag_id='%s' and dag_task_id = '%s'""" % ("test", "test"))
-    ###########os.system("""rm -f /tmp/task_status_1.log """)
-    ###########os.system("""rm -f /tmp/create_task_status_1.log""")
-    ###########os.system("""date >>/tmp/task_status_1.log """)
-    ###########os.system("""rm -f /tmp/exception_log.log""")
+    os.system("""rm -f /tmp/task_status_1.log """)
+    os.system("""rm -f /tmp/create_task_status_1.log""")
+    os.system("""date >>/tmp/task_status_1.log """)
+    os.system("""rm -f /tmp/exception_log.log""")
+    os.system("""rm -f /tmp/notempty1.log""")
+    os.system("""rm -f /tmp/empty1.log""")
     exec_create_task(MediaType=2)
-    #get_download_task()
+    get_download_task()
+    os.system("""date >>/tmp/task_status_1.log """)
     ###################import time
     ###################
     ###################time.sleep(30)
