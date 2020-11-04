@@ -6,6 +6,7 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 
 mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
+etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 def get_account_sql(MediaType="",ServiceCode=""):
     #获取子账户
     source_data_sql = """
@@ -94,7 +95,7 @@ def get_token(MediaType=""):
         #print(token)
     return token
 
-def create_task(Sql="",ThreadName="",Token="",arg=None):
+def create_task(Sql="",ThreadName="",Token="",MediaType="",arg=None):
     account_id = ""
     token_data = ""
     service_code = ""
@@ -103,6 +104,7 @@ def create_task(Sql="",ThreadName="",Token="",arg=None):
        Sql = arg["Sql"]
        ThreadName = arg["ThreadName"]
        Token = arg["Token"]
+       MediaType = arg["MediaType"]
        ok, data_list = mysql_session.get_all_rows_thread(Sql)
        print("线程：%s,长度：%s,=================================="%(ThreadName,len(data_list)))
        for data in data_list:
@@ -138,6 +140,20 @@ def create_task(Sql="",ThreadName="",Token="",arg=None):
              task_id = resp_data["data"]["task_id"]
              task_name = resp_data["data"]["task_name"]
              os.system("""echo "%s %s %s %s %s">>/tmp/create_task_status_1.log """%(token_data,service_code,account_id,task_id,task_name))
+             insert_sql = """
+                insert into metadb.oe_async_task_interface
+                (`dag_id`
+                 ,`dag_task_id`
+                 ,`media_type`
+                 ,`token_data`
+                 ,`service_code`
+                 ,`account_id`
+                 ,`task_id`
+                 ,`task_name`)
+                select '%s','%s','%s','%s','%s','%s','%s','%s'
+             """%("test","test",MediaType,token_data,service_code,account_id,task_id,task_name)
+             etl_md.execute_sql("""delete from metadb.oe_async_task_interface where dag_id='%s' and dag_task_id = '%s'"""%("test","test"))
+             etl_md.execute_sql(insert_sql)
            except Exception as e:
              print("异常！！！！【%s,%s,%s】"%(token_data,service_code,account_id))
 def exec_create_task(MediaType=2):
@@ -151,7 +167,8 @@ def exec_create_task(MediaType=2):
                 i = i + 1
                 etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
                                    my_run=create_task,
-                                   Sql = get_sql,ThreadName="Thread%d" % (i),Token=token
+                                   Sql = get_sql,ThreadName="Thread%d" % (i),Token=token,
+                                   MediaType = MediaType
                                    )
                 etl_thread.start()
                 import time
