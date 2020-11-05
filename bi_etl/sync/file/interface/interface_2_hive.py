@@ -643,7 +643,6 @@ def set_filebeat_yml(DataFile="",FileName="",ExecDate=""):
 
 #等待md5
 def wait_for_md5(FileDirNameList="",DB="", Table="",ExecDate=""):
-    print(FileDirNameList,"===================================================")
     md5_file_false = []
     set_md5_file_true = True
     sleep_num = 1
@@ -651,9 +650,9 @@ def wait_for_md5(FileDirNameList="",DB="", Table="",ExecDate=""):
     while set_md5_file_true:
       for file in FileDirNameList:
         #判断md5文件是否存在
-        is_md5_file = os.path.exists(file[0]+".md5")
+        is_md5_file = os.path.exists(file+".md5")
         if is_md5_file is False:
-           md5_file_false.append(file[0])
+           md5_file_false.append(file)
         else:
            pass
       if len(md5_file_false) > 0:
