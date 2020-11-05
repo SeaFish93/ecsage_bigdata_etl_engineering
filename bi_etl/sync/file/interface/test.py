@@ -130,7 +130,6 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",AsyncT
                  set_true = False
                except Exception as e:
                  if n > 3:
-                    print("错误日志："+ str(e))
                     os.system("""echo "%s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,AsyncTaskExceptionFile))
                     set_true = False
                n = n + 1
@@ -144,9 +143,9 @@ def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExcep
             token = sqls[0]
             for get_sql in sqls[1]:
                 i = i + 1
-                etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i), #thread_name="%s%d" % (AsyncTask,i),
+                etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (AsyncTask,i),
                                    my_run=create_task,
-                                   Sql = get_sql,ThreadName="Thread%d" % (i), #ThreadName="%s%d" % (AsyncTask,i),
+                                   Sql = get_sql,ThreadName="%s%d" % (AsyncTask,i),
                                    Token=token,
                                    MediaType = MediaType,ServiceCode=ServiceCode,AsyncTaskFile=AsyncTaskFile,
                                    AsyncTaskExceptionFile=AsyncTaskExceptionFile
