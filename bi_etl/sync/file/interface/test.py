@@ -96,7 +96,7 @@ def get_token(MediaType="",ServiceCode=""):
         token.append((token_data,sql_list))
     return token
 
-def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",arg=None):
+def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",AsyncTaskFile="",arg=None):
     account_id = ""
     token_data = ""
     service_code = ""
@@ -107,6 +107,7 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",arg=No
        Token = arg["Token"]
        MediaType = arg["MediaType"]
        ServiceCode = arg["ServiceCode"]
+       AsyncTaskFile = arg["AsyncTaskFile"]
        ok, data_list = mysql_session.get_all_rows_thread(Sql)
        print("线程：%s,长度：%s,=================================="%(ThreadName,len(data_list)))
        for data in data_list:
@@ -114,7 +115,7 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",arg=No
            service_code = ServiceCode
            token_data = Token
            try:
-             set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num, Token=token_data)
+             set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num, Token=token_data,AsyncTaskFile=AsyncTaskFile)
              num = num + 1
              print(ThreadName,num, "**********************************************")
            except Exception as e:
@@ -124,7 +125,7 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",arg=No
              while set_true:
                time.sleep(2)
                try:
-                 set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data)
+                 set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
                  set_true = False
                except Exception as e:
                  if n > 3:
@@ -132,7 +133,7 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",arg=No
                     set_true = False
                n = n + 1
 
-def exec_create_task(MediaType="",ServiceCode=""):
+def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile=""):
     sql_list = get_token(MediaType=MediaType,ServiceCode=ServiceCode)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
@@ -144,7 +145,7 @@ def exec_create_task(MediaType="",ServiceCode=""):
                 etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
                                    my_run=create_task,
                                    Sql = get_sql,ThreadName="Thread%d" % (i),Token=token,
-                                   MediaType = MediaType,ServiceCode=ServiceCode
+                                   MediaType = MediaType,ServiceCode=ServiceCode,AsyncTaskFile=AsyncTaskFile
                                    )
                 etl_thread.start()
                 import time
@@ -153,11 +154,11 @@ def exec_create_task(MediaType="",ServiceCode=""):
         for etl_th in th:
             etl_th.join()
         insert_sql = """
-          load data local infile '/tmp/create_task_status_2.log' into table metadb.oe_async_task_interface fields terminated by ' ' lines terminated by '\\n' (media_type,token_data,service_code,account_id,task_id,task_name)
-        """
+          load data local infile '%s' into table metadb.oe_async_task_interface fields terminated by ' ' lines terminated by '\\n' (media_type,token_data,service_code,account_id,task_id,task_name)
+        """%(AsyncTaskFile)
         etl_md.execute_sql("""delete from metadb.oe_async_task_interface""")
         etl_md.local_file_to_mysql(sql=insert_sql)
-def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token=""):
+def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
     url = open_api_domain + path
@@ -181,7 +182,7 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     resp_data = resp.json()
     task_id = resp_data["data"]["task_id"]
     task_name = resp_data["data"]["task_name"]
-    os.system("""echo "%s %s %s %s %s %s">>/tmp/create_task_status_2.log """ % (MediaType,Token, ServiceCode, AccountId, task_id, task_name))
+    os.system("""echo "%s %s %s %s %s %s">>%s """ % (MediaType,Token, ServiceCode, AccountId, task_id, task_name,AsyncTaskFile))
 
 def set_download_content(AccountId="",TaskId="",Token=""):
     open_api_domain = "https://ad.toutiao.com"
@@ -313,15 +314,16 @@ def get_download_sql(MediaType="",ServiceCode=""):
 if __name__ == '__main__':
     media_type = sys.argv[1]
     service_code = sys.argv[2]
+    async_task_file = """/tmp/async_%s_%s.log"""%(media_type,service_code.replace("-",""))
     os.system("""rm -f /tmp/task_status_2.log """)
-    os.system("""rm -f /tmp/create_task_status_2.log""")
+    os.system("""rm -f %s"""%(async_task_file))
     os.system("""date >>/tmp/task_status_2.log """)
     os.system("""rm -f /tmp/exception_log.log""")
     os.system("""rm -f /tmp/notempty2.log""")
     os.system("""rm -f /tmp/empty2.log""")
     os.system("""rm -f /tmp/status_exception.log""")
     os.system("""rm -f /tmp/create_exception.log""")
-    exec_create_task(MediaType=media_type,ServiceCode=service_code)
+    exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file)
     print("开始启动下载内容!!!!!")
     import time
     time.sleep(60)
