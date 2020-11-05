@@ -143,9 +143,9 @@ def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExcep
             token = sqls[0]
             for get_sql in sqls[1]:
                 i = i + 1
-                etl_thread = EtlThread(thread_id=i, thread_name="%s%s%d" % (ServiceCode.replace("-",""),MediaType,i),
+                etl_thread = EtlThread(thread_id=i, thread_name="%s%s%d" % (ServiceCode,MediaType,i),
                                    my_run=create_task,
-                                   Sql = get_sql,ThreadName="%s%s%d" % (ServiceCode.replace("-",""),MediaType,i),Token=token,
+                                   Sql = get_sql,ThreadName="%s%s%d" % (ServiceCode,MediaType,i),Token=token,
                                    MediaType = MediaType,ServiceCode=ServiceCode,AsyncTaskFile=AsyncTaskFile,
                                    AsyncTaskExceptionFile=AsyncTaskExceptionFile
                                    )
