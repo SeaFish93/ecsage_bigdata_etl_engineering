@@ -350,3 +350,31 @@ if __name__ == '__main__':
     time.sleep(120)
     get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
     os.system("""date >>%s """%(async_date_file))
+
+"""
+nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-13" "task1" > /root/wangsong/tt-hnhd-13.log 2>&1 &
+nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-11" "task2" > /root/wangsong/tt-hnhd-11.log 2>&1 &
+nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-14" "task3" > /root/wangsong/tt-hnhd-14.log 2>&1 &
+nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-10" "task5" > /root/wangsong/tt-hnhd-10.log 2>&1 &
+nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnzc" "task4" > /root/wangsong/tt-hnzc.log 2>&1 &
+nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-04" "task7" > /root/wangsong/tt-hnhd-04.log 2>&1 &
+
+
+nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-05" "task6" > /root/wangsong/tt-hnhd-05.log 2>&1 &
+
+nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-03" "task8" > /root/wangsong/tt-hnhd-03.log 2>&1 &
+
+nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-02" "task9" > /root/wangsong/tt-hnhd-02.log 2>&1 &
+
+
+(('tt-hnhd-02', 13405), 
+('tt-hnhd-03', 3836), --
+('tt-hnhd-04', 2003), --
+('tt-hnhd-05', 13462), --
+('tt-hnhd-10', 3), --
+('tt-hnhd-11', 1780),-- 
+('tt-hnhd-12', 68), 
+('tt-hnhd-13', 17), --
+('tt-hnhd-14', 145), --
+('tt-hnzc', 2768))--
+"""
