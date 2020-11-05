@@ -685,7 +685,7 @@ def request_commit_account(AccountData="",Num="",InterfaceUrl="",ExecDate="",Fil
         advertiser_list.append({"serviceCode": service_code, "accountId": account_id})
     print("第%s批正在提交！%s" % (Num, advertiser_list))
     now_time = time.strftime("%H_%M_%S", time.localtime())
-    file_name = "%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task, run_num, ExecDate, now_time)
+    file_name = "%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task, Num, ExecDate, now_time)
     file_dir_name = "%s/%s" % (FileDir, file_name)
     if os.path.exists(FileDir) is False:
        os.system("mkdir -p %s" % (FileDir))
