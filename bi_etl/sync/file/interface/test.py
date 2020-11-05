@@ -134,7 +134,7 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",AsyncT
                     set_true = False
                n = n + 1
 
-def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExceptionFile=""):
+def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask=""):
     sql_list = get_token(MediaType=MediaType,ServiceCode=ServiceCode)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
@@ -143,9 +143,9 @@ def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExcep
             token = sqls[0]
             for get_sql in sqls[1]:
                 i = i + 1
-                etl_thread = EtlThread(thread_id=i, thread_name="%s%s%d" % (ServiceCode,MediaType,i),
+                etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (AsyncTask,i),
                                    my_run=create_task,
-                                   Sql = get_sql,ThreadName="%s%s%d" % (ServiceCode,MediaType,i),Token=token,
+                                   Sql = get_sql,ThreadName="%s%d" % (AsyncTask,i),Token=token,
                                    MediaType = MediaType,ServiceCode=ServiceCode,AsyncTaskFile=AsyncTaskFile,
                                    AsyncTaskExceptionFile=AsyncTaskExceptionFile
                                    )
@@ -166,7 +166,7 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     url = open_api_domain + path
     params = {
         "advertiser_id": AccountId,
-        "task_name": "%s_%s" % (ThreadName, Num),
+        "task_name": "%s%s" % (ThreadName, Num),
         "task_type": "REPORT",
         "force": "true",
         "task_params": {
@@ -320,6 +320,7 @@ def get_download_sql(MediaType="",ServiceCode=""):
 if __name__ == '__main__':
     media_type = sys.argv[1]
     service_code = sys.argv[2]
+    async_task = sys.argv[3]
     async_task_file = """/tmp/async_create_%s_%s.log"""%(media_type,service_code.replace("-",""))
     async_task_exception_file = """/tmp/async_create_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
     async_status_exception_file = """/tmp/async_status_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
@@ -333,7 +334,7 @@ if __name__ == '__main__':
     os.system("""rm -f %s"""%(async_empty_file))
     os.system("""rm -f %s"""%(async_status_exception_file))
     os.system("""rm -f %s"""%(async_task_exception_file))
-    exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file)
+    exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
     print("开始启动下载内容!!!!!")
     import time
     time.sleep(60)
