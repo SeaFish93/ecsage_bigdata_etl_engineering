@@ -39,7 +39,8 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
         cron_prev_01 = cron.get_prev(datetime)
         if str(execution_date)[11:19] != str(cron_prev_01)[11:19]:
             if int(str(cron_prev_01)[11:13]) + 8 <= 23:
-                cron_prev = cron_next
+                print("大于23点")
+                cron_prev = cron_prev_01
             else:
                 cron_prev = cron_prev_01
         cron_prev_pendulum = pendulum.datetime(cron_prev.year,

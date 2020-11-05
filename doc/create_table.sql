@@ -602,6 +602,19 @@ CREATE TABLE `get_day_tc_interface` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='接口任务配置'
 
+CREATE TABLE metadb.oe_async_task_interface (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `dag_id` varchar(1000) DEFAULT NULL COMMENT '执行接口所属dag',
+  `dag_task_id` varchar(1000) DEFAULT NULL COMMENT '执行接口所属dag的taskId',
+  `media_type` varchar(100) DEFAULT NULL COMMENT '媒体子账户类型',
+  `token_data` varchar(1000) DEFAULT NULL COMMENT 'token',
+  `service_code` varchar(500) DEFAULT NULL COMMENT '代理商凭证',
+  `account_id`   varchar(1000) DEFAULT NULL COMMENT '子账户id',
+  `task_id`   varchar(1000) DEFAULT NULL COMMENT '异步任务id',
+  `task_name`   varchar(1000) DEFAULT NULL COMMENT '异步任务名称',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='巨量异步任务'
+
 
 
 

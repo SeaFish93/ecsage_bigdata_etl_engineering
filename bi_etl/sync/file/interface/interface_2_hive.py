@@ -88,7 +88,12 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ):
     data_json = DataJson
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-    ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media = %s"""%(int(data_json["mt"])))
+    ok,data_list = mysql_session.get_all_rows("""select account_id, media, service_code 
+                                                 from big_data_mdg.media_advertiser 
+                                                 where media = %s
+                                                   and service_code = 'tt-hnhd-12'
+                                                   and system_status in ('STATUS_ENABLE','STATUS_PENDING_CONFIRM_MODIFY','STATUS_WAIT_FOR_PUBLIC_AUTH')
+                                              """%(int(data_json["mt"])))
     #ok, data_list = mysql_session.get_all_rows("""select account_id, media, service_code from big_data_mdg.media_advertiser where media =2 and account_id in (%s)""" % (data))
     request_type = data_json["mt"]
     if "filtering" in data_json.keys():
@@ -105,6 +110,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     print("开始执行调用接口")
     data_dir = conf.get("Interface", InterfaceModule)
     file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,request_type)
+    ########set_filebeat_yml(DataFile=file_dir, FileName="%s_%s_%s.log" % (airflow.dag, airflow.task,ExecData), ExecDate=ExecData)
     #数据文件绝对路径
     file_dir_name_list = []
     advertiser_list = []
@@ -332,14 +338,18 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
-   if IsReport == 1:
-       regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\":\\\\[\\\\{\\\\".*)',1),'$.data'),'$.list') as data_colums"""
-       return_regexp_extract = """regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\")',1) as returns_colums"""
-       returns_account_id = """regexp_replace(regexp_replace(regexp_extract(a.request_data,'(responseData : accountId: .*, \\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\")',1),', \\\\{\\\\"data\\\\":\\\\{\\\\"list\\\\"',''),'responseData : accountId: ','') as returns_account_id"""
-   else:
-      regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
-      return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
-      returns_account_id = """regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'returns : accountId: ',''),',.*','') as returns_account_id"""
+   regexp_extract = """get_json_object(get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data'),'$.list') as data_colums"""
+   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
+   returns_account_id = """trim(get_json_object(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}## )',1),'##',''),' ',''),'$.accountId')) as returns_account_id"""
+   filter_line = """length(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1)) > 0"""
+   ######if IsReport == 1:
+   ######    regexp_extract = """get_json_object(get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data'),'$.list') as data_colums"""
+   ######    return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
+   ######    returns_account_id = """trim(get_json_object(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}## )',1),'##',''),' ',''),'$.accountId')) as returns_account_id"""
+   ######else:
+   ######   regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
+   ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
+   ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
    sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         drop table if exists %s.%s_tmp;
@@ -357,6 +367,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                                     ,request_type
                              from %s.%s a
                              where a.etl_date = '%s'
+                               and %s
                             ) a
                         ) b
                    ) c
@@ -365,7 +376,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               lateral view json_tuple(data_num_colums,%s) b
               as %s
                ;
-        """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,json_tuple_columns,select_json_tuple_column)
+        """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line,json_tuple_columns,select_json_tuple_column)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -569,3 +580,23 @@ def is_key_columns(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDat
                                Log="请确认配置表指定主键字段是否正确！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
+
+def set_filebeat_yml(DataFile="",FileName="",ExecDate=""):
+    #设置数据采集
+    tmplate_yml_file = """/root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml"""
+    tmplate_yml_shell = """mkdir -p /tmp/tmplate_yml"""
+    yml_file = """/tmp/tmplate_yml/%s.yml"""%(FileName)
+    os.system(tmplate_yml_shell)
+    cp_yml = """cp /root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/template_filebeat.yml %s"""%(yml_file)
+    os.system(cp_yml)
+    filebeat_name = "%s_%s*_%s*.log" % (airflow.dag, airflow.task, ExecDate)
+    filebeat_name = "%s/%s" % (DataFile, filebeat_name)
+    sed_cat = """echo '%s'|sed 's/\//\\\\\//g'"""%(filebeat_name)
+    sed_cat = os.popen(sed_cat)
+    get_sed_cat = sed_cat.read().split()[0]
+    sed_file_dir = """ sed -i "s/##file_dir##/%s/g" %s"""%(get_sed_cat,yml_file)
+    os.system(sed_file_dir)
+    sed_file_dir = """sed -i "s/##file_name##/testfile/g" %s """%(yml_file)
+    os.system(sed_file_dir)
+    scp = """ scp %s root@bd127-node:/etc/filebeat/inputs.d/ """%(yml_file)
+    os.system(scp)
