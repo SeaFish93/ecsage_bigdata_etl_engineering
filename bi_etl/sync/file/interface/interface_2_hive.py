@@ -110,7 +110,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     print("开始执行调用接口")
     data_dir = conf.get("Interface", InterfaceModule)
     file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,request_type)
-    set_filebeat_yml(DataFile=file_dir, FileName="%s_%s_%s.log" % (airflow.dag, airflow.task,ExecData), ExecDate=ExecData)
+    ########set_filebeat_yml(DataFile=file_dir, FileName="%s_%s_%s.log" % (airflow.dag, airflow.task,ExecData), ExecDate=ExecData)
     #数据文件绝对路径
     file_dir_name_list = []
     advertiser_list = []

@@ -331,15 +331,15 @@ if __name__ == '__main__':
     media_type = sys.argv[1]
     service_code = sys.argv[2]
     async_task = sys.argv[3]
+    async_date_file = """/tmp/async_date_file_%s_%s.log"""%(media_type,service_code.replace("-",""))
     async_task_file = """/tmp/async_create_%s_%s.log"""%(media_type,service_code.replace("-",""))
     async_task_exception_file = """/tmp/async_create_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
     async_status_exception_file = """/tmp/async_status_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
     async_notempty_file = """/tmp/async_notempty_%s_%s.log"""%(media_type,service_code.replace("-",""))
     async_empty_file = """/tmp/async_empty_%s_%s.log""" % (media_type, service_code.replace("-", ""))
-    os.system("""rm -f /tmp/task_status_2.log """)
+    os.system("""rm -f %s """%(async_date_file))
     os.system("""rm -f %s"""%(async_task_file))
-    os.system("""date >>/tmp/task_status_2.log """)
-    os.system("""rm -f /tmp/exception_log.log""")
+    os.system("""date >>%s """%(async_date_file))
     os.system("""rm -f %s"""%(async_notempty_file))
     os.system("""rm -f %s"""%(async_empty_file))
     os.system("""rm -f %s"""%(async_status_exception_file))
@@ -349,4 +349,4 @@ if __name__ == '__main__':
     import time
     time.sleep(120)
     get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
-    os.system("""date >>/tmp/task_status_2.log """)
+    os.system("""date >>%s """%(async_date_file))
