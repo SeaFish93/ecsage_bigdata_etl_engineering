@@ -323,5 +323,7 @@ if __name__ == '__main__':
     os.system("""rm -f /tmp/create_exception.log""")
     exec_create_task(MediaType=media_type,ServiceCode=service_code)
     print("开始启动下载内容!!!!!")
+    import time
+    time.sleep(60)
     get_download_task(MediaType=media_type,ServiceCode=service_code)
     os.system("""date >>/tmp/task_status_2.log """)
