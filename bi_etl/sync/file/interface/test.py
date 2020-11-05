@@ -187,7 +187,7 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     task_name = resp_data["data"]["task_name"]
     os.system("""echo "%s %s %s %s %s %s">>%s """ % (MediaType,Token, ServiceCode, AccountId, task_id, task_name,AsyncTaskFile))
 
-def set_download_content(AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile=""):
+def set_download_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/get/"
     url = open_api_domain + path
@@ -205,18 +205,20 @@ def set_download_content(AccountId="",TaskId="",Token="",AsyncNotemptyFile="",As
     resp_data = resp.json()
     file_size = resp_data["data"]["list"][0]["file_size"]
     task_status = resp_data["data"]["list"][0]["task_status"]
-    print(file_size,task_status,"=============================================")
+    print("文件大小：%s，任务状态：%s"%(file_size,task_status))
     if int(file_size) <= 12:
         os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
     else:
-        os.system("""echo "%s">>%s """%(resp_data,AsyncNotemptyFile))
+        os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
 
-def get_download_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",arg=None):
+def get_download_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",ServiceCode="",arg=None):
   if arg is not None:
     Sql = arg["Sql"]
     AsyncNotemptyFile = arg["AsyncNotemptyFile"]
     AsyncEmptyFile = arg["AsyncEmptyFile"]
     AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
+    MediaType = arg["MediaType"]
+    ServiceCode = arg["ServiceCode"]
     ok,datas = etl_md.get_all_rows(Sql)
     for data in datas:
         token = data[0]
@@ -225,7 +227,7 @@ def get_download_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStat
         task_id = data[3]
         task_name = data[4]
         try:
-          set_download_content(AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
+          set_download_content(MediaType=MediaType,ServiceCode=ServiceCode,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
         except Exception as e:
           import time
           set_true = True
@@ -233,7 +235,7 @@ def get_download_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStat
           while set_true:
               time.sleep(2)
               try:
-                  set_download_content(AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
+                  set_download_content(MediaType=MediaType,ServiceCode=ServiceCode,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
                   set_true = False
               except Exception as e:
                   if n > 3:
@@ -250,7 +252,7 @@ def get_download_task(MediaType="",ServiceCode="",AsyncNotemptyFile="",AsyncEmpt
                 etl_thread = EtlThread(thread_id=i, thread_name="%s%s%d" % (ServiceCode.replace("-",""),MediaType,i),
                                    my_run=get_download_content,
                                    Sql = sqls,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
-                                   AsyncStatusExceptionFile=AsyncStatusExceptionFile
+                                   AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,ServiceCode=ServiceCode
                                    )
                 etl_thread.start()
                 import time
@@ -258,6 +260,13 @@ def get_download_task(MediaType="",ServiceCode="",AsyncNotemptyFile="",AsyncEmpt
                 th.append(etl_thread)
         for etl_th in th:
             etl_th.join()
+        #记录有效子账户
+        insert_sql = """
+           load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
+         """ % (AsyncNotemptyFile)
+        etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s and service_code='%s' """ % (MediaType, ServiceCode))
+        etl_md.local_file_to_mysql(sql=insert_sql)
+
         print("the end!!!!!")
 
 def get_download_sql(MediaType="",ServiceCode=""):
