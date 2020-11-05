@@ -679,20 +679,21 @@ def wait_for_md5(FileDirNameList="",DB="", Table="",ExecDate=""):
 
 def request_commit_account(AccountData="",Num="",InterfaceUrl="",ExecDate="",FileDir="",FileDirName="",DataJson=""):
     advertiser_list = []
-    for data in AccountData:
-        account_id = str(data[0])
-        service_code = str(data[2])
-        advertiser_list.append({"serviceCode": service_code, "accountId": account_id})
-    print("第%s批正在提交！%s" % (Num, advertiser_list))
-    now_time = time.strftime("%H_%M_%S", time.localtime())
-    file_name = "%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task, Num, ExecDate, now_time)
-    file_dir_name = "%s/%s" % (FileDir, file_name)
-    if os.path.exists(FileDir) is False:
-       os.system("mkdir -p %s" % (FileDir))
-    DataJson["%s" % (FileDirName)] = file_dir_name
-    DataJson["advertiser_list"] = advertiser_list
-    print("请求接口URL：%s" % (InterfaceUrl))
-    print("请求接口参数：%s" % (DataJson))
-    # 分子账户开启进程
-    exec_interface_data_curl(URL=InterfaceUrl, Data=DataJson, File=file_dir_name, DataJsonRequest="DataJsonRequest")
-    return file_dir_name
+    if AccountData is not None and len(AccountData)>0:
+       for data in AccountData:
+           account_id = str(data[0])
+           service_code = str(data[2])
+           advertiser_list.append({"serviceCode": service_code, "accountId": account_id})
+       print("第【%s】批正在提交，子账户个数：【%s】！" % (Num,len(AccountData)))
+       now_time = time.strftime("%H_%M_%S", time.localtime())
+       file_name = "%s_%s_%s_%s_%s.log" % (airflow.dag, airflow.task, Num, ExecDate, now_time)
+       file_dir_name = "%s/%s" % (FileDir, file_name)
+       if os.path.exists(FileDir) is False:
+          os.system("mkdir -p %s" % (FileDir))
+       DataJson["%s" % (FileDirName)] = file_dir_name
+       DataJson["advertiser_list"] = advertiser_list
+       print("请求接口URL：%s" % (InterfaceUrl))
+       print("请求接口参数：%s" % (DataJson))
+       # 分子账户开启进程
+       exec_interface_data_curl(URL=InterfaceUrl, Data=DataJson, File=file_dir_name, DataJsonRequest="DataJsonRequest")
+       return file_dir_name
