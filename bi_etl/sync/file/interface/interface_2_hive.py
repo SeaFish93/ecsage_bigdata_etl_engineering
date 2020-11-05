@@ -643,6 +643,7 @@ def set_filebeat_yml(DataFile="",FileName="",ExecDate=""):
 
 #等待md5
 def wait_for_md5(FileDirNameList="",DB="", Table="",ExecDate=""):
+    print(FileDirNameList,"===================================================")
     md5_file_false = []
     set_md5_file_true = True
     sleep_num = 1
@@ -696,5 +697,5 @@ def request_commit_account(AccountData="",Num="",InterfaceUrl="",ExecDate="",Fil
        print("请求接口URL：%s" % (InterfaceUrl))
        print("请求接口参数：%s" % (DataJson))
        # 分子账户开启进程
-       exec_interface_data_curl(URL=InterfaceUrl, Data=DataJson, File=file_dir_name, DataJsonRequest="DataJsonRequest")
+       #####exec_interface_data_curl(URL=InterfaceUrl, Data=DataJson, File=file_dir_name, DataJsonRequest="DataJsonRequest")
        return file_dir_name
