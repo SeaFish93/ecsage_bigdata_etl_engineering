@@ -115,25 +115,30 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",AsyncT
            account_id = data[0]
            service_code = ServiceCode
            token_data = Token
-           try:
-             set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num, Token=token_data,AsyncTaskFile=AsyncTaskFile)
-             num = num + 1
-             print(ThreadName,num, "**********************************************")
-           except Exception as e:
-             import time
-             set_true = True
-             n = 1
-             while set_true:
-               time.sleep(2)
-               try:
-                 set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
-                 set_true = False
-               except Exception as e:
-                 if n > 3:
-                    print("错误日志："+ str(e))
-                    os.system("""echo "%s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,AsyncTaskExceptionFile))
-                    set_true = False
-               n = n + 1
+           set_async_tasks(MediaType=MediaType, ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName,
+                           Num=num, Token=token_data, AsyncTaskFile=AsyncTaskFile)
+
+
+
+           ######## try:
+           ########   set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num, Token=token_data,AsyncTaskFile=AsyncTaskFile)
+           ########   num = num + 1
+           ########   print(ThreadName,num, "**********************************************")
+           ######## except Exception as e:
+           ########   import time
+           ########   set_true = True
+           ########   n = 1
+           ########   while set_true:
+           ########     time.sleep(2)
+           ########     try:
+           ########       set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
+           ########       set_true = False
+           ########     except Exception as e:
+           ########       if n > 3:
+           ########          print("错误日志："+ str(e))
+           ########          os.system("""echo "%s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,AsyncTaskExceptionFile))
+           ########          set_true = False
+           ########     n = n + 1
 
 def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask=""):
     sql_list = get_token(MediaType=MediaType,ServiceCode=ServiceCode)
