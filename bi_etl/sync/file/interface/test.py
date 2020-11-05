@@ -115,30 +115,25 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",AsyncT
            account_id = data[0]
            service_code = ServiceCode
            token_data = Token
-           set_async_tasks(MediaType=MediaType, ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName,
-                           Num=num, Token=token_data, AsyncTaskFile=AsyncTaskFile)
-
-
-
-           ######## try:
-           ########   set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num, Token=token_data,AsyncTaskFile=AsyncTaskFile)
-           ########   num = num + 1
-           ########   print(ThreadName,num, "**********************************************")
-           ######## except Exception as e:
-           ########   import time
-           ########   set_true = True
-           ########   n = 1
-           ########   while set_true:
-           ########     time.sleep(2)
-           ########     try:
-           ########       set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
-           ########       set_true = False
-           ########     except Exception as e:
-           ########       if n > 3:
-           ########          print("错误日志："+ str(e))
-           ########          os.system("""echo "%s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,AsyncTaskExceptionFile))
-           ########          set_true = False
-           ########     n = n + 1
+           try:
+             set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num, Token=token_data,AsyncTaskFile=AsyncTaskFile)
+             num = num + 1
+             print(ThreadName,num, "**********************************************")
+           except Exception as e:
+             import time
+             set_true = True
+             n = 1
+             while set_true:
+               time.sleep(2)
+               try:
+                 set_async_tasks(MediaType=MediaType,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
+                 set_true = False
+               except Exception as e:
+                 if n > 3:
+                    print("错误日志："+ str(e))
+                    os.system("""echo "%s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,AsyncTaskExceptionFile))
+                    set_true = False
+               n = n + 1
 
 def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask=""):
     sql_list = get_token(MediaType=MediaType,ServiceCode=ServiceCode)
@@ -149,9 +144,10 @@ def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExcep
             token = sqls[0]
             for get_sql in sqls[1]:
                 i = i + 1
-                etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (AsyncTask,i),
+                etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i), #thread_name="%s%d" % (AsyncTask,i),
                                    my_run=create_task,
-                                   Sql = get_sql,ThreadName="%s%d" % (AsyncTask,i),Token=token,
+                                   Sql = get_sql,ThreadName="Thread%d" % (i), #ThreadName="%s%d" % (AsyncTask,i),
+                                   Token=token,
                                    MediaType = MediaType,ServiceCode=ServiceCode,AsyncTaskFile=AsyncTaskFile,
                                    AsyncTaskExceptionFile=AsyncTaskExceptionFile
                                    )
@@ -167,7 +163,6 @@ def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExcep
         etl_md.execute_sql("""delete from metadb.oe_async_task_interface where media_type=%s and service_code='%s' """%(MediaType,ServiceCode))
         etl_md.local_file_to_mysql(sql=insert_sql)
 def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile=""):
-    print(ThreadName,"*******************************")
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
     url = open_api_domain + path
@@ -189,7 +184,6 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     }
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
-    print(resp_data,"=========================================")
     task_id = resp_data["data"]["task_id"]
     task_name = resp_data["data"]["task_name"]
     os.system("""echo "%s %s %s %s %s %s">>%s """ % (MediaType,Token, ServiceCode, AccountId, task_id, task_name,AsyncTaskFile))
