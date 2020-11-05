@@ -146,7 +146,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
            #提交请求
            interface_url = """http://%s%s"""%(host,InterfaceUrl)
            file = request_commit_account(AccountData=accounts_list, Num=n, InterfaceUrl=interface_url, ExecDate=ExecDate, FileDir=file_dir,
-                                  FileDirName=FileDirName,DataJson="")
+                                  FileDirName=FileDirName,DataJson=data_json)
            file_dir_name_list.append(file)
            #提交次数
            account_run_num = account_avg + 1
