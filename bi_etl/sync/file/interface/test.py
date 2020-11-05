@@ -200,7 +200,8 @@ def set_download_content(AccountId="",TaskId="",Token=""):
     resp = requests.get(url, json=params, headers=headers)
     resp_data = resp.json()
     file_size = resp_data["data"]["list"][0]["file_size"]
-    print(file_size,"=============================================")
+    task_status = resp_data["data"]["list"][0]["task_status"]
+    print(file_size,task_status,"=============================================")
     if int(file_size) <= 12:
         os.system("""echo "%s %s %s">>/tmp/empty2.log """%(AccountId,TaskId,Token))
     else:
