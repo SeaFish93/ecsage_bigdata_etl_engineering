@@ -167,6 +167,7 @@ def exec_create_task(MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExcep
         etl_md.execute_sql("""delete from metadb.oe_async_task_interface where media_type=%s and service_code='%s' """%(MediaType,ServiceCode))
         etl_md.local_file_to_mysql(sql=insert_sql)
 def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile=""):
+    print(ThreadName,"*******************************")
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
     url = open_api_domain + path
@@ -188,6 +189,7 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     }
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
+    print(resp_data,"=========================================")
     task_id = resp_data["data"]["task_id"]
     task_name = resp_data["data"]["task_name"]
     os.system("""echo "%s %s %s %s %s %s">>%s """ % (MediaType,Token, ServiceCode, AccountId, task_id, task_name,AsyncTaskFile))
