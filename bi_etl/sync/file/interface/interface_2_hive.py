@@ -57,6 +57,7 @@ def main(TaskInfo, Level,**kwargs):
     #if regexp_extract_column is None or len(regexp_extract_column) == 0:
     #    regexp_extract_column = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list')"""
     exec_date = airflow.execution_date_utc8_str[0:10]
+    exec_date="2020-11-02"
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
     if Level == "file":
