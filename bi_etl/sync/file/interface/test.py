@@ -277,6 +277,7 @@ def get_download_sql(MediaType="",ServiceCode=""):
     fcnt = 0
     sql_list = []
     if all_rows is not None and len(all_rows) > 0:
+        print(all_rows,"=======================================")
         fcnt = all_rows[0][0]
         fmin = int(all_rows[0][1])
         fmax = int(all_rows[0][2])
