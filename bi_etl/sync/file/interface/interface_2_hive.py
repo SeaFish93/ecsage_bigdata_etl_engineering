@@ -227,7 +227,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
     HiveSession.execute_sql(mid_sql)
     load_num = 0
     for data in LocalFileName:
-        local_file = """%s""" % (data[0])
+        local_file = """%s""" % (data)
         # 上传本地数据文件至HDFS
         hdfs_dir = "/tmp/datafolder_new"
         # 上传数据文件
