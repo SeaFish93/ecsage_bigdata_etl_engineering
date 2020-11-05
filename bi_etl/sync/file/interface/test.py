@@ -130,7 +130,7 @@ def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",AsyncT
                  set_true = False
                except Exception as e:
                  if n > 3:
-                    print("错误日志："+e)
+                    print("错误日志："+ str(e))
                     os.system("""echo "%s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,AsyncTaskExceptionFile))
                     set_true = False
                n = n + 1
