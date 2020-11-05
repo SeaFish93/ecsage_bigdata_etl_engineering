@@ -690,7 +690,6 @@ def request_commit_account(AccountData="",Num="",InterfaceUrl="",ExecDate="",Fil
        file_dir_name = "%s/%s" % (FileDir, file_name)
        if os.path.exists(FileDir) is False:
           os.system("mkdir -p %s" % (FileDir))
-       print(FileDirName,file_dir_name,"=============================================")
        DataJson["%s" % (FileDirName)] = file_dir_name
        DataJson["advertiser_list"] = advertiser_list
        print("请求接口URL：%s" % (InterfaceUrl))
