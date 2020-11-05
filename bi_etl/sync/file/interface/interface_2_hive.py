@@ -72,7 +72,7 @@ def main(TaskInfo, Level,**kwargs):
       get_file_2_hive(HiveSession=hive_session,BeelineSession=beeline_session,InterfaceUrl=interface_url,DataJson=data_json
                       ,FileDirName = file_dir_name,DataJsonRequest=data_json_request
                       ,InterfaceModule = interface_module,CommitNum=commit_num
-                      ,DB=target_db, Table=target_table,ExecDate=exec_date
+                      ,DB=target_db, Table=target_table,ExecDate=exec_date,IsReport=is_report
                      )
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
@@ -85,7 +85,7 @@ def main(TaskInfo, Level,**kwargs):
 def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={},DataJsonRequest=""
                                    ,FileDirName = ""
                                    ,InterfaceModule = "",CommitNum=""
-                                   ,DB="", Table="",ExecDate=""
+                                   ,DB="", Table="",ExecDate="",IsReport=""
                                    ):
     data_json = DataJson
     etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
