@@ -184,7 +184,7 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     task_name = resp_data["data"]["task_name"]
     os.system("""echo "%s %s %s %s %s %s">>%s """ % (MediaType,Token, ServiceCode, AccountId, task_id, task_name,AsyncTaskFile))
 
-def set_download_content(AccountId="",TaskId="",Token=""):
+def set_download_content(AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/get/"
     url = open_api_domain + path
@@ -204,13 +204,15 @@ def set_download_content(AccountId="",TaskId="",Token=""):
     task_status = resp_data["data"]["list"][0]["task_status"]
     print(file_size,task_status,"=============================================")
     if int(file_size) <= 12:
-        os.system("""echo "%s %s %s">>/tmp/empty2.log """%(AccountId,TaskId,Token))
+        os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
     else:
-        os.system("""echo "%s">>/tmp/notempty2.log """%(resp_data))
+        os.system("""echo "%s">>%s """%(resp_data,AsyncNotemptyFile))
 
-def get_download_content(Sql="",arg=None):
+def get_download_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",arg=None):
   if arg is not None:
     Sql = arg["Sql"]
+    AsyncNotemptyFile = arg["AsyncNotemptyFile"]
+    AsyncEmptyFile = arg["AsyncEmptyFile"]
     ok,datas = etl_md.get_all_rows(Sql)
     for data in datas:
         token = data[0]
@@ -219,7 +221,7 @@ def get_download_content(Sql="",arg=None):
         task_id = data[3]
         task_name = data[4]
         try:
-          set_download_content(AccountId=account_id, TaskId=task_id, Token=token)
+          set_download_content(AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
         except Exception as e:
           import time
           set_true = True
@@ -227,14 +229,14 @@ def get_download_content(Sql="",arg=None):
           while set_true:
               time.sleep(2)
               try:
-                  set_download_content(AccountId=account_id, TaskId=task_id, Token=token)
+                  set_download_content(AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
                   set_true = False
               except Exception as e:
                   if n > 3:
                       os.system("""echo "%s %s %s">>/tmp/status_exception.log """ % (token, service_code, account_id))
                       set_true = False
               n = n + 1
-def get_download_task(MediaType="",ServiceCode=""):
+def get_download_task(MediaType="",ServiceCode="",AsyncNotemptyFile="",AsyncEmptyFile=""):
     sql_list = get_download_sql(MediaType=MediaType,ServiceCode=ServiceCode)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
@@ -243,7 +245,7 @@ def get_download_task(MediaType="",ServiceCode=""):
                 i = i + 1
                 etl_thread = EtlThread(thread_id=i, thread_name="Thread.%d" % (i),
                                    my_run=get_download_content,
-                                   Sql = sqls
+                                   Sql = sqls,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile
                                    )
                 etl_thread.start()
                 import time
@@ -314,18 +316,20 @@ def get_download_sql(MediaType="",ServiceCode=""):
 if __name__ == '__main__':
     media_type = sys.argv[1]
     service_code = sys.argv[2]
-    async_task_file = """/tmp/async_%s_%s.log"""%(media_type,service_code.replace("-",""))
+    async_task_file = """/tmp/async_create_%s_%s.log"""%(media_type,service_code.replace("-",""))
+    async_notempty_file = """/tmp/async_notempty_%s_%s.log"""%(media_type,service_code.replace("-",""))
+    async_empty_file = """/tmp/async_empty_%s_%s.log""" % (media_type, service_code.replace("-", ""))
     os.system("""rm -f /tmp/task_status_2.log """)
     os.system("""rm -f %s"""%(async_task_file))
     os.system("""date >>/tmp/task_status_2.log """)
     os.system("""rm -f /tmp/exception_log.log""")
-    os.system("""rm -f /tmp/notempty2.log""")
-    os.system("""rm -f /tmp/empty2.log""")
+    os.system("""rm -f %s"""%(async_notempty_file))
+    os.system("""rm -f %s"""%(async_empty_file))
     os.system("""rm -f /tmp/status_exception.log""")
     os.system("""rm -f /tmp/create_exception.log""")
     exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file)
     print("开始启动下载内容!!!!!")
     import time
     time.sleep(60)
-    get_download_task(MediaType=media_type,ServiceCode=service_code)
+    get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file)
     os.system("""date >>/tmp/task_status_2.log """)
