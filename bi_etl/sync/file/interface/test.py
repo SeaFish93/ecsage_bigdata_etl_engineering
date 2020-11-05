@@ -309,8 +309,8 @@ def get_download_sql(MediaType="",ServiceCode=""):
     return sql_list
 
 if __name__ == '__main__':
-    media_type = sys.argv[0]
-    service_code = sys.argv[1]
+    media_type = sys.argv[1]
+    service_code = sys.argv[2]
     os.system("""rm -f /tmp/task_status_2.log """)
     os.system("""rm -f /tmp/create_task_status_2.log""")
     os.system("""date >>/tmp/task_status_2.log """)
