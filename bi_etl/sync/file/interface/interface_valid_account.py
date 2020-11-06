@@ -405,23 +405,27 @@ if __name__ == '__main__':
     n = 0
     host_num = 0
     host_i = 0
-    test_list = []
+    start_end_list = []
     for get_data in max_min:
-        max = get_data[1]
-        min = get_data[0]
-        count = max - min
-        if n == 0:
-           min_n = 0
-        else:
-           min_n = 1
-        sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,MinN=min_n)
-        test_list.append(max_min[n])
+        start_end_list.append(max_min[n])
         if host_num == 4:
-           print(test_list)
+           print(start_end_list)
            print("[%s]执行机器"%(host_data[host_i][0]))
            host_i = host_i + 1
            host_num = -1
-           test_list = []
+           for start_end in start_end_list:
+               max = start_end[1]
+               min = start_end[0]
+               count = max - min
+               if n == 0:
+                   min_n = 0
+               else:
+                   min_n = 1
+               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n)
+               print("=======================================================")
+               print(sqls_list)
+               print("=======================================================")
+           start_end_list = []
            shell_cmd = """
               nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
             """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
