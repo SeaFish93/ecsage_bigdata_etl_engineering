@@ -361,7 +361,7 @@ if __name__ == '__main__':
        exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
        print("开始启动下载内容!!!!!")
        import time
-       time.sleep(120)
+       time.sleep(5)
        get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
        os.system("""date >>%s """%(async_date_file))
 
