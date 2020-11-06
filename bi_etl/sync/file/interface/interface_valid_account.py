@@ -419,11 +419,15 @@ if __name__ == '__main__':
                else:
                    min_n = 1
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n)
+               shell_cmd = """
+                 nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
+               """ % (media_type, "test", sqls_list, async_task_file, async_task_exception_file)
+               exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
            start_end_list = []
            print(sqls_list,"################################")
-           shell_cmd = """
-              nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
-            """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
+           ####shell_cmd = """
+           ####   nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
+           #### """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
            #exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
            host_i = host_i + 1
         host_num = host_num + 1
