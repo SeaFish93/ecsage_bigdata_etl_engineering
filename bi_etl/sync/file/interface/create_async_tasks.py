@@ -6,6 +6,7 @@ import time
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 import json
+import ast
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 #创建任务
