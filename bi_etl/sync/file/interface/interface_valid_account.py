@@ -403,6 +403,8 @@ if __name__ == '__main__':
     sql,max_min = get_account_sql(MediaType=media_type)
     ok,host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
     n = 0
+    host_num = 0
+    host_i = 0
     for get_data in max_min:
         max = get_data[1]
         min = get_data[0]
@@ -412,15 +414,13 @@ if __name__ == '__main__':
         else:
            min_n = 1
         sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,MinN=min_n)
-        ########media_type = sys.argv[1]
-        ########async_task = sys.argv[2]
-        ########sqls_list = sys.argv[3]
-        ########async_task_file = sys.argv[4]
-        ########async_task_exception_file = sys.argv[5]
-        print("[%s]执行机器"%(n))
-        shell_cmd = """
-         nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
-        """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
+        if host_num == 4:
+           print("[%s]执行机器"%(n,host_data[host_i][0]))
+           host_i = host_i + 1
+           shell_cmd = """
+              nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
+            """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
+        host_num = host_num + 1
         #######exec_remote_proc(HostName=host_data[n][0], UserName=host_data[n][1], PassWord=host_data[n][2], ShellCommd=shell_cmd)
         #oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file, AsyncTaskExceptionFile=async_task_exception_file, AsyncTask="")
         n = n + 1
