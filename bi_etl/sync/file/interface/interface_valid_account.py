@@ -105,6 +105,11 @@ def get_token(MediaType="",AccountTokenFile="",AccountTokenExceptionFile=""):
     ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
     for data in all_rows:
         get_account_token(MediaType=MediaType,ServiceCode=data[0],AccountTokenFile=AccountTokenFile,AccountTokenExceptionFile=AccountTokenExceptionFile)
+    insert_sql = """
+              load data local infile '%s' into table metadb.request_account_token_interface fields terminated by ' ' lines terminated by '\\n' (media_type,service_code,token_data)
+            """ % (AccountTokenFile)
+    etl_md.execute_sql("""delete from metadb.request_account_token_interface where media_type=%s """ % (MediaType))
+    etl_md.local_file_to_mysql(sql=insert_sql)
 
 def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExceptionFile="",arg=None):
     account_id = ""
@@ -341,6 +346,8 @@ if __name__ == '__main__':
     media_type = sys.argv[1]
     account_token_file = """/tmp/account_token_file_%s.log"""%(media_type)
     account_token_exception_file = """/tmp/account_token_exception_file_%s.log"""%(media_type)
+    os.system("""rm -f %s """ % (account_token_file))
+    os.system("""rm -f %s """ % (account_token_exception_file))
     get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
     ####### media_type = sys.argv[1]
     ####### service_code = sys.argv[2]
