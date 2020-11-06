@@ -426,10 +426,8 @@ if __name__ == '__main__':
            shell_cmd = """
               nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
             """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
-           exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
+           #exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
         host_num = host_num + 1
-        #######exec_remote_proc(HostName=host_data[n][0], UserName=host_data[n][1], PassWord=host_data[n][2], ShellCommd=shell_cmd)
-        #oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file, AsyncTaskExceptionFile=async_task_exception_file, AsyncTask="")
         n = n + 1
     ####### media_type = sys.argv[1]
     ####### service_code = sys.argv[2]
