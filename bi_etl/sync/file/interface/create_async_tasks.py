@@ -3,11 +3,7 @@ import requests
 import sys
 import os
 import time
-from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
-
-#mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-#etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 #创建任务
 def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask=""):
@@ -41,7 +37,6 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
     service_code = ""
     num = 1
     if arg is not None:
-       #etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
        Sql = arg["Sql"]
        ThreadName = arg["ThreadName"]
        AsyncTaskFile = arg["AsyncTaskFile"]
@@ -59,7 +54,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
            n = 1
            while set_true:
              try:
-               #set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
+               set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
                set_true = False
              except Exception as e:
                if n > 3:
