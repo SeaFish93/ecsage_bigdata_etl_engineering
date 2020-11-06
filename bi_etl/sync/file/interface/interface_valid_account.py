@@ -9,6 +9,38 @@ from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
+def get_run_sql(Sql="",Max="",Min="",Count=""):
+    fcnt = int(Count)
+    sql_list = []
+    if fcnt > 0:
+        fmin = int(Min)
+        fmax = int(Max)
+        source_cnt = fcnt
+        print("min=%s, max=%s, count=%s" % (str(fmin), str(fmax), str(fcnt)))
+        if fcnt < 100:
+            # 100以下的数据量不用分批跑
+            sql_list.clear()
+            sql_list.append(Sql)
+        else:
+            sql_list.clear()
+            num_proc = int(fmax) - int(fmin)
+            if num_proc > 5:
+                # 最多20个进程同时获取数据
+                num_proc = 20
+            # 每一个进程查询量的增量
+            d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
+            i = 0
+            while i < num_proc:
+                s_ind = int(fmin) + i * d
+                e_ind = s_ind + d
+                if i == num_proc - 1:
+                    e_ind = int(fmax) + 1
+                sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
+                sql_list.append(sql)
+                max_min.append([s_ind,e_ind])
+                i = i + 1
+    return sql_list
+
 def get_account_sql(MediaType=""):
     #保存子账户
     account_file = "/tmp/oe_request_get_account_%s.log"%(MediaType)
@@ -59,7 +91,7 @@ def get_account_sql(MediaType=""):
             num_proc = int(fmax) - int(fmin)
             if num_proc > 4:
                 # 最多20个进程同时获取数据
-                num_proc = 4
+                num_proc = 12
             # 每一个进程查询量的增量
             d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
             i = 0
@@ -363,9 +395,13 @@ if __name__ == '__main__':
     get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
-    print(sql,"===============================================")
-    for get_sql in max_min:
-        print(get_sql)
+    for get_data in max_min:
+        max = get_data[1]
+        min = get_data[0]
+        count = max - min
+        sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
+        for sqls in sqls_list:
+            print(sqls)
     ####### media_type = sys.argv[1]
     ####### service_code = sys.argv[2]
     ####### async_task = sys.argv[3]
