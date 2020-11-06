@@ -93,7 +93,7 @@ def get_account_sql(MediaType=""):
             num_proc = int(fmax) - int(fmin)
             if num_proc > 4:
                 # 最多20个进程同时获取数据
-                num_proc = 100
+                num_proc = 20
             # 每一个进程查询量的增量
             d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
             i = 0
@@ -408,7 +408,7 @@ if __name__ == '__main__':
     start_end_list = []
     for get_data in max_min:
         start_end_list.append(max_min[n])
-        if len(start_end_list) == 25 or len(max_min) < 25 or len(max_min)-1 == n:
+        if len(start_end_list) == 5 or len(max_min) < 5 or len(max_min)-1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
            for start_end in start_end_list:
                max = start_end[1]
