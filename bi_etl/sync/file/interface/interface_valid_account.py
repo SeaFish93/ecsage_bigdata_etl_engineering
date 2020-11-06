@@ -406,7 +406,7 @@ if __name__ == '__main__':
     max_min_test = []
     for tt in max_min:
         max_min_test.append(tt)
-        if len(max_min_test) == 5:
+        if len(max_min_test) == 6:
             break
     #####################################################
     n = 0
