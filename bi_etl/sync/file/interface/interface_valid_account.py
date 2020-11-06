@@ -410,6 +410,7 @@ if __name__ == '__main__':
         start_end_list.append(max_min[n])
         if len(start_end_list) == 5 or len(max_min) < 5 or len(max_min)-1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
+           print(host_data,"####################################")
            print(host_data[host_i][0],host_data[host_i][1],host_data[host_i][2],"=================================================")
            host_i = host_i + 1
            for start_end in start_end_list:
