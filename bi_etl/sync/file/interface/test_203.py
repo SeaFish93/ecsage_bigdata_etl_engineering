@@ -332,16 +332,17 @@ if __name__ == '__main__':
     #service_code = sys.argv[2]
     #async_task = sys.argv[3]
     source_data_sql_201 = """
-                   select account_id, media, service_code from(
+                   select media, service_code from(
                    select account_id, media, service_code,@row_num:=@row_num+1 as rn
                    from big_data_mdg.media_advertiser a,(select @row_num:=0) r
                    where media = 203
+                   group by media, service_code
                    ) tmp
                 """
     ok,all_rows_201 = mysql_session.get_all_rows(source_data_sql_201)
     for data in all_rows_201:
-       media_type = data[1]
-       service_code = data[2]
+       media_type = data[0]
+       service_code = data[1]
        async_task = "203"
 
        async_date_file = """/tmp/async_date_file_%s_%s.log"""%(media_type,service_code.replace("-",""))
