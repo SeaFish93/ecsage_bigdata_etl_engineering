@@ -408,11 +408,10 @@ if __name__ == '__main__':
     start_end_list = []
     for get_data in max_min:
         start_end_list.append(max_min[n])
-        if host_num == 4:
+        if len(start_end_list) == 4:
+           print("[%s]执行机器" % (host_data[host_i][0]))
            print(start_end_list)
-           print("[%s]执行机器"%(host_data[host_i][0]))
            host_i = host_i + 1
-           host_num = -1
            for start_end in start_end_list:
                max = start_end[1]
                min = start_end[0]
