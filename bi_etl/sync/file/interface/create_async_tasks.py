@@ -11,7 +11,7 @@ import ast
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 #创建任务
 def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask=""):
-    sql_list = ast.literal_eval(json.loads(SqlList))
+    sql_list = json.loads(SqlList)
     print(sql_list, "#####################################")
     if sql_list is not None and len(sql_list) > 0:
         i = 0
