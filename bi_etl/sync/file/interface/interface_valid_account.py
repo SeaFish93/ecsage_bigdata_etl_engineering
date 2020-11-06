@@ -5,7 +5,7 @@ import os
 import time
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
-
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.create_async_tasks import oe_create_tasks
 mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
@@ -389,13 +389,16 @@ if __name__ == '__main__':
     media_type = sys.argv[1]
     account_token_file = """/tmp/account_token_file_%s.log"""%(media_type)
     account_token_exception_file = """/tmp/account_token_exception_file_%s.log"""%(media_type)
+    async_task_file = """/tmp/async_create_%s.log""" % (media_type)
+    async_task_exception_file = """/tmp/async_create_exception_%s.log""" % (media_type)
+    os.system("""rm -f %s """ % (async_task_exception_file))
+    os.system("""rm -f %s """%(async_task_file))
     os.system("""rm -f %s """ % (account_token_file))
     os.system("""rm -f %s """ % (account_token_exception_file))
     #获取token
     get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
-    print(max_min,"====================")
     n = 0
     for get_data in max_min:
         max = get_data[1]
@@ -406,9 +409,8 @@ if __name__ == '__main__':
         else:
            min_n = 1
         sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,MinN=min_n)
-        for sqls in sqls_list:
-            print(sqls)
-        print("=================================================================")
+        oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file, AsyncTaskExceptionFile=async_task_exception_file, AsyncTask="")
+        break
         n = n + 1
     ####### media_type = sys.argv[1]
     ####### service_code = sys.argv[2]
@@ -426,7 +428,7 @@ if __name__ == '__main__':
     ####### os.system("""rm -f %s"""%(async_empty_file))
     ####### os.system("""rm -f %s"""%(async_status_exception_file))
     ####### os.system("""rm -f %s"""%(async_task_exception_file))
-    #exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
+    #######exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
     ####### print("开始启动下载内容!!!!!")
     ####### import time
     ####### time.sleep(120)
