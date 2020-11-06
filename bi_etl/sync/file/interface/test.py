@@ -171,8 +171,8 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
         "task_type": "REPORT",
         "force": "true",
         "task_params": {
-            "start_date": "2020-11-04",
-            "end_date": "2020-11-04",
+            "start_date": "2020-11-05",
+            "end_date": "2020-11-05",
             "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
         }
     }
