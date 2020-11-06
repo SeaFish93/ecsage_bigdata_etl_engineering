@@ -408,7 +408,7 @@ if __name__ == '__main__':
     start_end_list = []
     for get_data in max_min:
         start_end_list.append(max_min[n])
-        if len(start_end_list) == 5 or len(max_min) < 5 or len(max_min)-1 == n:
+        if len(start_end_list) == 25 or len(max_min) < 25 or len(max_min)-1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
            for start_end in start_end_list:
                max = start_end[1]
