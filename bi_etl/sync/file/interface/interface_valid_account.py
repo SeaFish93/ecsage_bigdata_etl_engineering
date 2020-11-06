@@ -402,6 +402,7 @@ if __name__ == '__main__':
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
     ok,host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
+    print(max_min,"##############################################")
     n = 0
     host_num = 0
     host_i = 0
