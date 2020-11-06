@@ -28,7 +28,7 @@ def get_run_sql(Sql="",Max="",Min="",Count="",MinN=""):
             num_proc = int(fmax) - int(fmin)
             if num_proc > 5:
                 # 最多20个进程同时获取数据
-                num_proc = 10
+                num_proc = 20
             # 每一个进程查询量的增量
             d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
             i = 0
