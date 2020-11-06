@@ -416,7 +416,7 @@ if __name__ == '__main__':
     print(max_min_test,"&&****************************************")
     for get_data in max_min_test:
         start_end_list.append(max_min_test[n])
-        if len(start_end_list) == 5:
+        if len(start_end_list) == 5 or len(max_min_test) < 5:
            print("[%s]执行机器" % (host_data[host_i][0]))
            print(start_end_list)
            host_i = host_i + 1
