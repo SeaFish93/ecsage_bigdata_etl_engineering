@@ -26,7 +26,7 @@ def get_account_sql(MediaType=""):
     etl_md.local_file_to_mysql(sql=insert_sql)
     #获取子账户
     source_data_sql = """
-           select b.id,b.account_id,b.media_type,b.service_code
+           select b.id,b.account_id,b.media_type,b.service_code,a.token_data
            from metadb.request_account_token_interface a
            inner join metadb.request_account_interface b
            on a.service_code = b.service_code
@@ -363,6 +363,9 @@ if __name__ == '__main__':
     get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
+    print(sql,"===============================================")
+    for get_sql in max_min:
+        print(get_sql)
     ####### media_type = sys.argv[1]
     ####### service_code = sys.argv[2]
     ####### async_task = sys.argv[3]
