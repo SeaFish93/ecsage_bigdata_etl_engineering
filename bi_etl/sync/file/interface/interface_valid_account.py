@@ -403,6 +403,7 @@ if __name__ == '__main__':
         sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
         for sqls in sqls_list:
             print(sqls)
+            break
         print("=================================================================")
     ####### media_type = sys.argv[1]
     ####### service_code = sys.argv[2]
