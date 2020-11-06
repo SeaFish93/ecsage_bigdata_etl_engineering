@@ -12,11 +12,11 @@ etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 #创建任务
 def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask=""):
     sql_list = ast.literal_eval(json.loads(SqlList))
+    print(sql_list, "#####################################")
     if sql_list is not None and len(sql_list) > 0:
         i = 0
         th = []
         for sql in sql_list:
-           print(sql,"#####################################")
            i = i + 1
            etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (AsyncTask,i),
                                    my_run=oe_run_create_task,

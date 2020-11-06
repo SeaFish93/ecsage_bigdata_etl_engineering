@@ -416,7 +416,7 @@ if __name__ == '__main__':
         ########sqls_list = sys.argv[3]
         ########async_task_file = sys.argv[4]
         ########async_task_exception_file = sys.argv[5]
-
+        sqls_list = {"sqls_list": sqls_list}
         shell_cmd = """
          nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
         """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
