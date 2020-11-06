@@ -402,8 +402,8 @@ if __name__ == '__main__':
         count = max - min
         print(max,min,count,"##########=========================================")
         sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
-        #for sqls in sqls_list:
-        #    print(sqls)
+        for sqls in sqls_list:
+            print(sqls)
     ####### media_type = sys.argv[1]
     ####### service_code = sys.argv[2]
     ####### async_task = sys.argv[3]
