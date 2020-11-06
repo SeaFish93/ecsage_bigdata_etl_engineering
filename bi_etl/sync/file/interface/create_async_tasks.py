@@ -4,7 +4,9 @@ import sys
 import os
 import time
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 
+etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 #创建任务
 def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask=""):
     sql_list = SqlList
@@ -54,7 +56,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
            n = 1
            while set_true:
              try:
-               set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
+               ############set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
                set_true = False
              except Exception as e:
                if n > 3:
@@ -89,3 +91,11 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     task_id = resp_data["data"]["task_id"]
     task_name = resp_data["data"]["task_name"]
     os.system("""echo "%s %s %s %s %s %s">>%s """ % (MediaType,Token, ServiceCode, AccountId, task_id, task_name,AsyncTaskFile))
+
+if __name__ == '__main__':
+    media_type = sys.argv[1]
+    async_task = sys.argv[2]
+    sqls_list = sys.argv[3]
+    async_task_file = sys.argv[4]
+    async_task_exception_file = sys.argv[5]
+    oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file, AsyncTask=async_task)

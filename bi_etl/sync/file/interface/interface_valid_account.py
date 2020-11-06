@@ -6,6 +6,8 @@ import time
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.create_async_tasks import oe_create_tasks
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.remote_proc import exec_remote_proc
+
 mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
@@ -56,7 +58,6 @@ def get_account_sql(MediaType=""):
       """ % (account_file)
     etl_md.execute_sql("""delete from metadb.request_account_interface where media_type = %s"""%(MediaType))
     etl_md.local_file_to_mysql(sql=insert_sql)
-    print(insert_sql,"================================")
     #获取子账户
     source_data_sql = """
            select b.id,b.account_id,b.media_type,b.service_code,a.token_data
@@ -410,7 +411,17 @@ if __name__ == '__main__':
         else:
            min_n = 1
         sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,MinN=min_n)
-        oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file, AsyncTaskExceptionFile=async_task_exception_file, AsyncTask="")
+        ########media_type = sys.argv[1]
+        ########async_task = sys.argv[2]
+        ########sqls_list = sys.argv[3]
+        ########async_task_file = sys.argv[4]
+        ########async_task_exception_file = sys.argv[5]
+
+        shell_cmd = """
+         nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
+        """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
+        exec_remote_proc(HostName="192.168.30.17", UserName="root", PassWord="Ecsagedev_bigdata#)^q", ShellCommd=shell_cmd)
+        #oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file, AsyncTaskExceptionFile=async_task_exception_file, AsyncTask="")
         break
         n = n + 1
     ####### media_type = sys.argv[1]
