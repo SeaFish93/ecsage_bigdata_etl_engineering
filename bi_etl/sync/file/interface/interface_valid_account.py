@@ -420,7 +420,7 @@ if __name__ == '__main__':
            print(test_list)
            print("[%s]执行机器"%(host_data[host_i][0]))
            host_i = host_i + 1
-           host_num = 0
+           host_num = -1
            test_list = []
            shell_cmd = """
               nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
