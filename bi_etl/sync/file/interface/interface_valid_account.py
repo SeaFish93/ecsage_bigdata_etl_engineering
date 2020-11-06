@@ -17,7 +17,7 @@ def get_run_sql(Sql="",Max="",Min="",Count=""):
         fmax = int(Max)
         source_cnt = fcnt
         print("min=%s, max=%s, count=%s" % (str(fmin), str(fmax), str(fcnt)))
-        if fcnt < 100:
+        if fcnt < 0:
             # 100以下的数据量不用分批跑
             sql_list.clear()
             sql_list.append(Sql)
