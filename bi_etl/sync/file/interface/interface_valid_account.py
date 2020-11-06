@@ -83,6 +83,7 @@ def get_account_token(MediaType="",ServiceCode="",AccountTokenFile="",AccountTok
         token_data_list = requests.post(token_url,headers=headers).json()
         token_data = token_data_list["t"]["token"]
         os.system("""echo "%s %s %s">>%s """%(MediaType,service_code,token_data,AccountTokenFile))
+        set_true = False
       except Exception as e:
         if n > 3:
             os.system("""echo "%s %s">>%s """ % (service_code, MediaType,AccountTokenExceptionFile))
@@ -103,7 +104,7 @@ def get_token(MediaType="",AccountTokenFile="",AccountTokenExceptionFile=""):
         """%(MediaType)
     ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
     for data in all_rows:
-        source_data,service_code,token_data = get_account_token(MediaType=MediaType,ServiceCode=data[0],AccountTokenFile=AccountTokenFile,AccountTokenExceptionFile=AccountTokenExceptionFile)
+        get_account_token(MediaType=MediaType,ServiceCode=data[0],AccountTokenFile=AccountTokenFile,AccountTokenExceptionFile=AccountTokenExceptionFile)
 
 def create_task(Sql="",ThreadName="",Token="",MediaType="",ServiceCode="",AsyncTaskFile="",AsyncTaskExceptionFile="",arg=None):
     account_id = ""
