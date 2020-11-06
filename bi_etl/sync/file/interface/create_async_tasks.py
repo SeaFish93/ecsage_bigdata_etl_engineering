@@ -53,12 +53,11 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
            service_code = data[3]
            token_data = data[4]
            media_type = data[2]
-           print(account_id,service_code,token_data,media_type,"################################################")
            set_true = True
            n = 1
            while set_true:
              try:
-               ############set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
+               set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
                set_true = False
              except Exception as e:
                if n > 3:
