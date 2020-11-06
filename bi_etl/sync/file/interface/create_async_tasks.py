@@ -98,8 +98,7 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     headers = {
         'Content-Type': "application/json",
         'Access-Token': Token,
-        'Connection': "close",
-        'User-Agent': user_agent
+        'Connection': "close"
     }
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
