@@ -401,7 +401,7 @@ if __name__ == '__main__':
         min = get_data[0]
         count = max - min
         #print(max,min,count,"=========================================")
-        sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
+        #sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
         #for sqls in sqls_list:
         #    print(sqls)
     ####### media_type = sys.argv[1]
