@@ -55,18 +55,17 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
            media_type = data[2]
            set_true = True
            n = 1
-           set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
-           #while set_true:
-            # try:
-             #  set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
-              # set_true = False
-            # except Exception as e:
-             #  if n > 3:
-              #    os.system("""echo "%s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,AsyncTaskExceptionFile))
-#                  set_true = False
- #              else:
-  #                time.sleep(2)
-   #          n = n + 1
+           while set_true:
+             try:
+               set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
+               set_true = False
+             except Exception as e:
+               if n > 3:
+                  os.system("""echo "%s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,AsyncTaskExceptionFile))
+                  set_true = False
+               else:
+                  time.sleep(2)
+             n = n + 1
 
 def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile=""):
     open_api_domain = "https://ad.toutiao.com"
