@@ -37,7 +37,7 @@ def get_account_sql(MediaType=""):
     get_account_count_sql = """
        select count(1),min(id),max(id) 
        from metadb.request_account_interface
-       where media = %s
+       where media_type = %s
     """%(MediaType)
     ok,all_rows = etl_md.get_all_rows(get_account_count_sql)
     fcnt = 0
