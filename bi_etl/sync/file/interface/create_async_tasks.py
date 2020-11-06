@@ -7,6 +7,7 @@ from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 import json
 import ast
+from fake_useragent import UserAgent
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 #创建任务
@@ -71,6 +72,18 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
     url = open_api_domain + path
+    set_true = True
+    n = 0
+    user_agent = """Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36"""
+    while set_true:
+      try:
+        ua = UserAgent()
+        set_true = False
+        user_agent = ua.random
+      except Exception as e:
+        if n > 3:
+          set_true = False
+      n = n + 1
     params = {
         "advertiser_id": AccountId,
         "task_name": "%s%s" % (ThreadName, Num),
@@ -85,7 +98,8 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     headers = {
         'Content-Type': "application/json",
         'Access-Token': Token,
-        'Connection': "close"
+        'Connection': "close",
+        'User-Agent': user_agent
     }
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
