@@ -400,7 +400,7 @@ if __name__ == '__main__':
         max = get_data[1]
         min = get_data[0]
         count = max - min
-        #print(max,min,count,"=========================================")
+        print(max,min,count,"##########=========================================")
         #sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
         #for sqls in sqls_list:
         #    print(sqls)
