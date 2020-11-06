@@ -5,15 +5,17 @@ import os
 import time
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+import json
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 #创建任务
 def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask=""):
-    sql_list = SqlList
+    sql_list = json.load(SqlList)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
         th = []
         for sql in sql_list:
+           print(sql,"#####################################")
            i = i + 1
            etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (AsyncTask,i),
                                    my_run=oe_run_create_task,
@@ -99,5 +101,5 @@ if __name__ == '__main__':
     async_task_file = sys.argv[4]
     async_task_exception_file = sys.argv[5]
     print("##################################################")
-    print(sqls_list,"###############################################")
+    #print(sqls_list,"###############################################")
     oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file, AsyncTask=async_task)
