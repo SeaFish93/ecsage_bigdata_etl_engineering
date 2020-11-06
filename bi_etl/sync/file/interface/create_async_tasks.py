@@ -3,7 +3,7 @@ import requests
 import sys
 import os
 import time
-#from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 
 #mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
@@ -41,10 +41,12 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
     service_code = ""
     num = 1
     if arg is not None:
+       #etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
        Sql = arg["Sql"]
        ThreadName = arg["ThreadName"]
        AsyncTaskFile = arg["AsyncTaskFile"]
        AsyncTaskExceptionFile = arg["AsyncTaskExceptionFile"]
+       MysqlSession = arg["MysqlSession"]
        ok, data_list = MysqlSession.get_all_rows_thread(Sql)
        print("线程：%s,长度：%s,=================================="%(ThreadName,len(data_list)))
        for data in data_list:
