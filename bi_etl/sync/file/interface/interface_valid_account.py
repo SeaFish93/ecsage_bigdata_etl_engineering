@@ -423,7 +423,8 @@ if __name__ == '__main__':
                    min_n = 1
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n)
                print("=======================================================")
-               print(sqls_list)
+               for get_sql in sqls_list:
+                   print(get_sql)
                print("=======================================================")
            start_end_list = []
            shell_cmd = """
