@@ -9,7 +9,7 @@ from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
-def get_run_sql(Sql="",Max="",Min="",Count=""):
+def get_run_sql(Sql="",Max="",Min="",Count="",MinN=""):
     fcnt = int(Count)
     sql_list = []
     if fcnt > 0:
@@ -31,7 +31,7 @@ def get_run_sql(Sql="",Max="",Min="",Count=""):
             d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
             i = 0
             while i < num_proc:
-                s_ind = int(fmin) + i * d
+                s_ind = int(fmin) + MinN + i * d
                 e_ind = s_ind + d
                 if i == num_proc - 1:
                     e_ind = int(fmax) + 1
@@ -396,14 +396,20 @@ if __name__ == '__main__':
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
     print(max_min,"====================")
+    n = 0
     for get_data in max_min:
         max = get_data[1]
         min = get_data[0]
         count = max - min
-        sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
+        if n == 0:
+           min_n = 0
+        else:
+           min_n = 1
+        sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,MinN=min_n)
         for sqls in sqls_list:
             print(sqls)
         print("=================================================================")
+        n = n + 1
     ####### media_type = sys.argv[1]
     ####### service_code = sys.argv[2]
     ####### async_task = sys.argv[3]
