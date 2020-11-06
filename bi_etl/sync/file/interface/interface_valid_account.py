@@ -413,6 +413,7 @@ if __name__ == '__main__':
     host_num = 0
     host_i = 0
     start_end_list = []
+    print(max_min_test,"&&****************************************")
     for get_data in max_min:
         start_end_list.append(max_min[n])
         if len(start_end_list) == 5 or len(max_min_test) < 5:
