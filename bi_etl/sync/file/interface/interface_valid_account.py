@@ -405,6 +405,7 @@ if __name__ == '__main__':
     n = 0
     host_num = 0
     host_i = 0
+    test_list = []
     for get_data in max_min:
         max = get_data[1]
         min = get_data[0]
@@ -414,11 +415,13 @@ if __name__ == '__main__':
         else:
            min_n = 1
         sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,MinN=min_n)
+        test_list.append(max_min[n])
         if host_num == 4:
            print(max_min[n])
            print("[%s]执行机器"%(host_data[host_i][0]))
            host_i = host_i + 1
            host_num = 0
+           test_list = []
            shell_cmd = """
               nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
             """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
