@@ -395,11 +395,12 @@ if __name__ == '__main__':
     get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
+    print(max_min,"====================")
     for get_data in max_min:
         max = get_data[1]
         min = get_data[0]
         count = max - min
-        print(max,min,count,"=========================================")
+        #print(max,min,count,"=========================================")
         sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
         #for sqls in sqls_list:
         #    print(sqls)
