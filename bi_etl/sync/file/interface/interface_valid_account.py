@@ -415,7 +415,7 @@ if __name__ == '__main__':
            min_n = 1
         sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,MinN=min_n)
         if host_num == 4:
-           print("[%s]执行机器"%(n,host_data[host_i][0]))
+           print("[%s]执行机器"%(host_data[host_i][0]))
            host_i = host_i + 1
            shell_cmd = """
               nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
