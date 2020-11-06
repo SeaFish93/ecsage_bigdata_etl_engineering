@@ -401,6 +401,7 @@ if __name__ == '__main__':
     get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
+    ok,host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
     n = 0
     for get_data in max_min:
         max = get_data[1]
@@ -416,10 +417,11 @@ if __name__ == '__main__':
         ########sqls_list = sys.argv[3]
         ########async_task_file = sys.argv[4]
         ########async_task_exception_file = sys.argv[5]
+        print("执行机器：%s"%(host_data[n][0]))
         shell_cmd = """
          nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
         """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
-        exec_remote_proc(HostName="192.168.30.17", UserName="root", PassWord="Ecsagedev_bigdata#)^q", ShellCommd=shell_cmd)
+        exec_remote_proc(HostName=host_data[n][0], UserName=host_data[n][1], PassWord=host_data[n][2], ShellCommd=shell_cmd)
         #oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file, AsyncTaskExceptionFile=async_task_exception_file, AsyncTask="")
         break
         n = n + 1
