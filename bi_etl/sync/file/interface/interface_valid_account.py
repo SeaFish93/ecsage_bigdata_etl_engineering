@@ -56,6 +56,7 @@ def get_account_sql(MediaType=""):
       """ % (account_file)
     etl_md.execute_sql("""delete from metadb.request_account_interface where media_type = %s"""%(MediaType))
     etl_md.local_file_to_mysql(sql=insert_sql)
+    print(insert_sql,"================================")
     #获取子账户
     source_data_sql = """
            select b.id,b.account_id,b.media_type,b.service_code,a.token_data
