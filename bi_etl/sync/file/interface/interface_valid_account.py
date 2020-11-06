@@ -402,21 +402,13 @@ if __name__ == '__main__':
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
     ok,host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
-    ##################################################
-    max_min_test = []
-    for tt in max_min:
-        max_min_test.append(tt)
-        if len(max_min_test) == 6:
-            break
-    #####################################################
     n = 0
     host_num = 0
     host_i = 0
     start_end_list = []
-    print(max_min_test,"&&****************************************")
-    for get_data in max_min_test:
-        start_end_list.append(max_min_test[n])
-        if len(start_end_list) == 5 or len(max_min_test) < 5 or len(max_min_test)-1 == n:
+    for get_data in max_min:
+        start_end_list.append(max_min[n])
+        if len(start_end_list) == 5 or len(max_min) < 5 or len(max_min)-1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
            print(start_end_list)
            host_i = host_i + 1
