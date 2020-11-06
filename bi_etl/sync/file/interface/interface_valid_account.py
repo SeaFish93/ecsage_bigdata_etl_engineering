@@ -417,7 +417,7 @@ if __name__ == '__main__':
         sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,MinN=min_n)
         test_list.append(max_min[n])
         if host_num == 4:
-           print(max_min[n])
+           print(test_list)
            print("[%s]执行机器"%(host_data[host_i][0]))
            host_i = host_i + 1
            host_num = 0
