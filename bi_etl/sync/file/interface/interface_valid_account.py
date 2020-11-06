@@ -17,7 +17,6 @@ def get_run_sql(Sql="",Max="",Min="",Count=""):
         fmax = int(Max)
         source_cnt = fcnt
         print("min=%s, max=%s, count=%s" % (str(fmin), str(fmax), str(fcnt)))
-        exit(0)
         if fcnt < 0:
             # 100以下的数据量不用分批跑
             sql_list.clear()
@@ -38,7 +37,7 @@ def get_run_sql(Sql="",Max="",Min="",Count=""):
                     e_ind = int(fmax) + 1
                 sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
                 sql_list.append(sql)
-                max_min.append([s_ind,e_ind])
+                #max_min.append([s_ind,e_ind])
                 i = i + 1
     return sql_list
 
