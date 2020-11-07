@@ -142,7 +142,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                    where media_type = %s
                    ) tmp
                    where rn >= %s and rn <= %s
-               """ % (int(data_json["mt"]),account_run_num, account_avg)
+               """ % (int(data_json["mt"]),int(account_run_num), int(account_avg))
            ok, accounts_list = etl_md.get_all_rows(account_sql)
            #提交请求
            interface_url = """http://%s%s"""%(host,InterfaceUrl)
