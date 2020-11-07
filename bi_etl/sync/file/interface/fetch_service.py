@@ -17,15 +17,16 @@ def get_fetch(MediaType="",Sql="",BeweetFileList=""):
     host_num = 0
     host_i = 0
     start_end_list = []
+    service_run_num = 5
     for get_data in BeweetFileList:
         start_end_list.append(BeweetFileList[n])
-        if len(start_end_list) == 5 or len(BeweetFileList) < 5 or len(BeweetFileList)-1 == n:
+        if len(start_end_list) == service_run_num or len(BeweetFileList) < service_run_num or len(BeweetFileList)-1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
            for start_end in start_end_list:
                max = start_end[1]
                min = start_end[0]
                count = max - min
-               if n == 0:
+               if n == service_run_num-1:
                    min_n = 0
                else:
                    min_n = 1
