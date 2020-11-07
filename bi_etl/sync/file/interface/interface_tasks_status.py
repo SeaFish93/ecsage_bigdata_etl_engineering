@@ -215,9 +215,7 @@ if __name__ == '__main__':
     ######### os.system("""rm -f %s"""%(async_notempty_file))
     ######### os.system("""rm -f %s"""%(async_empty_file))
     ######### os.system("""rm -f %s"""%(async_status_exception_file))
-    print("开始启动下载内容!!!!!")
     sql,max_min_list = get_task_status_sql(MediaType=media_type)
-    print(max_min_list,"#########################################")
     get_fetch(MediaType=media_type, Sql=sql, BeweetFileList=max_min_list)
     #import time
     #time.sleep(120)
