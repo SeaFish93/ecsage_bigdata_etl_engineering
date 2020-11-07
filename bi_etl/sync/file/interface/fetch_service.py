@@ -9,7 +9,7 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 import math
 
 
-def get_fetch(MediaType="",Sql="",BeweetFileList=""):
+def get_fetch(MediaType="",Sql="",BeweetFileList="",LeftFilter="",RightFilter=""):
     etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
     get_host_sql = """select ip,user_name,passwd from metadb.request_account_host"""
     ok,host_data = etl_md.get_all_rows(get_host_sql)
@@ -30,7 +30,7 @@ def get_fetch(MediaType="",Sql="",BeweetFileList=""):
                    min_n = 0
                else:
                    min_n = 1
-               sqls_list = get_run_sql(Sql=Sql, Max=max, Min=min, Count=count, MinN=min_n)
+               sqls_list = get_run_sql(Sql=Sql, Max=max, Min=min, Count=count, MinN=min_n,LeftFilter=LeftFilter,RightFilter=RightFilter)
                for sql in sqls_list:
                    print(sql,"###########################################")
            start_end_list = []

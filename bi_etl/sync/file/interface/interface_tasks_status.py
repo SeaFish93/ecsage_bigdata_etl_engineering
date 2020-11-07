@@ -47,8 +47,8 @@ if __name__ == '__main__':
     ######### os.system("""rm -f %s"""%(async_status_exception_file))
     sql,max_min_list = set_task_status_sql(MediaType=media_type)
     left_filter = """ where b.id >= """
-    RightFilter = """ and b.id < """
-    get_fetch(MediaType=media_type, Sql=sql, BeweetFileList=max_min_list,LeftFilter=left_filter,RightFilter=RightFilter)
+    right_filter = """ and b.id < """
+    get_fetch(MediaType=media_type, Sql=sql, BeweetFileList=max_min_list,LeftFilter=left_filter,RightFilter=right_filter)
     #import time
     #time.sleep(120)
     #get_download_task(MediaType=media_type,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
