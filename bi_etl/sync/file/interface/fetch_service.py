@@ -30,7 +30,8 @@ def get_fetch(MediaType="",Sql="",BeweetFileList=""):
                else:
                    min_n = 1
                sqls_list = get_run_sql(Sql=Sql, Max=max, Min=min, Count=count, MinN=min_n)
-               print(sqls_list,"#######################################")
+               for sql in sqls_list:
+                   print(sql,"###########################################")
            start_end_list = []
            host_i = host_i + 1
         host_num = host_num + 1
