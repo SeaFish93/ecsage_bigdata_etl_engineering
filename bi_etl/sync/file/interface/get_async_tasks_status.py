@@ -21,7 +21,7 @@ def get_async_status(MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile
         for sql in sql_list:
                 i = i + 1
                 etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
-                                   my_run=get_download_content,
+                                   my_run=get_async_status_content,
                                    Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
                                    AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType
                                    )
@@ -39,7 +39,7 @@ def get_async_status(MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile
 
         print("the end!!!!!")
 
-def get_download_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",arg=None):
+def get_async_status_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",arg=None):
   if arg is not None:
     Sql = arg["Sql"]
     AsyncNotemptyFile = arg["AsyncNotemptyFile"]
@@ -53,23 +53,21 @@ def get_download_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStat
         account_id = data[2]
         task_id = data[3]
         task_name = data[4]
-        try:
-          set_download_content(MediaType=MediaType,ServiceCode=service_code,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
-        except Exception as e:
-          set_true = True
-          n = 1
-          while set_true:
-              time.sleep(2)
-              try:
-                  set_download_content(MediaType=MediaType,ServiceCode=service_code,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
+        set_true = True
+        n = 1
+        while set_true:
+          try:
+              set_async_status_content_content(MediaType=MediaType,ServiceCode=service_code,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
+              set_true = False
+          except Exception as e:
+              if n > 3:
+                  os.system("""echo "%s %s %s %s %s">>%s """ % (token, service_code, account_id,task_id,task_name,AsyncStatusExceptionFile))
                   set_true = False
-              except Exception as e:
-                  if n > 3:
-                      os.system("""echo "%s %s %s %s %s">>%s """ % (token, service_code, account_id,task_id,task_name,AsyncStatusExceptionFile))
-                      set_true = False
-              n = n + 1
+              else:
+                  time.sleep(2)
+          n = n + 1
 
-def set_download_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile=""):
+def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/get/"
     url = open_api_domain + path

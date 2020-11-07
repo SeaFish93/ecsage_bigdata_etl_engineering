@@ -38,17 +38,14 @@ def set_task_status_sql(MediaType=""):
 
 if __name__ == '__main__':
     media_type = sys.argv[1]
-    ######### async_task = sys.argv[2]
-    ######### async_status_exception_file = """/tmp/async_status_exception_%s.log""" % (media_type)
-    ######### async_notempty_file = """/tmp/async_notempty_%s.log"""%(media_type)
-    ######### async_empty_file = """/tmp/async_empty_%s.log""" % (media_type)
-    ######### os.system("""rm -f %s"""%(async_notempty_file))
-    ######### os.system("""rm -f %s"""%(async_empty_file))
-    ######### os.system("""rm -f %s"""%(async_status_exception_file))
+    async_status_exception_file = """/tmp/async_status_exception_%s.log""" % (media_type)
+    async_notempty_file = """/tmp/async_notempty_%s.log"""%(media_type)
+    async_empty_file = """/tmp/async_empty_%s.log""" % (media_type)
+    os.system("""rm -f %s"""%(async_notempty_file))
+    os.system("""rm -f %s"""%(async_empty_file))
+    os.system("""rm -f %s"""%(async_status_exception_file))
     sql,max_min_list = set_task_status_sql(MediaType=media_type)
     left_filter = """ where b.id """
     right_filter = """ and b.id """
-    get_fetch(MediaType=media_type, Sql=sql, BeweetFileList=max_min_list,LeftFilter=left_filter,RightFilter=right_filter)
-    #import time
-    #time.sleep(120)
-    #get_download_task(MediaType=media_type,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
+    get_fetch(MediaType=media_type, Sql=sql, BeweetFileList=max_min_list,LeftFilter=left_filter,RightFilter=right_filter,
+              AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)

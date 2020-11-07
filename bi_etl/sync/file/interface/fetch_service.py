@@ -6,10 +6,11 @@
 # function info：分发服务
 
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.remote_proc import exec_remote_proc
 import math
 
 
-def get_fetch(MediaType="",Sql="",BeweetFileList="",LeftFilter="",RightFilter=""):
+def get_fetch(MediaType="",Sql="",BeweetFileList="",LeftFilter="",RightFilter="",AsyncNotemptyFile="", AsyncEmptyFile="",AsyncStatusExceptionFile=""):
     etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
     get_host_sql = """select ip,user_name,passwd from metadb.request_account_host"""
     ok,host_data = etl_md.get_all_rows(get_host_sql)
@@ -31,8 +32,14 @@ def get_fetch(MediaType="",Sql="",BeweetFileList="",LeftFilter="",RightFilter=""
                else:
                    min_n = 1
                sqls_list = get_run_sql(Sql=Sql, Max=max, Min=min, Count=count, MinN=min_n,LeftFilter=LeftFilter,RightFilter=RightFilter)
-               for sql in sqls_list:
-                   print(sql,"###########################################")
+               """
+               get_async_status(MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="")
+               """
+               shell_cmd = """
+                   nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02-status.log 2>&1 &
+                  """ % (MediaType, sqls_list, AsyncNotemptyFile, AsyncEmptyFile,AsyncStatusExceptionFile)
+               exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1],
+                                PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
            start_end_list = []
            host_i = host_i + 1
         host_num = host_num + 1
