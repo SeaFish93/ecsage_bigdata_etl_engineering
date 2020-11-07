@@ -7,6 +7,7 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.create_async_tasks import oe_create_tasks
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.remote_proc import exec_remote_proc
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service import get_fetch
 
 mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
@@ -215,8 +216,9 @@ if __name__ == '__main__':
     ######### os.system("""rm -f %s"""%(async_empty_file))
     ######### os.system("""rm -f %s"""%(async_status_exception_file))
     print("开始启动下载内容!!!!!")
-    sqls,max_min_list = get_task_status_sql(MediaType=media_type)
+    sql,max_min_list = get_task_status_sql(MediaType=media_type)
     print(max_min_list,"#########################################")
+    get_fetch(MediaType=media_type, Sql=sql, BeweetFileList=max_min_list)
     #import time
     #time.sleep(120)
     #get_download_task(MediaType=media_type,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
