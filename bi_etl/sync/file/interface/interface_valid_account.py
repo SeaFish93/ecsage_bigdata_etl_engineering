@@ -107,6 +107,7 @@ def get_account_sql(MediaType=""):
                 max_min.append([s_ind,e_ind])
                 i = i + 1
     return source_data_sql,max_min
+
 def get_account_token(MediaType="",ServiceCode="",AccountTokenFile="",AccountTokenExceptionFile=""):
     # 获取子账户
     source_data_sql = """
@@ -424,60 +425,6 @@ if __name__ == '__main__':
                """ % (media_type, "test", sqls_list, async_task_file, async_task_exception_file)
                exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
            start_end_list = []
-           ####shell_cmd = """
-           ####   nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
-           #### """%(media_type,"test",sqls_list,async_task_file,async_task_exception_file)
-           #exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
            host_i = host_i + 1
         host_num = host_num + 1
         n = n + 1
-    ####### media_type = sys.argv[1]
-    ####### service_code = sys.argv[2]
-    ####### async_task = sys.argv[3]
-    ####### async_date_file = """/tmp/async_date_file_%s_%s.log"""%(media_type,service_code.replace("-",""))
-    ####### async_task_file = """/tmp/async_create_%s_%s.log"""%(media_type,service_code.replace("-",""))
-    ####### async_task_exception_file = """/tmp/async_create_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
-    ####### async_status_exception_file = """/tmp/async_status_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
-    ####### async_notempty_file = """/tmp/async_notempty_%s_%s.log"""%(media_type,service_code.replace("-",""))
-    ####### async_empty_file = """/tmp/async_empty_%s_%s.log""" % (media_type, service_code.replace("-", ""))
-    ####### os.system("""rm -f %s """%(async_date_file))
-    ####### os.system("""rm -f %s"""%(async_task_file))
-    ####### os.system("""date >>%s """%(async_date_file))
-    ####### os.system("""rm -f %s"""%(async_notempty_file))
-    ####### os.system("""rm -f %s"""%(async_empty_file))
-    ####### os.system("""rm -f %s"""%(async_status_exception_file))
-    ####### os.system("""rm -f %s"""%(async_task_exception_file))
-    #######exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
-    ####### print("开始启动下载内容!!!!!")
-    ####### import time
-    ####### time.sleep(120)
-    ####### get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
-    ####### os.system("""date >>%s """%(async_date_file))
-
-"""
-nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-13" "task1" > /root/wangsong/tt-hnhd-13.log 2>&1 &
-nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-11" "task2" > /root/wangsong/tt-hnhd-11.log 2>&1 &
-nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-14" "task3" > /root/wangsong/tt-hnhd-14.log 2>&1 &
-nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-10" "task5" > /root/wangsong/tt-hnhd-10.log 2>&1 &
-nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnzc" "task4" > /root/wangsong/tt-hnzc.log 2>&1 &
-nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-04" "task7" > /root/wangsong/tt-hnhd-04.log 2>&1 &
-
-
-nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-05" "task6" > /root/wangsong/tt-hnhd-05.log 2>&1 &
-
-nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-03" "task8" > /root/wangsong/tt-hnhd-03.log 2>&1 &
-
-nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-02" "task9" > /root/wangsong/tt-hnhd-02.log 2>&1 &
-
-
-(('tt-hnhd-02', 13405), 
-('tt-hnhd-03', 3836), --
-('tt-hnhd-04', 2003), --
-('tt-hnhd-05', 13462), --
-('tt-hnhd-10', 3), --
-('tt-hnhd-11', 1780),-- 
-('tt-hnhd-12', 68), 
-('tt-hnhd-13', 17), --
-('tt-hnhd-14', 145), --
-('tt-hnzc', 2768))--
-"""
