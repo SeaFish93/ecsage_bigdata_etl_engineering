@@ -328,28 +328,45 @@ def get_download_sql(MediaType="",ServiceCode=""):
     return sql_list
 
 if __name__ == '__main__':
-    media_type = sys.argv[1]
-    service_code = sys.argv[2]
-    async_task = sys.argv[3]
-    async_date_file = """/tmp/async_date_file_%s_%s.log"""%(media_type,service_code.replace("-",""))
-    async_task_file = """/tmp/async_create_%s_%s.log"""%(media_type,service_code.replace("-",""))
-    async_task_exception_file = """/tmp/async_create_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
-    async_status_exception_file = """/tmp/async_status_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
-    async_notempty_file = """/tmp/async_notempty_%s_%s.log"""%(media_type,service_code.replace("-",""))
-    async_empty_file = """/tmp/async_empty_%s_%s.log""" % (media_type, service_code.replace("-", ""))
-    os.system("""rm -f %s """%(async_date_file))
-    os.system("""rm -f %s"""%(async_task_file))
-    os.system("""date >>%s """%(async_date_file))
-    os.system("""rm -f %s"""%(async_notempty_file))
-    os.system("""rm -f %s"""%(async_empty_file))
-    os.system("""rm -f %s"""%(async_status_exception_file))
-    os.system("""rm -f %s"""%(async_task_exception_file))
-    exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
-    print("开始启动下载内容!!!!!")
-    import time
-    time.sleep(120)
-    get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
-    os.system("""date >>%s """%(async_date_file))
+    #media_type = sys.argv[1]
+    #service_code = sys.argv[2]
+    #async_task = sys.argv[3]
+    source_data_sql_201 = """
+                   select media, service_code from(
+                   select account_id, media, service_code,@row_num:=@row_num+1 as rn
+                   from big_data_mdg.media_advertiser a,(select @row_num:=0) r
+                   where media = 201
+                   group by media, service_code
+                   ) tmp
+                """
+    ok,all_rows_201 = mysql_session.get_all_rows(source_data_sql_201)
+    for data in all_rows_201:
+       media_type = data[0]
+       service_code = data[1]
+       async_task = "201"
+
+       async_date_file = """/tmp/async_date_file_%s_%s.log"""%(media_type,service_code.replace("-",""))
+       async_task_file = """/tmp/async_create_%s_%s.log"""%(media_type,service_code.replace("-",""))
+       async_task_exception_file = """/tmp/async_create_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
+       async_status_exception_file = """/tmp/async_status_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
+       async_notempty_file = """/tmp/async_notempty_%s_%s.log"""%(media_type,service_code.replace("-",""))
+       async_empty_file = """/tmp/async_empty_%s_%s.log""" % (media_type, service_code.replace("-", ""))
+       os.system("""rm -f %s """%(async_date_file))
+       os.system("""rm -f %s"""%(async_task_file))
+       os.system("""date >>%s """%(async_date_file))
+       os.system("""rm -f %s"""%(async_notempty_file))
+       os.system("""rm -f %s"""%(async_empty_file))
+       os.system("""rm -f %s"""%(async_status_exception_file))
+       os.system("""rm -f %s"""%(async_task_exception_file))
+       #exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
+       print("开始启动下载内容!!!!!")
+       import time
+       #time.sleep(5)
+       try:
+         get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
+       except Exception as e:
+           pass
+       os.system("""date >>%s """%(async_date_file))
 
 """
 nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/test.py 2 "tt-hnhd-13" "task1" > /root/wangsong/tt-hnhd-13.log 2>&1 &
