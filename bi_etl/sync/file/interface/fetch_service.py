@@ -38,7 +38,7 @@ def get_fetch(MediaType="",Sql="",BeweetFileList=""):
         host_num = host_num + 1
         n = n + 1
 
-def get_run_sql(Sql="",Max="",Min="",Count="",MinN=""):
+def get_run_sql(Sql="",Max="",Min="",Count="",MinN="",LeftFilter="",RightFilter=""):
     fcnt = int(Count)
     sql_list = []
     if fcnt > 0:
@@ -64,7 +64,7 @@ def get_run_sql(Sql="",Max="",Min="",Count="",MinN=""):
                 e_ind = s_ind + d
                 if i == num_proc - 1:
                     e_ind = int(fmax) + 1
-                sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
+                sql = Sql + " %s"%(LeftFilter) + " >= " + str(s_ind) + " %s"%(RightFilter) + " < " + str(e_ind)
                 sql_list.append(sql)
                 #max_min.append([s_ind,e_ind])
                 i = i + 1
