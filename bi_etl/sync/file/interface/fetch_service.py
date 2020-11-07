@@ -69,3 +69,42 @@ def get_run_sql(Sql="",Max="",Min="",Count="",MinN=""):
                 #max_min.append([s_ind,e_ind])
                 i = i + 1
     return sql_list
+
+#获取分批子账户个数
+def get_task_status_sql(MysqlSession="",SelectAccountSql="",AccountCountSql=""):
+    #获取子账户
+    source_data_sql = SelectAccountSql
+    #获取子账户条数
+    get_account_count_sql = AccountCountSql
+    ok,all_rows = MysqlSession.get_all_rows(get_account_count_sql)
+    fcnt = 0
+    sql_list = []
+    max_min = []
+    if all_rows is not None and len(all_rows) > 0:
+        fcnt = all_rows[0][0]
+    if fcnt > 0:
+        fmin = int(all_rows[0][1])
+        fmax = int(all_rows[0][2])
+        source_cnt = fcnt
+        print("min=%s, max=%s, count=%s" % (str(fmin), str(fmax), str(fcnt)))
+        if fcnt < 100:
+            # 100以下的数据量不用分批跑
+            sql_list.clear()
+            sql_list.append(source_data_sql)
+        else:
+            sql_list.clear()
+            num_proc = int(fmax) - int(fmin)
+            if num_proc > 4:
+                # 最多20个进程同时获取数据
+                num_proc = 20
+            # 每一个进程查询量的增量
+            d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
+            i = 0
+            while i < num_proc:
+                s_ind = int(fmin) + i * d
+                e_ind = s_ind + d
+                if i == num_proc - 1:
+                    e_ind = int(fmax) + 1
+                max_min.append([s_ind,e_ind])
+                i = i + 1
+    return source_data_sql,max_min

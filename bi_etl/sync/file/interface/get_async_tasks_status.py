@@ -6,10 +6,13 @@
 # function info：获取异步状态
 
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 import requests
 import os
 import sys
+import time
 
+etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 def get_async_status(MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile=""):
     sql_list = eval(SqlList)
     if sql_list is not None and len(sql_list) > 0:
@@ -17,18 +20,16 @@ def get_async_status(MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile
         th = []
         for sql in sql_list:
                 i = i + 1
-                print(sql,"######################################")
-                ## etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
-                ##                    my_run=get_download_content,
-                ##                    Sql = sqls,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
-                ##                    AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType
-                ##                    )
-                ## etl_thread.start()
-                ## import time
-                ## time.sleep(2)
-                ## th.append(etl_thread)
-        ##for etl_th in th:
-        ##    etl_th.join()
+                etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
+                                   my_run=get_download_content,
+                                   Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
+                                   AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType
+                                   )
+                etl_thread.start()
+                time.sleep(2)
+                th.append(etl_thread)
+        for etl_th in th:
+            etl_th.join()
         #记录有效子账户
         ####insert_sql = """
         ####   load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
@@ -53,19 +54,18 @@ def get_download_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStat
         task_id = data[3]
         task_name = data[4]
         try:
-          set_download_content(MediaType=MediaType,ServiceCode=ServiceCode,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
+          set_download_content(MediaType=MediaType,ServiceCode=service_code,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
         except Exception as e:
-          import time
           set_true = True
           n = 1
           while set_true:
               time.sleep(2)
               try:
-                  set_download_content(MediaType=MediaType,ServiceCode=ServiceCode,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
+                  set_download_content(MediaType=MediaType,ServiceCode=service_code,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
                   set_true = False
               except Exception as e:
                   if n > 3:
-                      os.system("""echo "%s %s %s">>%s """ % (token, service_code, account_id,AsyncStatusExceptionFile))
+                      os.system("""echo "%s %s %s %s %s">>%s """ % (token, service_code, account_id,task_id,task_name,AsyncStatusExceptionFile))
                       set_true = False
               n = n + 1
 
