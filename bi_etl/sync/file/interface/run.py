@@ -1,4 +1,3 @@
-ddd
 while True:
 
   print("==================")

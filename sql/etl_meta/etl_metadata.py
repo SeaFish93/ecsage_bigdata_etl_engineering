@@ -104,6 +104,24 @@ class EtlMetaDataSQL():
       and dag_id = '%s'
   """ % ("##{dag_id}##")
 
+  #获取创建接口tasks
+  get_interface_sync_account_tasks_sql = """
+    select media_id
+       ,media_type
+       ,task_id
+       ,dag_id
+       ,is_create_task
+       ,status
+       ,comments
+       ,create_user
+       ,update_user
+       ,create_time
+       ,update_time
+    from metadb.interface_account_tasks_info
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
+
   #删除etl作业重跑每天条数记录表
   delete_etl_job_rows_sql = """
     delete from metadb.etl_job_rows 

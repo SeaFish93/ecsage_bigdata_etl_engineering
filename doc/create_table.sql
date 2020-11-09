@@ -675,6 +675,35 @@ CREATE TABLE metadb.request_account_host (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='子账户服务'
 
+CREATE TABLE metadb.interface_account_tasks_info (
+  `id`                  int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  media_id              int(10) not null comment'所属媒体id，1：巨量',
+  media_type            int(10) not null comment'所属媒体平台类型：2、201、203',
+  task_id               varchar(200) not null comment'任务名称',
+  dag_id                varchar(200) not null comment'dag名称',
+  is_create_task        int(10) not null comment'是否是创建任务，1：是，0：否',
+  status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效',
+  comments              varchar(512)null COMMENT '备注',
+  create_user           varchar(32)   COMMENT '创建者',
+  update_user           varchar(32)   COMMENT '最后更新者',
+  create_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
+  update_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='子账户任务配置表'
+
+select media_id
+       ,media_type
+       ,task_id
+       ,dag_id
+       ,is_create_task
+       ,status
+       ,comments
+       ,create_user
+       ,update_user
+       ,create_time
+       ,update_time
+from metadb.interface_account_tasks_info
+where status = 1
 
 
 

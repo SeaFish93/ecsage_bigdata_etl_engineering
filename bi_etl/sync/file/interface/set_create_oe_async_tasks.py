@@ -5,9 +5,69 @@ import os
 import time
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.remote_proc import exec_remote_proc
+from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
+from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 
 mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+
+#入口方法
+def main(TaskInfo,**kwargs):
+    global airflow
+    global developer
+    global regexp_extract_column
+    airflow = Airflow(kwargs)
+    print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+    media_type = TaskInfo[2]
+    account_token_file = """/tmp/account_token_file_%s.log"""%(media_type)
+    account_token_exception_file = """/tmp/account_token_exception_file_%s.log"""%(media_type)
+    async_task_file = """/tmp/async_create_%s.log""" % (media_type)
+    async_task_exception_file = """/tmp/async_create_exception_%s.log""" % (media_type)
+    os.system("""rm -f %s """ % (async_task_exception_file))
+    os.system("""rm -f %s """%(async_task_file))
+    os.system("""rm -f %s """ % (account_token_file))
+    os.system("""rm -f %s """ % (account_token_exception_file))
+    etl_md.execute_sql("""delete from metadb.oe_async_task_interface where media_type=%s """ % (media_type))
+    #获取token
+    get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
+    #获取每台服务处理数据量
+    sql,max_min = get_account_sql(MediaType=media_type)
+    ok,host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
+    n = 0
+    host_num = 0
+    host_i = 0
+    start_end_list = []
+    th = []
+    for get_data in max_min:
+        start_end_list.append(max_min[n])
+        if len(start_end_list) == 5 or len(max_min) < 5 or len(max_min)-1 == n:
+           print("[%s]执行机器" % (host_data[host_i][0]))
+           for start_end in start_end_list:
+               max = start_end[1]
+               min = start_end[0]
+               count = max - min
+               if n == 0:
+                   min_n = 0
+               else:
+                   min_n = 1
+               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n)
+               shell_cmd = """
+                  python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/create_async.log
+               """ % (media_type, "test", sqls_list, async_task_file, async_task_exception_file)
+               exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
+               etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),
+                                      my_run=exec_remote_proc,HostName=host_data[host_i][0],
+                                      UserName=host_data[host_i][1],PassWord=host_data[host_i][2], ShellCommd=shell_cmd
+                                      )
+               etl_thread.start()
+               th.append(etl_thread)
+           start_end_list = []
+           host_i = host_i + 1
+        host_num = host_num + 1
+        n = n + 1
+    for etl_th in th:
+        etl_th.join()
 
 def get_run_sql(Sql="",Max="",Min="",Count="",MinN=""):
     fcnt = int(Count)
@@ -144,45 +204,3 @@ def get_token(MediaType="",AccountTokenFile="",AccountTokenExceptionFile=""):
             """ % (AccountTokenFile)
     etl_md.execute_sql("""delete from metadb.request_account_token_interface where media_type=%s """ % (MediaType))
     etl_md.local_file_to_mysql(sql=insert_sql)
-
-if __name__ == '__main__':
-    media_type = sys.argv[1]
-    account_token_file = """/tmp/account_token_file_%s.log"""%(media_type)
-    account_token_exception_file = """/tmp/account_token_exception_file_%s.log"""%(media_type)
-    async_task_file = """/tmp/async_create_%s.log""" % (media_type)
-    async_task_exception_file = """/tmp/async_create_exception_%s.log""" % (media_type)
-    os.system("""rm -f %s """ % (async_task_exception_file))
-    os.system("""rm -f %s """%(async_task_file))
-    os.system("""rm -f %s """ % (account_token_file))
-    os.system("""rm -f %s """ % (account_token_exception_file))
-    etl_md.execute_sql("""delete from metadb.oe_async_task_interface where media_type=%s """ % (media_type))
-    #获取token
-    get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
-    #获取每台服务处理数据量
-    sql,max_min = get_account_sql(MediaType=media_type)
-    ok,host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
-    n = 0
-    host_num = 0
-    host_i = 0
-    start_end_list = []
-    for get_data in max_min:
-        start_end_list.append(max_min[n])
-        if len(start_end_list) == 5 or len(max_min) < 5 or len(max_min)-1 == n:
-           print("[%s]执行机器" % (host_data[host_i][0]))
-           for start_end in start_end_list:
-               max = start_end[1]
-               min = start_end[0]
-               count = max - min
-               if n == 0:
-                   min_n = 0
-               else:
-                   min_n = 1
-               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n)
-               shell_cmd = """
-                 nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02.log 2>&1 &
-               """ % (media_type, "test", sqls_list, async_task_file, async_task_exception_file)
-               exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
-           start_end_list = []
-           host_i = host_i + 1
-        host_num = host_num + 1
-        n = n + 1
