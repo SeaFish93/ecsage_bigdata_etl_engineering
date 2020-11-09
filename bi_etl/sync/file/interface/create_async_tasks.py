@@ -104,4 +104,7 @@ if __name__ == '__main__':
     sqls_list = sys.argv[3]
     async_task_file = sys.argv[4]
     async_task_exception_file = sys.argv[5]
+    os.system("""rm -f %s """ % (async_task_exception_file))
+    os.system("""rm -f %s """ % (async_task_file))
+
     oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file, AsyncTask=async_task)
