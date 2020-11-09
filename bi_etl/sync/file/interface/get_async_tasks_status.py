@@ -13,7 +13,7 @@ import sys
 import time
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
-def get_async_status(MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",AsyncNotSuccFile=""):
+def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",AsyncNotSuccFile=""):
     sql_list = eval(SqlList)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
@@ -21,7 +21,7 @@ def get_async_status(MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile
         for sql in sql_list:
                 i = i + 1
                 etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
-                                   my_run=get_async_status_content,
+                                   my_run=get_async_status_content,MysqlSession=MysqlSession,
                                    Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
                                    AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
                                    AsyncNotSuccFile=AsyncNotSuccFile
@@ -38,7 +38,7 @@ def get_async_status(MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile
         #########etl_md.local_file_to_mysql(sql=insert_sql)
         print("the end!!!!!")
 
-def get_async_status_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile="",arg=None):
+def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile="",arg=None):
   if arg is not None:
     Sql = arg["Sql"]
     AsyncNotemptyFile = arg["AsyncNotemptyFile"]
@@ -46,7 +46,8 @@ def get_async_status_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",Async
     AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
     MediaType = arg["MediaType"]
     AsyncNotSuccFile = arg["AsyncNotSuccFile"]
-    ok,datas = etl_md.get_all_rows(Sql)
+    MysqlSession = arg["MysqlSession"]
+    ok,datas = MysqlSession.get_all_rows(Sql)
     for data in datas:
         token = data[0]
         service_code = data[1]
@@ -106,6 +107,6 @@ if __name__ == '__main__':
     os.system("""rm -f %s""" % (async_notempty_file))
     os.system("""rm -f %s""" % (async_empty_file))
     os.system("""rm -f %s""" % (async_status_exception_file))
-    get_async_status(MediaType=media_type,SqlList=sqls_list,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
+    get_async_status(MysqlSession=etl_md,MediaType=media_type,SqlList=sqls_list,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
                      AsyncStatusExceptionFile=async_status_exception_file,AsyncNotSuccFile=async_not_succ_file
                      )
