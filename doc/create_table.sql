@@ -294,6 +294,14 @@ from metadb.interface_tasks_info_bak a
 inner join metadb.dags_info b
 on a.dag_id = b.dag_id
 where b.status = 1
+union all
+select a.dag_id
+       ,a.task_id
+       ,b.schedule_interval
+from metadb.interface_account_tasks_info a
+inner join metadb.dags_info b
+on a.dag_id = b.dag_id
+where b.status = 1
 
   union all
 select a.dag_id
