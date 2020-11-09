@@ -428,8 +428,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                               Log="ods入库-tmp失败！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
-   if IsReport == 0:
-     sql = """
+   sql = """
         insert overwrite table %s.%s
         partition(etl_date = '%s')
         select %s,%s from(
@@ -439,18 +438,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                ;
         drop table if exists %s.%s_tmp;
         """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,select_json_tuple_column,select_system_table_column,row_number_columns,"etl_mid",TargetTable,"etl_mid",TargetTable)
-   else:
-       sql = """
-               insert overwrite table %s.%s
-               partition(etl_date = '%s')
-               select %s,%s from(
-               select %s,%s,row_number()over(partition by %s order by 1) as rn_row_number
-               from %s.%s_tmp
-               ) tmp -- where rn_row_number = 1
-                      ;
-               drop table if exists %s.%s_tmp;
-               """ % (TargetDB, TargetTable, ExecDate, select_json_tuple_column, select_system_table_column, select_json_tuple_column,
-                      select_system_table_column, row_number_columns, "etl_mid", TargetTable, "etl_mid", TargetTable)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
