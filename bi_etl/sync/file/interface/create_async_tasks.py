@@ -41,6 +41,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
     token_data = ""
     service_code = ""
     num = 1
+    nums = 1
     if arg is not None:
        Sql = arg["Sql"]
        ThreadName = arg["ThreadName"]
@@ -58,7 +59,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
            n = 1
            while set_true:
              try:
-               set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile)
+               set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile,Nums=nums)
                set_true = False
              except Exception as e:
                if n > 3:
@@ -67,25 +68,9 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
                else:
                   time.sleep(2)
              n = n + 1
+             nums = nums + 1
 
-def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile=""):
-    ip_pool = [
-        '116.117.134.134:80',
-        '117.185.16.31:80',
-        '115.223.7.110:80',
-        '112.80.248.75:80',
-        '123.125.114.107:80',
-        '222.74.202.228:9999',
-        '117.185.17.151:80',
-        '117.185.17.144:80',
-        '61.135.185.31:80',
-        '113.116.197.87:8888'
-
-    ]
-    ip = random.choice(ip_pool)
-    proxy = {
-        'http': 'http://%s'%(ip)
-    }
+def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile="",Nums=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
     url = open_api_domain + path
@@ -105,7 +90,9 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
         'Access-Token': Token,
         'Connection': "close"
     }
-    resp = requests.post(url, json=params, headers=headers, proxies=proxy)
+    if Nums%2 == 0:
+       time.sleep(5)
+    resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
     task_id = resp_data["data"]["task_id"]
     task_name = resp_data["data"]["task_name"]
