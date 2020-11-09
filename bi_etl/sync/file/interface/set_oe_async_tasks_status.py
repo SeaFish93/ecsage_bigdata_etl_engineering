@@ -5,8 +5,10 @@ import os
 import time
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service import get_fetch
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service import get_run_sql
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service import get_task_status_sql
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.remote_proc import exec_remote_proc
+from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
@@ -29,14 +31,43 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f %s""" % (async_status_exception_file))
     #etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
     sql, max_min_list = set_task_status_sql(MediaType=media_type)
-    left_filter = """ where b.id """
-    right_filter = """ and b.id """
-    get_fetch(MediaType=media_type, Sql=sql, BeweetFileList=max_min_list, LeftFilter=left_filter,
-              RightFilter=right_filter,
-              AsyncNotemptyFile=async_notempty_file, AsyncEmptyFile=async_empty_file,
-              AsyncStatusExceptionFile=async_status_exception_file,
-              AsyncNotSuccFile=async_not_succ_file
-              )
+    ok, host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
+    n = 0
+    host_num = 0
+    host_i = 0
+    start_end_list = []
+    th = []
+    for get_data in max_min_list:
+        start_end_list.append(max_min_list[n])
+        if len(start_end_list) == 5 or len(max_min_list) < 5 or len(max_min_list) - 1 == n:
+            print("[%s]执行机器" % (host_data[host_i][0]))
+            for start_end in start_end_list:
+                max = start_end[1]
+                min = start_end[0]
+                count = max - min
+                if n == 0:
+                    min_n = 0
+                else:
+                    min_n = 1
+                left_filter = """ where b.id """
+                right_filter = """ and b.id """
+                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n,LeftFilter=left_filter,RightFilter=right_filter)
+                shell_cmd = """
+                    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" > /root/wangsong/status_async.log
+                 """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
+                etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),
+                                       my_run=exec_remote_proc, HostName=host_data[host_i][0],
+                                       UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
+                                       ShellCommd=shell_cmd
+                                       )
+                etl_thread.start()
+                th.append(etl_thread)
+            start_end_list = []
+            host_i = host_i + 1
+        host_num = host_num + 1
+        n = n + 1
+    for etl_th in th:
+        etl_th.join()
 
 def set_task_status_sql(MediaType=""):
     #获取子账户
