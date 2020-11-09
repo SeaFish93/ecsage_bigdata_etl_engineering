@@ -8,7 +8,7 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 #创建任务
-def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask=""):
+def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask="",ExecDate=""):
     sql_list = eval(SqlList)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
@@ -19,7 +19,7 @@ def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExcepti
                                    my_run=oe_run_create_task,
                                    Sql = sql,ThreadName="%s%d" % (AsyncTask,i),
                                    AsyncTaskFile=AsyncTaskFile,AsyncTaskExceptionFile=AsyncTaskExceptionFile,
-                                   MysqlSession = MysqlSession
+                                   MysqlSession = MysqlSession,ExecDate=ExecDate
                                    )
            etl_thread.start()
            import time
@@ -32,7 +32,7 @@ def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExcepti
         """%(AsyncTaskFile)
         etl_md.local_file_to_mysql(sql=insert_sql)
 
-def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",AsyncTaskExceptionFile="",arg=None):
+def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",AsyncTaskExceptionFile="",ExecDate="",arg=None):
     account_id = ""
     token_data = ""
     service_code = ""
@@ -44,6 +44,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
        AsyncTaskFile = arg["AsyncTaskFile"]
        AsyncTaskExceptionFile = arg["AsyncTaskExceptionFile"]
        MysqlSession = arg["MysqlSession"]
+       ExecDate = arg["ExecDate"]
        ok, data_list = MysqlSession.get_all_rows_thread(Sql)
        print("线程：%s,长度：%s,=================================="%(ThreadName,len(data_list)))
        for data in data_list:
@@ -55,7 +56,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
            n = 1
            while set_true:
              try:
-               set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile,Nums=nums)
+               set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile,Nums=nums,ExecDate=ExecDate)
                set_true = False
              except Exception as e:
                if n > 3:
@@ -66,7 +67,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
              n = n + 1
              nums = nums + 1
 
-def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile="",Nums=""):
+def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile="",Nums="",ExecDate=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
     url = open_api_domain + path
@@ -76,8 +77,8 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
         "task_type": "REPORT",
         "force": "true",
         "task_params": {
-            "start_date": "2020-11-05",
-            "end_date": "2020-11-05",
+            "start_date": ExecDate,
+            "end_date": ExecDate,
             "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
         }
     }
@@ -100,7 +101,8 @@ if __name__ == '__main__':
     sqls_list = sys.argv[3]
     async_task_file = sys.argv[4]
     async_task_exception_file = sys.argv[5]
+    exec_date = sys.argv[6]
     os.system("""rm -f %s """ % (async_task_exception_file))
     os.system("""rm -f %s """ % (async_task_file))
 
-    oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file, AsyncTask=async_task)
+    oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file, AsyncTask=async_task,ExecDate=exec_date)
