@@ -54,7 +54,7 @@ def main(TaskInfo,**kwargs):
                 right_filter = """ and b.id """
                 sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n,LeftFilter=left_filter,RightFilter=right_filter)
                 shell_cmd = """
-                  nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" > /root/wangsong/status_async.log &
+                  nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" > /root/wangsong/status_async.log 2>&1 &
                  """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
                 ####etl_thread = EtlThread(thread_id=n_this, thread_name="fetch%d" % (n_this),
                 ####                       my_run=exec_remote_proc, HostName=host_data[host_i][0],
