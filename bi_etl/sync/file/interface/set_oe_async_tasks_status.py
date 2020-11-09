@@ -27,7 +27,7 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f %s""" % (async_notempty_file))
     os.system("""rm -f %s""" % (async_empty_file))
     os.system("""rm -f %s""" % (async_status_exception_file))
-    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
+    #etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
     sql, max_min_list = set_task_status_sql(MediaType=media_type)
     left_filter = """ where b.id """
     right_filter = """ and b.id """
