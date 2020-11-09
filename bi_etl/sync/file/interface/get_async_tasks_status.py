@@ -20,17 +20,20 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         th = []
         for sql in sql_list:
                 i = i + 1
-                etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
-                                   my_run=get_async_status_content,MysqlSession=MysqlSession,
-                                   Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
-                                   AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
-                                   AsyncNotSuccFile=AsyncNotSuccFile
-                                   )
-                etl_thread.start()
-                time.sleep(2)
-                th.append(etl_thread)
-        for etl_th in th:
-            etl_th.join()
+                get_async_status_content(MysqlSession=MysqlSession, Sql=sql, AsyncNotemptyFile=AsyncNotemptyFile, AsyncEmptyFile=AsyncEmptyFile,
+                                         AsyncStatusExceptionFile=AsyncStatusExceptionFile, MediaType=MediaType, AsyncNotSuccFile=AsyncNotSuccFile)
+
+                ######## etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
+                ########                    my_run=get_async_status_content,MysqlSession=MysqlSession,
+                ########                    Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
+                ########                    AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
+                ########                    AsyncNotSuccFile=AsyncNotSuccFile
+                ########                    )
+                ######## etl_thread.start()
+                ######## time.sleep(2)
+                ######## th.append(etl_thread)
+        #### for etl_th in th:
+        ####     etl_th.join()
         #记录有效子账户
         #########insert_sql = """
         #########   load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
@@ -39,14 +42,14 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         print("the end!!!!!")
 
 def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile="",arg=None):
-  if arg is not None:
-    Sql = arg["Sql"]
-    AsyncNotemptyFile = arg["AsyncNotemptyFile"]
-    AsyncEmptyFile = arg["AsyncEmptyFile"]
-    AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
-    MediaType = arg["MediaType"]
-    AsyncNotSuccFile = arg["AsyncNotSuccFile"]
-    MysqlSession = arg["MysqlSession"]
+    if arg is not None:
+      Sql = arg["Sql"]
+      AsyncNotemptyFile = arg["AsyncNotemptyFile"]
+      AsyncEmptyFile = arg["AsyncEmptyFile"]
+      AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
+      MediaType = arg["MediaType"]
+      AsyncNotSuccFile = arg["AsyncNotSuccFile"]
+      MysqlSession = arg["MysqlSession"]
     ok,datas = MysqlSession.get_all_rows(Sql)
     for data in datas:
         token = data[0]
