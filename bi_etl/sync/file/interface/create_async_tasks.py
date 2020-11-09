@@ -3,6 +3,7 @@ import requests
 import sys
 import os
 import time
+import random
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 import json
@@ -68,6 +69,23 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
              n = n + 1
 
 def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile=""):
+    ip_pool = [
+        '116.117.134.134:80',
+        '117.185.16.31:80',
+        '115.223.7.110:80',
+        '112.80.248.75:80',
+        '123.125.114.107:80',
+        '222.74.202.228:9999',
+        '117.185.17.151:80',
+        '117.185.17.144:80',
+        '61.135.185.31:80',
+        '113.116.197.87:8888'
+
+    ]
+    ip = random.choice(ip_pool)
+    proxy = {
+        'http': 'http://%s'%(ip)
+    }
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
     url = open_api_domain + path
@@ -87,7 +105,7 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
         'Access-Token': Token,
         'Connection': "close"
     }
-    resp = requests.post(url, json=params, headers=headers)
+    resp = requests.post(url, json=params, headers=headers, proxies=proxy)
     resp_data = resp.json()
     task_id = resp_data["data"]["task_id"]
     task_name = resp_data["data"]["task_name"]
