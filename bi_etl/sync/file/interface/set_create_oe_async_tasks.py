@@ -19,7 +19,7 @@ def main(TaskInfo,**kwargs):
     airflow = Airflow(kwargs)
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
-    media_type = TaskInfo[2]
+    media_type = TaskInfo[1]
     account_token_file = """/tmp/account_token_file_%s.log"""%(media_type)
     account_token_exception_file = """/tmp/account_token_exception_file_%s.log"""%(media_type)
     async_task_file = """/tmp/async_create_%s.log""" % (media_type)
