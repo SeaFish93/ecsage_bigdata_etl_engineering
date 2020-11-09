@@ -7,6 +7,7 @@
 
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.remote_proc import exec_remote_proc
+from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 import math
 
 
@@ -19,6 +20,7 @@ def get_fetch(MediaType="",Sql="",BeweetFileList="",LeftFilter="",RightFilter=""
     host_i = 0
     start_end_list = []
     service_run_num = 5
+    th = []
     for get_data in BeweetFileList:
         start_end_list.append(BeweetFileList[n])
         if len(start_end_list) == service_run_num or len(BeweetFileList) < service_run_num or len(BeweetFileList)-1 == n:
@@ -33,14 +35,20 @@ def get_fetch(MediaType="",Sql="",BeweetFileList="",LeftFilter="",RightFilter=""
                    min_n = 1
                sqls_list = get_run_sql(Sql=Sql, Max=max, Min=min, Count=count, MinN=min_n,LeftFilter=LeftFilter,RightFilter=RightFilter)
                shell_cmd = """
-                nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" > /root/wangsong/t111t-hnhd-02-status.log 2>&1 &
+                 python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" > /root/wangsong/status_async.log
               """ % (MediaType, sqls_list, AsyncNotemptyFile, AsyncEmptyFile,AsyncStatusExceptionFile,AsyncNotSuccFile)
-               exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1],
-                                PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
+               etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),
+                                      my_run=exec_remote_proc, HostName=host_data[host_i][0],
+                                      UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd
+                                      )
+               etl_thread.start()
+               th.append(etl_thread)
            start_end_list = []
            host_i = host_i + 1
         host_num = host_num + 1
         n = n + 1
+    for etl_th in th:
+        etl_th.join()
 
 def get_run_sql(Sql="",Max="",Min="",Count="",MinN="",LeftFilter="",RightFilter=""):
     fcnt = int(Count)

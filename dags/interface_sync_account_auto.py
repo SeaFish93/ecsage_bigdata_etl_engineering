@@ -11,7 +11,8 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import DAG
 import airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_create_oe_async_tasks import main as sync_interface_main
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_create_oe_async_tasks import main as create_main
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_oe_async_tasks_status import main as status_main
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
@@ -96,12 +97,16 @@ for dag_info in get_dags:
           elif batch_type == "day":
               if level == 1:
                  task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                         python_callable=sync_interface_main,
+                                         python_callable=create_main,
                                          provide_context=True,
                                          op_args=(tasks_info,),
                                          dag=dag)
               else:
-                 pass
+                 task['%s' % (task_id)] = PythonOperator(task_id=task_id,
+                                                          python_callable=status_main,
+                                                          provide_context=True,
+                                                          op_args=(tasks_info,),
+                                                          dag=dag)
           else:
               pass
        for task_name in tasks:
