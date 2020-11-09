@@ -37,6 +37,7 @@ def main(TaskInfo,**kwargs):
     host_i = 0
     start_end_list = []
     th = []
+    n_this = 0
     for get_data in max_min_list:
         start_end_list.append(max_min_list[n])
         if len(start_end_list) == 5 or len(max_min_list) < 5 or len(max_min_list) - 1 == n:
@@ -55,11 +56,12 @@ def main(TaskInfo,**kwargs):
                 shell_cmd = """
                     python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" > /root/wangsong/status_async.log
                  """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
-                etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),
+                etl_thread = EtlThread(thread_id=n_this, thread_name="fetch%d" % (n_this),
                                        my_run=exec_remote_proc, HostName=host_data[host_i][0],
                                        UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
                                        ShellCommd=shell_cmd
                                        )
+                n_this = n_this + 1
                 etl_thread.start()
                 th.append(etl_thread)
             start_end_list = []
