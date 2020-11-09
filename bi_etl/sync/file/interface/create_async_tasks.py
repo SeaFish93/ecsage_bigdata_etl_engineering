@@ -30,11 +30,10 @@ def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExcepti
            th.append(etl_thread)
         for etl_th in th:
             etl_th.join()
-        #insert_sql = """
-        #  load data local infile '%s' into table metadb.oe_async_task_interface fields terminated by ' ' lines terminated by '\\n' (media_type,token_data,service_code,account_id,task_id,task_name)
-        #"""%(AsyncTaskFile)
-        #etl_md.execute_sql("""delete from metadb.oe_async_task_interface where media_type=%s and service_code='%s' """%(MediaType,ServiceCode))
-        #etl_md.local_file_to_mysql(sql=insert_sql)
+        insert_sql = """
+          load data local infile '%s' into table metadb.oe_async_task_interface fields terminated by ' ' lines terminated by '\\n' (media_type,token_data,service_code,account_id,task_id,task_name)
+        """%(AsyncTaskFile)
+        etl_md.local_file_to_mysql(sql=insert_sql)
 
 def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",AsyncTaskExceptionFile="",arg=None):
     account_id = ""
@@ -91,7 +90,7 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
         'Connection': "close"
     }
     if Nums%2 == 0:
-       time.sleep(5)
+       time.sleep(2)
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
     task_id = resp_data["data"]["task_id"]
