@@ -54,7 +54,7 @@ def main(TaskInfo,**kwargs):
                else:
                    min_n = 1
                print(nu,len(max_min),"#####################################################")
-               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count-1)
+               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count-1,LastNumber=(nu,len(max_min)))
                for sqls in sqls_list:
                    os.system("""echo "%s">>/tmp/sqlsql.sql """%(sqls))
                os.system("""echo "%s %s %s==========================================">>/tmp/sqlsql.sql """%(max,min,start_end))
@@ -76,7 +76,7 @@ def main(TaskInfo,**kwargs):
     ######for etl_th in th:
     ######    etl_th.join()
 
-def get_run_sql(Sql="",Max="",Min="",Count=""):
+def get_run_sql(Sql="",Max="",Min="",Count="",LastNumber=""):
     fcnt = int(Count)
     sql_list = []
     if fcnt > 0:
@@ -102,9 +102,12 @@ def get_run_sql(Sql="",Max="",Min="",Count=""):
                 e_ind = s_ind + d
                 if i == num_proc - 1:
                     e_ind = int(fmax) + 1
-                if e_ind <= Max:
+                if e_ind <= Max and LastNumber[0] != LastNumber[1]:
                   sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
                   sql_list.append(sql)
+                elif LastNumber[0] == LastNumber[1]:
+                    sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
+                    sql_list.append(sql)
                 #max_min.append([s_ind,e_ind])
                 i = i + 1
     return sql_list
