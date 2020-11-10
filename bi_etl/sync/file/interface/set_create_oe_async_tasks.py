@@ -52,7 +52,8 @@ def main(TaskInfo,**kwargs):
                    min_n = 0
                else:
                    min_n = 1
-               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
+               if max != start_end[1]:
+                  sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
                for sqls in sqls_list:
                    os.system("""echo "%s">>/tmp/sqlsql.sql """%(sqls))
                os.system("""echo "%s==========================================">>/tmp/sqlsql.sql """%(start_end))
