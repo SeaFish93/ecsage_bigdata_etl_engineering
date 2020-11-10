@@ -159,6 +159,7 @@ class SparkNoSqlDB(BaseDB):
         print(self.conn.read.text().rdd.foreach(lambda x:x))
     
     def get_csv(self,IsHeader="",FileDir=""):
+        state = False
         df = None
         if IsHeader == "Y":
             header = "True"
@@ -166,6 +167,7 @@ class SparkNoSqlDB(BaseDB):
             header = "False"
         try:
           df = self.conn.read.options(header=header, inferSchema='True', delimiter=',').csv(FileDir)
+          state = True
         except Exception as e:
             print("spark select CSV Error:" + FileDir)
             print(e)
