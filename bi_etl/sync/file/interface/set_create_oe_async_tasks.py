@@ -52,7 +52,7 @@ def main(TaskInfo,**kwargs):
                    min_n = 0
                else:
                    min_n = 1
-               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n)
+               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
                for sqls in sqls_list:
                    os.system("""echo "%s">>/tmp/sqlsql.sql """%(sqls))
                ##### shell_cmd = """
@@ -72,7 +72,7 @@ def main(TaskInfo,**kwargs):
     ######for etl_th in th:
     ######    etl_th.join()
 
-def get_run_sql(Sql="",Max="",Min="",Count="",MinN=""):
+def get_run_sql(Sql="",Max="",Min="",Count=""):
     fcnt = int(Count)
     sql_list = []
     if fcnt > 0:
@@ -94,7 +94,7 @@ def get_run_sql(Sql="",Max="",Min="",Count="",MinN=""):
             d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
             i = 0
             while i < num_proc:
-                s_ind = int(fmin) + MinN + i * d
+                s_ind = int(fmin) + i * d
                 e_ind = s_ind + d
                 if i == num_proc - 1:
                     e_ind = int(fmax) + 1
