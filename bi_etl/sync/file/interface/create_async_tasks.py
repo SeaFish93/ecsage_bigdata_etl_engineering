@@ -49,7 +49,6 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
        print("线程：%s,长度：%s,=================================="%(ThreadName,len(data_list)))
        for data in data_list:
            account_id = data[1]
-           os.system("""echo "%s">>/tmp/account.log """%(account_id))
            service_code = data[3]
            token_data = data[4]
            media_type = data[2]
@@ -57,6 +56,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
            n = 1
            while set_true:
              try:
+               os.system("""echo "%s">>/tmp/account.log """ % (account_id))
                set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile,Nums=nums,ExecDate=ExecDate)
                set_true = False
              except Exception as e:
