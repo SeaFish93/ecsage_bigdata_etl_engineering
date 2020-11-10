@@ -157,3 +157,17 @@ class SparkNoSqlDB(BaseDB):
     #处理文本
     def text(self):
         print(self.conn.read.text().rdd.foreach(lambda x:x))
+    
+    def get_csv(IsHeader="",FileDir=""):
+        df = None
+        if IsHeader == "Y":
+            header = "True"
+        else:
+            header = "False"
+        try:
+          df = self.conn.read.options(header=header, inferSchema='True', delimiter=',').csv(FileDir)
+        except Exception as e:
+            print("spark select CSV Error:" + FileDir)
+            print(e)
+        finally:
+            return state,df
