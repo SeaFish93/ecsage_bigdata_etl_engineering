@@ -409,6 +409,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                              where a.etl_date = '%s'
                                and %s
                             ) a
+                        where data_colums is not null
                         ) b
                    ) c
                    lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums

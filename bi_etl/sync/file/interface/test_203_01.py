@@ -361,13 +361,13 @@ if __name__ == '__main__':
        os.system("""rm -f %s"""%(async_empty_file))
        os.system("""rm -f %s"""%(async_status_exception_file))
        os.system("""rm -f %s"""%(async_task_exception_file))
-       exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
+       #exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
        print("开始启动下载内容!!!!!")
        import time
        #time.sleep(5)
        try:
         pass
-        #get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
+        get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
        except Exception as e:
            pass
        os.system("""date >>%s """%(async_date_file))
