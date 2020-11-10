@@ -52,11 +52,10 @@ def main(TaskInfo,**kwargs):
                    min_n = 0
                else:
                    min_n = 1
-               if max != start_end[1]:
-                  sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
-                  for sqls in sqls_list:
+               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count)
+               for sqls in sqls_list:
                    os.system("""echo "%s">>/tmp/sqlsql.sql """%(sqls))
-               os.system("""echo "%s==========================================">>/tmp/sqlsql.sql """%(start_end))
+               os.system("""echo "%s %s %s==========================================">>/tmp/sqlsql.sql """%(max,min,start_end))
                ##### shell_cmd = """
                #####    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" "%s" > /root/wangsong/create_async.log
                ##### """ % (media_type, async_task_name, sqls_list, async_task_file, async_task_exception_file,exec_date)
