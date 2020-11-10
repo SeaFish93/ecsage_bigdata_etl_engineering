@@ -56,7 +56,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
            n = 1
            while set_true:
              try:
-               os.system("""echo "%s">>/tmp/account.log """ % (account_id))
+               os.system("""echo "%s">>/tmp/account.log"""%(account_id))
                set_async_tasks(MediaType=media_type,ServiceCode=service_code, AccountId=account_id, ThreadName=ThreadName, Num=num,Token=token_data,AsyncTaskFile=AsyncTaskFile,Nums=nums,ExecDate=ExecDate)
                set_true = False
              except Exception as e:
