@@ -86,7 +86,7 @@ class SparkNoSqlDB(BaseDB):
     # add by wangsong
     #spark sql读取MySQL、MsSQL、hive，返回dataframe
     def get_df(self, SessionHandler="", DBType="", Sql=""):
-        print(sql)
+        print(Sql)
         df = None
         state = False
         etl_md = EtlMetadata()
