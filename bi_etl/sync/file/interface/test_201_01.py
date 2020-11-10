@@ -338,7 +338,7 @@ if __name__ == '__main__':
                    where media = 201
                    group by media, service_code
                    ) tmp
-                   where rn >=1 and rn <= 100
+                   where rn > 100
                 """
     ok,all_rows_201 = mysql_session.get_all_rows(source_data_sql_201)
     for data in all_rows_201:
