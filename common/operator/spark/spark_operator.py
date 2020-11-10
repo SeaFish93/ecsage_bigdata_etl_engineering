@@ -85,7 +85,7 @@ class SparkNoSqlDB(BaseDB):
 
     # add by wangsong
     #spark sql读取MySQL、MsSQL、hive，返回dataframe
-    def get_df(self, SessionHandler="", sql=""):
+    def get_df(self, SessionHandler="", DBType="", Sql=""):
         print(sql)
         df = None
         state = False
@@ -98,33 +98,33 @@ class SparkNoSqlDB(BaseDB):
         jdbc_default_db = get_handle[0][4]
         print(get_handle)
         try:
-            if db_type == "mysql":
+            if DBType == "mysql":
                 db_info = BaseDB(port=jdbc_port, host=jdbc_host, user=jdbc_user, password=jdbc_password)
                 df = self.conn.read \
                     .format("jdbc") \
                     .option("url", "jdbc:mysql://%s:%s/%s?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8" % (jdbc_host, jdbc_port, jdbc_default_db)) \
-                    .option("dbtable", """(""" + sql + """) t""") \
+                    .option("dbtable", """(""" + Sql + """) t""") \
                     .option("user", jdbc_user) \
                     .option("password", db_info.get_password()) \
                     .option("fetchsize",100000) \
                     .load()
-            elif db_type == "mssql":
+            elif DBType == "mssql":
                 db_info = BaseDB(port=jdbc_port, host=jdbc_host, user=jdbc_user, password=jdbc_password)
                 df = self.conn.read \
                     .format("jdbc") \
                     .option("url", "jdbc:sqlserver://%s:%s;DatabaseName=%s" % (jdbc_host, jdbc_port, jdbc_default_db)) \
-                    .option("dbtable", """(""" + sql + """) t""") \
+                    .option("dbtable", """(""" + Sql + """) t""") \
                     .option("user", jdbc_user) \
                     .option("password", db_info.get_password()) \
                     .option("fetchsize",10000) \
                     .load()
-            elif db_type == "hive":
-                df = self.conn.sql(sql)
+            elif DBType == "hive":
+                df = self.conn.sql(Sql)
             else:
                 pass
             state = True
         except Exception as e:
-            print("spark get df sql Error:" + sql)
+            print("spark get df sql Error:" + Sql)
             print(e)
         finally:
             return state, df
