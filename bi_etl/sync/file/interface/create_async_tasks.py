@@ -49,6 +49,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
        print("线程：%s,长度：%s,=================================="%(ThreadName,len(data_list)))
        for data in data_list:
            account_id = data[1]
+           os.system("""echo "%s">>/tmp/account.log """%(account_id))
            service_code = data[3]
            token_data = data[4]
            media_type = data[2]
