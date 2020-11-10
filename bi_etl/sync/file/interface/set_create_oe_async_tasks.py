@@ -49,10 +49,6 @@ def main(TaskInfo,**kwargs):
                max = start_end[1]
                min = start_end[0]
                count = max - min
-               if n == 0:
-                   min_n = 0
-               else:
-                   min_n = 1
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count-1,LastNumber=(nu,len(max_min)))
                shell_cmd = """
                   python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" "%s" > /root/wangsong/create_async.log
