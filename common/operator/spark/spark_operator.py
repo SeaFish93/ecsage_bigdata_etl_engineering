@@ -7,7 +7,6 @@
 import os
 import sys
 from ecsage_bigdata_etl_engineering.common.base.base_operator import BaseDB
-from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 
 os.environ['SPARK_HOME'] = "/opt/spark"
 os.environ['PYSPARK_SUBMIT_ARGS'] = "--master yarn pyspark-shell"
@@ -85,18 +84,10 @@ class SparkNoSqlDB(BaseDB):
 
     # add by wangsong
     #spark sql读取MySQL、MsSQL、hive，返回dataframe
-    def get_df(self, SessionHandler="", sql=""):
+    def get_df(self, db_type="", jdbc_host="", jdbc_user="", jdbc_password="", jdbc_default_db="",jdbc_port="", sql=""):
         print(sql)
         df = None
         state = False
-        etl_md = EtlMetadata()
-        ok, get_handle = etl_md.execute_sql(sqlName="get_handle_sql",Parameter={"handle_code": SessionHandler},IsReturnData="Y")
-        jdbc_host = get_handle[0][0]
-        jdbc_user = get_handle[0][2]
-        jdbc_password = get_handle[0][3]
-        jdbc_port = get_handle[0][1]
-        jdbc_default_db = get_handle[0][4]
-        print(get_handle)
         try:
             if db_type == "mysql":
                 db_info = BaseDB(port=jdbc_port, host=jdbc_host, user=jdbc_user, password=jdbc_password)
