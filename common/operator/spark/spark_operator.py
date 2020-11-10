@@ -166,7 +166,10 @@ class SparkNoSqlDB(BaseDB):
         else:
             header = "False"
         try:
-          df = self.conn.read.options(header=header, inferSchema='True', delimiter=',').csv(FileDir)
+          file = FileDir.split("/")[-1]
+          os.system("""hadoop fs -rmr /tmp/jupyter/%s"""%(file))
+          os.system("""hadoop fs -put %s /tmp/jupyter/"""%(FileDir))
+          df = self.conn.read.options(header=header, inferSchema='True', delimiter=',').csv("/tmp/jupyter/%s"%(file))
           state = True
         except Exception as e:
             print("spark select CSV Error:" + FileDir)
