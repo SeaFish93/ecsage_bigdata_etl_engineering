@@ -158,7 +158,7 @@ class SparkNoSqlDB(BaseDB):
     def text(self):
         print(self.conn.read.text().rdd.foreach(lambda x:x))
     
-    def get_csv(IsHeader="",FileDir=""):
+    def get_csv(self,IsHeader="",FileDir=""):
         df = None
         if IsHeader == "Y":
             header = "True"
