@@ -346,12 +346,12 @@ if __name__ == '__main__':
        service_code = data[1]
        async_task = "201"
 
-       async_date_file = """/tmp/async_date_file_%s_%s.log"""%(media_type,service_code.replace("-",""))
-       async_task_file = """/tmp/async_create_%s_%s.log"""%(media_type,service_code.replace("-",""))
-       async_task_exception_file = """/tmp/async_create_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
-       async_status_exception_file = """/tmp/async_status_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
-       async_notempty_file = """/tmp/async_notempty_%s_%s.log"""%(media_type,service_code.replace("-",""))
-       async_empty_file = """/tmp/async_empty_%s_%s.log""" % (media_type, service_code.replace("-", ""))
+       async_date_file = """/tmp/async_date1_file_%s_%s.log"""%(media_type,service_code.replace("-",""))
+       async_task_file = """/tmp/async_create1_%s_%s.log"""%(media_type,service_code.replace("-",""))
+       async_task_exception_file = """/tmp/async1_create_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
+       async_status_exception_file = """/tmp/async1_status_exception_%s_%s.log""" % (media_type, service_code.replace("-", ""))
+       async_notempty_file = """/tmp/async_notempty1_%s_%s.log"""%(media_type,service_code.replace("-",""))
+       async_empty_file = """/tmp/async1_empty_%s_%s.log""" % (media_type, service_code.replace("-", ""))
        os.system("""rm -f %s """%(async_date_file))
        os.system("""rm -f %s"""%(async_task_file))
        os.system("""date >>%s """%(async_date_file))

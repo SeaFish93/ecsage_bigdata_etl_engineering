@@ -37,7 +37,7 @@ def get_account_sql(MediaType="",ServiceCode=""):
     if fcnt > 0:
         source_cnt = fcnt
         print("min=%s, max=%s, count=%s" % (str(fmin), str(fmax), str(fcnt)))
-        if fcnt < 500:
+        if fcnt < 5:
             # 500以下的数据量不用分批跑
             sql_list.clear()
             sql_list.append(source_data_sql)
@@ -46,7 +46,7 @@ def get_account_sql(MediaType="",ServiceCode=""):
             num_proc = int(fmax) - int(fmin)
             if num_proc > 5:
                 # 最多5个进程同时获取数据
-                num_proc = 20
+                num_proc = 5
             #if fcnt > 10000:
             #    num_proc = 20
             # 每一个进程查询量的增量
