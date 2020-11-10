@@ -96,7 +96,6 @@ class SparkNoSqlDB(BaseDB):
         jdbc_password = get_handle[0][3]
         jdbc_port = get_handle[0][1]
         jdbc_default_db = get_handle[0][4]
-        print(get_handle)
         try:
             if DBType == "mysql":
                 db_info = BaseDB(port=jdbc_port, host=jdbc_host, user=jdbc_user, password=jdbc_password)
