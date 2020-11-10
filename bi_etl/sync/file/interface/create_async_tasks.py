@@ -60,7 +60,7 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
                set_true = False
              except Exception as e:
                if n > 3:
-                  os.system("""echo "%s %s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,"%s%s" % (ThreadName, Num),AsyncTaskExceptionFile))
+                  os.system("""echo "%s %s %s %s %s">>%s """%(service_code,token_data,service_code,account_id,"%s%s" % (ThreadName, num),AsyncTaskExceptionFile))
                   set_true = False
                else:
                   time.sleep(2)
