@@ -108,6 +108,9 @@ def get_run_sql(Sql="",Max="",Min="",Count="",LastNumber=""):
                 elif LastNumber[0] == LastNumber[1] and i < num_proc-1:
                     sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
                     sql_list.append(sql)
+                elif LastNumber[0] == LastNumber[1] and i == num_proc-1:
+                    sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " <= " + str(e_ind)
+                    sql_list.append(sql)
                 i = i + 1
     return sql_list
 
