@@ -40,6 +40,7 @@ def main(TaskInfo,**kwargs):
     host_i = 0
     start_end_list = []
     th = []
+    nu = 1
     for get_data in max_min:
         start_end_list.append(max_min[n])
         if len(start_end_list) == 5 or len(max_min) < 5 or len(max_min)-1 == n:
@@ -52,6 +53,7 @@ def main(TaskInfo,**kwargs):
                    min_n = 0
                else:
                    min_n = 1
+               print(nu,len(max_min),"#####################################################")
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count-1)
                for sqls in sqls_list:
                    os.system("""echo "%s">>/tmp/sqlsql.sql """%(sqls))
@@ -70,6 +72,7 @@ def main(TaskInfo,**kwargs):
            host_i = host_i + 1
         host_num = host_num + 1
         n = n + 1
+        nu = nu + 1
     ######for etl_th in th:
     ######    etl_th.join()
 
