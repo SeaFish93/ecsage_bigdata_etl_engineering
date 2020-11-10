@@ -333,12 +333,14 @@ if __name__ == '__main__':
     #async_task = sys.argv[3]
     source_data_sql_201 = """
                    select media, service_code from(
-                   select account_id, media, service_code,@row_num:=@row_num+1 as rn
-                   from big_data_mdg.media_advertiser a,(select @row_num:=0) r
+                   select media, service_code,@row_num:=@row_num+1 as rn from(
+                   select account_id, media, service_code
+                   from big_data_mdg.media_advertiser a
                    where media = 203
                    group by media, service_code
-                   ) tmp
-                   where rn<= 50
+                   ) tmp,(select @row_num:=0) r
+                   ) tmp1
+                  where rn <= 60
                 """
     ok,all_rows_201 = mysql_session.get_all_rows(source_data_sql_201)
     for data in all_rows_201:
