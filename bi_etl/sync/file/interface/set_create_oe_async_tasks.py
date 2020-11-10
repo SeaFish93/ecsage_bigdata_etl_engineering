@@ -56,19 +56,19 @@ def main(TaskInfo,**kwargs):
                   python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" "%s" > /root/wangsong/create_async.log
                """ % (media_type, async_task_name, sqls_list, async_task_file, async_task_exception_file,exec_date)
                #exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
-               ####### etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),
-               #######                        my_run=exec_remote_proc,HostName=host_data[host_i][0],
-               #######                        UserName=host_data[host_i][1],PassWord=host_data[host_i][2], ShellCommd=shell_cmd
-               #######                        )
-               ####### etl_thread.start()
-               ####### th.append(etl_thread)
+               etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),
+                                      my_run=exec_remote_proc,HostName=host_data[host_i][0],
+                                      UserName=host_data[host_i][1],PassWord=host_data[host_i][2], ShellCommd=shell_cmd
+                                      )
+               etl_thread.start()
+               th.append(etl_thread)
            start_end_list = []
            host_i = host_i + 1
         host_num = host_num + 1
         n = n + 1
         nu = nu + 1
-    ##### for etl_th in th:
-    #####     etl_th.join()
+    for etl_th in th:
+        etl_th.join()
 
 def get_run_sql(Sql="",Max="",Min="",Count="",LastNumber=""):
     fcnt = int(Count)
