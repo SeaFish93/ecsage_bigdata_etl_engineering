@@ -670,8 +670,7 @@ CREATE TABLE metadb.request_account_interface (
   `id` int(11)  COMMENT '主键',
    media_type int(11) not null comment'',
   `service_code` varchar(500) DEFAULT NULL COMMENT '代理商凭证',
-  `account_id` varchar(1000) DEFAULT NULL COMMENT '子账户',
-  PRIMARY KEY (`id`)
+  `account_id` varchar(1000) DEFAULT NULL COMMENT '子账户'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='请求子账户表'
 
 
