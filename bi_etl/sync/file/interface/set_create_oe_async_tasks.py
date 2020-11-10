@@ -69,8 +69,8 @@ def main(TaskInfo,**kwargs):
         host_num = host_num + 1
         n = n + 1
         nu = nu + 1
-    ######for etl_th in th:
-    ######    etl_th.join()
+    for etl_th in th:
+        etl_th.join()
 
 def get_run_sql(Sql="",Max="",Min="",Count="",LastNumber=""):
     fcnt = int(Count)
