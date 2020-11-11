@@ -115,10 +115,12 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
        media_type = """media_type"""
        where = """media_type"""
        table = """metadb.oe_valid_account_interface"""
+       select_session = etl_md
     else:
        media_type = """media as media_type"""
        where = """media"""
        table = """big_data_mdg.media_advertiser"""
+       select_session = mysql_session
     account_num_sql = """
            select count(1),min(rn),max(rn) 
            from(select account_id, media_type, service_code,@row_num:=@row_num+1 as rn
@@ -128,7 +130,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                       ) tmp,(select @row_num:=0) r
                 ) tmp1
        """%(media_type,table,where,int(data_json["mt"]))
-    ok, account_num = etl_md.get_all_rows(account_num_sql)
+    ok, account_num = select_session.get_all_rows(account_num_sql)
     account_avg = account_num[0][0] / host_count[0][0]
     if account_avg > 0:
         account_avg = account_avg + 1
@@ -150,10 +152,12 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                media_type = """media_type"""
                where = """media_type"""
                table = """metadb.oe_valid_account_interface"""
+               select_session = etl_md
            else:
                media_type = """media as media_type"""
                where = """media"""
                table = """big_data_mdg.media_advertiser"""
+               select_session = mysql_session
 
            #请求子账户
            account_sql = """
@@ -166,7 +170,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                        ) tmp1
                   where rn >= %s and rn <= %s
                """ % (media_type,table,where,int(data_json["mt"]),int(account_run_num), int(account_avg))
-           ok, accounts_list = etl_md.get_all_rows(account_sql)
+           ok, accounts_list = select_session.get_all_rows(account_sql)
            #提交请求
            interface_url = """http://%s%s"""%(host,InterfaceUrl)
            file = request_commit_account(AccountData=accounts_list, Num=n, InterfaceUrl=interface_url, ExecDate=ExecDate, FileDir=file_dir,
