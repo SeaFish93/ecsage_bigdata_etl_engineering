@@ -64,7 +64,6 @@ def main(TaskInfo, Level,**kwargs):
       data_json = ast.literal_eval(json.loads(data_json))
       if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
           data_json["filtering"]["%s" % (filter_modify_time_name)] = exec_date
-          print(exec_date,"############################################################")
       if start_date_name is not None and len(start_date_name) > 0 and end_date_name is not None and len(
               end_date_name) > 0:
           data_json["%s" % (start_date_name)] = exec_date
