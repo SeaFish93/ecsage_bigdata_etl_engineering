@@ -171,8 +171,8 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
         "task_type": "REPORT",
         "force": "true",
         "task_params": {
-            "start_date": "2020-11-10",
-            "end_date": "2020-11-10",
+            "start_date": "2020-11-11",
+            "end_date": "2020-11-11",
             "group_by": ["STAT_GROUP_BY_CAMPAIGN_ID"]
         }
     }
@@ -347,7 +347,7 @@ if __name__ == '__main__':
     exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
     print("开始启动下载内容!!!!!")
     import time
-    time.sleep(120)
+    time.sleep(600)
     get_download_task(MediaType=media_type,ServiceCode=service_code,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,AsyncStatusExceptionFile=async_status_exception_file)
     os.system("""date >>%s """%(async_date_file))
 
