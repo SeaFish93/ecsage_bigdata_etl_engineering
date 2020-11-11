@@ -89,6 +89,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ):
     data_json = DataJson
     etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+    mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
     request_type = data_json["mt"]
     if "filtering" in data_json.keys():
        if "status" in data_json["filtering"].keys():
@@ -109,14 +110,24 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
          from metadb.request_hostname_interface a
     """
     ok, host_count = etl_md.get_all_rows(host_count_sql)
-    #获取每个域名分配的子账户个数
+    if IsReport == 1:
+       #获取每个域名分配的子账户个数
+       media_type = """media_type"""
+       where = """media_type"""
+       table = """metadb.oe_valid_account_interface"""
+    else:
+       media_type = """media as media_type"""
+       where = """media"""
+       table = """big_data_mdg.media_advertiser"""
     account_num_sql = """
-        select count(1),min(rn),max(rn) from(
-        select account_id, media_type, service_code,@row_num:=@row_num+1 as rn
-        from metadb.oe_valid_account_interface a,(select @row_num:=0) r
-        where media_type = %s
-        ) tmp
-    """%(int(data_json["mt"]))
+           select count(1),min(rn),max(rn) 
+           from(select account_id, media_type, service_code,@row_num:=@row_num+1 as rn
+                from (select account_id, %s, service_code
+                      from %s a
+                      where %s = %s
+                      ) tmp,(select @row_num:=0) r
+                ) tmp1
+       """%(media_type,table,where,int(data_json["mt"]))
     ok, account_num = etl_md.get_all_rows(account_num_sql)
     account_avg = account_num[0][0] / host_count[0][0]
     if account_avg > 0:
@@ -134,15 +145,27 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
            """%(n)
            ok, hosts = etl_md.get_all_rows(host_sql)
            host = hosts[0][0]
+           if IsReport == 1:
+               # 获取每个域名分配的子账户个数
+               media_type = """media_type"""
+               where = """media_type"""
+               table = """metadb.oe_valid_account_interface"""
+           else:
+               media_type = """media as media_type"""
+               where = """media"""
+               table = """big_data_mdg.media_advertiser"""
+
            #请求子账户
            account_sql = """
-                   select account_id, media_type, service_code from(
-                   select account_id, media_type, service_code,@row_num:=@row_num+1 as rn
-                   from metadb.oe_valid_account_interface a,(select @row_num:=0) r
-                   where media_type = %s
-                   ) tmp
-                   where rn >= %s and rn <= %s
-               """ % (int(data_json["mt"]),int(account_run_num), int(account_avg))
+                  select account_id, media_type, service_code
+                  from(select account_id, media_type, service_code,@row_num:=@row_num+1 as rn
+                       from (select account_id, %s, service_code
+                             from %s a
+                             where %s = %s
+                            ) tmp,(select @row_num:=0) r
+                       ) tmp1
+                  where rn >= %s and rn <= %s
+               """ % (media_type,table,where,int(data_json["mt"]),int(account_run_num), int(account_avg))
            ok, accounts_list = etl_md.get_all_rows(account_sql)
            #提交请求
            interface_url = """http://%s%s"""%(host,InterfaceUrl)
