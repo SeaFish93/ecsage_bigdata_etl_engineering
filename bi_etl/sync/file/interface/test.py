@@ -207,7 +207,10 @@ def set_download_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Toke
     task_status = resp_data["data"]["list"][0]["task_status"]
     print("账户：%s,%s,%s,文件大小：%s，任务状态：%s"%(AccountId,ServiceCode,TaskId,file_size,task_status))
     if int(file_size) <= 12:
-        os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
+        if int(file_size) == 12:
+           os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
+        else:
+           os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType, ServiceCode, Token, AsyncNotemptyFile))
     else:
         os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
 
@@ -344,7 +347,7 @@ if __name__ == '__main__':
     os.system("""rm -f %s"""%(async_empty_file))
     os.system("""rm -f %s"""%(async_status_exception_file))
     os.system("""rm -f %s"""%(async_task_exception_file))
-    #exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
+    exec_create_task(MediaType=media_type,ServiceCode=service_code,AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file,AsyncTask=async_task)
     print("开始启动下载内容!!!!!")
     import time
     #time.sleep(600)
