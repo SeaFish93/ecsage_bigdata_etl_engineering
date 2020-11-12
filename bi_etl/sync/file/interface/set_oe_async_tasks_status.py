@@ -14,7 +14,7 @@ etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 #入口方法
 def main(TaskInfo,**kwargs):
-    time.sleep(60)
+    #time.sleep(60)
     global airflow
     global developer
     global regexp_extract_column
