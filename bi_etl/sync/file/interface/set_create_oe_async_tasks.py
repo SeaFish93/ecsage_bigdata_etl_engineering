@@ -78,9 +78,9 @@ def main(TaskInfo,**kwargs):
                #th.append(etl_thread)
            start_end_list = []
            host_i = host_i + 1
+           nnn = nnn + 1
         host_num = host_num + 1
         n = n + 1
-        nnn = nnn + 1
         nu = nu + 1
     #for etl_th in th:
     #    etl_th.join()
