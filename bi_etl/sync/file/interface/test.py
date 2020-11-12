@@ -205,7 +205,7 @@ def set_download_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Toke
     resp_data = resp.json()
     file_size = resp_data["data"]["list"][0]["file_size"]
     task_status = resp_data["data"]["list"][0]["task_status"]
-    print("文件大小：%s，任务状态：%s"%(file_size,task_status))
+    print("账户：%s,%s,%s,文件大小：%s，任务状态：%s"%(AccountId,ServiceCode,TaskId,file_size,task_status))
     if int(file_size) <= 12:
         os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
     else:
