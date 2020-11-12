@@ -65,7 +65,7 @@ def main(TaskInfo,**kwargs):
                shell_cmd = """
                    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log 2>&1 &
                  """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
-               etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n_this),
+               etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),
                                        my_run=exec_remote_proc, HostName=host_data[host_i][0],
                                        UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
                                        ShellCommd=shell_cmd
