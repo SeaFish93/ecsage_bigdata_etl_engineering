@@ -43,8 +43,8 @@ def main(TaskInfo,**kwargs):
     for get_data in max_min_list:
         start_end_list.append(max_min_list[n])
         if len(start_end_list) == 5 or len(max_min_list) < 5 or len(max_min_list) - 1 == n:
-            print("[%s]执行机器" % (host_data[host_i][0]))
-            if nnn == 0:
+           print("[%s]执行机器" % (host_data[host_i][0]))
+           if nnn == 0:
               nn = 0
            else:
               nn = 1
