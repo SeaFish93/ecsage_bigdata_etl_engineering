@@ -67,6 +67,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
               set_true = False
           except Exception as e:
               if n > 3:
+                  os.system("""echo "%s %s %s %s">>%s """ % (account_id, MediaType,service_code, token, AsyncNotemptyFile))
                   os.system("""echo "%s %s %s %s %s">>%s """ % (token, service_code, account_id,task_id,task_name,AsyncStatusExceptionFile))
                   set_true = False
               else:
@@ -91,14 +92,14 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
     resp_data = resp.json()
     file_size = resp_data["data"]["list"][0]["file_size"]
     task_status = resp_data["data"]["list"][0]["task_status"]
-    print("文件大小：%s，任务状态：%s"%(file_size,task_status))
+    print("账户：%s，serviceCode：%s，文件大小：%s，任务状态：%s"%(AccountId,ServiceCode,file_size,task_status))
     if task_status == "ASYNC_TASK_STATUS_COMPLETED":
-       if int(file_size) <= 12:
+       if int(file_size) == 12:
            os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
        else:
            os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
     else:
-       os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotSuccFile))
+       os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
 
 if __name__ == '__main__':
     media_type = sys.argv[1]
