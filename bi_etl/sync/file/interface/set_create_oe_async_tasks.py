@@ -30,7 +30,7 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f %s """ % (account_token_file))
     os.system("""rm -f %s """ % (account_token_exception_file))
     group_by = "STAT_GROUP_BY_CREATIVE_ID"
-    fields = """ "cost", "show", "avg_show_cost", "click", "avg_click_cost", "ctr", "convert", "convert_cost", "convert_rate", "deep_convert", "deep_convert_cost", "deep_convert_rate" """
+    fields = """cost,show,avg_show_cost,click,avg_click_cost,ctr,convert,convert_cost,convert_rate,deep_convert,deep_convert_cost,deep_convert_rate"""
     etl_md.execute_sql("""delete from metadb.oe_async_task_interface where media_type=%s """ % (media_type))
     #获取token
     get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
