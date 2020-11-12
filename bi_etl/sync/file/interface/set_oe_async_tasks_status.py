@@ -90,9 +90,9 @@ def main(TaskInfo,**kwargs):
                 #n_this = n_this + 1
                 #etl_thread.start()
                 #th.append(etl_thread)
-            start_end_list = []
-            host_i = host_i + 1
-            nnn = nnn + 1
+           start_end_list = []
+           host_i = host_i + 1
+           nnn = nnn + 1
         host_num = host_num + 1
         n = n + 1
         nu = nu + 1
