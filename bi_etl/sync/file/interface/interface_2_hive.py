@@ -177,6 +177,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                   where rn >= %s and rn <= %s
                """ % (media_type,table,where,int(data_json["mt"]),group_by,int(account_run_num), int(account_avg))
            ok, accounts_list = select_session.get_all_rows(account_sql)
+           exit(0)
            #提交请求
            interface_url = """http://%s%s"""%(host,InterfaceUrl)
            file = request_commit_account(AccountData=accounts_list, Num=n, InterfaceUrl=interface_url, ExecDate=ExecDate, FileDir=file_dir,
