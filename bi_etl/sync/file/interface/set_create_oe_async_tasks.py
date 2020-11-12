@@ -43,13 +43,16 @@ def main(TaskInfo,**kwargs):
     start_end_list = []
     th = []
     nu = 1
-    
+    nnn = 0
     #
     for get_data in max_min:
         start_end_list.append(max_min[n])
         if len(start_end_list) == 5 or len(max_min) < 5 or len(max_min)-1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
-           nn = 0
+           if nnn == 0:
+              nn = 0
+           else:
+              nn = 1
            for start_end in start_end_list:
                max = start_end[1]
                if nn == 0:
@@ -77,6 +80,7 @@ def main(TaskInfo,**kwargs):
            host_i = host_i + 1
         host_num = host_num + 1
         n = n + 1
+        nnn = nnn + 1
         nu = nu + 1
     #for etl_th in th:
     #    etl_th.join()
