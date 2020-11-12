@@ -100,7 +100,7 @@ def get_run_sql(Sql="",Max="",Min="",Count="",LastNumber=""):
                e_ind = s_ind + d
                if i == num_proc - 1:
                   e_ind = int(fmax) + 1
-               sql = Sql + " where " + get_table_index + ">=" + str(s_ind) + " and " + get_table_index + "<" + str(e_ind)
+               sql = Sql + " where " + "get_table_index" + ">=" + str(s_ind) + " and " + "get_table_index" + "<" + str(e_ind)
                sql_list.append(sql)
                i = i + 1
             #while i < num_proc:
