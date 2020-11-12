@@ -62,10 +62,16 @@ def main(TaskInfo,**kwargs):
                for sqls in sqls_list:
                   os.system("""echo "%s %s %s">>/tmp/sql1213.sql """%(nn,nu,sqls))
                nn = nn + 1
-               #shell_cmd = """
-               #    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log 2>&1 &
-               #  """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
-
+               shell_cmd = """
+                   python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log 2>&1 &
+                 """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
+               etl_thread = EtlThread(thread_id=n_this, thread_name="fetch%d" % (n_this),
+                                       my_run=exec_remote_proc, HostName=host_data[host_i][0],
+                                       UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
+                                       ShellCommd=shell_cmd
+                                       )
+               etl_thread.start()
+               th.append(etl_thread)
 
             #for start_end in start_end_list:
              #   max = start_end[1]
@@ -96,8 +102,8 @@ def main(TaskInfo,**kwargs):
         host_num = host_num + 1
         n = n + 1
         nu = nu + 1
-    #for etl_th in th:
-    #    etl_th.join()
+    for etl_th in th:
+        etl_th.join()
 
 def set_task_status_sql(MediaType=""):
     #获取子账户
