@@ -115,11 +115,13 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
        media_type = """media_type"""
        where = """media_type"""
        table = """metadb.oe_valid_account_interface"""
+       group_by = """media_type"""
        select_session = etl_md
     else:
        media_type = """media as media_type"""
        where = """media"""
        table = """big_data_mdg.media_advertiser"""
+       group_by = """media"""
        select_session = mysql_session
     account_num_sql = """
            select count(1),min(rn),max(rn) 
@@ -127,9 +129,10 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                 from (select account_id, %s, service_code
                       from %s a
                       where %s = %s
+                      group by account_id, %s, service_code
                       ) tmp,(select @row_num:=0) r
                 ) tmp1
-       """%(media_type,table,where,int(data_json["mt"]))
+       """%(media_type,table,where,int(data_json["mt"]),group_by)
     ok, account_num = select_session.get_all_rows(account_num_sql)
     account_avg = account_num[0][0] / host_count[0][0]
     if account_avg > 0:
@@ -153,11 +156,13 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                where = """media_type"""
                table = """metadb.oe_valid_account_interface"""
                select_session = etl_md
+               group_by = """media_type"""
            else:
                media_type = """media as media_type"""
                where = """media"""
                table = """big_data_mdg.media_advertiser"""
                select_session = mysql_session
+               group_by = """media"""
 
            #请求子账户
            account_sql = """
@@ -166,10 +171,11 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                        from (select account_id, %s, service_code
                              from %s a
                              where %s = %s
+                             group by account_id, %s, service_code
                             ) tmp,(select @row_num:=0) r
                        ) tmp1
                   where rn >= %s and rn <= %s
-               """ % (media_type,table,where,int(data_json["mt"]),int(account_run_num), int(account_avg))
+               """ % (media_type,table,where,int(data_json["mt"]),group_by,int(account_run_num), int(account_avg))
            ok, accounts_list = select_session.get_all_rows(account_sql)
            #提交请求
            interface_url = """http://%s%s"""%(host,InterfaceUrl)
