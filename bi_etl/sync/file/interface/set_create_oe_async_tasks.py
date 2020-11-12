@@ -43,19 +43,23 @@ def main(TaskInfo,**kwargs):
     start_end_list = []
     th = []
     nu = 1
+    
     #
     for get_data in max_min:
         start_end_list.append(max_min[n])
         if len(start_end_list) == 5 or len(max_min) < 5 or len(max_min)-1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
+           nn = 0
            for start_end in start_end_list:
                max = start_end[1]
                min = start_end[0]
                count = max - min
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,LastNumber=(nu,len(max_min)))
-               print("""get_run_sql(Sql="sql", Max=%s, Min=%s, Count=%s,LastNumber=%s)"""%(max,min,count-1,(nu,len(max_min))))
+               print(nn,"==============================@@@@@@@@@@@@@@@@@@")
+               #print("""get_run_sql(Sql="sql", Max=%s, Min=%s, Count=%s,LastNumber=%s)"""%(max,min,count-1,(nu,len(max_min))))
                for sqls in sqls_list:
-                  os.system("""echo "%s %s %s">>/tmp/sql1213.sql """%(nu,len(max_min),sqls))
+                  os.system("""echo "%s %s %s %s">>/tmp/sql1213.sql """%(nn,nu,len(max_min),sqls))
+               nn = nn + 1
                shell_cmd = """
                   python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/create_async.log
                """ % (media_type, async_task_name, sqls_list, async_task_file, async_task_exception_file,exec_date,group_by,fields)
