@@ -57,14 +57,14 @@ def main(TaskInfo,**kwargs):
                count = max - min
                left_filter = """ where b.id """
                right_filter = """ and b.id """
-               print(nn,"==============================@@@@@@@@@@@@@@@@@@")
+               print(nn,"==============================@@@@@@@@@@@@@@@@@@===============")
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n,LeftFilter=left_filter,RightFilter=right_filter)
                for sqls in sqls_list:
                   os.system("""echo "%s %s %s %s">>/tmp/sql1213.sql """%(nn,nu,len(max_min),sqls))
                nn = nn + 1
-               shell_cmd = """
-                   python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log 2>&1 &
-                 """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
+               #shell_cmd = """
+               #    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log 2>&1 &
+               #  """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
 
 
             #for start_end in start_end_list:
