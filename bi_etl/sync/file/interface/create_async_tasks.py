@@ -111,6 +111,7 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
     }
     if Nums%2 == 0:
        time.sleep(2)
+    print(params,"============================############")
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
     task_id = resp_data["data"]["task_id"]
