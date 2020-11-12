@@ -60,7 +60,7 @@ def main(TaskInfo,**kwargs):
                print(nn,"==============================@@@@@@@@@@@@@@@@@@===============")
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=0,LeftFilter=left_filter,RightFilter=right_filter)
                for sqls in sqls_list:
-                  os.system("""echo "%s %s %s %s">>/tmp/sql1213.sql """%(nn,nu,len(max_min),sqls))
+                  os.system("""echo "%s %s %s">>/tmp/sql1213.sql """%(nn,nu,sqls))
                nn = nn + 1
                #shell_cmd = """
                #    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log 2>&1 &
