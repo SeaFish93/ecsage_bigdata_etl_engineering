@@ -52,7 +52,10 @@ def main(TaskInfo,**kwargs):
            nn = 0
            for start_end in start_end_list:
                max = start_end[1]
-               min = start_end[0]
+               if nn == 0:
+                 min = start_end[0]
+               else:
+                 min = start_end[0] + 1
                count = max - min
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,LastNumber=(nu,len(max_min)))
                print(nn,"==============================@@@@@@@@@@@@@@@@@@")
