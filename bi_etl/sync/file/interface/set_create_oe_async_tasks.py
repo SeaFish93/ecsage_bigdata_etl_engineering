@@ -29,8 +29,8 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f %s """%(async_task_file))
     os.system("""rm -f %s """ % (account_token_file))
     os.system("""rm -f %s """ % (account_token_exception_file))
-    group_by = ["STAT_GROUP_BY_CREATIVE_ID"]
-    fields = ["cost", "show", "avg_show_cost", "click", "avg_click_cost", "ctr", "convert", "convert_cost", "convert_rate", "deep_convert", "deep_convert_cost", "deep_convert_rate"]
+    group_by = "STAT_GROUP_BY_CREATIVE_ID"
+    fields = "cost", "show", "avg_show_cost", "click", "avg_click_cost", "ctr", "convert", "convert_cost", "convert_rate", "deep_convert", "deep_convert_cost", "deep_convert_rate"
     etl_md.execute_sql("""delete from metadb.oe_async_task_interface where media_type=%s """ % (media_type))
     #获取token
     get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
@@ -56,7 +56,7 @@ def main(TaskInfo,**kwargs):
                #for sqls in sqls_list:
                #    os.system("""echo "%s">>/tmp/sql123.sql """%(sqls))
                shell_cmd = """
-                  python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" "%s" '%s' '%s' >> /root/wangsong/create_async.log
+                  python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/create_async.log
                """ % (media_type, async_task_name, sqls_list, async_task_file, async_task_exception_file,exec_date,group_by,fields)
                #exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
                etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),

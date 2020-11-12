@@ -10,8 +10,11 @@ etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 #创建任务
 def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExceptionFile="",AsyncTask="",ExecDate="",GroupBy="",Fields=""):
     sql_list = eval(SqlList)
-    group_by = eval(GroupBy)
-    fields = eval(Fields)
+    group_by = GroupBy.split(",")
+    if Fields == "" or Fields is None or len(Fields) == 0:
+        fields = []
+    else:
+        fields = Fields.split(",")
     os.system("""echo "%s,%s">>/tmp/datadata.log """%(group_by,fields))
     if sql_list is not None and len(sql_list) > 0:
         i = 0
