@@ -380,4 +380,8 @@ nohup python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync
 ('tt-hnhd-13', 17), --
 ('tt-hnhd-14', 145), --
 ('tt-hnzc', 2768))--
+
+
 """
+
+
