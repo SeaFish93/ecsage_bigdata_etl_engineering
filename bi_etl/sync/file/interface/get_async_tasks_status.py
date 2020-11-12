@@ -19,21 +19,22 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         i = 0
         th = []
         for sql in sql_list:
+                os.system("""echo "%s">>/tmp/sqlsqlsql.sql """%(sql))
                 i = i + 1
                 get_async_status_content(MysqlSession=MysqlSession, Sql=sql, AsyncNotemptyFile=AsyncNotemptyFile, AsyncEmptyFile=AsyncEmptyFile,
                                          AsyncStatusExceptionFile=AsyncStatusExceptionFile, MediaType=MediaType, AsyncNotSuccFile=AsyncNotSuccFile)
 
-                ######## etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
-                ########                    my_run=get_async_status_content,MysqlSession=MysqlSession,
-                ########                    Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
-                ########                    AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
-                ########                    AsyncNotSuccFile=AsyncNotSuccFile
-                ########                    )
-                ######## etl_thread.start()
-                ######## time.sleep(2)
-                ######## th.append(etl_thread)
-        #### for etl_th in th:
-        ####     etl_th.join()
+                etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
+                                   my_run=get_async_status_content,MysqlSession=MysqlSession,
+                                   Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
+                                   AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
+                                   AsyncNotSuccFile=AsyncNotSuccFile
+                                   )
+                etl_thread.start()
+                time.sleep(2)
+                th.append(etl_thread)
+        for etl_th in th:
+            etl_th.join()
         #记录有效子账户
         insert_sql = """
            load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
