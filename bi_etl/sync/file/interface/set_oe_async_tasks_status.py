@@ -58,7 +58,7 @@ def main(TaskInfo,**kwargs):
                left_filter = """ where b.id """
                right_filter = """ and b.id """
                print(nn,"==============================@@@@@@@@@@@@@@@@@@===============")
-               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n,LeftFilter=left_filter,RightFilter=right_filter)
+               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=0,LeftFilter=left_filter,RightFilter=right_filter)
                for sqls in sqls_list:
                   os.system("""echo "%s %s %s %s">>/tmp/sql1213.sql """%(nn,nu,len(max_min),sqls))
                nn = nn + 1
