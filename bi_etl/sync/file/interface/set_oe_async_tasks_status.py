@@ -65,37 +65,13 @@ def main(TaskInfo,**kwargs):
                shell_cmd = """
                    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log 2>&1 &
                  """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
-               etl_thread = EtlThread(thread_id=n_this, thread_name="fetch%d" % (n_this),
+               etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n_this),
                                        my_run=exec_remote_proc, HostName=host_data[host_i][0],
                                        UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
                                        ShellCommd=shell_cmd
                                        )
                etl_thread.start()
                th.append(etl_thread)
-
-            #for start_end in start_end_list:
-             #   max = start_end[1]
-              #  min = start_end[0]
-              #  count = max - min
-              #  if n == 0:
-              #      min_n = 0
-              #  else:
-              #      min_n = 1
-              #  left_filter = """ where b.id """
-              #  right_filter = """ and b.id """
-              #  sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=min_n,LeftFilter=left_filter,RightFilter=right_filter)
-               # shell_cmd = """
-               #    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log 2>&1 &
-                # """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
-                #etl_thread = EtlThread(thread_id=n_this, thread_name="fetch%d" % (n_this),
-                 #                      my_run=exec_remote_proc, HostName=host_data[host_i][0],
-                  #                     UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
-                  #                     ShellCommd=shell_cmd
-                  #                     )
-                #exec_remote_proc(HostName=host_data[host_i][0],UserName=host_data[host_i][1], PassWord=host_data[host_i][2],ShellCommd=shell_cmd)
-                #n_this = n_this + 1
-                #etl_thread.start()
-                #th.append(etl_thread)
            start_end_list = []
            host_i = host_i + 1
            nnn = nnn + 1
