@@ -12,6 +12,7 @@ def oe_create_tasks(MysqlSession="",SqlList="",AsyncTaskFile="",AsyncTaskExcepti
     sql_list = eval(SqlList)
     group_by = eval(GroupBy)
     fields = eval(Fields)
+    os.system("""echo "%s,%s">>/tmp/datadata.log """%(group_by,fields))
     if sql_list is not None and len(sql_list) > 0:
         i = 0
         th = []
