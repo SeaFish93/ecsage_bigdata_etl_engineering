@@ -52,7 +52,7 @@ def main(TaskInfo,**kwargs):
                max = start_end[1]
                min = start_end[0]
                count = max - min
-               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count-1,LastNumber=(nu,len(max_min)))
+               sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,LastNumber=(nu,len(max_min)))
                print("""get_run_sql(Sql="sql", Max=%s, Min=%s, Count=%s,LastNumber=%s)"""%(max,min,count-1,(nu,len(max_min))))
                for sqls in sqls_list:
                   os.system("""echo "%s %s %s">>/tmp/sql1213.sql """%(nu,len(max_min),sqls))
@@ -96,23 +96,31 @@ def get_run_sql(Sql="",Max="",Min="",Count="",LastNumber=""):
             d = math.ceil((int(fmax) - int(fmin) + 1) / num_proc)
             i = 0
             while i < num_proc:
-                s_ind = int(fmin) + i * d
-                e_ind = s_ind + d
-                if i == num_proc - 1:
-                    e_ind = int(fmax) + 1
-                if e_ind <= Max and LastNumber[0] != LastNumber[1]:
-                  sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
-                  sql_list.append(sql)
-                elif LastNumber[0] == LastNumber[1] and i < num_proc-1:
-                    sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
-                    sql_list.append(sql)
-                elif LastNumber[0] == LastNumber[1] and i == num_proc-1:
-                    sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " <= " + str(e_ind)
-                    sql_list.append(sql)
-                else:
-                    sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " <= " + str(e_ind)+"####################"
-                    sql_list.append(sql)
-                i = i + 1
+            s_ind = int(fmin) + i * d
+            e_ind = s_ind + d
+            if i == num_proc - 1:
+               e_ind = int(fmax) + 1
+            sql = source_data_sql + " where " + get_table_index + ">=" + str(s_ind) + " and " + get_table_index + "<" + str(e_ind)
+            sql_list.append(sql)
+            i = i + 1
+            #while i < num_proc:
+            #    s_ind = int(fmin) + i * d
+            #    e_ind = s_ind + d
+            #    if i == num_proc - 1:
+            #        e_ind = int(fmax) + 1
+            #    if e_ind <= Max and LastNumber[0] != LastNumber[1]:
+            #      sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
+            #      sql_list.append(sql)
+            #    elif LastNumber[0] == LastNumber[1] and i < num_proc-1:
+            #        sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " < " + str(e_ind)
+            #        sql_list.append(sql)
+            #    elif LastNumber[0] == LastNumber[1] and i == num_proc-1:
+            #        sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " <= " + str(e_ind)
+            #        sql_list.append(sql)
+            #    else:
+            #        sql = Sql + " and b.id" + " >= " + str(s_ind) + " and b.id" + " <= " + str(e_ind)+"####################"
+            #        sql_list.append(sql)
+            #    i = i + 1
     return sql_list
 
 def get_account_sql(MediaType=""):
