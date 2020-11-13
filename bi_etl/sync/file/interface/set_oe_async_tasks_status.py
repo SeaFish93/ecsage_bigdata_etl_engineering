@@ -30,6 +30,7 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f %s""" % (async_notempty_file))
     os.system("""rm -f %s""" % (async_empty_file))
     os.system("""rm -f %s""" % (async_status_exception_file))
+    os.system("""rm -f /tmp/sql_%s.sql""")
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
     sql, max_min_list = set_task_status_sql(MediaType=media_type)
     ok, host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
@@ -40,6 +41,7 @@ def main(TaskInfo,**kwargs):
     th = []
     nu = 1
     nnn = 0
+    thread_id = 0
     for get_data in max_min_list:
         start_end_list.append(max_min_list[n])
         if len(start_end_list) == 5 or len(max_min_list) < 5 or len(max_min_list) - 1 == n:
@@ -49,6 +51,7 @@ def main(TaskInfo,**kwargs):
            else:
               nn = 1
            for start_end in start_end_list:
+               thread_id = thread_id + 1
                max = start_end[1]
                if nn == 0:
                  min = start_end[0]
@@ -57,15 +60,14 @@ def main(TaskInfo,**kwargs):
                count = max - min
                left_filter = """ where b.id """
                right_filter = """ and b.id """
-               print(nn,"==============================@@@@@@@@@@@@@@@@@@===============")
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count, MinN=0,LeftFilter=left_filter,RightFilter=right_filter)
                for sqls in sqls_list:
-                  os.system("""echo "%s %s %s">>/tmp/sql1213.sql """%(nn,nu,sqls))
+                  os.system("""echo "%s %s %s">>/tmp/sql_%s.sql """%(nn,nu,sqls,media_type))
                nn = nn + 1
                shell_cmd = """
                    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log
                  """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
-               etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),
+               etl_thread = EtlThread(thread_id=thread_id, thread_name="fetch%d" % (thread_id),
                                        my_run=exec_remote_proc, HostName=host_data[host_i][0],
                                        UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
                                        ShellCommd=shell_cmd
