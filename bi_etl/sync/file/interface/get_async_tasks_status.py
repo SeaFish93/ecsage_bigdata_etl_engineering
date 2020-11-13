@@ -17,7 +17,6 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
     sql_list = eval(SqlList)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
-        th = []
         for sql in sql_list:
                 os.system("""echo "%s">>/tmp/sqlsqlsql.sql """%(sql))
                 i = i + 1
