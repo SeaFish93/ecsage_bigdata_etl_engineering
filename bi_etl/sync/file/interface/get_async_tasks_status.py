@@ -56,6 +56,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
     #  MysqlSession = arg["MysqlSession"]
     ok,datas = MysqlSession.get_all_rows(Sql)
     th = []
+    thread_data = []
     thread_id = 1
     for data in datas:
         token = data[0]
@@ -63,18 +64,19 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
         account_id = data[2]
         task_id = data[3]
         task_name = data[4]
-        etl_thread = EtlThread(thread_id=thread_id, thread_name="%s%d" % (MediaType,thread_id),
-                               my_run=run_get_task_status,MediaType=MediaType,ServiceCode=service_code,AccountId=account_id,
-                               TaskId=task_id,TaskName=task_name,Token=token,AsyncNotemptyFile=AsyncNotemptyFile,
+        thread_data.append((token,service_code,account_id,task_id,task_name))
+        if len(thread_data) == 300:
+            for get_data in thread_data:
+               etl_thread = EtlThread(thread_id=thread_id, thread_name="%s%d" % (MediaType,thread_id),
+                               my_run=run_get_task_status,MediaType=MediaType,ServiceCode=get_data[1],AccountId=get_data[2],
+                               TaskId=get_data[3],TaskName=get_data[4],Token=get_data[0],AsyncNotemptyFile=AsyncNotemptyFile,
                                AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile
                            )
-        if thread_id % 50 == 0:
-            time.sleep(2)
-        etl_thread.start()
-        th.append(etl_thread)
-        thread_id = thread_id + 1
-    for etl_th in th:
-        etl_th.join()
+               etl_thread.start()
+               th.append(etl_thread)
+               thread_id = thread_id + 1
+            for etl_th in th:
+                etl_th.join()
 
 def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskName="",Token="",AsyncNotemptyFile="",
                         AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile="",arg=None):
