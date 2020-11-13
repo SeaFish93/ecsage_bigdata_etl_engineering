@@ -21,17 +21,20 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         for sql in sql_list:
                 os.system("""echo "%s">>/tmp/sqlsqlsql.sql """%(sql))
                 i = i + 1
-                etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
-                                   my_run=get_async_status_content,MysqlSession=MysqlSession,
-                                   Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
-                                   AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
-                                   AsyncNotSuccFile=AsyncNotSuccFile
-                                   )
-                etl_thread.start()
-                time.sleep(2)
-                th.append(etl_thread)
-        for etl_th in th:
-            etl_th.join()
+                get_async_status_content(MysqlSession=MysqlSession,Sql=sql,AsyncNotemptyFile=AsyncNotemptyFile,
+                                         AsyncEmptyFile=AsyncEmptyFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile,
+                                         MediaType=MediaType,AsyncNotSuccFile=AsyncNotSuccFile)
+                #####etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
+                #####                   my_run=get_async_status_content,MysqlSession=MysqlSession,
+                #####                   Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
+                #####                   AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
+                #####                   AsyncNotSuccFile=AsyncNotSuccFile
+                #####                   )
+                #### etl_thread.start()
+                #### time.sleep(2)
+                #### th.append(etl_thread)
+        ### for etl_th in th:
+        ###     etl_th.join()
         #记录有效子账户
         insert_sql = """
            load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
@@ -39,39 +42,66 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         #etl_md.local_file_to_mysql(sql=insert_sql)
         print("the end!!!!!")
 
-def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile="",arg=None):
-    if arg is not None:
-      Sql = arg["Sql"]
-      AsyncNotemptyFile = arg["AsyncNotemptyFile"]
-      AsyncEmptyFile = arg["AsyncEmptyFile"]
-      AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
-      MediaType = arg["MediaType"]
-      AsyncNotSuccFile = arg["AsyncNotSuccFile"]
-      MysqlSession = arg["MysqlSession"]
+def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile=""):
+    #if arg is not None:
+    #  Sql = arg["Sql"]
+    #  AsyncNotemptyFile = arg["AsyncNotemptyFile"]
+    #  AsyncEmptyFile = arg["AsyncEmptyFile"]
+    #  AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
+    #  MediaType = arg["MediaType"]
+    #  AsyncNotSuccFile = arg["AsyncNotSuccFile"]
+    #  MysqlSession = arg["MysqlSession"]
     ok,datas = MysqlSession.get_all_rows(Sql)
+    th = []
+    thread_id = 1
     for data in datas:
         token = data[0]
         service_code = data[1]
         account_id = data[2]
         task_id = data[3]
         task_name = data[4]
-        set_true = True
-        n = 1
-        while set_true:
-          try:
-              set_async_status_content_content(MediaType=MediaType,ServiceCode=service_code,AccountId=account_id, TaskId=task_id, Token=token,AsyncNotemptyFile=AsyncNotemptyFile,
-                                               AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile)
-              set_true = False
-          except Exception as e:
-              if task_id == 0:
-                  n = 4
-              if n > 3:
-                  os.system("""echo "%s %s %s %s">>%s """ % (account_id, MediaType,service_code, token, AsyncNotemptyFile))
-                  os.system("""echo "%s %s %s %s %s">>%s """ % (token, service_code, account_id,task_id,task_name,AsyncStatusExceptionFile))
-                  set_true = False
-              else:
-                  time.sleep(2)
-          n = n + 1
+        etl_thread = EtlThread(thread_id=thread_id, thread_name="%s%d" % (MediaType,thread_id),
+                               my_run=run_get_task_status,MediaType=MediaType,ServiceCode=service_code,AccountId=account_id,
+                               TaskId=task_id,TaskName=task_name,Token=token,AsyncNotemptyFile=AsyncNotemptyFile,
+                               AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile
+                           )
+        etl_thread.start()
+        th.append(etl_thread)
+        thread_id = thread_id + 1
+    for etl_th in th:
+        etl_th.join()
+
+def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskName="",Token="",AsyncNotemptyFile="",
+                        AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile="",arg=None):
+  if arg is not None:
+    MediaType = arg["MediaType"]
+    ServiceCode = arg["ServiceCode"]
+    AccountId = arg["AccountId"]
+    TaskId = arg["TaskId"]
+    TaskName = arg["TaskName"]
+    Token = arg["Token"]
+    AsyncNotemptyFile = arg["AsyncNotemptyFile"]
+    AsyncEmptyFile = arg["AsyncEmptyFile"]
+    AsyncNotSuccFile = arg["AsyncNotSuccFile"]
+    AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
+    set_true = True
+    n = 1
+    while set_true:
+        try:
+            set_async_status_content_content(MediaType=MediaType, ServiceCode=ServiceCode, AccountId=AccountId,
+                                             TaskId=TaskId, Token=Token, AsyncNotemptyFile=AsyncNotemptyFile,
+                                             AsyncEmptyFile=AsyncEmptyFile, AsyncNotSuccFile=AsyncNotSuccFile)
+            set_true = False
+        except Exception as e:
+            if TaskId == 0:
+                n = 4
+            if n > 3:
+                os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType, ServiceCode, Token, AsyncNotemptyFile))
+                os.system("""echo "%s %s %s %s %s">>%s """ % (Token, ServiceCode, AccountId, TaskId, TaskName, AsyncStatusExceptionFile))
+                set_true = False
+            else:
+                time.sleep(2)
+        n = n + 1
 
 def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile=""):
     os.system("""echo "%s %s">>/tmp/account_status.log """%(ServiceCode,AccountId))
