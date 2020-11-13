@@ -243,6 +243,7 @@ def get_download_content(Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStat
               except Exception as e:
                   if n > 3:
                       os.system("""echo "%s %s %s">>%s """ % (token, service_code, account_id,AsyncStatusExceptionFile))
+                      os.system("""echo "%s %s %s %s">>%s """ % (account_id, MediaType, service_code, token, AsyncNotemptyFile))
                       set_true = False
               n = n + 1
 def get_download_task(MediaType="",ServiceCode="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile=""):
