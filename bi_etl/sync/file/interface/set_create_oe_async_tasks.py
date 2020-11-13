@@ -29,6 +29,7 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f %s """%(async_task_file))
     os.system("""rm -f %s """ % (account_token_file))
     os.system("""rm -f %s """ % (account_token_exception_file))
+    os.system("""rm -f /tmp/sql_%s.sql"""%(media_type))
     group_by = "STAT_GROUP_BY_CREATIVE_ID"
     fields = """cost,show,avg_show_cost,click,avg_click_cost,ctr,convert,convert_cost,convert_rate,deep_convert,deep_convert_cost,deep_convert_rate"""
     etl_md.execute_sql("""delete from metadb.oe_async_task_interface where media_type=%s """ % (media_type))
@@ -61,10 +62,8 @@ def main(TaskInfo,**kwargs):
                  min = start_end[0] + 1
                count = max - min
                sqls_list = get_run_sql(Sql=sql, Max=max, Min=min, Count=count,LastNumber=(nu,len(max_min)))
-               print(nn,"==============================@@@@@@@@@@@@@@@@@@")
-               #print("""get_run_sql(Sql="sql", Max=%s, Min=%s, Count=%s,LastNumber=%s)"""%(max,min,count-1,(nu,len(max_min))))
                for sqls in sqls_list:
-                  os.system("""echo "%s %s %s %s">>/tmp/sql1213.sql """%(nn,nu,len(max_min),sqls))
+                  os.system("""echo "%s %s %s %s">>/tmp/sql_%s.sql """%(nn,nu,len(max_min),sqls,media_type))
                nn = nn + 1
                shell_cmd = """
                   python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/create_async.log
