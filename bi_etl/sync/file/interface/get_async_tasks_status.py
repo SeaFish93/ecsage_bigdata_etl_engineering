@@ -77,6 +77,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
                thread_id = thread_id + 1
             for etl_th in th:
                 etl_th.join()
+            th = []
             thread_data = []
 
 def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskName="",Token="",AsyncNotemptyFile="",
@@ -101,7 +102,6 @@ def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskN
                                              AsyncEmptyFile=AsyncEmptyFile, AsyncNotSuccFile=AsyncNotSuccFile)
             set_true = False
         except Exception as e:
-            print("错误日志："+e)
             if TaskId == 0:
                 n = 4
             if n > 3:
