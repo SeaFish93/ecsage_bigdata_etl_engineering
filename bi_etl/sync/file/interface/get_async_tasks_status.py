@@ -91,26 +91,22 @@ def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskN
     AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
     set_true = True
     n = 1
-    set_async_status_content_content(MediaType=MediaType, ServiceCode=ServiceCode, AccountId=AccountId,
-                                     TaskId=TaskId, Token=Token, AsyncNotemptyFile=AsyncNotemptyFile,
-                                     AsyncEmptyFile=AsyncEmptyFile, AsyncNotSuccFile=AsyncNotSuccFile)
-
-    ######## while set_true:
-    ########     try:
-    ########         set_async_status_content_content(MediaType=MediaType, ServiceCode=ServiceCode, AccountId=AccountId,
-    ########                                          TaskId=TaskId, Token=Token, AsyncNotemptyFile=AsyncNotemptyFile,
-    ########                                          AsyncEmptyFile=AsyncEmptyFile, AsyncNotSuccFile=AsyncNotSuccFile)
-    ########         set_true = False
-    ########     except Exception as e:
-    ########         if TaskId == 0:
-    ########             n = 4
-    ########         if n > 3:
-    ########             os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType, ServiceCode, Token, AsyncNotemptyFile))
-    ########             os.system("""echo "%s %s %s %s %s">>%s """ % (Token, ServiceCode, AccountId, TaskId, TaskName, AsyncStatusExceptionFile))
-    ########             set_true = False
-    ########         else:
-    ########             time.sleep(2)
-    ########     n = n + 1
+    while set_true:
+        try:
+            set_async_status_content_content(MediaType=MediaType, ServiceCode=ServiceCode, AccountId=AccountId,
+                                             TaskId=TaskId, Token=Token, AsyncNotemptyFile=AsyncNotemptyFile,
+                                             AsyncEmptyFile=AsyncEmptyFile, AsyncNotSuccFile=AsyncNotSuccFile)
+            set_true = False
+        except Exception as e:
+            if TaskId == 0:
+                n = 4
+            if n > 3:
+                os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType, ServiceCode, Token, AsyncNotemptyFile))
+                os.system("""echo "%s %s %s %s %s">>%s """ % (Token, ServiceCode, AccountId, TaskId, TaskName, AsyncStatusExceptionFile))
+                set_true = False
+            else:
+                time.sleep(2)
+        n = n + 1
 
 def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile=""):
     os.system("""echo "%s %s">>/tmp/account_status.log """%(ServiceCode,AccountId))
