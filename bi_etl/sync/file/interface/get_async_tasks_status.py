@@ -65,7 +65,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
         task_id = data[3]
         task_name = data[4]
         thread_data.append((token,service_code,account_id,task_id,task_name))
-        if len(thread_data) == 300:#
+        if len(thread_data) == 100:#
             for get_data in thread_data:
                etl_thread = EtlThread(thread_id=thread_id, thread_name="%s%d" % (MediaType,thread_id),
                                my_run=run_get_task_status,MediaType=MediaType,ServiceCode=get_data[1],AccountId=get_data[2],
