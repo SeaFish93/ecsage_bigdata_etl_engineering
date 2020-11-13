@@ -79,20 +79,49 @@ def oe_run_create_task(MysqlSession="",Sql="",ThreadName="",AsyncTaskFile="",Asy
              nums = nums + 1
 
 def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="",Token="",AsyncTaskFile="",Nums="",ExecDate="",GroupBy="",Fields=""):
+    resp_data = set_tasks_status(AccountId=AccountId, ThreadName=ThreadName, Num=Num, Nums=Nums, Fields=Fields, ExecDate=ExecDate, Token=Token, GroupBy=GroupBy)
+    data = resp_data["code"]
+    if data == 40105:
+       token = get_account_token(ServiceCode=ServiceCode)
+       resp_data = set_tasks_status(AccountId=AccountId, ThreadName=ThreadName, Num=Num, Nums=Nums, Fields=Fields, ExecDate=ExecDate, Token=token, GroupBy=GroupBy)
+    task_id = resp_data["data"]["task_id"]
+    task_name = resp_data["data"]["task_name"]
+    os.system("""echo "%s %s %s %s %s %s">>%s """ % (MediaType,Token, ServiceCode, AccountId, task_id, task_name,AsyncTaskFile))
+
+def get_account_token(ServiceCode=""):
+    headers = {'Content-Type': "application/json", "Connection": "close"}
+    token_url = """http://token.ecsage.net/service-media-token/rest/getToken?code=%s""" % (ServiceCode)
+    set_true = True
+    n = 1
+    token_data = None
+    while set_true:
+      try:
+        token_data_list = requests.post(token_url,headers=headers).json()
+        token_data = token_data_list["t"]["token"]
+        set_true = False
+      except Exception as e:
+        if n > 3:
+            set_true = False
+        else:
+            time.sleep(2)
+      n = n + 1
+    return token_data
+
+def set_tasks_status(AccountId="",ThreadName="",Num="",Nums="",Fields="",ExecDate="",Token="",GroupBy=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
     url = open_api_domain + path
     if Fields is None or len(Fields) == 0:
-       params = {
-             "advertiser_id": AccountId,
-             "task_name": "%s%s" % (ThreadName, Num),
-             "task_type": "REPORT",
-             "force": "true",
-             "task_params": {"start_date": ExecDate,
-                             "end_date": ExecDate,
-                             "group_by": GroupBy
-              }
-       }
+        params = {
+            "advertiser_id": AccountId,
+            "task_name": "%s%s" % (ThreadName, Num),
+            "task_type": "REPORT",
+            "force": "true",
+            "task_params": {"start_date": ExecDate,
+                            "end_date": ExecDate,
+                            "group_by": GroupBy
+                            }
+        }
     else:
         params = {
             "advertiser_id": AccountId,
@@ -110,14 +139,11 @@ def set_async_tasks(MediaType="",ServiceCode="",AccountId="",ThreadName="",Num="
         'Access-Token': Token,
         'Connection': "close"
     }
-    if Nums%2 == 0:
-       time.sleep(2)
-    print(params,"============================############")
+    if Nums % 2 == 0:
+        time.sleep(2)
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
-    task_id = resp_data["data"]["task_id"]
-    task_name = resp_data["data"]["task_name"]
-    os.system("""echo "%s %s %s %s %s %s">>%s """ % (MediaType,Token, ServiceCode, AccountId, task_id, task_name,AsyncTaskFile))
+    return resp_data
 
 if __name__ == '__main__':
     media_type = sys.argv[1]
