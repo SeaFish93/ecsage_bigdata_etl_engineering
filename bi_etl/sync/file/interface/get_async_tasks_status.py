@@ -68,7 +68,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
                                TaskId=task_id,TaskName=task_name,Token=token,AsyncNotemptyFile=AsyncNotemptyFile,
                                AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile
                            )
-        if thread_id % 100 == 0:
+        if thread_id % 50 == 0:
             time.sleep(20)
         etl_thread.start()
         th.append(etl_thread)
