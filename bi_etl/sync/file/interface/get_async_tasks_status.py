@@ -17,9 +17,11 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
     sql_list = eval(SqlList)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
+        data_list = []
         for sql in sql_list:
                 os.system("""echo "%s">>/tmp/sqlsqlsql.sql """%(sql))
-                i = i + 1
+                #ok, datas = MysqlSession.get_all_rows(sql)
+                #data_list.append(datas)
                 os.system("""date >>/tmp/thread.time.log""")
                 get_async_status_content(MysqlSession=MysqlSession,Sql=sql,AsyncNotemptyFile=AsyncNotemptyFile,
                                          AsyncEmptyFile=AsyncEmptyFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile,
@@ -67,7 +69,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
                                AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile
                            )
         if thread_id % 2 == 0:
-            time.sleep(2)
+            time.sleep(1)
         etl_thread.start()
         th.append(etl_thread)
         thread_id = thread_id + 1
