@@ -153,7 +153,8 @@ def get_tasks_status(AccountId="",TaskId="",Token=""):
     }
     headers = {
         'Content-Type': "application/json",
-        'Access-Token': Token
+        'Access-Token': Token,
+        'Connection': "close"
     }
     resp = requests.get(url, json=params, headers=headers)
     resp_data = resp.json()
