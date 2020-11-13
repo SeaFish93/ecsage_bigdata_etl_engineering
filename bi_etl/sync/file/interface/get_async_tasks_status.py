@@ -66,6 +66,8 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
                                                AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile)
               set_true = False
           except Exception as e:
+              if task_id == 0:
+                  n = 4
               if n > 3:
                   os.system("""echo "%s %s %s %s">>%s """ % (account_id, MediaType,service_code, token, AsyncNotemptyFile))
                   os.system("""echo "%s %s %s %s %s">>%s """ % (token, service_code, account_id,task_id,task_name,AsyncStatusExceptionFile))
@@ -75,6 +77,42 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
           n = n + 1
 
 def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile=""):
+    resp_data = get_tasks_status(AccountId=AccountId, TaskId=TaskId, Token=Token)
+    data = resp_data["code"]
+    if data == 40105:
+        token = get_account_token(ServiceCode=ServiceCode)
+        resp_data = get_tasks_status(AccountId=AccountId, TaskId=TaskId, Token=token)
+    file_size = resp_data["data"]["list"][0]["file_size"]
+    task_status = resp_data["data"]["list"][0]["task_status"]
+    print("账户：%s，serviceCode：%s，文件大小：%s，任务状态：%s"%(AccountId,ServiceCode,file_size,task_status))
+    if task_status == "ASYNC_TASK_STATUS_COMPLETED":
+       if int(file_size) == 12:
+           os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
+       else:
+           os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
+    else:
+       os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
+
+def get_account_token(ServiceCode=""):
+    headers = {'Content-Type': "application/json", "Connection": "close"}
+    token_url = """http://token.ecsage.net/service-media-token/rest/getToken?code=%s""" % (ServiceCode)
+    set_true = True
+    n = 1
+    token_data = None
+    while set_true:
+      try:
+        token_data_list = requests.post(token_url,headers=headers).json()
+        token_data = token_data_list["t"]["token"]
+        set_true = False
+      except Exception as e:
+        if n > 3:
+            set_true = False
+        else:
+            time.sleep(2)
+      n = n + 1
+    return token_data
+
+def get_tasks_status(AccountId="",TaskId="",Token=""):
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/get/"
     url = open_api_domain + path
@@ -90,16 +128,7 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
     }
     resp = requests.get(url, json=params, headers=headers)
     resp_data = resp.json()
-    file_size = resp_data["data"]["list"][0]["file_size"]
-    task_status = resp_data["data"]["list"][0]["task_status"]
-    print("账户：%s，serviceCode：%s，文件大小：%s，任务状态：%s"%(AccountId,ServiceCode,file_size,task_status))
-    if task_status == "ASYNC_TASK_STATUS_COMPLETED":
-       if int(file_size) == 12:
-           os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
-       else:
-           os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
-    else:
-       os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
+    return resp_data
 
 if __name__ == '__main__':
     media_type = sys.argv[1]
