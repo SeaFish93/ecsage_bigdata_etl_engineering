@@ -21,9 +21,6 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         for sql in sql_list:
                 os.system("""echo "%s">>/tmp/sqlsqlsql.sql """%(sql))
                 i = i + 1
-                get_async_status_content(MysqlSession=MysqlSession, Sql=sql, AsyncNotemptyFile=AsyncNotemptyFile, AsyncEmptyFile=AsyncEmptyFile,
-                                         AsyncStatusExceptionFile=AsyncStatusExceptionFile, MediaType=MediaType, AsyncNotSuccFile=AsyncNotSuccFile)
-
                 etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
                                    my_run=get_async_status_content,MysqlSession=MysqlSession,
                                    Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
