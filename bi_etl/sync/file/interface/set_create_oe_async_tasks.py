@@ -45,6 +45,7 @@ def main(TaskInfo,**kwargs):
     th = []
     nu = 1
     nnn = 0
+    thread_id = 1
     #
     for get_data in max_min:
         start_end_list.append(max_min[n])
@@ -55,6 +56,7 @@ def main(TaskInfo,**kwargs):
            else:
               nn = 1
            for start_end in start_end_list:
+               thread_id = thread_id + 1
                max = start_end[1]
                if nn == 0:
                  min = start_end[0]
@@ -69,7 +71,7 @@ def main(TaskInfo,**kwargs):
                   python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/create_async_tasks.py "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/create_async.log
                """ % (media_type, async_task_name, sqls_list, async_task_file, async_task_exception_file,exec_date,group_by,fields)
                #exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], PassWord=host_data[host_i][2], ShellCommd=shell_cmd)
-               etl_thread = EtlThread(thread_id=n, thread_name="fetch%d" % (n),
+               etl_thread = EtlThread(thread_id=thread_id, thread_name="fetch%d" % (thread_id),
                                       my_run=exec_remote_proc,HostName=host_data[host_i][0],
                                       UserName=host_data[host_i][1],PassWord=host_data[host_i][2], ShellCommd=shell_cmd
                                       )
