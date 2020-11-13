@@ -74,6 +74,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
           n = n + 1
 
 def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile=""):
+    os.system("""echo "%s %s">>/tmp/account_status.log """%(ServiceCode,AccountId))
     resp_data = get_tasks_status(AccountId=AccountId, TaskId=TaskId, Token=Token)
     data = resp_data["code"]
     if data == 40105:
