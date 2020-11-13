@@ -134,10 +134,10 @@ if __name__ == '__main__':
     async_empty_file = sys.argv[4]
     async_status_exception_file = sys.argv[5]
     async_not_succ_file = sys.argv[6]
-    os.system("""rm -f %s""" % (async_not_succ_file))
-    os.system("""rm -f %s""" % (async_notempty_file))
-    os.system("""rm -f %s""" % (async_empty_file))
-    os.system("""rm -f %s""" % (async_status_exception_file))
+    ##os.system("""rm -f %s""" % (async_not_succ_file))
+    ##os.system("""rm -f %s""" % (async_notempty_file))
+    ##os.system("""rm -f %s""" % (async_empty_file))
+    ##os.system("""rm -f %s""" % (async_status_exception_file))
     get_async_status(MysqlSession=etl_md,MediaType=media_type,SqlList=sqls_list,AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
                      AsyncStatusExceptionFile=async_status_exception_file,AsyncNotSuccFile=async_not_succ_file
                      )
