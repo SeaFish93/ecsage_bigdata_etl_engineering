@@ -15,6 +15,7 @@ import time
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",AsyncNotSuccFile=""):
     sql_list = eval(SqlList)
+    os.system("""echo "%s">>length.log """%(len(sql_list)))
     if sql_list is not None and len(sql_list) > 0:
         i = 0
         th = []
