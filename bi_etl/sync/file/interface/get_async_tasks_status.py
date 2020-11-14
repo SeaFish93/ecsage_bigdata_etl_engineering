@@ -87,8 +87,8 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
         #thread_id = thread_id + 1
 
 def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskName="",Token="",AsyncNotemptyFile="",
-                        AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile="",arg=None):
-  if arg is not None:
+                        AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile=""):
+  #if arg is not None:
     MediaType = arg["MediaType"]
     ServiceCode = arg["ServiceCode"]
     AccountId = arg["AccountId"]
