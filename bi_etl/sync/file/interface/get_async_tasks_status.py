@@ -42,7 +42,7 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         insert_sql = """
            load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
         """ % (AsyncNotemptyFile)
-        #etl_md.local_file_to_mysql(sql=insert_sql)
+        etl_md.local_file_to_mysql(sql=insert_sql)
         print("the end!!!!!")
 
 def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile=""):
@@ -79,6 +79,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
                 etl_th.join()
             th = []
             thread_data = []
+        thread_id = thread_id + 1
 
 def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskName="",Token="",AsyncNotemptyFile="",
                         AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile="",arg=None):
