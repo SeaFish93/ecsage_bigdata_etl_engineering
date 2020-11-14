@@ -50,9 +50,10 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
       MediaType = arg["MediaType"]
       AsyncNotSuccFile = arg["AsyncNotSuccFile"]
       MysqlSession = arg["MysqlSession"]
-      ok,datas = MysqlSession.get_all_rows_thread(Sql)#(Sql)
-      for data in datas:
-        os.system("""echo "%s">>/tmp/gggg2222ggg.log"""%(data))
+      try:
+        ok,datas = MysqlSession.get_all_rows_thread(Sql)#(Sql)
+      except Exception as e:
+        os.system("""echo "%s">>/tmp/gggg22212ggg.log"""%("11111111111111111"))
         #token = data[0]
         #service_code = data[1]
         #account_id = data[2]
