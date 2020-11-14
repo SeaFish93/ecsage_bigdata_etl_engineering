@@ -99,9 +99,6 @@ def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskN
     n = 1
     while set_true:
         try:
-            if ThreadId % 2 == 0:
-                   import time
-                   time.sleep(5)  
             set_async_status_content_content(MediaType=MediaType, ServiceCode=ServiceCode, AccountId=AccountId,
                                              TaskId=TaskId, Token=Token, AsyncNotemptyFile=AsyncNotemptyFile,
                                              AsyncEmptyFile=AsyncEmptyFile, AsyncNotSuccFile=AsyncNotSuccFile)
