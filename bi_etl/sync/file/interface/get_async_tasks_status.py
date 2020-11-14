@@ -38,7 +38,7 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
                 #### th.append(etl_thread)
         ### for etl_th in th:
         ###     etl_th.join()
-        run_task_exception(AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
+        get_exception_thread(AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
         #记录有效子账户
         insert_sql = """
            load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
@@ -172,11 +172,14 @@ def get_tasks_status(AccountId="",TaskId="",Token=""):
     resp_data = resp.json()
     return resp_data
 
-def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile=""):
-    with open(AsyncStatusExceptionFile) as lines:
-       array=lines.readlines()
-       for data in array:
-          get_data = data.split(" ")
+def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile="",ExecData="",arg=None):
+      if arg is not None:
+          AsyncNotemptyFile=arg["AsyncNotemptyFile"]
+          AsyncEmptyFile=arg["AsyncEmptyFile"]
+          AsyncNotSuccFile=arg["AsyncNotSuccFile"]
+          AsyncStatusExceptionFile=arg["AsyncStatusExceptionFile"]
+          ExecData=arg["ExecData"]
+          get_data = ExecData
           set_true = True
           n = 1
           while set_true:
@@ -193,6 +196,31 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="
                else:
                 time.sleep(2)
             n = n + 1
+
+def get_exception_thread(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile=""):
+    data_list = []
+    th = []
+    thread_id = 1
+    print(AsyncStatusExceptionFile)
+    with open(AsyncStatusExceptionFile) as lines:
+       array=lines.readlines()
+       for data in array:
+          get_data = data.strip('\n').split(" ")
+          data_list.append(get_data)
+          if len(data_list) == 3 or len(array) == thread_id:
+             for exec_data in data_list:
+                etl_thread = EtlThread(thread_id=thread_id, thread_name="%d" % (thread_id),
+                               my_run=run_task_exception,AsyncNotemptyFile=AsyncNotemptyFile,
+                               AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,
+                               AsyncStatusExceptionFile=AsyncStatusExceptionFile,ExecData=exec_data
+                          )
+                etl_thread.start()
+                th.append(etl_thread)
+             for etl_th in th:
+               etl_th.join()
+             th = []
+             data_list = []
+          thread_id = thread_id + 1
 
 if __name__ == '__main__':
     media_type = sys.argv[1]
