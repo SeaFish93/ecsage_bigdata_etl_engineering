@@ -15,22 +15,29 @@ import time
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",AsyncNotSuccFile=""):
     sql_list = eval(SqlList)
-    os.system("""echo "%s">>/tmp/length.log """%(len(sql_list)))
     if sql_list is not None and len(sql_list) > 0:
         i = 0
-        th = []
+        data_list = []
         for sql in sql_list:
-           i = i + 1
-           etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
-                                   my_run=get_async_status_content,MysqlSession=MysqlSession,
-                                   Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
-                                   AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
-                                   AsyncNotSuccFile=AsyncNotSuccFile
-                                   )
-           etl_thread.start()
-           th.append(etl_thread)
-        for etl_th in th:
-            etl_th.join()
+                os.system("""echo "%s">>/tmp/sqlsqlsql.sql """%(sql))
+                #ok, datas = MysqlSession.get_all_rows(sql)
+                #data_list.append(datas)
+                os.system("""date >>/tmp/thread.time.log""")
+                get_async_status_content(MysqlSession=MysqlSession,Sql=sql,AsyncNotemptyFile=AsyncNotemptyFile,
+                                         AsyncEmptyFile=AsyncEmptyFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile,
+                                         MediaType=MediaType,AsyncNotSuccFile=AsyncNotSuccFile)
+                os.system("""date >>/tmp/thread.time.log""")
+                #####etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
+                #####                   my_run=get_async_status_content,MysqlSession=MysqlSession,
+                #####                   Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
+                #####                   AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
+                #####                   AsyncNotSuccFile=AsyncNotSuccFile
+                #####                   )
+                #### etl_thread.start()
+                #### time.sleep(2)
+                #### th.append(etl_thread)
+        ### for etl_th in th:
+        ###     etl_th.join()
         #记录有效子账户
         insert_sql = """
            load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
@@ -38,47 +45,48 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         etl_md.local_file_to_mysql(sql=insert_sql)
         print("the end!!!!!")
 
-def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile="",arg=None):
-    if arg is not None:
-      os.system("""echo "dddddd">>/tmp/ggggggg.log""")
-      Sql = arg["Sql"]
-      AsyncNotemptyFile = arg["AsyncNotemptyFile"]
-      AsyncEmptyFile = arg["AsyncEmptyFile"]
-      AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
-      MediaType = arg["MediaType"]
-      AsyncNotSuccFile = arg["AsyncNotSuccFile"]
-      MysqlSession = arg["MysqlSession"]
-      os.system("""echo "1">>/tmp/testtttt.log """)
-        #token = data[0]
-        #service_code = data[1]
-        #account_id = data[2]
-        #task_id = data[3]
-        #task_name = data[4]
-
-        #run_get_task_status(MediaType=MediaType,ServiceCode=service_code,
-        #                   AccountId=account_id,TaskId=task_id,TaskName=task_name,Token=token,
-        #                   AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
-        #                   AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
-     #   thread_data.append((token,service_code,account_id,task_id,task_name))
-      #  if len(thread_data) == 50 or len(datas) == thread_id:#
-       #     for get_data in thread_data:
-               #etl_thread = EtlThread(thread_id=thread_id, thread_name="%s%d" % (MediaType,thread_id),
-               #                my_run=run_get_task_status,MediaType=MediaType,ServiceCode=get_data[1],AccountId=get_data[2],
-               #                TaskId=get_data[3],TaskName=get_data[4],Token=get_data[0],AsyncNotemptyFile=AsyncNotemptyFile,
-               #                AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile
-                #           )
-               #etl_thread.start()
-               #th.append(etl_thread)
-               #thread_id = thread_id + 1
-            #for etl_th in th:
-            #    etl_th.join()
-            #th = []
-            #thread_data = []
-        #thread_id = thread_id + 1
+def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile=""):
+    #if arg is not None:
+    #  Sql = arg["Sql"]
+    #  AsyncNotemptyFile = arg["AsyncNotemptyFile"]
+    #  AsyncEmptyFile = arg["AsyncEmptyFile"]
+    #  AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
+    #  MediaType = arg["MediaType"]
+    #  AsyncNotSuccFile = arg["AsyncNotSuccFile"]
+    #  MysqlSession = arg["MysqlSession"]
+    ok,datas = MysqlSession.get_all_rows(Sql)
+    th = []
+    thread_data = []
+    thread_id = 1
+    for data in datas:
+        token = data[0]
+        service_code = data[1]
+        account_id = data[2]
+        task_id = data[3]
+        task_name = data[4]
+        thread_data.append((token,service_code,account_id,task_id,task_name))
+        if len(thread_data) == 100 or len(datas) == thread_id:#
+            for get_data in thread_data:
+               etl_thread = EtlThread(thread_id=thread_id, thread_name="%s%d" % (MediaType,thread_id),
+                               my_run=run_get_task_status,MediaType=MediaType,ServiceCode=get_data[1],AccountId=get_data[2],
+                               TaskId=get_data[3],TaskName=get_data[4],Token=get_data[0],AsyncNotemptyFile=AsyncNotemptyFile,
+                               AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile
+                           )
+               if thread_id % 2 == 0:
+                   import time
+                   time.sleep(2)
+               etl_thread.start()
+               th.append(etl_thread)
+               thread_id = thread_id + 1
+            for etl_th in th:
+                etl_th.join()
+            th = []
+            thread_data = []
+        thread_id = thread_id + 1
 
 def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskName="",Token="",AsyncNotemptyFile="",
-                        AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile=""):
-  #if arg is not None:
+                        AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile="",arg=None):
+  if arg is not None:
     MediaType = arg["MediaType"]
     ServiceCode = arg["ServiceCode"]
     AccountId = arg["AccountId"]
@@ -139,7 +147,6 @@ def get_account_token(ServiceCode=""):
         set_true = False
       except Exception as e:
         if n > 3:
-            os.system("""echo "获取子账户【%s】任务状态token异常！！！">>/tmp/get_task_status_token_exception.log """%(account_id))
             set_true = False
         else:
             time.sleep(2)
@@ -161,7 +168,7 @@ def get_tasks_status(AccountId="",TaskId="",Token=""):
         'Access-Token': Token,
         'Connection': "close"
     }
-    resp = requests.get(url, json=params, headers=headers)
+    resp = requests.get(url, json=params, headers=headers,timeout = 20)
     resp_data = resp.json()
     return resp_data
 
