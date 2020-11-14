@@ -47,7 +47,7 @@ def main(TaskInfo,**kwargs):
         start_end_list.append(max_min_list[n])
         if len(start_end_list) == 5 or len(max_min_list) < 5 or len(max_min_list) - 1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
-           rm_file = """rm -f %s %s %s %s /root/wangsong/status_async.log"""%(async_not_succ_file,async_notempty_file,async_empty_file,async_status_exception_file)
+           rm_file = """rm -f %s* %s* %s* %s* /root/wangsong/status_async.log"""%(async_not_succ_file,async_notempty_file,async_empty_file,async_status_exception_file)
            exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], 
                             PassWord=host_data[host_i][2], ShellCommd=rm_file)
            if nnn == 0:
@@ -70,7 +70,7 @@ def main(TaskInfo,**kwargs):
                nn = nn + 1
                shell_cmd = """
                    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log
-                 """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
+                 """ % (media_type, sqls_list, async_notempty_file+"_%s"%(thread_id), async_empty_file+"_%s"%(thread_id), async_status_exception_file+"_%s"%(thread_id), async_not_succ_file+"_%s"%(thread_id))
                etl_thread = EtlThread(thread_id=thread_id, thread_name="fetch%d" % (thread_id),
                                        my_run=exec_remote_proc, HostName=host_data[host_i][0],
                                        UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
