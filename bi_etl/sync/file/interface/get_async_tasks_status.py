@@ -59,7 +59,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
       MysqlSession = arg["MysqlSession"]
       ok,datas = MysqlSession.get_all_rows(Sql)
       print("错误：%s"%(datas))
-      os.system("""echo "%s %s">>/tmp/gggg2222ggg.log"""%(datas,MediaType))
+      os.system("""echo "%s %s">>/tmp/gggg2222ggg.log"""%("datas",MediaType))
     #th = []
     #thread_data = []
     #thread_id = 1
