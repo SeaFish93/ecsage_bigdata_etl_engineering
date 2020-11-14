@@ -65,7 +65,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
         task_id = data[3]
         task_name = data[4]
         thread_data.append((token,service_code,account_id,task_id,task_name))
-        if len(thread_data) == 100 or len(datas) == thread_id:#
+        if len(thread_data) == 300 or len(datas) == thread_id:#
             for get_data in thread_data:
                etl_thread = EtlThread(thread_id=thread_id, thread_name="%s%d" % (MediaType,thread_id),
                                my_run=run_get_task_status,MediaType=MediaType,ServiceCode=get_data[1],AccountId=get_data[2],
@@ -101,7 +101,7 @@ def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskN
         try:
             if ThreadId % 2 == 0:
                    import time
-                   time.sleep(2)  
+                   time.sleep(5)  
             set_async_status_content_content(MediaType=MediaType, ServiceCode=ServiceCode, AccountId=AccountId,
                                              TaskId=TaskId, Token=Token, AsyncNotemptyFile=AsyncNotemptyFile,
                                              AsyncEmptyFile=AsyncEmptyFile, AsyncNotSuccFile=AsyncNotSuccFile)
@@ -148,6 +148,7 @@ def get_account_token(ServiceCode=""):
         set_true = False
       except Exception as e:
         if n > 3:
+            os.system("""echo "错误子账户token：%s">>/tmp/account_token_token.log """%(account_id))
             set_true = False
         else:
             time.sleep(2)
