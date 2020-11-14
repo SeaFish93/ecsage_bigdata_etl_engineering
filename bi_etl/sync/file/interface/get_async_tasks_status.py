@@ -46,7 +46,9 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         print("the end!!!!!")
 
 def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile="",arg=None):
+    os.system("""echo "dddddd">>/tmp/ggggggg1.log""")
     if arg is not None:
+      os.system("""echo "dddddd">>/tmp/ggggggg.log""")
       Sql = arg["Sql"]
       AsyncNotemptyFile = arg["AsyncNotemptyFile"]
       AsyncEmptyFile = arg["AsyncEmptyFile"]
