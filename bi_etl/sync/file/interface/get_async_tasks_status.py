@@ -27,8 +27,6 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
                                    AsyncNotSuccFile=AsyncNotSuccFile
                                    )
            etl_thread.start()
-           import time
-           time.sleep(60)
            th.append(etl_thread)
         for etl_th in th:
             etl_th.join()
@@ -40,7 +38,6 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         print("the end!!!!!")
 
 def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",MediaType="",AsyncNotSuccFile="",arg=None):
-    os.system("""echo "dddddd">>/tmp/ggggggg1.log""")
     if arg is not None:
       os.system("""echo "dddddd">>/tmp/ggggggg.log""")
       Sql = arg["Sql"]
@@ -50,8 +47,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
       MediaType = arg["MediaType"]
       AsyncNotSuccFile = arg["AsyncNotSuccFile"]
       MysqlSession = arg["MysqlSession"]
-      ok,datas = MysqlSession.get_all_rows(Sql)#(Sql)
-      os.system("""echo "%s">>/tmp/dataddddd.log """%(datas))
+      os.system("""echo "1">>/tmp/testtttt.log """)
         #token = data[0]
         #service_code = data[1]
         #account_id = data[2]
