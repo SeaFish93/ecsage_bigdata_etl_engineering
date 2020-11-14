@@ -17,28 +17,21 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
     sql_list = eval(SqlList)
     if sql_list is not None and len(sql_list) > 0:
         i = 0
-        data_list = []
+        th = []
         for sql in sql_list:
-                os.system("""echo "%s">>/tmp/sqlsqlsql.sql """%(sql))
-                #ok, datas = MysqlSession.get_all_rows(sql)
-                #data_list.append(datas)
-                os.system("""date >>/tmp/thread.time.log""")
-                #task = locals()
-                #get_async_status_content(MysqlSession=MysqlSession,Sql=sql,AsyncNotemptyFile=AsyncNotemptyFile,
-                #                         AsyncEmptyFile=AsyncEmptyFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile,
-                #                         MediaType=MediaType,AsyncNotSuccFile=AsyncNotSuccFile)
-                #os.system("""date >>/tmp/thread.time.log""")
-                etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
+           i = i + 1
+           etl_thread = EtlThread(thread_id=i, thread_name="%s%d" % (MediaType,i),
                                    my_run=get_async_status_content,MysqlSession=MysqlSession,
                                    Sql = sql,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
                                    AsyncStatusExceptionFile=AsyncStatusExceptionFile,MediaType=MediaType,
                                    AsyncNotSuccFile=AsyncNotSuccFile
                                    )
-                etl_thread.start()
-                time.sleep(2)
-                th.append(etl_thread)
+           etl_thread.start()
+           import time
+           time.sleep(2)
+           th.append(etl_thread)
         for etl_th in th:
-          etl_th.join()
+            etl_th.join()
         #记录有效子账户
         insert_sql = """
            load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
@@ -57,25 +50,19 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
       MediaType = arg["MediaType"]
       AsyncNotSuccFile = arg["AsyncNotSuccFile"]
       MysqlSession = arg["MysqlSession"]
-      #datas = []
       ok,datas = MysqlSession.get_all_rows_thread(Sql)#(Sql)
-      print("错误：%s"%(datas))
-      os.system("""echo "%s %s">>/tmp/gggg2222ggg.log"""%("datas",MediaType))
-    #th = []
-    #thread_data = []
-    #thread_id = 1
       for data in datas:
         os.system("""echo "%s">>/tmp/gggg2222ggg.log"""%(data))
-        token = data[0]
-        service_code = data[1]
-        account_id = data[2]
-        task_id = data[3]
-        task_name = data[4]
+        #token = data[0]
+        #service_code = data[1]
+        #account_id = data[2]
+        #task_id = data[3]
+        #task_name = data[4]
 
-        run_get_task_status(MediaType=MediaType,ServiceCode=service_code,
-                           AccountId=account_id,TaskId=task_id,TaskName=task_name,Token=token,
-                           AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
-                           AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
+        #run_get_task_status(MediaType=MediaType,ServiceCode=service_code,
+        #                   AccountId=account_id,TaskId=task_id,TaskName=task_name,Token=token,
+        #                   AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,
+        #                   AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
      #   thread_data.append((token,service_code,account_id,task_id,task_name))
       #  if len(thread_data) == 50 or len(datas) == thread_id:#
        #     for get_data in thread_data:
