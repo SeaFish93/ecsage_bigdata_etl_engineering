@@ -94,7 +94,7 @@ def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskN
     AsyncEmptyFile = arg["AsyncEmptyFile"]
     AsyncNotSuccFile = arg["AsyncNotSuccFile"]
     AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
-    ThreadId = = arg["ThreadId"]
+    ThreadId = arg["ThreadId"]
     set_true = True
     n = 1
     while set_true:
