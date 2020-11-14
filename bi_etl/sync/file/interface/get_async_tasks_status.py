@@ -58,6 +58,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
       AsyncNotSuccFile = arg["AsyncNotSuccFile"]
       MysqlSession = arg["MysqlSession"]
       ok,datas = etl_md.get_all_rows(Sql)
+      os.system("""echo "%s">>/tmp/gggg2222ggg.log"""%(data))
     #th = []
     #thread_data = []
     #thread_id = 1
