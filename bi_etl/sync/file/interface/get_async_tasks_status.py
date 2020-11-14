@@ -38,6 +38,7 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
                 #### th.append(etl_thread)
         ### for etl_th in th:
         ###     etl_th.join()
+        run_task_exception(AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
         #记录有效子账户
         insert_sql = """
            load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
@@ -107,8 +108,8 @@ def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskN
             if TaskId == 0:
                 n = 4
             if n > 3:
-                os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType, ServiceCode, Token, AsyncNotemptyFile))
-                os.system("""echo "%s %s %s %s %s">>%s """ % (Token, ServiceCode, AccountId, TaskId, TaskName, AsyncStatusExceptionFile))
+                #os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType, ServiceCode, Token, AsyncNotemptyFile))
+                os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType, ServiceCode, Token, TaskId, TaskName,  AsyncStatusExceptionFile))
                 set_true = False
             else:
                 time.sleep(2)
@@ -170,6 +171,28 @@ def get_tasks_status(AccountId="",TaskId="",Token=""):
     resp = requests.get(url, json=params, headers=headers,timeout = 20)
     resp_data = resp.json()
     return resp_data
+
+def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile=""):
+    with open(AsyncStatusExceptionFile) as lines:
+       array=lines.readlines()
+       for data in array:
+          get_data = data.split(" ")
+          set_true = True
+          n = 1
+          while set_true:
+            try:
+               set_async_status_content_content(MediaType=get_data[1],ServiceCode=get_data[2],AccountId=get_data[0],TaskId=get_data[4],Token=get_data[3],AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile)
+               set_true = False
+            except Exception as e:
+               if TaskId == 0:
+                  n = 4
+               if n > 3:
+                  os.system("""echo "%s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], AsyncNotemptyFile))
+                  os.system("""echo "%s %s %s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], get_data[4], get_data[5],  AsyncStatusExceptionFile+"_last"))
+                  set_true = False
+               else:
+                time.sleep(2)
+            n = n + 1
 
 if __name__ == '__main__':
     media_type = sys.argv[1]
