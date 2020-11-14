@@ -144,7 +144,7 @@ def get_account_token(ServiceCode=""):
         set_true = False
       except Exception as e:
         if n > 3:
-            print("获取子账户【%s】任务状态token异常！！！"%(account_id))
+            os.system("""echo "获取子账户【%s】任务状态token异常！！！">>/tmp/get_task_status_token_exception.log """%(account_id))
             set_true = False
         else:
             time.sleep(2)
