@@ -47,7 +47,7 @@ def main(TaskInfo,**kwargs):
         start_end_list.append(max_min_list[n])
         if len(start_end_list) == 5 or len(max_min_list) < 5 or len(max_min_list) - 1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
-           rm_file = """rm -f %s %s %s %s"""%(async_not_succ_file,async_notempty_file,async_empty_file,async_status_exception_file)
+           rm_file = """rm -f %s %s %s %s /root/wangsong/status_async.log"""%(async_not_succ_file,async_notempty_file,async_empty_file,async_status_exception_file)
            exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], 
                             PassWord=host_data[host_i][2], ShellCommd=rm_file)
            if nnn == 0:
