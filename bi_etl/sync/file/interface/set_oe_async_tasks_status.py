@@ -42,10 +42,14 @@ def main(TaskInfo,**kwargs):
     nu = 1
     nnn = 0
     thread_id = 0
+    del_num = 0
     for get_data in max_min_list:
         start_end_list.append(max_min_list[n])
         if len(start_end_list) == 5 or len(max_min_list) < 5 or len(max_min_list) - 1 == n:
            print("[%s]执行机器" % (host_data[host_i][0]))
+           rm_file = """rm -f %s %s %s %s"""%(async_not_succ_file,async_notempty_file,async_empty_file,async_status_exception_file)
+           exec_remote_proc(HostName=host_data[host_i][0], UserName=host_data[host_i][1], 
+                            PassWord=host_data[host_i][2], ShellCommd=rm_file)
            if nnn == 0:
               nn = 0
            else:
@@ -67,21 +71,21 @@ def main(TaskInfo,**kwargs):
                shell_cmd = """
                    python3 /root/bigdata_item_code/ecsage_bigdata_etl_engineering/bi_etl/sync/file/interface/get_async_tasks_status.py "%s" "%s" "%s" "%s" "%s" "%s" >> /root/wangsong/status_async.log
                  """ % (media_type, sqls_list, async_notempty_file, async_empty_file, async_status_exception_file, async_not_succ_file)
-               etl_thread = EtlThread(thread_id=thread_id, thread_name="fetch%d" % (thread_id),
-                                       my_run=exec_remote_proc, HostName=host_data[host_i][0],
-                                       UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
-                                       ShellCommd=shell_cmd
-                                       )
-               etl_thread.start()
-               th.append(etl_thread)
+               #etl_thread = EtlThread(thread_id=thread_id, thread_name="fetch%d" % (thread_id),
+               #                        my_run=exec_remote_proc, HostName=host_data[host_i][0],
+               #                        UserName=host_data[host_i][1], PassWord=host_data[host_i][2],
+               #                        ShellCommd=shell_cmd
+               #                        )
+               #etl_thread.start()
+               #th.append(etl_thread)
            start_end_list = []
            host_i = host_i + 1
            nnn = nnn + 1
         host_num = host_num + 1
         n = n + 1
         nu = nu + 1
-    for etl_th in th:
-        etl_th.join()
+    #for etl_th in th:
+    #    etl_th.join()
 
 def set_task_status_sql(MediaType=""):
     #获取子账户
