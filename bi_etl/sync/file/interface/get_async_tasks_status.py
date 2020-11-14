@@ -70,11 +70,8 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
                etl_thread = EtlThread(thread_id=thread_id, thread_name="%s%d" % (MediaType,thread_id),
                                my_run=run_get_task_status,MediaType=MediaType,ServiceCode=get_data[1],AccountId=get_data[2],
                                TaskId=get_data[3],TaskName=get_data[4],Token=get_data[0],AsyncNotemptyFile=AsyncNotemptyFile,
-                               AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile
+                               AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile,ThreadId=thread_id
                            )
-               if thread_id % 2 == 0:
-                   import time
-                   time.sleep(2)
                etl_thread.start()
                th.append(etl_thread)
                thread_id = thread_id + 1
@@ -85,7 +82,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
         thread_id = thread_id + 1
 
 def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskName="",Token="",AsyncNotemptyFile="",
-                        AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile="",arg=None):
+                        AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile="",ThreadId="",arg=None):
   if arg is not None:
     MediaType = arg["MediaType"]
     ServiceCode = arg["ServiceCode"]
@@ -97,10 +94,14 @@ def run_get_task_status(MediaType="",ServiceCode="",AccountId="",TaskId="",TaskN
     AsyncEmptyFile = arg["AsyncEmptyFile"]
     AsyncNotSuccFile = arg["AsyncNotSuccFile"]
     AsyncStatusExceptionFile = arg["AsyncStatusExceptionFile"]
+    ThreadId = = arg["ThreadId"]
     set_true = True
     n = 1
     while set_true:
         try:
+            if ThreadId % 2 == 0:
+                   import time
+                   time.sleep(2)  
             set_async_status_content_content(MediaType=MediaType, ServiceCode=ServiceCode, AccountId=AccountId,
                                              TaskId=TaskId, Token=Token, AsyncNotemptyFile=AsyncNotemptyFile,
                                              AsyncEmptyFile=AsyncEmptyFile, AsyncNotSuccFile=AsyncNotSuccFile)
