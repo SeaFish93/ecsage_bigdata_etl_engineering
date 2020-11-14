@@ -23,6 +23,7 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
                 #ok, datas = MysqlSession.get_all_rows(sql)
                 #data_list.append(datas)
                 os.system("""date >>/tmp/thread.time.log""")
+                #task = locals()
                 #get_async_status_content(MysqlSession=MysqlSession,Sql=sql,AsyncNotemptyFile=AsyncNotemptyFile,
                 #                         AsyncEmptyFile=AsyncEmptyFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile,
                 #                         MediaType=MediaType,AsyncNotSuccFile=AsyncNotSuccFile)
@@ -56,7 +57,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
       MediaType = arg["MediaType"]
       AsyncNotSuccFile = arg["AsyncNotSuccFile"]
       MysqlSession = arg["MysqlSession"]
-      ok,datas = MysqlSession.get_all_rows(Sql)
+      ok,datas = etl_md.get_all_rows(Sql)
     #th = []
     #thread_data = []
     #thread_id = 1
