@@ -57,8 +57,8 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
       MediaType = arg["MediaType"]
       AsyncNotSuccFile = arg["AsyncNotSuccFile"]
       MysqlSession = arg["MysqlSession"]
-      datas = []
-      #ok,datas = MysqlSession.get_all_rows(Sql)
+      #datas = []
+      ok,datas = MysqlSession.get_all_rows_thread(Sql)#(Sql)
       print("错误：%s"%(datas))
       os.system("""echo "%s %s">>/tmp/gggg2222ggg.log"""%("datas",MediaType))
     #th = []
