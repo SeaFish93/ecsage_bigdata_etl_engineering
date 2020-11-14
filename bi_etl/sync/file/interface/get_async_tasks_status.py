@@ -61,6 +61,7 @@ def get_async_status_content(MysqlSession="",Sql="",AsyncNotemptyFile="",AsyncEm
     #thread_data = []
     #thread_id = 1
       for data in datas:
+        os.system("""echo "%s">>/tmp/gggg2222ggg.log"""%(data))
         token = data[0]
         service_code = data[1]
         account_id = data[2]
