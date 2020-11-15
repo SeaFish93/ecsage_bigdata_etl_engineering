@@ -38,7 +38,8 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
                 #### th.append(etl_thread)
         ### for etl_th in th:
         ###     etl_th.join()
-        get_exception_thread(AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
+        if os.path.exists(AsyncStatusExceptionFile):
+           get_exception_thread(AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
         #记录有效子账户
         insert_sql = """
            load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
