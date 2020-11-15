@@ -73,11 +73,10 @@ def wait_for_celery_status(StatusList=""):
     status_false = []
     run_wait = True
     sleep_num = 1
-    # 判断是否没有md5的文件
     while run_wait:
       for status in StatusList:
         #判断是否成功
-        if get_celery_job_status(CeleryTaskId=waits_id) is False:
+        if get_celery_job_status(CeleryTaskId=status) is False:
            status_false.append(status)
         else:
            pass
