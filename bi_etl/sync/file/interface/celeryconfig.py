@@ -1,7 +1,7 @@
 from kombu import Queue
 from kombu import Exchange
 #broker use rabbitmq
-BROKER_URL = 'redis://:1qazXSW2@192.168.30.235:9544/0'
+BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/0'
 #backend use redis
 #CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.235:9544/1'
 #use json
