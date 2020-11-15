@@ -186,6 +186,7 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="
           n = 1
           while set_true:
             try:
+               print("@@@@@@%s %s"%(AsyncNotemptyFile,get_data[0]))
                set_async_status_content_content(MediaType=get_data[1],ServiceCode=get_data[2],AccountId=get_data[0],TaskId=get_data[4],Token=get_data[3],AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile)
                set_true = False
             except Exception as e:
