@@ -5,7 +5,7 @@ import os
 import requests
 import time
 
-etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+#etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 @app.task
 def add(x,y):
     return x+y
@@ -40,7 +40,7 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="
                (account_id,media_type,service_code,token_data)
                select '%s',%s,'%s','%s'
             """ % (get_data[0], get_data[1], get_data[2], get_data[3])
-            ok = etl_md.execute_sql(sql=insert_sql)
+            #ok = etl_md.execute_sql(sql=insert_sql)
 
             set_true = False
          else:
@@ -67,7 +67,7 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
                (account_id,media_type,service_code,token_data)
                select '%s',%s,'%s','%s'
             """ % (AccountId, MediaType,ServiceCode, Token)
-           ok = etl_md.execute_sql(sql=insert_sql)
+           #ok = etl_md.execute_sql(sql=insert_sql)
            os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
            os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, "/tmp/AsyncNotemptyFile.log.log"))
     else:
@@ -76,7 +76,7 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
                (account_id,media_type,service_code,token_data)
                select '%s',%s,'%s','%s'
             """ % (AccountId, MediaType,ServiceCode, Token)
-       ok = etl_md.execute_sql(sql=insert_sql)
+       #ok = etl_md.execute_sql(sql=insert_sql)
        os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
        os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, "/tmp/AsyncNotemptyFile.log.log"))
 
