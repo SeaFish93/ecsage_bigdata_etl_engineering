@@ -3,6 +3,7 @@ import requests
 import sys
 import os
 import time
+from celery.result import AsyncResult
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service import get_run_sql
@@ -27,13 +28,14 @@ def main(TaskInfo,**kwargs):
     async_notempty_file = """/tmp/async_notempty_%s.log""" % (media_type)
     async_empty_file = """/tmp/async_empty_%s.log""" % (media_type)
     async_not_succ_file = """/tmp/async_not_succ_file_%s.log""" % (media_type)
+    celery_task_status_file = """/tmp/celery_task_status_file_%s.log"""%(media_type)
     os.system("""rm -f %s""" % (async_not_succ_file))
     os.system("""rm -f %s""" % (async_notempty_file))
     os.system("""rm -f %s""" % (async_empty_file))
     os.system("""rm -f %s""" % (async_status_exception_file))
     os.system("""rm -f /tmp/sql_%s.sql""")
-    os.system("""rm -f /tmp/celery_task_status.log""")
-    #etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
+    os.system("""rm -f %s"""%(celery_task_status_file))
+    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
     #获取子账户
     source_data_sql = """
                  select distinct account_id,media_type,service_code,token_data,task_id,task_name
@@ -44,11 +46,33 @@ def main(TaskInfo,**kwargs):
     for get_data in datas:
         status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
                                  AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
-        os.system("""echo "%s">>/tmp/celery_task_status.log"""%(status_id))
-        break;
+        os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
     #获取状态
-    with open("/tmp/celery_task_status.log") as lines:
+    status_wait = []
+    celery_task_id = []
+    with open(celery_task_status_file) as lines:
        array=lines.readlines()
        for data in array:
           get_data = data.strip('\n').split(" ")
-          print(get_data,"=============================")
+          if get_celery_job_status(CeleryTaskId=get_data[0]) is False:
+             status_wait.append(get_data[0])
+             celery_task_id.append(get_data[0])
+    run_wait = True
+    while run_wait:
+       for waits_id in status_wait:
+          if get_celery_job_status(CeleryTaskId=waits_id) is True:
+             celery_task_id.remove(waits_id)
+          if len(celery_task_id) == 0:
+             run_wait = False 
+
+def get_celery_job_status(CeleryTaskId=""):
+    set_task = AsyncResult(CeleryTaskId)
+    status = set_task.status
+    if status == "SUCCESS":
+       return True
+    else:
+       return False
+
+
+
+
