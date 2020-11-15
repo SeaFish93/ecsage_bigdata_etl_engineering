@@ -186,15 +186,13 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="
           n = 1
           while set_true:
             try:
-               print("@@@@@@%s %s"%(AsyncNotemptyFile,get_data[0]))
                set_async_status_content_content(MediaType=get_data[1],ServiceCode=get_data[2],AccountId=get_data[0],TaskId=get_data[4],Token=get_data[3],AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile)
                set_true = False
             except Exception as e:
                print("!!!!!!!!!!!!!%s %s"%(AsyncNotemptyFile,get_data[0]))
-               if TaskId == 0:
+               if get_data[4] == 0:
                   n = 4
                if n > 3:
-                  print("###############%s %s"%(AsyncNotemptyFile,get_data[0]))
                   os.system("""echo "%s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], AsyncNotemptyFile))
                   os.system("""echo "%s %s %s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], get_data[4], get_data[5],  AsyncStatusExceptionFile+"_last"))
                   set_true = False
