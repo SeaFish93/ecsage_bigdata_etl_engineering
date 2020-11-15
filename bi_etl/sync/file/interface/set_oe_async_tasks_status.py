@@ -63,7 +63,10 @@ def main(TaskInfo,**kwargs):
           if get_celery_job_status(CeleryTaskId=waits_id) is True:
              celery_task_id.remove(waits_id)
           if len(celery_task_id) == 0:
-             run_wait = False 
+             run_wait = False
+          else:
+             print("等待任务队列完成！！！") 
+             time.sleep(10)
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(CeleryTaskId)
