@@ -24,11 +24,13 @@ def main(TaskInfo,**kwargs):
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     media_type = TaskInfo[1]
-    async_status_exception_file = """/tmp/async_status_exception_%s.log""" % (media_type)
-    async_notempty_file = """/tmp/async_notempty_%s.log""" % (media_type)
-    async_empty_file = """/tmp/async_empty_%s.log""" % (media_type)
-    async_not_succ_file = """/tmp/async_not_succ_file_%s.log""" % (media_type)
-    celery_task_status_file = """/tmp/celery_task_status_file_%s.log"""%(media_type)
+    async_account_file = "/home/ecsage_data/oceanengine/account"
+    async_status_exception_file = """%s/async_status_exception_%s.log""" % (async_account_file,media_type)
+    async_notempty_file = """%s/async_notempty_%s.log""" % (async_account_file,media_type)
+    async_empty_file = """%s/async_empty_%s.log""" % (async_account_file,media_type)
+    async_not_succ_file = """%s/async_not_succ_file_%s.log""" % (async_account_file,media_type)
+    celery_task_status_file = """%s/celery_task_status_file_%s.log"""%(async_account_file,media_type)
+    os.system("""mkdir -p %s"""%(async_account_file))
     os.system("""rm -f %s""" % (async_not_succ_file))
     os.system("""rm -f %s""" % (async_notempty_file))
     os.system("""rm -f %s""" % (async_empty_file))
