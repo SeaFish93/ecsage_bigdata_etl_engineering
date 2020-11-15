@@ -10,7 +10,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service imp
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service import get_task_status_sql
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.remote_proc import exec_remote_proc
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
-from tasks import *
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import *
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
