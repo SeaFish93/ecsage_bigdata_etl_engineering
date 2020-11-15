@@ -192,6 +192,7 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="
                if TaskId == 0:
                   n = 4
                if n > 3:
+                  print("###############%s %s"%(AsyncNotemptyFile,get_data[0]))
                   os.system("""echo "%s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], AsyncNotemptyFile))
                   os.system("""echo "%s %s %s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], get_data[4], get_data[5],  AsyncStatusExceptionFile+"_last"))
                   set_true = False
