@@ -57,17 +57,9 @@ def main(TaskInfo,**kwargs):
           if get_celery_job_status(CeleryTaskId=get_data[0]) is False:
              status_wait.append(get_data[0])
              celery_task_id.append(get_data[0])
-    run_wait = True
-    while run_wait:
-       for waits_id in status_wait:
-          print(waits_id,len(celery_task_id),"======================")
-          if get_celery_job_status(CeleryTaskId=waits_id) is True:
-             celery_task_id.remove(waits_id)
-          if len(celery_task_id) == 0:
-             run_wait = False
-          else:
-             print("等待任务队列完成！！！") 
-             #time.sleep(10)
+    print("正在等待celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("celery队列执行完成！！！")
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(CeleryTaskId)
@@ -76,6 +68,40 @@ def get_celery_job_status(CeleryTaskId=""):
        return True
     else:
        return False
+
+def wait_for_celery_status(StatusList=""):
+    status_false = []
+    run_wait = True
+    sleep_num = 1
+    # 判断是否没有md5的文件
+    while run_wait:
+      for status in StatusList:
+        #判断是否成功
+        if get_celery_job_status(CeleryTaskId=waits_id) is False:
+           status_false.append(status)
+        else:
+           pass
+      if len(status_false) > 0:
+          wait_mins = 600
+          if sleep_num <= wait_mins:
+              min = 60
+              print("等待第%s次%s秒"%(sleep_num,min))
+              time.sleep(min)
+          else:
+              msg = "等待celery队列完成超时！！！\n%s" % (status_false)
+              msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                     SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                     TargetTable="%s.%s" % ("", ""),
+                                     BeginExecDate="",
+                                     EndExecDate="",
+                                     Status="Error",
+                                     Log=msg,
+                                     Developer="developer")
+              set_exit(LevelStatu="red", MSG=msg)
+      else:
+          run_wait = False
+      status_false.clear()
+      sleep_num = sleep_num + 1
 
 
 
