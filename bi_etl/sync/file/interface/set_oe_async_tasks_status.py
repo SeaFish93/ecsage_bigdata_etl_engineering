@@ -46,3 +46,9 @@ def main(TaskInfo,**kwargs):
                                  AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
         os.system("""echo "%s">>/tmp/celery_task_status.log"""%(status_id))
         break;
+    #获取状态
+    with open("/tmp/celery_task_status.log") as lines:
+       array=lines.readlines()
+       for data in array:
+          get_data = data.strip('\n').split(" ")
+          print(get_data,"=============================")
