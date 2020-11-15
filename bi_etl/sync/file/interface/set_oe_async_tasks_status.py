@@ -45,3 +45,4 @@ def main(TaskInfo,**kwargs):
         status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
                                  AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
         os.system("""echo "%s">>/tmp/celery_task_status.log"""%(status_id))
+        break;
