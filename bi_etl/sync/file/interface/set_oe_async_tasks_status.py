@@ -62,6 +62,22 @@ def main(TaskInfo,**kwargs):
     print("正在等待celery队列执行完成！！！")
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
+    #记录有效子账户
+    insert_sql = """
+       load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
+        """ % (async_notempty_file)
+    ok = etl_md.local_file_to_mysql(sql=insert_sql)
+    if ok is False:
+       msg = "写入MySQL出现异常！！！\n%s" % (async_notempty_file)
+       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                     SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                     TargetTable="%s.%s" % ("", ""),
+                                     BeginExecDate="",
+                                     EndExecDate="",
+                                     Status="Error",
+                                     Log=msg,
+                                     Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg) 
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(CeleryTaskId)
@@ -103,12 +119,7 @@ def wait_for_celery_status(StatusList=""):
           run_wait = False
       status_false.clear()
       sleep_num = sleep_num + 1
-    #写入mysql
-    #记录有效子账户
-    insert_sql = """
-       load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
-        """ % (async_notempty_file)
-    etl_md.local_file_to_mysql(sql=insert_sql)
+    
 
 
 
