@@ -34,7 +34,7 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f %s""" % (async_empty_file))
     os.system("""rm -f %s""" % (async_status_exception_file))
     os.system("""rm -f /tmp/sql_%s.sql""")
-    os.system("""rm -f %s"""%(celery_task_status_file))
+    #os.system("""rm -f %s"""%(celery_task_status_file))
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
     #获取子账户
     source_data_sql = """
@@ -44,9 +44,10 @@ def main(TaskInfo,**kwargs):
     """%(media_type)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     for get_data in datas:
-        status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
+        pass
+        #status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
                                  AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
-        os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
+        #os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
     #获取状态
     status_wait = []
     celery_task_id = []
@@ -60,13 +61,14 @@ def main(TaskInfo,**kwargs):
     run_wait = True
     while run_wait:
        for waits_id in status_wait:
+          print(waits_id,len(celery_task_id),"======================")
           if get_celery_job_status(CeleryTaskId=waits_id) is True:
              celery_task_id.remove(waits_id)
           if len(celery_task_id) == 0:
              run_wait = False
           else:
              print("等待任务队列完成！！！") 
-             time.sleep(10)
+             #time.sleep(10)
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(CeleryTaskId)
