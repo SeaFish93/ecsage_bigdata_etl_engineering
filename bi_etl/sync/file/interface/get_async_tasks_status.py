@@ -39,6 +39,7 @@ def get_async_status(MysqlSession="",MediaType="",SqlList="",AsyncNotemptyFile="
         ### for etl_th in th:
         ###     etl_th.join()
         if os.path.exists(AsyncStatusExceptionFile):
+           print("===============%s"%(AsyncStatusExceptionFile))
            get_exception_thread(AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
         #记录有效子账户
         insert_sql = """
