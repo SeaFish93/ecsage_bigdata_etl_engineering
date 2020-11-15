@@ -107,7 +107,7 @@ def wait_for_celery_status(StatusList=""):
     #记录有效子账户
     insert_sql = """
        load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
-        """ % (AsyncNotemptyFile)
+        """ % (async_notempty_file)
     etl_md.local_file_to_mysql(sql=insert_sql)
 
 
