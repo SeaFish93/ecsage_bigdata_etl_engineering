@@ -3,7 +3,7 @@ from kombu import Exchange
 #broker use rabbitmq
 BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/0'
 #backend use redis
-#CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.235:9544/1'
+CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/1'
 #use json
 CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
