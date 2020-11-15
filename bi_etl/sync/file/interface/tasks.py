@@ -1,9 +1,11 @@
 from __future__ import absolute_import, unicode_literals
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import app
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 import os
 import requests
 import time
 
+etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 @app.task
 def add(x,y):
     return x+y
@@ -31,6 +33,12 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="
             n = 4
          if n > 3:
             os.system("""echo "%s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], AsyncNotemptyFile))
+            sql = """
+              insert into metadb.oe_valid_account_interface_bak
+              (account_id,media_type,service_code,token_data)
+              select '%',%s,'%s','%s'
+            """%(get_data[0], get_data[1], get_data[2], get_data[3])
+            etl_md.execute_sql(sql)
             os.system("""echo "%s %s %s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], get_data[4], get_data[5],  AsyncStatusExceptionFile+"_last"))
             set_true = False
          else:
@@ -52,8 +60,20 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
            os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
        else:
            os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
+           sql = """
+              insert into metadb.oe_valid_account_interface_bak
+              (account_id,media_type,service_code,token_data)
+              select '%',%s,'%s','%s'
+            """%(AccountId, MediaType,ServiceCode, Token)
+            etl_md.execute_sql(sql)
     else:
        os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
+       sql = """
+              insert into metadb.oe_valid_account_interface_bak
+              (account_id,media_type,service_code,token_data)
+              select '%',%s,'%s','%s'
+            """%(AccountId, MediaType,ServiceCode, Token)
+        etl_md.execute_sql(sql)
 
 def get_account_token(ServiceCode=""):
     headers = {'Content-Type': "application/json", "Connection": "close"}
