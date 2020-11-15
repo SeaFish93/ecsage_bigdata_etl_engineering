@@ -65,7 +65,7 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
               (account_id,media_type,service_code,token_data)
               select '%',%s,'%s','%s'
             """%(AccountId, MediaType,ServiceCode, Token)
-            etl_md.execute_sql(sql)
+           etl_md.execute_sql(sql)
     else:
        os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
        sql = """
@@ -73,7 +73,7 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
               (account_id,media_type,service_code,token_data)
               select '%',%s,'%s','%s'
             """%(AccountId, MediaType,ServiceCode, Token)
-        etl_md.execute_sql(sql)
+       etl_md.execute_sql(sql)
 
 def get_account_token(ServiceCode=""):
     headers = {'Content-Type': "application/json", "Connection": "close"}
