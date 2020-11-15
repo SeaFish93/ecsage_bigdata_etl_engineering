@@ -38,7 +38,7 @@ def main(TaskInfo,**kwargs):
                  select distinct account_id,media_type,service_code,token_data,task_id,task_name
                  from metadb.oe_async_task_interface 
                  where media_type = %s
-    """%(MediaType)
+    """%(media_type)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     for get_data in datas:
         run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
