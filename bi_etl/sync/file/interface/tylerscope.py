@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath("."))
 
 #app = Celery('tasks',include=['tasks'])
 #app.config_from_object('celeryconfig')
-app = Celery('tasks',include=['ecsage_bigdata_etl_engineering.bi_etl.sync.file.tasks'])
+app = Celery('ecsage_bigdata_etl_engineering.bi_etl.sync.file.tasks',include=['ecsage_bigdata_etl_engineering.bi_etl.sync.file.tasks'])
 app.config_from_object('ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.celeryconfig')
 
 def my_decorator(func):
