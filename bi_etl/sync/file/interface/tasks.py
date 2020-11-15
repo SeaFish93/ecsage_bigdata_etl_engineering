@@ -1,5 +1,5 @@
 from __future__ import absolute_import, unicode_literals
-from tylerscope import app
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import app
 import os
 import requests
 import time
