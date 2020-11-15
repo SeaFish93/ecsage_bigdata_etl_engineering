@@ -46,7 +46,7 @@ def main(TaskInfo,**kwargs):
     for get_data in datas:
         pass
         #status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
-                                 AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
+                              #   AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
         #os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
     #获取状态
     status_wait = []
