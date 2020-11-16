@@ -48,10 +48,6 @@ def main(TaskInfo,**kwargs):
                  where media_type = %s
     """%(media_type)
     ok, datas = etl_md.get_all_rows(source_data_sql)
-    ####with open("/home/ecsage_data/oceanengine/account/bak_async_notempty_2.log") as lines1:
-    ####   array1=lines1.readlines()
-    ####   for data in array1:
-    ####      get_data1 = data.strip('\n').split(" ")
     for get_data in datas:
           status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
                                                AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
@@ -59,16 +55,22 @@ def main(TaskInfo,**kwargs):
     #获取状态
     status_wait = []
     celery_task_id = []
-    with open(celery_task_status_file) as lines:
-       array=lines.readlines()
-       for data in array:
-          get_data1 = data.strip('\n').split(" ")
-          if get_celery_job_status(CeleryTaskId=get_data1[0]) is False:
-             status_wait.append(get_data1[0])
-             celery_task_id.append(get_data1[0])
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+    ######## with open(celery_task_status_file) as lines:
+    ########    array=lines.readlines()
+    ########    for data in array:
+    ########       get_data1 = data.strip('\n').split(" ")
+    ########       if get_celery_job_status(CeleryTaskId=get_data1[0]) is False:
+    ########          status_wait.append(get_data1[0])
+    ########          celery_task_id.append(get_data1[0])
     print("正在等待celery队列执行完成！！！")
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
+    print("等待重试异常任务！！！")
+    rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file.split("/")[0],
+                          AsyncNotemptyFile=async_notempty_file.split("/")[0],AsyncemptyFile=async_empty_file.split("/")[0],
+                          CeleryTaskStatusFile=celery_task_status_file.split("/")[0])
+    print("重试异常任务执行完成！！！")
     target_file = os.listdir(async_account_file)
     for files in target_file:
        if async_notempty_file.split("/")[-1] in files:
@@ -130,13 +132,38 @@ def wait_for_celery_status(StatusList=""):
       status_false.clear()
       sleep_num = sleep_num + 1
 
-def rerun_exception_tasks():
-    pass
-    ####with open("/home/ecsage_data/oceanengine/account/bak_async_notempty_2.log") as lines1:
-    ####   array1=lines1.readlines()
-    ####   for data in array1:
-    ####      get_data1 = data.strip('\n').split(" ")
+#重跑异常任务
+def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile="",AsyncemptyFile="",CeleryTaskStatusFile=""):
+    target_file = os.listdir(AsyncAccountDir)
+    exception_file_list = []
+    for files in target_file:
+        if ExceptionFile in files:
+            exception_file_list.append(files)
+            with open("""%s/%s"""%(AsyncAccountDir,files)) as lines1:
+                array1=lines1.readlines()
+                for data in array1:
+                    get_data = data.strip('\n').split(" ")
+                    status_id = run_task_exception.delay(AsyncNotemptyFile="""%s/%s"""%(AsyncAccountDir,AsyncNotemptyFile+".last_runned"),
+                                                         AsyncEmptyFile="""%s/%s"""%(AsyncAccountDir,AsyncemptyFile+".last_runned"),
+                                                         AsyncStatusExceptionFile="""%s/%s"""%(AsyncAccountDir,ExceptionFile+".last_runned"),
+                                                         ExecData=get_data)
+                    os.system("""echo "%s %s">>%s/%s""" % (status_id, get_data[0],AsyncAccountDir,CeleryTaskStatusFile+".last_runned"))
+    if len(exception_file_list) > 0:
+        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=AsyncAccountDir+"/"+CeleryTaskStatusFile+".last_runned")
+        wait_for_celery_status(StatusList=celery_task_id)
+        print("重试异常完成！！！")
 
+def get_celery_status_list(CeleryTaskStatusFile=""):
+    celery_task_id = []
+    status_wait = []
+    with open(CeleryTaskStatusFile) as lines:
+        array = lines.readlines()
+        for data in array:
+            get_data1 = data.strip('\n').split(" ")
+            if get_celery_job_status(CeleryTaskId=get_data1[0]) is False:
+                status_wait.append(get_data1[0])
+                celery_task_id.append(get_data1[0])
+    return celery_task_id,status_wait
 
 
 

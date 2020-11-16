@@ -28,9 +28,9 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExcepti
             n = 4
          if n > 3:
             print("异常子账户：%s" % (account_id))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, AsyncNotemptyFile+".%s"%(hostname)))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, AsyncStatusExceptionFile+"_last.%s"%(hostname)))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, 999999, "异常子账户", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, 999999, "异常子账户", AsyncNotemptyFile+".%s"%(hostname)))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, 999999, "异常子账户", AsyncStatusExceptionFile+".%s"%(hostname)))
             set_true = False
          else:
           time.sleep(2)
