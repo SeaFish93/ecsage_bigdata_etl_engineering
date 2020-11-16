@@ -114,7 +114,17 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
        #获取每个域名分配的子账户个数
        media_type = """media_type"""
        where = """media_type"""
-       table = """metadb.oe_valid_account_interface"""
+       table = """
+          (select a.account_id, a.media_type, a.service_code 
+           from metadb.oe_valid_account_interface a
+           left join metadb.oe_not_valid_account_interface b
+           on a.media_type = b.media_type
+           and a.account_id = b.account_id
+           and a.service_code = b.service_code
+           where b.service_code is null
+           group by a.account_id, a.media_type, a.service_code
+          )
+       """
        group_by = """media_type"""
        select_session = etl_md
     else:
@@ -154,7 +164,16 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                # 获取每个域名分配的子账户个数
                media_type = """media_type"""
                where = """media_type"""
-               table = """metadb.oe_valid_account_interface"""
+               table = """
+                  (select a.account_id, a.media_type, a.service_code 
+                   from metadb.oe_valid_account_interface a
+                   left join metadb.oe_not_valid_account_interface b
+                   on a.media_type = b.media_type
+                   and a.account_id = b.account_id
+                   and a.service_code = b.service_code
+                   where b.service_code is null
+                   group by a.account_id, a.media_type, a.service_code )
+               """
                select_session = etl_md
                group_by = """media_type"""
            else:
