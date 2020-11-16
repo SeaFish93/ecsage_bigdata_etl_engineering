@@ -61,26 +61,10 @@ def main(TaskInfo,**kwargs):
                           CeleryTaskStatusFile=celery_task_status_file)
     print("重试异常任务执行完成！！！")
     time.sleep(60)
-    target_file = os.listdir(async_account_file)
-    for files in target_file:
-       if async_notempty_file.split("/")[-1] in files:
-           print(files,"###############################################")
-           #记录有效子账户
-           insert_sql = """
-              load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data,task_id,task_name)
-           """ % (async_account_file+"/"+files)
-           ok = etl_md.local_file_to_mysql(sql=insert_sql)
-           if ok is False:
-              msg = "写入MySQL出现异常！！！\n%s" % (async_notempty_file)
-              msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                                     SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                                     TargetTable="%s.%s" % ("", ""),
-                                     BeginExecDate="",
-                                     EndExecDate="",
-                                     Status="Error",
-                                     Log=msg,
-                                     Developer="developer")
-              set_exit(LevelStatu="red", MSG=msg)
+    #落地有数据
+    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface")
+    #落地没数据
+    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface")
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(CeleryTaskId)
@@ -162,7 +146,27 @@ def get_celery_status_list(CeleryTaskStatusFile=""):
                 celery_task_id.append(get_data1[0])
     return celery_task_id,status_wait
 
-
+def load_data_mysql(AsyncAccountFile="",DataFile="",TableName=""):
+    target_file = os.listdir(AsyncAccountFile)
+    for files in target_file:
+        if DataFile.split("/")[-1] in files:
+            print(files, "###############################################")
+            # 记录有效子账户
+            insert_sql = """
+                  load data local infile '%s' into table metadb.%s fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data,task_id,task_name)
+               """ % (AsyncAccountFile + "/" + files,TableName)
+            ok = etl_md.local_file_to_mysql(sql=insert_sql)
+            if ok is False:
+                msg = "写入MySQL出现异常！！！\n%s" % (DataFile)
+                msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                       SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                       TargetTable="%s.%s" % ("", ""),
+                                       BeginExecDate="",
+                                       EndExecDate="",
+                                       Status="Error",
+                                       Log=msg,
+                                       Developer="developer")
+                set_exit(LevelStatu="red", MSG=msg)
 
 
 
