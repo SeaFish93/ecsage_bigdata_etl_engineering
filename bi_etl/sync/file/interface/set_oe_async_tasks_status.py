@@ -142,15 +142,15 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
             exception_file_list.append(files)
             exception_dir_file = """%s/%s"""%(AsyncAccountDir,files)
             print(exception_file, exception_dir_file,"==========================")
-            with open(exception_dir_file) as lines1:
-                array1=lines1.readlines()
-                for data in array1:
+            with open(exception_dir_file) as lines:
+                array = lines.readlines()
+                for data in array:
                     get_data = data.strip('\n').split(" ")
                     os.system("""echo "%s">>/tmp/datadata.log.log """%(get_data))
-                    #status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,
-                                                         #AsyncEmptyFile=async_empty_file,
-                                                         #AsyncStatusExceptionFile=async_status_exception_file,
-                                                         #ExecData=get_data)
+                    status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,
+                                                         AsyncEmptyFile=async_empty_file,
+                                                         AsyncStatusExceptionFile=async_status_exception_file,
+                                                         ExecData=get_data)
                     #os.system("""echo "%s %s">>%s/%s""" % (status_id, get_data[0],AsyncAccountDir,CeleryTaskStatusFile+".last_runned"))
     #if len(exception_file_list) > 0:
     #    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=AsyncAccountDir+"/"+CeleryTaskStatusFile+".last_runned")
