@@ -73,7 +73,8 @@ def main(TaskInfo,**kwargs):
     insert_sql = """
        load data local infile '%s' into table metadb.oe_valid_account_interface_bak fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
         """ % (async_notempty_file)
-    ok = etl_md.local_file_to_mysql(sql=insert_sql)
+    #ok = etl_md.local_file_to_mysql(sql=insert_sql)
+    ok = True
     if ok is False:
        msg = "写入MySQL出现异常！！！\n%s" % (async_notempty_file)
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
