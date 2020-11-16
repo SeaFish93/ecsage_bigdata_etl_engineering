@@ -146,7 +146,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
                 array = lines.readlines()
                 for data in array:
                     get_data = data.strip('\n').split(" ")
-                    os.system("""echo "%s">>/tmp/datadata.log.log """%(get_data))
+                    os.system("""echo "%s %s">>/tmp/datadata.log.log """%(get_data,type(get_data)))
                     status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,
                                                          AsyncEmptyFile=async_empty_file,
                                                          AsyncStatusExceptionFile=async_status_exception_file,
