@@ -3,7 +3,10 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import
 import os
 import requests
 import time
+import socket
+import datetime
 
+hostname = socket.gethostname()
 @app.task
 def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData=""):
     get_data = ExecData
@@ -26,15 +29,15 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExcepti
          if n > 3:
             print("异常子账户：%s" % (account_id))
             os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, AsyncNotemptyFile))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, AsyncStatusExceptionFile+"_last"))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, AsyncNotemptyFile+".%s"%(hostname)))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, AsyncStatusExceptionFile+"_last.%s"%(hostname)))
             set_true = False
          else:
           time.sleep(2)
       n = n + 1
 
 def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile=""):
-    os.system("""echo "%s %s">>/tmp/account_status.log """%(ServiceCode,AccountId))
+    os.system("""echo "%s %s %s">>/tmp/account_status.log """%(ServiceCode,AccountId,datetime.datetime.now()))
     resp_data = get_tasks_status(AccountId=AccountId, TaskId=TaskId, Token=Token)
     data = resp_data["code"]
     if data == 40105:
@@ -45,14 +48,14 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
     print("账户：%s，serviceCode：%s，文件大小：%s，任务状态：%s"%(AccountId,ServiceCode,file_size,task_status))
     if task_status == "ASYNC_TASK_STATUS_COMPLETED":
        if int(file_size) == 12:
-           os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
+           os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile+".%s"%(hostname)))
        else:
            print("有数据：%s"%(AccountId))
-           os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"有数", AsyncNotemptyFile))
+           os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"有数", AsyncNotemptyFile+".%s"%(hostname)))
            os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"有数", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
     else:
-       os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"未执行完成", AsyncNotemptyFile))
-       os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"未执行完成", "/tmp/AsyncNotemptyFile.log.log"))
+       os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"未执行完成", AsyncNotemptyFile+".%s"%(hostname)))
+       os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"未执行完成", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
 
 def get_account_token(ServiceCode=""):
     headers = {'Content-Type': "application/json", "Connection": "close"}
@@ -67,7 +70,7 @@ def get_account_token(ServiceCode=""):
         set_true = False
       except Exception as e:
         if n > 3:
-            os.system("""echo "错误子账户token：%s">>/tmp/account_token_token.log """%(ServiceCode))
+            os.system("""echo "错误子账户token：%s %s">>/tmp/account_token_token.log """%(ServiceCode,datetime.datetime.now()))
             set_true = False
         else:
             time.sleep(2)
