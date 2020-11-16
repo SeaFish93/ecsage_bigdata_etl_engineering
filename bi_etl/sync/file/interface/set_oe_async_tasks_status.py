@@ -28,13 +28,13 @@ def main(TaskInfo,**kwargs):
     async_empty_file = """%s/async_empty_%s.log""" % (async_account_file,media_type)
     async_not_succ_file = """%s/async_not_succ_file_%s.log""" % (async_account_file,media_type)
     celery_task_status_file = """%s/celery_task_status_file_%s.log"""%(async_account_file,media_type)
-    #########os.system("""mkdir -p %s"""%(async_account_file))
-    #########os.system("""rm -f %s*""" % (async_not_succ_file))
-    #########os.system("""rm -f %s*""" % (async_notempty_file))
-    #########os.system("""rm -f %s*""" % (async_empty_file))
-    #########os.system("""rm -f %s*""" % (async_status_exception_file))
-    #########os.system("""rm -f /tmp/sql_%s.sql""")
-    #########os.system("""rm -f %s*"""%(celery_task_status_file))
+    os.system("""mkdir -p %s"""%(async_account_file))
+    os.system("""rm -f %s*""" % (async_not_succ_file))
+    os.system("""rm -f %s*""" % (async_notempty_file))
+    os.system("""rm -f %s*""" % (async_empty_file))
+    os.system("""rm -f %s*""" % (async_status_exception_file))
+    os.system("""rm -f /tmp/sql_%s.sql""")
+    os.system("""rm -f %s*"""%(celery_task_status_file))
     #etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface_bak where media_type=%s """ % (media_type))
     #获取子账户
@@ -52,15 +52,8 @@ def main(TaskInfo,**kwargs):
     status_wait = []
     celery_task_id = []
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
-    ######## with open(celery_task_status_file) as lines:
-    ########    array=lines.readlines()
-    ########    for data in array:
-    ########       get_data1 = data.strip('\n').split(" ")
-    ########       if get_celery_job_status(CeleryTaskId=get_data1[0]) is False:
-    ########          status_wait.append(get_data1[0])
-    ########          celery_task_id.append(get_data1[0])
     print("正在等待celery队列执行完成！！！")
-    #wait_for_celery_status(StatusList=celery_task_id)
+    wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
     rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file,
@@ -141,7 +134,6 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
         if exception_file in files:
             exception_file_list.append(files)
             exception_dir_file = """%s/%s"""%(AsyncAccountDir,files)
-            print(exception_file, exception_dir_file,"==========================")
             with open(exception_dir_file) as lines:
                 array = lines.readlines()
                 for data in array:
