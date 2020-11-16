@@ -35,8 +35,8 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f %s*""" % (async_status_exception_file))
     os.system("""rm -f /tmp/sql_%s.sql""")
     os.system("""rm -f %s*"""%(celery_task_status_file))
-    #etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
-    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface_bak where media_type=%s """ % (media_type))
+    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
+    #etl_md.execute_sql("""delete from metadb.oe_valid_account_interface_bak where media_type=%s """ % (media_type))
     #获取子账户
     source_data_sql = """
                  select distinct account_id,media_type,service_code,token_data,task_id,task_name
@@ -63,9 +63,10 @@ def main(TaskInfo,**kwargs):
     target_file = os.listdir(async_account_file)
     for files in target_file:
        if async_notempty_file.split("/")[-1] in files:
+           print(files,"###############################################")
            #记录有效子账户
            insert_sql = """
-              load data local infile '%s' into table metadb.oe_valid_account_interface_bak fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
+              load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data,task_id,task_name)
            """ % (async_account_file+"/"+files)
            ok = etl_md.local_file_to_mysql(sql=insert_sql)
            if ok is False:
@@ -149,7 +150,6 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
         print("重试异常完成！！！")
 
 def get_celery_status_list(CeleryTaskStatusFile=""):
-    print(CeleryTaskStatusFile,"@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     celery_task_id = []
     status_wait = []
     with open(CeleryTaskStatusFile) as lines:
