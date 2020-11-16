@@ -266,7 +266,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
         hdfs_dir = "/tmp/datafolder_new"
         # 上传数据文件
         print("""hadoop fs -moveFromLocal -f %s %s""" % (local_file, hdfs_dir), "************************************")
-        ok_data = os.system("hadoop fs -moveFromLocal -f %s %s" % (local_file, hdfs_dir))
+        ok_data = os.system("hadoop fs -put %s %s" % (local_file, hdfs_dir))
         if ok_data != 0:
            msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                   SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
