@@ -60,7 +60,7 @@ def main(TaskInfo,**kwargs):
     ########          status_wait.append(get_data1[0])
     ########          celery_task_id.append(get_data1[0])
     print("正在等待celery队列执行完成！！！")
-    wait_for_celery_status(StatusList=celery_task_id)
+    #wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
     rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file,
