@@ -60,6 +60,7 @@ def main(TaskInfo,**kwargs):
                           AsyncNotemptyFile=async_notempty_file,AsyncemptyFile=async_empty_file,
                           CeleryTaskStatusFile=celery_task_status_file)
     print("重试异常任务执行完成！！！")
+    time.sleep(60)
     target_file = os.listdir(async_account_file)
     for files in target_file:
        if async_notempty_file.split("/")[-1] in files:
