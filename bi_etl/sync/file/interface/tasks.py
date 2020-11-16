@@ -15,6 +15,7 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExcepti
     task_name = get_data[5]
     set_true = True
     n = 1
+    print("执行子账户：%s"%(account_id))
     while set_true:
       try:
          set_async_status_content_content(MediaType=media_type,ServiceCode=service_code,AccountId=account_id,TaskId=task_id,Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
