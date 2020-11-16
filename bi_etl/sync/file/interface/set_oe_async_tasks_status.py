@@ -134,13 +134,13 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
     exception_file_list = []
     for files in target_file:
         if ExceptionFile in files:
-            print(files,"==========================")
+            print(ExceptionFile,files,"==========================")
             exception_file_list.append(files)
             with open("""%s/%s"""%(AsyncAccountDir,files)) as lines1:
                 array1=lines1.readlines()
                 for data in array1:
                     get_data = data.strip('\n').split(" ")
-                    print(get_data,"######################################################")
+                    #print(get_data,"######################################################")
                     async_notempty_file = """%s/%s"""%(AsyncAccountDir,AsyncNotemptyFile+".last_runned")
                     async_empty_file = """%s/%s"""%(AsyncAccountDir,AsyncemptyFile+".last_runned")
                     async_status_exception_file = """%s/%s"""%(AsyncAccountDir,ExceptionFile+".last_runned")
