@@ -131,16 +131,15 @@ def wait_for_celery_status(StatusList=""):
 #重跑异常任务
 def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile="",AsyncemptyFile="",CeleryTaskStatusFile=""):
     exception_file = ExceptionFile.split("/")[-1]
-    print(exception_file,"##########################!!!!!!!!!!!!!!!!!!!!!!!!")
-    exit(0)
-    async_notempty_file = AsyncNotemptyFile
-    async_empty_file = AsyncemptyFile
-    celery_task_status_file = CeleryTaskStatusFile
+    async_notempty_file = AsyncNotemptyFile.split("/")[-1]
+    async_empty_file = AsyncemptyFile.split("/")[-1]
+    celery_task_status_file = CeleryTaskStatusFile.split("/")[-1]
     target_file = os.listdir(AsyncAccountDir)
     exception_file_list = []
     for files in target_file:
-        if ExceptionFile in files:
-            print(ExceptionFile,files,"==========================")
+        if exception_file in files:
+            print(exception_file,files,+"@@@@@"+async_notempty_file+"||"+celery_task_status_file+"==========================")
+            exit(0)
             exception_file_list.append(files)
             with open("""%s/%s"""%(AsyncAccountDir,files)) as lines1:
                 array1=lines1.readlines()
@@ -149,15 +148,15 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
                     async_notempty_file = """%s/%s"""%(AsyncAccountDir,AsyncNotemptyFile+".last_runned")
                     async_empty_file = """%s/%s"""%(AsyncAccountDir,AsyncemptyFile+".last_runned")
                     async_status_exception_file = """%s/%s"""%(AsyncAccountDir,ExceptionFile+".last_runned")
-                    status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,
-                                                         AsyncEmptyFile=async_empty_file,
-                                                         AsyncStatusExceptionFile=async_status_exception_file,
-                                                         ExecData=get_data)
-                    os.system("""echo "%s %s">>%s/%s""" % (status_id, get_data[0],AsyncAccountDir,CeleryTaskStatusFile+".last_runned"))
-    if len(exception_file_list) > 0:
-        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=AsyncAccountDir+"/"+CeleryTaskStatusFile+".last_runned")
-        wait_for_celery_status(StatusList=celery_task_id)
-        print("重试异常完成！！！")
+                    #status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,
+                                                         #AsyncEmptyFile=async_empty_file,
+                                                         #AsyncStatusExceptionFile=async_status_exception_file,
+                                                         #ExecData=get_data)
+                    #os.system("""echo "%s %s">>%s/%s""" % (status_id, get_data[0],AsyncAccountDir,CeleryTaskStatusFile+".last_runned"))
+    #if len(exception_file_list) > 0:
+    #    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=AsyncAccountDir+"/"+CeleryTaskStatusFile+".last_runned")
+    #    wait_for_celery_status(StatusList=celery_task_id)
+    #    print("重试异常完成！！！")
 
 def get_celery_status_list(CeleryTaskStatusFile=""):
     print(CeleryTaskStatusFile,"@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
