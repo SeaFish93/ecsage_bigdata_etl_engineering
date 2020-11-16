@@ -33,7 +33,7 @@ def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="
             n = 4
          if n > 3:
             os.system("""echo "%s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], "/tmp/AsyncNotemptyFile.log.log"))
-            os.system("""echo "%s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], AsyncNotemptyFile))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], get_data[4], get_data[5], AsyncNotemptyFile))
             os.system("""echo "%s %s %s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], get_data[4], get_data[5],  AsyncStatusExceptionFile+"_last"))
             insert_sql = """
                insert into metadb.oe_valid_account_interface_bak
@@ -61,14 +61,14 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
        if int(file_size) == 12:
            os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
        else:
-           print("有数据：%s"%(account_id))
+           print("有数据：%s"%(AccountId))
            insert_sql = """
                insert into metadb.oe_valid_account_interface_bak
                (account_id,media_type,service_code,token_data)
                select '%s',%s,'%s','%s'
             """ % (AccountId, MediaType,ServiceCode, Token)
            #ok = etl_md.execute_sql(sql=insert_sql)
-           os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
+           os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"", AsyncNotemptyFile))
            os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, "/tmp/AsyncNotemptyFile.log.log"))
     else:
        insert_sql = """
@@ -77,7 +77,7 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
                select '%s',%s,'%s','%s'
             """ % (AccountId, MediaType,ServiceCode, Token)
        #ok = etl_md.execute_sql(sql=insert_sql)
-       os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, AsyncNotemptyFile))
+       os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"", AsyncNotemptyFile))
        os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, "/tmp/AsyncNotemptyFile.log.log"))
 
 def get_account_token(ServiceCode=""):
