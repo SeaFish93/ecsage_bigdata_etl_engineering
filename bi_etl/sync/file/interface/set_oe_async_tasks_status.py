@@ -131,15 +131,14 @@ def wait_for_celery_status(StatusList=""):
 #重跑异常任务
 def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile="",AsyncemptyFile="",CeleryTaskStatusFile=""):
     exception_file = ExceptionFile.split("/")[-1]
-    async_notempty_file = AsyncNotemptyFile.split("/")[-1]
-    async_empty_file = AsyncemptyFile.split("/")[-1]
-    celery_task_status_file = CeleryTaskStatusFile.split("/")[-1]
+    async_notempty_file = """%s/%s"""%(AsyncAccountDir,AsyncNotemptyFile.split("/")[-1])
+    async_empty_file = """%s/%s"""%(AsyncAccountDir,AsyncemptyFile.split("/")[-1])
+    celery_task_status_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskStatusFile.split("/")[-1])
     target_file = os.listdir(AsyncAccountDir)
     exception_file_list = []
     for files in target_file:
         if exception_file in files:
             print(exception_file,files,"@@@@@",async_notempty_file,"||",celery_task_status_file,"==========================")
-            exit(0)
             exception_file_list.append(files)
             with open("""%s/%s"""%(AsyncAccountDir,files)) as lines1:
                 array1=lines1.readlines()
