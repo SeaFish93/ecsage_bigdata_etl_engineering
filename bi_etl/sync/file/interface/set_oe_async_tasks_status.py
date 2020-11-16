@@ -39,7 +39,7 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f %s""" % (async_status_exception_file))
     os.system("""rm -f /tmp/sql_%s.sql""")
     os.system("""rm -f %s"""%(celery_task_status_file))
-    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
+    #etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface_bak where media_type=%s """ % (media_type))
     #获取子账户
     source_data_sql = """
@@ -54,7 +54,7 @@ def main(TaskInfo,**kwargs):
     ####      get_data1 = data.strip('\n').split(" ")
     for get_data in datas:
           status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
-                                             AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
+                                               AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
           os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
     #获取状态
     status_wait = []
@@ -71,7 +71,7 @@ def main(TaskInfo,**kwargs):
     print("celery队列执行完成！！！")
     #记录有效子账户
     insert_sql = """
-       load data local infile '%s' into table metadb.oe_valid_account_interface fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
+       load data local infile '%s' into table metadb.oe_valid_account_interface_bak fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
         """ % (async_notempty_file)
     ok = etl_md.local_file_to_mysql(sql=insert_sql)
     if ok is False:

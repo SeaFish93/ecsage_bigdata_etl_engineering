@@ -1,53 +1,38 @@
 from __future__ import absolute_import, unicode_literals
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import app
-from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 import os
 import requests
 import time
 
-#etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 @app.task
-def add(x,y):
-    return x+y
-
-@app.task
-def multiply(x,y):
-    return x*y
-
-@app.task
-def signup():
-    print('i am here now.')
-
-@app.task
-def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile="",AsyncStatusExceptionFile="",ExecData=""):
+def run_task_exception(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData=""):
     get_data = ExecData
+    media_type = get_data[1]
+    service_code = get_data[2]
+    account_id = get_data[0]
+    task_id = get_data[4]
+    token = get_data[3]
+    task_name = get_data[5]
     set_true = True
     n = 1
     while set_true:
       try:
-         set_async_status_content_content(MediaType=get_data[1],ServiceCode=get_data[2],AccountId=get_data[0],TaskId=get_data[4],Token=get_data[3],AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,AsyncNotSuccFile=AsyncNotSuccFile)
+         set_async_status_content_content(MediaType=media_type,ServiceCode=service_code,AccountId=account_id,TaskId=task_id,Token=token,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
          set_true = False
       except Exception as e:
-         print("!!!!!!!!!!!!!%s %s"%(AsyncNotemptyFile,get_data[0]))
-         if get_data[4] == 0:
+         if task_id == 0:
             n = 4
          if n > 3:
-            os.system("""echo "%s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], "/tmp/AsyncNotemptyFile.log.log"))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], get_data[4], get_data[5], AsyncNotemptyFile))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (get_data[0], get_data[1], get_data[2], get_data[3], get_data[4], get_data[5],  AsyncStatusExceptionFile+"_last"))
-            insert_sql = """
-               insert into metadb.oe_valid_account_interface_bak
-               (account_id,media_type,service_code,token_data)
-               select '%s',%s,'%s','%s'
-            """ % (get_data[0], get_data[1], get_data[2], get_data[3])
-            #ok = etl_md.execute_sql(sql=insert_sql)
-
+            print("异常子账户：%s" % (account_id))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, AsyncNotemptyFile))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, task_name, AsyncStatusExceptionFile+"_last"))
             set_true = False
          else:
           time.sleep(2)
       n = n + 1
 
-def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile="",AsyncNotSuccFile=""):
+def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",TaskId="",Token="",AsyncNotemptyFile="",AsyncEmptyFile=""):
     os.system("""echo "%s %s">>/tmp/account_status.log """%(ServiceCode,AccountId))
     resp_data = get_tasks_status(AccountId=AccountId, TaskId=TaskId, Token=Token)
     data = resp_data["code"]
@@ -62,23 +47,11 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
            os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile))
        else:
            print("有数据：%s"%(AccountId))
-           insert_sql = """
-               insert into metadb.oe_valid_account_interface_bak
-               (account_id,media_type,service_code,token_data)
-               select '%s',%s,'%s','%s'
-            """ % (AccountId, MediaType,ServiceCode, Token)
-           #ok = etl_md.execute_sql(sql=insert_sql)
-           os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"", AsyncNotemptyFile))
-           os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, "/tmp/AsyncNotemptyFile.log.log"))
+           os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"有数", AsyncNotemptyFile))
+           os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"有数", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
     else:
-       insert_sql = """
-               insert into metadb.oe_valid_account_interface_bak
-               (account_id,media_type,service_code,token_data)
-               select '%s',%s,'%s','%s'
-            """ % (AccountId, MediaType,ServiceCode, Token)
-       #ok = etl_md.execute_sql(sql=insert_sql)
-       os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"", AsyncNotemptyFile))
-       os.system("""echo "%s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, "/tmp/AsyncNotemptyFile.log.log"))
+       os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"未执行完成", AsyncNotemptyFile))
+       os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"未执行完成", "/tmp/AsyncNotemptyFile.log.log"))
 
 def get_account_token(ServiceCode=""):
     headers = {'Content-Type': "application/json", "Connection": "close"}
