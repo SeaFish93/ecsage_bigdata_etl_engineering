@@ -40,16 +40,20 @@ def main(TaskInfo,**kwargs):
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface_bak where media_type=%s """ % (media_type))
     #获取子账户
-    source_data_sql = """
-                 select distinct account_id,media_type,service_code,token_data,task_id,task_name
-                 from metadb.oe_async_task_interface 
-                 where media_type = %s
-    """%(media_type)
-    ok, datas = etl_md.get_all_rows(source_data_sql)
-    for get_data in datas:
-        status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
-                                             AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
-        os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
+    ## source_data_sql = """
+    ##              select distinct account_id,media_type,service_code,token_data,task_id,task_name
+    ##              from metadb.oe_async_task_interface
+    ##              where media_type = %s
+    ## """%(media_type)
+    ## ok, datas = etl_md.get_all_rows(source_data_sql)
+    with open("/home/ecsage_data/oceanengine/account/bak_async_notempty_2.log") as lines1:
+       array1=lines1.readlines()
+       for data in array1:
+          get_data1 = data.strip('\n').split(" ")
+    #for get_data in datas:
+          status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
+                                             AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data1)
+          os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
     #获取状态
     status_wait = []
     celery_task_id = []
