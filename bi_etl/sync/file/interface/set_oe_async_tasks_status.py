@@ -63,9 +63,9 @@ def main(TaskInfo,**kwargs):
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
-    rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file.split("/")[0],
-                          AsyncNotemptyFile=async_notempty_file.split("/")[0],AsyncemptyFile=async_empty_file.split("/")[0],
-                          CeleryTaskStatusFile=celery_task_status_file.split("/")[0])
+    rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file,
+                          AsyncNotemptyFile=async_notempty_file,AsyncemptyFile=async_empty_file,
+                          CeleryTaskStatusFile=celery_task_status_file)
     print("重试异常任务执行完成！！！")
     target_file = os.listdir(async_account_file)
     for files in target_file:
@@ -130,6 +130,12 @@ def wait_for_celery_status(StatusList=""):
 
 #重跑异常任务
 def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile="",AsyncemptyFile="",CeleryTaskStatusFile=""):
+    exception_file = ExceptionFile.split("/")[-1]
+    print(exception_file,"##########################!!!!!!!!!!!!!!!!!!!!!!!!")
+    exit(0)
+    async_notempty_file = AsyncNotemptyFile
+    async_empty_file = AsyncemptyFile
+    celery_task_status_file = CeleryTaskStatusFile
     target_file = os.listdir(AsyncAccountDir)
     exception_file_list = []
     for files in target_file:
@@ -140,7 +146,6 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
                 array1=lines1.readlines()
                 for data in array1:
                     get_data = data.strip('\n').split(" ")
-                    #print(get_data,"######################################################")
                     async_notempty_file = """%s/%s"""%(AsyncAccountDir,AsyncNotemptyFile+".last_runned")
                     async_empty_file = """%s/%s"""%(AsyncAccountDir,AsyncemptyFile+".last_runned")
                     async_status_exception_file = """%s/%s"""%(AsyncAccountDir,ExceptionFile+".last_runned")
