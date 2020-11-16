@@ -138,7 +138,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
     exception_file_list = []
     for files in target_file:
         if exception_file in files:
-            print(exception_file,files,+"@@@@@"+async_notempty_file+"||"+celery_task_status_file+"==========================")
+            print(exception_file,files,"@@@@@",async_notempty_file,"||",celery_task_status_file,"==========================")
             exit(0)
             exception_file_list.append(files)
             with open("""%s/%s"""%(AsyncAccountDir,files)) as lines1:
