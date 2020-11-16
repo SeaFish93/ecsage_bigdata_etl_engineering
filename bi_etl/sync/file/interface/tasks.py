@@ -48,7 +48,7 @@ def set_async_status_content_content(MediaType="",ServiceCode="",AccountId="",Ta
     print("账户：%s，serviceCode：%s，文件大小：%s，任务状态：%s"%(AccountId,ServiceCode,file_size,task_status))
     if task_status == "ASYNC_TASK_STATUS_COMPLETED":
        if int(file_size) == 12:
-           os.system("""echo "%s %s %s">>%s """%(AccountId,TaskId,Token,AsyncEmptyFile+".%s"%(hostname)))
+           os.system("""echo "%s %s %s %s %s %s">>%s """%(AccountId, MediaType,ServiceCode, Token, TaskId,"有数",AsyncEmptyFile+".%s"%(hostname)))
        else:
            print("有数据：%s"%(AccountId))
            os.system("""echo "%s %s %s %s %s %s">>%s """ % (AccountId, MediaType,ServiceCode, Token, TaskId,"有数", AsyncNotemptyFile+".%s"%(hostname)))
