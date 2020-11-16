@@ -36,7 +36,7 @@ def main(TaskInfo,**kwargs):
     os.system("""rm -f /tmp/sql_%s.sql""")
     os.system("""rm -f %s*"""%(celery_task_status_file))
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
-    #etl_md.execute_sql("""delete from metadb.oe_valid_account_interface_bak where media_type=%s """ % (media_type))
+    etl_md.execute_sql("""delete from metadb.oe_not_valid_account_interface where media_type=%s """ % (media_type))
     #获取子账户
     source_data_sql = """
                  select distinct account_id,media_type,service_code,token_data,task_id,task_name
