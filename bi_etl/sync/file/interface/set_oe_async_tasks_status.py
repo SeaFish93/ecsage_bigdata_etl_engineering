@@ -67,17 +67,19 @@ def main(TaskInfo,**kwargs):
              status_wait.append(get_data1[0])
              celery_task_id.append(get_data1[0])
     print("正在等待celery队列执行完成！！！")
-    #wait_for_celery_status(StatusList=celery_task_id)
+    wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
-    #记录有效子账户
-    insert_sql = """
-       load data local infile '%s' into table metadb.oe_valid_account_interface_bak fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
-        """ % (async_notempty_file)
-    #ok = etl_md.local_file_to_mysql(sql=insert_sql)
-    ok = True
-    if ok is False:
-       msg = "写入MySQL出现异常！！！\n%s" % (async_notempty_file)
-       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+    target_file = os.listdir(async_account_file)
+    for files in target_file:
+       if async_notempty_file.split("/")[-1] in files:
+           #记录有效子账户
+           insert_sql = """
+              load data local infile '%s' into table metadb.oe_valid_account_interface_bak fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data)
+           """ % (async_account_file+"/"+files)
+           ok = etl_md.local_file_to_mysql(sql=insert_sql)
+           if ok is False:
+              msg = "写入MySQL出现异常！！！\n%s" % (async_notempty_file)
+              msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                      SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
                                      TargetTable="%s.%s" % ("", ""),
                                      BeginExecDate="",
@@ -85,7 +87,7 @@ def main(TaskInfo,**kwargs):
                                      Status="Error",
                                      Log=msg,
                                      Developer="developer")
-       set_exit(LevelStatu="red", MSG=msg) 
+              set_exit(LevelStatu="red", MSG=msg)
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(CeleryTaskId)
@@ -127,7 +129,13 @@ def wait_for_celery_status(StatusList=""):
           run_wait = False
       status_false.clear()
       sleep_num = sleep_num + 1
-    
+
+def rerun_exception_tasks():
+    pass
+    ####with open("/home/ecsage_data/oceanengine/account/bak_async_notempty_2.log") as lines1:
+    ####   array1=lines1.readlines()
+    ####   for data in array1:
+    ####      get_data1 = data.strip('\n').split(" ")
 
 
 
