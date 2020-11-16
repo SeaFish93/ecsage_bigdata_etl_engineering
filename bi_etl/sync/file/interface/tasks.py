@@ -93,7 +93,7 @@ def get_account_token(ServiceCode=""):
         set_true = False
       except Exception as e:
         if n > 3:
-            os.system("""echo "错误子账户token：%s">>/tmp/account_token_token.log """%(account_id))
+            os.system("""echo "错误子账户token：%s">>/tmp/account_token_token.log """%(ServiceCode))
             set_true = False
         else:
             time.sleep(2)

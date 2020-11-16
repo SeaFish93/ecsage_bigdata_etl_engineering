@@ -4,6 +4,8 @@ import sys
 import os
 import time
 from celery.result import AsyncResult
+from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service import get_run_sql
@@ -40,19 +42,19 @@ def main(TaskInfo,**kwargs):
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface_bak where media_type=%s """ % (media_type))
     #获取子账户
-    ## source_data_sql = """
-    ##              select distinct account_id,media_type,service_code,token_data,task_id,task_name
-    ##              from metadb.oe_async_task_interface
-    ##              where media_type = %s
-    ## """%(media_type)
-    ## ok, datas = etl_md.get_all_rows(source_data_sql)
-    with open("/home/ecsage_data/oceanengine/account/bak_async_notempty_2.log") as lines1:
-       array1=lines1.readlines()
-       for data in array1:
-          get_data1 = data.strip('\n').split(" ")
-    #for get_data in datas:
+    source_data_sql = """
+                 select distinct account_id,media_type,service_code,token_data,task_id,task_name
+                 from metadb.oe_async_task_interface
+                 where media_type = %s
+    """%(media_type)
+    ok, datas = etl_md.get_all_rows(source_data_sql)
+    ####with open("/home/ecsage_data/oceanengine/account/bak_async_notempty_2.log") as lines1:
+    ####   array1=lines1.readlines()
+    ####   for data in array1:
+    ####      get_data1 = data.strip('\n').split(" ")
+    for get_data in datas:
           status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
-                                             AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data1)
+                                             AsyncNotSuccFile=async_not_succ_file,AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
           os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
     #获取状态
     status_wait = []
@@ -60,10 +62,10 @@ def main(TaskInfo,**kwargs):
     with open(celery_task_status_file) as lines:
        array=lines.readlines()
        for data in array:
-          get_data = data.strip('\n').split(" ")
-          if get_celery_job_status(CeleryTaskId=get_data[0]) is False:
-             status_wait.append(get_data[0])
-             celery_task_id.append(get_data[0])
+          get_data1 = data.strip('\n').split(" ")
+          if get_celery_job_status(CeleryTaskId=get_data1[0]) is False:
+             status_wait.append(get_data1[0])
+             celery_task_id.append(get_data1[0])
     print("正在等待celery队列执行完成！！！")
     #wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
