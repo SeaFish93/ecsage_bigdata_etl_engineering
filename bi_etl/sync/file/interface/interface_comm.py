@@ -98,6 +98,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
              time.sleep(2)
        else:
            code == 0
+           print(DataFile,"##################################================================")
            os.system("""echo %s>>%s""" % (resp_datas, DataFile + ".%s" % (hostname)))
            set_run = False
        n = n + 1
