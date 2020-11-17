@@ -10,7 +10,7 @@ from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_inf
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import *
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status as get_oe_async_tasks_status_celery
 import os
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
@@ -50,7 +50,7 @@ def get_oe_async_tasks_status(MediaType=""):
     """%(media_type)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     for get_data in datas:
-          status_id = get_oe_async_tasks_status.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
+          status_id = get_oe_async_tasks_status_celery.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
                                                AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
           os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
     #获取状态
@@ -127,7 +127,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
                 array = lines.readlines()
                 for data in array:
                     get_data = data.strip('\n').split(" ")
-                    status_id = get_oe_async_tasks_status.delay(AsyncNotemptyFile=async_notempty_file,
+                    status_id = get_oe_async_tasks_status_celery.delay(AsyncNotemptyFile=async_notempty_file,
                                                          AsyncEmptyFile=async_empty_file,
                                                          AsyncStatusExceptionFile=async_status_exception_file,
                                                          ExecData=get_data)
