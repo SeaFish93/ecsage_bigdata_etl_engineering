@@ -201,4 +201,19 @@ def get_oe_async_tasks_data(MediaType=""):
         status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data)
         os.system("""echo "%s">>%s""" % (status_id, celery_task_data_file))
 
+    #获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
+    print("正在等待celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("celery队列执行完成！！！")
+    ######print("等待重试异常任务！！！")
+    ######rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file,
+    ######                      AsyncNotemptyFile=async_notempty_file,AsyncemptyFile=async_empty_file,
+    ######                      CeleryTaskStatusFile=celery_task_status_file)
+    ######print("重试异常任务执行完成！！！")
+    ######time.sleep(60)
+    #######落地有数据
+    ######load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface")
+    #######落地没数据
+    ######load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface")
 

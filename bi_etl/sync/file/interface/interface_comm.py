@@ -91,6 +91,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
     while set_run:
        code,resp_datas = get_oe_async_tasks_data(Token=token, AccountId=account_id, TaskId=task_id)
        if code == 40105:
+           token = get_oe_account_token(ServiceCode=service_code)
            if n >3:
              print("异常")
              code == 40105
@@ -119,9 +120,9 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
         'Access-Token': Token,
         'Connection': "close"
     }
-    resp = requests.get(url, json=params, headers=headers)
-    resp_data = resp.content
     try:
+      resp = requests.get(url, json=params, headers=headers)
+      resp_data = resp.content
       code = eval(resp_data.decode())["code"]
       resp_datas = ""
     except Exception as e:
