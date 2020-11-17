@@ -98,8 +98,16 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
              time.sleep(2)
        else:
            code == 0
-           os.system("""echo '%s'>>%s""" % (resp_datas, DataFile + ".%s" % (hostname)))
-           os.system("""echo '%s'>>%s""" % (resp_datas, "/tmp/DataFile" + ".%s" % (hostname)))
+           try:
+             files = open(DataFile + ".%s" % (hostname), mode="w")
+             files.write(resp_datas)
+             files.flush()
+           except Exception as e:
+             os.system("""echo '99999'>>%s""" % (resp_datas, DataFile + "_%s_write_exception_.%s" % (media_type,hostname)))
+           finally:
+             files.close()
+           #os.system("""echo '%s'>>%s""" % (resp_datas, DataFile + ".%s" % (hostname)))
+           #os.system("""echo '%s'>>%s""" % (resp_datas, "/tmp/DataFile" + ".%s" % (hostname)))
            set_run = False
        n = n + 1
     return code
