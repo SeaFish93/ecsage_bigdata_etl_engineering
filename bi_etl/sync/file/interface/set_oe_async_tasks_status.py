@@ -11,6 +11,7 @@ from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status as get_oe_async_tasks_status_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data as get_oe_async_tasks_data_celery
 import os
 import time
 
@@ -173,6 +174,30 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",TableName=""):
                 set_exit(LevelStatu="red", MSG=msg)
 
 def get_oe_async_tasks_data(MediaType=""):
-    pass
+    media_type = MediaType
+    async_account_file = "/home/ecsage_data/oceanengine/account"
+    async_data_exception_file = """%s/async_data_exception_%s.log""" % (async_account_file, media_type)
+    async_data_file = """%s/async_data_file_%s.log""" % (async_account_file, media_type)
+    celery_task_data_file = """%s/celery_async_data_file_%s.log""" % (async_account_file, media_type)
+    os.system("""mkdir -p %s""" % (async_account_file))
+    os.system("""rm -f %s*""" % (async_data_file))
+    os.system("""rm -f %s*""" % (async_data_exception_file))
+    os.system("""rm -f %s*""" % (celery_task_data_file))
+    # 获取子账户
+    source_data_sql = """
+        select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+        from metadb.oe_valid_account_interface a
+        left join metadb.oe_not_valid_account_interface b
+        on a.media_type = b.media_type
+        and a.account_id = b.account_id
+        and a.service_code = b.service_code
+        where b.service_code is null
+          and a.media_type = %s
+        group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+        """ % (media_type)
+    ok, datas = etl_md.get_all_rows(source_data_sql)
+    for get_data in datas:
+        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data)
+        os.system("""echo "%s">>%s""" % (status_id, celery_task_data_file))
 
 
