@@ -199,7 +199,7 @@ def get_oe_async_tasks_data(MediaType=""):
     ok, datas = etl_md.get_all_rows(source_data_sql)
     for get_data in datas:
         status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data)
-        os.system("""echo "%s">>%s""" % (status_id, celery_task_data_file))
+        os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
 
     #获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
@@ -225,6 +225,11 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
     async_data_exception_file = """%s/%s.last_runned""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
     target_file = os.listdir(AsyncAccountDir)
     exception_file_list = []
+    run_true = True
+    n = 0
+    #while run_true:
+     #exception_file_list = []
+     #target_file = os.listdir(AsyncAccountDir)
     for files in target_file:
         if exception_file in files:
             exception_file_list.append(files)
@@ -235,7 +240,11 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                     get_data = data.strip('\n').split(" ")
                     status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data)
                     os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file))
+            os.system("""rm -f %s"""%(exception_dir_file))
     if len(exception_file_list) > 0:
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
         wait_for_celery_status(StatusList=celery_task_id)
+        #os.system("""rm -f %s"""%(celery_task_data_file+".%s"%(n)))
         print("重试异常完成！！！")
+     #if len(exception_file_list) == 0:
+     #    run_true = False
