@@ -171,5 +171,7 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",TableName=""):
                                        Developer="developer")
                 set_exit(LevelStatu="red", MSG=msg)
 
+def get_oe_async_tasks_data(MediaType=""):
+    pass
 
 

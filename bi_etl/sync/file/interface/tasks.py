@@ -9,6 +9,7 @@ from __future__ import absolute_import, unicode_literals
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import app
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_status_content_content
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data
 import time
 import socket
 
@@ -33,3 +34,23 @@ def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatus
          else:
           time.sleep(2)
       n = n + 1
+
+#定义oe任务数据
+@app.task
+def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData=""):
+    account_id = ExecData[0]
+    set_true = True
+    n = 1
+    print("执行子账户：%s"%(account_id))
+    while set_true:
+       code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData)
+       if code != 0:
+         if n > 3:
+            print("异常子账户：%s" % (account_id))
+            get_oe_save_exception_file(ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile)
+            set_true = False
+         else:
+            time.sleep(2)
+       else:
+         set_true = False
+       n = n + 1
