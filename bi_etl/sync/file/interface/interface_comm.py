@@ -77,7 +77,6 @@ def get_oe_save_exception_file(ExecData="",AsyncNotemptyFile="",AsyncStatusExcep
     os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
 
 def set_oe_async_tasks_data(DataFile="",ExecData=""):
-    print(DataFile,"##################################================================")
     get_data = ExecData
     media_type = get_data[1]
     service_code = get_data[2]
@@ -92,7 +91,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
        code,resp_datas = get_oe_async_tasks_data(Token=token, AccountId=account_id, TaskId=task_id)
        if code == 40105:
            token = get_oe_account_token(ServiceCode=service_code)
-           if n >3:
+           if n >2:
              code == 40105
              set_run = False
            else:
