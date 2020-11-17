@@ -131,4 +131,4 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
       except Exception as e:
         code = 40105
         resp_datas = ""
-    return code,resp_datas.replace("""'""","").replace("""\"""","").replace("""`"","").replace("""\n"","")
+    return code,resp_datas.replace("""'""","")
