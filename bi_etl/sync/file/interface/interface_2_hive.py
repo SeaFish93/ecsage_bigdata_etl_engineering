@@ -708,7 +708,19 @@ def wait_for_md5(FileDirNameList="",DB="", Table="",ExecDate=""):
         if is_md5_file is False:
            md5_file_false.append(file)
         else:
-           pass
+           file_md5_length = os.popen("cat %s|wc -l"%(file+".md5"))
+           file_length = file_md5_length.read().split()[0]
+           if file_length == 0:
+               msg = "生成为空异常md5文件！！！\n%s" % (file+".md5")
+               msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                      SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                      TargetTable="%s.%s" % (DB, Table),
+                                      BeginExecDate=ExecDate,
+                                      EndExecDate=ExecDate,
+                                      Status="Error",
+                                      Log=msg,
+                                      Developer="developer")
+               set_exit(LevelStatu="red", MSG=msg)
       if len(md5_file_false) > 0:
           wait_mins = 600
           if sleep_num <= wait_mins:
