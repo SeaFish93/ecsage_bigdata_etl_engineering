@@ -294,6 +294,14 @@ from metadb.interface_tasks_info_bak a
 inner join metadb.dags_info b
 on a.dag_id = b.dag_id
 where b.status = 1
+union all
+select a.dag_id
+       ,a.task_id
+       ,b.schedule_interval
+from metadb.interface_account_tasks_info a
+inner join metadb.dags_info b
+on a.dag_id = b.dag_id
+where b.status = 1
 
   union all
 select a.dag_id
@@ -615,6 +623,94 @@ CREATE TABLE metadb.oe_async_task_interface (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='巨量异步任务'
 
+
+CREATE TABLE metadb.`oe_async_task_interface` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+   media_type int(11) comment'',
+  `token_data` varchar(1000) DEFAULT NULL COMMENT 'token',
+  `service_code` varchar(500) DEFAULT NULL COMMENT '代理商凭证',
+  `account_id` varchar(1000) DEFAULT NULL COMMENT '子账户id',
+  `task_id` varchar(1000) DEFAULT NULL COMMENT '异步任务id',
+  `task_name` varchar(1000) DEFAULT NULL COMMENT '异步任务名称',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=81922 DEFAULT CHARSET=utf8 COMMENT='巨量异步任务'
+
+
+AccountId, MediaType,ServiceCode, Token
+
+CREATE TABLE metadb.oe_valid_account_interface (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+   media_type int(11) comment'',
+  `token_data` varchar(1000) DEFAULT NULL COMMENT 'token',
+  `service_code` varchar(500) DEFAULT NULL COMMENT '代理商凭证',
+  `account_id` varchar(1000) DEFAULT NULL COMMENT '子账户id',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='巨量有效子账户'
+
+
+CREATE TABLE metadb.request_hostname_interface (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+   hostname varchar(1000) not null comment'请求域名',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='请求域名表'
+
+AccountTokenFile
+
+CREATE TABLE metadb.request_account_token_interface (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+   media_type int(11) not null comment'',
+  `service_code` varchar(500) DEFAULT NULL COMMENT '代理商凭证',
+  `token_data` varchar(1000) DEFAULT NULL COMMENT 'token',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='请求子账户token表'
+
+account_id, media, service_code
+
+CREATE TABLE metadb.request_account_interface (
+  `id` int(11)  COMMENT '主键',
+   media_type int(11) not null comment'',
+  `service_code` varchar(500) DEFAULT NULL COMMENT '代理商凭证',
+  `account_id` varchar(1000) DEFAULT NULL COMMENT '子账户'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='请求子账户表'
+
+
+CREATE TABLE metadb.request_account_host (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+   ip varchar(200) not null comment'',
+  `user_name` varchar(500) DEFAULT NULL COMMENT '代理商凭证',
+  `passwd` varchar(1000) DEFAULT NULL COMMENT '子账户',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='子账户服务'
+
+CREATE TABLE metadb.interface_account_tasks_info (
+  `id`                  int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  media_id              int(10) not null comment'所属媒体id，1：巨量',
+  media_type            int(10) not null comment'所属媒体平台类型：2、201、203',
+  task_id               varchar(200) not null comment'任务名称',
+  dag_id                varchar(200) not null comment'dag名称',
+  is_create_task        int(10) not null comment'是否是创建任务，1：是，0：否',
+  status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效',
+  comments              varchar(512)null COMMENT '备注',
+  create_user           varchar(32)   COMMENT '创建者',
+  update_user           varchar(32)   COMMENT '最后更新者',
+  create_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
+  update_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='子账户任务配置表'
+
+select media_id
+       ,media_type
+       ,task_id
+       ,dag_id
+       ,is_create_task
+       ,status
+       ,comments
+       ,create_user
+       ,update_user
+       ,create_time
+       ,update_time
+from metadb.interface_account_tasks_info
+where status = 1
 
 
 

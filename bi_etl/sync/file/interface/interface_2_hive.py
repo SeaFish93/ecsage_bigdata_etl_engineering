@@ -89,6 +89,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ):
     data_json = DataJson
     etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+    mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
     request_type = data_json["mt"]
     if "filtering" in data_json.keys():
        if "status" in data_json["filtering"].keys():
@@ -109,15 +110,40 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
          from metadb.request_hostname_interface a
     """
     ok, host_count = etl_md.get_all_rows(host_count_sql)
-    #获取每个域名分配的子账户个数
+    if IsReport == 1:
+       #获取每个域名分配的子账户个数
+       media_type = """media_type"""
+       where = """media_type"""
+       table = """
+          (select a.account_id, a.media_type, a.service_code 
+           from metadb.oe_valid_account_interface a
+           left join metadb.oe_not_valid_account_interface b
+           on a.media_type = b.media_type
+           and a.account_id = b.account_id
+           and a.service_code = b.service_code
+           where b.service_code is null
+           group by a.account_id, a.media_type, a.service_code
+          )
+       """
+       group_by = """media_type"""
+       select_session = etl_md
+    else:
+       media_type = """media as media_type"""
+       where = """media"""
+       table = """big_data_mdg.media_advertiser"""
+       group_by = """media"""
+       select_session = mysql_session
     account_num_sql = """
-        select count(1),min(rn),max(rn) from(
-        select account_id, media_type, service_code,@row_num:=@row_num+1 as rn
-        from metadb.oe_valid_account_interface a,(select @row_num:=0) r
-        where media_type = %s
-        ) tmp
-    """%(int(data_json["mt"]))
-    ok, account_num = etl_md.get_all_rows(account_num_sql)
+           select count(1),min(rn),max(rn) 
+           from(select account_id, media_type, service_code,@row_num:=@row_num+1 as rn
+                from (select account_id, %s, service_code
+                      from %s a
+                      where %s = %s
+                      group by account_id, %s, service_code
+                      ) tmp,(select @row_num:=0) r
+                ) tmp1
+       """%(media_type,table,where,int(data_json["mt"]),group_by)
+    ok, account_num = select_session.get_all_rows(account_num_sql)
     account_avg = account_num[0][0] / host_count[0][0]
     if account_avg > 0:
         account_avg = account_avg + 1
@@ -134,16 +160,42 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
            """%(n)
            ok, hosts = etl_md.get_all_rows(host_sql)
            host = hosts[0][0]
+           if IsReport == 1:
+               # 获取每个域名分配的子账户个数
+               media_type = """media_type"""
+               where = """media_type"""
+               table = """
+                  (select a.account_id, a.media_type, a.service_code 
+                   from metadb.oe_valid_account_interface a
+                   left join metadb.oe_not_valid_account_interface b
+                   on a.media_type = b.media_type
+                   and a.account_id = b.account_id
+                   and a.service_code = b.service_code
+                   where b.service_code is null
+                   group by a.account_id, a.media_type, a.service_code )
+               """
+               select_session = etl_md
+               group_by = """media_type"""
+           else:
+               media_type = """media as media_type"""
+               where = """media"""
+               table = """big_data_mdg.media_advertiser"""
+               select_session = mysql_session
+               group_by = """media"""
+
            #请求子账户
            account_sql = """
-                   select account_id, media_type, service_code from(
-                   select account_id, media_type, service_code,@row_num:=@row_num+1 as rn
-                   from metadb.oe_valid_account_interface a,(select @row_num:=0) r
-                   where media_type = %s
-                   ) tmp
-                   where rn >= %s and rn <= %s
-               """ % (int(data_json["mt"]),int(account_run_num), int(account_avg))
-           ok, accounts_list = etl_md.get_all_rows(account_sql)
+                  select account_id, media_type, service_code
+                  from(select account_id, media_type, service_code,@row_num:=@row_num+1 as rn
+                       from (select account_id, %s, service_code
+                             from %s a
+                             where %s = %s
+                             group by account_id, %s, service_code
+                            ) tmp,(select @row_num:=0) r
+                       ) tmp1
+                  where rn >= %s and rn <= %s
+               """ % (media_type,table,where,int(data_json["mt"]),group_by,int(account_run_num), int(account_avg))
+           ok, accounts_list = select_session.get_all_rows(account_sql)
            #提交请求
            interface_url = """http://%s%s"""%(host,InterfaceUrl)
            file = request_commit_account(AccountData=accounts_list, Num=n, InterfaceUrl=interface_url, ExecDate=ExecDate, FileDir=file_dir,
@@ -233,7 +285,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
         hdfs_dir = "/tmp/datafolder_new"
         # 上传数据文件
         print("""hadoop fs -moveFromLocal -f %s %s""" % (local_file, hdfs_dir), "************************************")
-        ok_data = os.system("hadoop fs -moveFromLocal -f %s %s" % (local_file, hdfs_dir))
+        ok_data = os.system("hadoop fs -put %s %s" % (local_file, hdfs_dir))
         if ok_data != 0:
            msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                   SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
@@ -409,6 +461,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                              where a.etl_date = '%s'
                                and %s
                             ) a
+                        where data_colums is not null
                         ) b
                    ) c
                    lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums

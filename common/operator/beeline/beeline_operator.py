@@ -25,7 +25,11 @@ class BeelineNoSqlDB(BaseDB):
         sql_file = "/tmp/tmp_%s_%s.sql" % (task_name, str(t))
         f = open(sql_file, mode="w")
         #f.write("set hive.server2.logging.operation.level=NONE;\n")
-        sql_set = "set hive.auto.convert.join=false;"
+        sql_set = """
+          set mapred.task.timeout=1800000;
+          set mapreduce.map.memory.mb=2048;
+          set hive.auto.convert.join=false;
+        """
         f.write(sql_set)
         f.write(sql)
         f.flush()
