@@ -37,13 +37,13 @@ def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatus
 
 #定义oe任务数据
 @app.task
-def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData=""):
+def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",FileHandler=""):
     account_id = ExecData[0]
     set_true = True
     n = 1
     print("执行子账户：%s"%(account_id))
     while set_true:
-       code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData)
+       code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData,FileHandler=FileHandler)
        if code != 0:
          if n > 3:
             print("异常子账户：%s" % (account_id))
