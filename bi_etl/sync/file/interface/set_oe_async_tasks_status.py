@@ -204,6 +204,7 @@ def get_oe_async_tasks_data(MediaType=""):
     #获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
     print("正在等待celery队列执行完成！！！")
+    print(celery_task_data_file,"=@@@@@@@@@@@@@@@###################################################")
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     ######print("等待重试异常任务！！！")
