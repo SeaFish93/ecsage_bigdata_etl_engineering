@@ -10,7 +10,7 @@ from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_inf
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import *
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status
 import os
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
