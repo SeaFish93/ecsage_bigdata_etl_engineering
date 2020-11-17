@@ -204,10 +204,11 @@ def get_oe_async_tasks_data(MediaType=""):
     #获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
     print("正在等待celery队列执行完成！！！")
-    print(celery_task_data_file,"=@@@@@@@@@@@@@@@###################################################")
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
-    ######print("等待重试异常任务！！！")
+    print("等待重试异常任务！！！")
+    time.sleep(60)
+    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file)
     ######rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file,
     ######                      AsyncNotemptyFile=async_notempty_file,AsyncemptyFile=async_empty_file,
     ######                      CeleryTaskStatusFile=celery_task_status_file)
@@ -217,4 +218,24 @@ def get_oe_async_tasks_data(MediaType=""):
     ######load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface")
     #######落地没数据
     ######load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface")
-
+def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
+    exception_file = ExceptionFile.split("/")[-1]
+    async_data_file = """%s/%s.last_runned"""%(AsyncAccountDir,DataFile.split("/")[-1])
+    celery_task_data_file = """%s/%s.last_runned"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
+    async_data_exception_file = """%s/%s.last_runned""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
+    target_file = os.listdir(AsyncAccountDir)
+    exception_file_list = []
+    for files in target_file:
+        if exception_file in files:
+            exception_file_list.append(files)
+            exception_dir_file = """%s/%s"""%(AsyncAccountDir,files)
+            with open(exception_dir_file) as lines:
+                array = lines.readlines()
+                for data in array:
+                    get_data = data.strip('\n').split(" ")
+                    status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data)
+                    os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file))
+    if len(exception_file_list) > 0:
+        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
+        wait_for_celery_status(StatusList=celery_task_id)
+        print("重试异常完成！！！")
