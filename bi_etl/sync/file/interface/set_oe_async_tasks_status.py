@@ -25,7 +25,8 @@ def main(TaskInfo,**kwargs):
     airflow = Airflow(kwargs)
     media_type = TaskInfo[1]
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    get_oe_async_tasks_status(MediaType=media_type)
+    ####get_oe_async_tasks_status(MediaType=media_type)
+    get_oe_async_tasks_data(MediaType=media_type)
 
 def get_oe_async_tasks_status(MediaType=""):
     media_type = MediaType
