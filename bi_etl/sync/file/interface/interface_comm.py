@@ -93,7 +93,6 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
        if code == 40105:
            token = get_oe_account_token(ServiceCode=service_code)
            if n >3:
-             print("异常")
              code == 40105
              set_run = False
            else:
