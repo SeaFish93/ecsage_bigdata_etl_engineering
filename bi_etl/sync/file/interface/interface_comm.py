@@ -118,12 +118,16 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
         'Access-Token': Token,
         'Connection': "close"
     }
+
     try:
       resp = requests.get(url, json=params, headers=headers)
       resp_data = resp.content
       code = eval(resp_data.decode())["code"]
-      resp_datas = ""
     except Exception as e:
       code = 0
-      resp_datas = resp_data.decode()
+      try:
+        resp_datas = resp_data.decode()
+      except Exception as e:
+        code = 40105
+        resp_datas = ""
     return code,resp_datas
