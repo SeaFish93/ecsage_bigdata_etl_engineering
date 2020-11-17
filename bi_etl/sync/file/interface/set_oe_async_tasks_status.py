@@ -1,27 +1,32 @@
+# -*- coding: utf-8 -*-
+# @Time    : 2019/11/12 18:04
+# @Author  : wangsong
+# @FileName: tasks.py
+# @Software: PyCharm
+# function info：定义celery任务
 
 from celery.result import AsyncResult
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service import get_run_sql
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.fetch_service import get_task_status_sql
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.remote_proc import exec_remote_proc
-from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import *
+import os
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 #入口方法
 def main(TaskInfo,**kwargs):
-    #time.sleep(800)
     global airflow
     global developer
     global regexp_extract_column
     airflow = Airflow(kwargs)
-    print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-
     media_type = TaskInfo[1]
+    print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    get_oe_async_tasks_status(MediaType=media_type)
+
+def get_oe_async_tasks_status(MediaType=""):
+    media_type = MediaType
     async_account_file = "/home/ecsage_data/oceanengine/account"
     async_status_exception_file = """%s/async_status_exception_%s.log""" % (async_account_file,media_type)
     async_notempty_file = """%s/async_notempty_%s.log""" % (async_account_file,media_type)
@@ -45,12 +50,10 @@ def main(TaskInfo,**kwargs):
     """%(media_type)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     for get_data in datas:
-          status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
+          status_id = get_oe_async_tasks_status.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
                                                AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
           os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
     #获取状态
-    status_wait = []
-    celery_task_id = []
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
     print("正在等待celery队列执行完成！！！")
     wait_for_celery_status(StatusList=celery_task_id)
@@ -124,7 +127,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
                 array = lines.readlines()
                 for data in array:
                     get_data = data.strip('\n').split(" ")
-                    status_id = run_task_exception.delay(AsyncNotemptyFile=async_notempty_file,
+                    status_id = get_oe_async_tasks_status.delay(AsyncNotemptyFile=async_notempty_file,
                                                          AsyncEmptyFile=async_empty_file,
                                                          AsyncStatusExceptionFile=async_status_exception_file,
                                                          ExecData=get_data)
