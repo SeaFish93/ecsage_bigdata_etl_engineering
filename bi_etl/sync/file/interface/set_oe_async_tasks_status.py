@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/11/12 18:04
 # @Author  : wangsong
-# @FileName: tasks.py
+# @FileName: set_oe_async_tasks_status.py
 # @Software: PyCharm
-# function info：定义celery任务
+# function info：定义oe异步接口
 
 from celery.result import AsyncResult
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
