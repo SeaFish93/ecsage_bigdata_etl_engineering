@@ -12,6 +12,7 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status as get_oe_async_tasks_status_celery
 import os
+import time
 
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
