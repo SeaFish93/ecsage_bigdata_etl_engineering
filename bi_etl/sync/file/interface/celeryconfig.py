@@ -1,5 +1,7 @@
 ######### import logging
 #########
+import socket
+import logging
 #broker use rabbitmq
 BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/0'
 #backend use redis
@@ -35,16 +37,15 @@ CELERY_PREFETCH_MULTIPLIER = 4
 ######        return logging.Formatter.format(self, record)
 ######
 ######
-######root_logger = logging.getLogger() # 返回logging.root
-######root_logger.setLevel(logging.DEBUG)
 ######
 ####### 将日志输出到文件
-######hostname = socket.gethostname()
-######fh = logging.FileHandler("""/home/ecsage_data/oceanengine/account/celery_worker.log.%s"""%(hostname)) # 这里注意不要使用TimedRotatingFileHandler，celery的每个进程都会切分，导致日志丢失
-######formatter = Formatter('[%(task_name)s%(task_id)s%(process)s %(thread)s %(asctime)s %(pathname)s:%(lineno)s] %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-######fh.setFormatter(formatter)
-######fh.setLevel(logging.DEBUG)
-######root_logger.addHandler(fh)
+hostname = socket.gethostname()
+fh = logging.FileHandler("""/home/ecsage_data/oceanengine/account/celery_worker.log.%s"""%(hostname)) # 这里注意不要使用TimedRotatingFileHandler，celery的每个进程都会切分，导致日志丢失
+root_logger = logging.getLogger() # 返回logging.root
+root_logger.setLevel(logging.DEBUG)
+#fh.setFormatter(formatter)
+fh.setLevel(logging.DEBUG)
+root_logger.addHandler(fh)
 
 # 将日志输出到控制台
 #### sh = logging.StreamHandler()
