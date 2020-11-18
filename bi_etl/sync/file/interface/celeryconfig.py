@@ -16,35 +16,35 @@ CELERY_CONCURRENCY = 20
 CELERY_PREFETCH_MULTIPLIER = 4
 
 
-import logging
-import socket
-
-from celery._state import get_current_task
-
-class Formatter(logging.Formatter):
-    """Formatter for tasks, adding the task name and id."""
-
-    def format(self, record):
-        task = get_current_task()
-        if task and task.request:
-            record.__dict__.update(task_id='%s ' % task.request.id,
-                                   task_name='%s ' % task.name)
-        else:
-            record.__dict__.setdefault('task_name', '')
-            record.__dict__.setdefault('task_id', '')
-        return logging.Formatter.format(self, record)
-
-
-root_logger = logging.getLogger() # 返回logging.root
-root_logger.setLevel(logging.DEBUG)
-
-# 将日志输出到文件
-hostname = socket.gethostname()
-fh = logging.FileHandler("""/home/ecsage_data/oceanengine/account/celery_worker.log.%s"""%(hostname)) # 这里注意不要使用TimedRotatingFileHandler，celery的每个进程都会切分，导致日志丢失
-formatter = Formatter('[%(task_name)s%(task_id)s%(process)s %(thread)s %(asctime)s %(pathname)s:%(lineno)s] %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-fh.setFormatter(formatter)
-fh.setLevel(logging.DEBUG)
-root_logger.addHandler(fh)
+######import logging
+######import socket
+######
+######from celery._state import get_current_task
+######
+######class Formatter(logging.Formatter):
+######    """Formatter for tasks, adding the task name and id."""
+######
+######    def format(self, record):
+######        task = get_current_task()
+######        if task and task.request:
+######            record.__dict__.update(task_id='%s ' % task.request.id,
+######                                   task_name='%s ' % task.name)
+######        else:
+######            record.__dict__.setdefault('task_name', '')
+######            record.__dict__.setdefault('task_id', '')
+######        return logging.Formatter.format(self, record)
+######
+######
+######root_logger = logging.getLogger() # 返回logging.root
+######root_logger.setLevel(logging.DEBUG)
+######
+####### 将日志输出到文件
+######hostname = socket.gethostname()
+######fh = logging.FileHandler("""/home/ecsage_data/oceanengine/account/celery_worker.log.%s"""%(hostname)) # 这里注意不要使用TimedRotatingFileHandler，celery的每个进程都会切分，导致日志丢失
+######formatter = Formatter('[%(task_name)s%(task_id)s%(process)s %(thread)s %(asctime)s %(pathname)s:%(lineno)s] %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+######fh.setFormatter(formatter)
+######fh.setLevel(logging.DEBUG)
+######root_logger.addHandler(fh)
 
 # 将日志输出到控制台
 #### sh = logging.StreamHandler()
