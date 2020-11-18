@@ -120,7 +120,7 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
         'Access-Token': Token,
         'Connection': "close"
     }
-
+    return_resp_data = ""
     try:
       resp = requests.get(url, json=params, headers=headers)
       resp_data = resp.content
@@ -128,5 +128,4 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
       code = eval(resp_data.decode())["code"]
     except Exception as e:
       code = 0
-      return_resp_data = ""
     return code,return_resp_data
