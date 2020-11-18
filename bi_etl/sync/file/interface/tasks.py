@@ -17,19 +17,19 @@ hostname = socket.gethostname()
 
 #定义oe任务状态
 @app.task
-def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData=""):
+def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     set_true = True
     n = 1
     print("执行子账户：%s"%(account_id))
     while set_true:
       try:
-         set_oe_async_status_content_content(ExecData=ExecData,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
+         set_oe_async_status_content_content(ExecData=ExecData,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,ExecDate=ExecDate)
          set_true = False
       except Exception as e:
          if n > 3:
             print("异常子账户：%s" % (account_id))
-            get_oe_save_exception_file(ExecData=ExecData,AsyncNotemptyFile=AsyncNotemptyFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
+            get_oe_save_exception_file(ExecData=ExecData,AsyncNotemptyFile=AsyncNotemptyFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile,ExecDate=ExecDate)
             set_true = False
          else:
           time.sleep(2)
@@ -37,7 +37,7 @@ def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatus
 
 #定义oe任务数据
 @app.task
-def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData=""):
+def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     set_true = True
     n = 1
@@ -47,7 +47,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData=""):
        if code != 0:
          if n > 3:
             print("异常子账户：%s" % (account_id))
-            get_oe_save_exception_file(ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile)
+            get_oe_save_exception_file(ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile,ExecDate=ExecDate)
             set_true = False
          else:
             time.sleep(2)

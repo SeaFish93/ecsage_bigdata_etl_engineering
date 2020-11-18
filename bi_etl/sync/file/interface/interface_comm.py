@@ -16,7 +16,7 @@ hostname = socket.gethostname()
 
 #创建创意
 #def
-def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEmptyFile=""):
+def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEmptyFile="",ExecDate=""):
     get_data = ExecData
     media_type = get_data[1]
     service_code = get_data[2]
@@ -36,14 +36,14 @@ def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEm
     print("账户：%s，serviceCode：%s，文件大小：%s，任务状态：%s"%(account_id,service_code,file_size,task_status))
     if task_status == "ASYNC_TASK_STATUS_COMPLETED":
        if int(file_size) == 12:
-           os.system("""echo "%s %s %s %s %s %s">>%s """%(account_id, media_type,service_code, token, task_id,"有数",AsyncEmptyFile+".%s"%(hostname)))
+           os.system("""echo "%s %s %s %s %s %s %s">>%s """%(ExecDate,account_id, media_type,service_code, token, task_id,"有数",AsyncEmptyFile+".%s"%(hostname)))
        else:
            print("有数据：%s"%(account_id))
-           os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type,service_code, token, task_id,"有数", AsyncNotemptyFile+".%s"%(hostname)))
-           os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type,service_code, token, task_id,"有数", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
+           os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"有数", AsyncNotemptyFile+".%s"%(hostname)))
+           os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"有数", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
     else:
-       os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type,service_code, token, task_id,"未执行完成", AsyncNotemptyFile+".%s"%(hostname)))
-       os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type,service_code, token, task_id,"未执行完成", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
+       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"未执行完成", AsyncNotemptyFile+".%s"%(hostname)))
+       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"未执行完成", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
 
 #获取oe异步任务执行状态
 def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
@@ -66,7 +66,7 @@ def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
     return resp_data
 
 #写入异常文件
-def get_oe_save_exception_file(ExecData="",AsyncNotemptyFile="",AsyncStatusExceptionFile=""):
+def get_oe_save_exception_file(ExecData="",AsyncNotemptyFile="",AsyncStatusExceptionFile="",ExecDate=""):
     get_data = ExecData
     media_type = get_data[1]
     service_code = get_data[2]
@@ -75,9 +75,9 @@ def get_oe_save_exception_file(ExecData="",AsyncNotemptyFile="",AsyncStatusExcep
     token = get_data[3]
     task_name = get_data[5]
     if len(AsyncNotemptyFile) >0:
-       os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", "/tmp/%s" % (AsyncNotemptyFile.split("/")[-1])))
-       os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
-    os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
+       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", "/tmp/%s" % (AsyncNotemptyFile.split("/")[-1])))
+       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
+    os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
 
 def set_oe_async_tasks_data(DataFile="",ExecData=""):
     get_data = ExecData

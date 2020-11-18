@@ -25,10 +25,11 @@ def main(TaskInfo,**kwargs):
     airflow = Airflow(kwargs)
     media_type = TaskInfo[1]
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    #get_oe_async_tasks_status(MediaType=media_type)
-    get_oe_async_tasks_data(MediaType=media_type)
+    exec_date = airflow.execution_date_utc8_str[0:10]
+    get_oe_async_tasks_status(MediaType=media_type,ExecDate=exec_date)
+    get_oe_async_tasks_data(MediaType=media_type,ExecDate=exec_date)
 
-def get_oe_async_tasks_status(MediaType=""):
+def get_oe_async_tasks_status(MediaType="",ExecDate=""):
     media_type = MediaType
     async_account_file = "/home/ecsage_data/oceanengine/account"
     async_status_exception_file = """%s/async_status_exception_%s.log""" % (async_account_file,media_type)
@@ -43,8 +44,8 @@ def get_oe_async_tasks_status(MediaType=""):
     os.system("""rm -f %s*""" % (async_status_exception_file))
     os.system("""rm -f /tmp/sql_%s.sql""")
     os.system("""rm -f %s*"""%(celery_task_status_file))
-    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s """ % (media_type))
-    etl_md.execute_sql("""delete from metadb.oe_not_valid_account_interface where media_type=%s """ % (media_type))
+    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s and exec_date = '%s' """ % (media_type,ExecDate))
+    etl_md.execute_sql("""delete from metadb.oe_not_valid_account_interface where media_type=%s and exec_date = '%s' """ % (media_type,ExecDate))
     #获取子账户
     source_data_sql = """
                  select distinct account_id,media_type,service_code,token_data,task_id,task_name
@@ -54,7 +55,7 @@ def get_oe_async_tasks_status(MediaType=""):
     ok, datas = etl_md.get_all_rows(source_data_sql)
     for get_data in datas:
           status_id = get_oe_async_tasks_status_celery.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
-                                               AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data)
+                                               AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data,ExecDate=ExecDate)
           os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
     #获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
@@ -64,7 +65,7 @@ def get_oe_async_tasks_status(MediaType=""):
     print("等待重试异常任务！！！")
     rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file,
                           AsyncNotemptyFile=async_notempty_file,AsyncemptyFile=async_empty_file,
-                          CeleryTaskStatusFile=celery_task_status_file)
+                          CeleryTaskStatusFile=celery_task_status_file,ExecDate=ExecDate)
     print("重试异常任务执行完成！！！")
     time.sleep(60)
     #落地有数据
@@ -114,7 +115,7 @@ def wait_for_celery_status(StatusList=""):
       sleep_num = sleep_num + 1
 
 #重跑异常任务
-def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile="",AsyncemptyFile="",CeleryTaskStatusFile=""):
+def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile="",AsyncemptyFile="",CeleryTaskStatusFile="",ExecDate=""):
     exception_file = ExceptionFile.split("/")[-1]
     async_notempty_file = """%s/%s.last_runned"""%(AsyncAccountDir,AsyncNotemptyFile.split("/")[-1])
     async_empty_file = """%s/%s.last_runned"""%(AsyncAccountDir,AsyncemptyFile.split("/")[-1])
@@ -133,7 +134,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",AsyncNotemptyFile=
                     status_id = get_oe_async_tasks_status_celery.delay(AsyncNotemptyFile=async_notempty_file,
                                                          AsyncEmptyFile=async_empty_file,
                                                          AsyncStatusExceptionFile=async_status_exception_file,
-                                                         ExecData=get_data)
+                                                         ExecData=get_data,ExecDate=ExecDate)
                     os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_status_file))
     if len(exception_file_list) > 0:
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
@@ -157,9 +158,9 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",TableName=""):
     for files in target_file:
         if DataFile.split("/")[-1] in files:
             print(files, "###############################################")
-            # 记录有效子账户
+            # 记录子账户
             insert_sql = """
-                  load data local infile '%s' into table metadb.%s fields terminated by ' ' lines terminated by '\\n' (account_id,media_type,service_code,token_data,task_id,task_name)
+                  load data local infile '%s' into table metadb.%s fields terminated by ' ' lines terminated by '\\n' (exec_date,account_id,media_type,service_code,token_data,task_id,task_name)
                """ % (AsyncAccountFile + "/" + files,TableName)
             ok = etl_md.local_file_to_mysql(sql=insert_sql)
             if ok is False:
@@ -174,7 +175,7 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",TableName=""):
                                        Developer="developer")
                 set_exit(LevelStatu="red", MSG=msg)
 
-def get_oe_async_tasks_data(MediaType=""):
+def get_oe_async_tasks_data(MediaType="",ExecDate=""):
     media_type = MediaType
     async_account_file = "/home/ecsage_data/oceanengine/account"
     async_data_exception_file = """%s/async_data_exception_%s.log""" % (async_account_file, media_type)
@@ -192,13 +193,15 @@ def get_oe_async_tasks_data(MediaType=""):
         on a.media_type = b.media_type
         and a.account_id = b.account_id
         and a.service_code = b.service_code
+        and a.exec_date = b.exec_date
         where b.service_code is null
           and a.media_type = %s
+          and a.exec_date = '%s'
         group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-        """ % (media_type)
+        """ % (media_type,ExecDate)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     for get_data in datas:
-        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data)
+        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate)
         os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
 
     #获取状态
