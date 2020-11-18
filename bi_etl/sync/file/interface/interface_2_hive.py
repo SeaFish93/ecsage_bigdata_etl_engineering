@@ -708,7 +708,7 @@ def wait_for_md5(FileDirNameList="",DB="", Table="",ExecDate=""):
         if is_md5_file is False:
            md5_file_false.append(file)
         else:
-           file_md5_length = os.popen("cat %s|wc -l"%(file+".md5"))
+           file_md5_length = os.popen("cat %s|wc -L"%(file+".md5"))
            file_length = file_md5_length.read().split()[0]
            print(file,".md5",file_length,"==============================================")
            if int(file_length) == 0:
