@@ -711,7 +711,7 @@ def wait_for_md5(FileDirNameList="",DB="", Table="",ExecDate=""):
            file_md5_length = os.popen("cat %s|wc -l"%(file+".md5"))
            file_length = file_md5_length.read().split()[0]
            print(file,".md5",file_length,"==============================================")
-           if file_length == 0:
+           if int(file_length) == 0:
                msg = "生成为空异常md5文件！！！\n%s" % (file+".md5")
                msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                       SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
