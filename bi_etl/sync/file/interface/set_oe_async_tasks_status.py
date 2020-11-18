@@ -238,6 +238,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                 array = lines.readlines()
                 for data in array:
                     get_data = data.strip('\n').split(" ")
+                    #判断此任务是否有创建，若是没有，则调用创建，只限两次，第三次还没创建，自动放弃
                     status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data)
                     os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file+".%s"%n))
             os.system("""rm -f %s"""%(exception_dir_file))
@@ -246,6 +247,6 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
         wait_for_celery_status(StatusList=celery_task_id)
         os.system("""rm -f %s"""%(celery_task_data_file +".%s"%n))
         print("重试异常完成！！！")
-     n = n + 1
-     if len(exception_file_list) == 0:
+     if len(exception_file_list) == 0 or n == 10:
          run_true = False
+     n = n + 1

@@ -14,6 +14,8 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 hostname = socket.gethostname()
 
+#创建创意
+#def
 def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEmptyFile=""):
     get_data = ExecData
     media_type = get_data[1]
