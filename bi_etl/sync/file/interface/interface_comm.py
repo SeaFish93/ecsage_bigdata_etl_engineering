@@ -59,7 +59,7 @@ def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
         'Connection': "close"
     }
     resp = requests.get(url, json=params, headers=headers,timeout = 20)
-    resp_data = resp.json()
+    resp_data = resp.iter_lines()
     return resp_data
 
 #写入异常文件
