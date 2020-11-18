@@ -59,7 +59,7 @@ def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
         'Connection': "close"
     }
     resp = requests.get(url, json=params, headers=headers,timeout = 20)
-    resp_data = resp.iter_lines()
+    resp_data = resp.json()
     return resp_data
 
 #写入异常文件
@@ -97,9 +97,9 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
            else:
              time.sleep(2)
        else:
-           code == 0
-           os.system("""echo '%s'>>%s""" % (account_id, DataFile + ".%s" % (hostname)))
-           #os.system("""echo '%s'>>%s""" % (resp_datas, "/tmp/DataFile" + ".%s" % (hostname)))
+           os.system("""echo '%s'>>%s""" % (account_id, DataFile + ".file_%s" % (hostname)))
+           for data in resp_datas:
+              os.system("""echo '%s'>>%s""" % (resp_datas.decode(), DataFile + ".%s" % (hostname)))
            set_run = False
        n = n + 1
     return code
@@ -123,12 +123,8 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
     try:
       resp = requests.get(url, json=params, headers=headers)
       resp_data = resp.content
+      return_resp_data = resp.iter_lines()
       code = eval(resp_data.decode())["code"]
     except Exception as e:
       code = 0
-      try:
-        resp_datas = resp_data.decode()
-      except Exception as e:
-        code = 40105
-        resp_datas = ""
-    return code,resp_datas.replace("""'""","")
+    return code,return_resp_data
