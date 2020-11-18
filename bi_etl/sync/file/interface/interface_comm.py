@@ -76,7 +76,7 @@ def get_oe_save_exception_file(ExecData="",AsyncNotemptyFile="",AsyncStatusExcep
        os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
     os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
 
-def set_oe_async_tasks_data(DataFile="",ExecData="",FileHandler=""):
+def set_oe_async_tasks_data(DataFile="",ExecData=""):
     get_data = ExecData
     media_type = get_data[1]
     service_code = get_data[2]
@@ -98,9 +98,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",FileHandler=""):
              time.sleep(2)
        else:
            code == 0
-           FileHandler.write(resp_datas)
-           FileHandler.flush()
-           #os.system("""echo '%s'>>%s""" % (resp_datas, DataFile + ".%s" % (hostname)))
+           os.system("""echo '%s'>>%s""" % (account_id, DataFile + ".%s" % (hostname)))
            #os.system("""echo '%s'>>%s""" % (resp_datas, "/tmp/DataFile" + ".%s" % (hostname)))
            set_run = False
        n = n + 1

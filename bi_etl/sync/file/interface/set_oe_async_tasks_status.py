@@ -25,8 +25,8 @@ def main(TaskInfo,**kwargs):
     airflow = Airflow(kwargs)
     media_type = TaskInfo[1]
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    get_oe_async_tasks_status(MediaType=media_type)
-    #get_oe_async_tasks_data(MediaType=media_type)
+    #get_oe_async_tasks_status(MediaType=media_type)
+    get_oe_async_tasks_data(MediaType=media_type)
 
 def get_oe_async_tasks_status(MediaType=""):
     media_type = MediaType
@@ -199,7 +199,7 @@ def get_oe_async_tasks_data(MediaType=""):
     ok, datas = etl_md.get_all_rows(source_data_sql)
     file_handler = open(async_data_file, mode="w")
     for get_data in datas:
-        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,FileHandler=file_handler)
+        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data)
         os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
 
     #获取状态
@@ -241,7 +241,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                 array = lines.readlines()
                 for data in array:
                     get_data = data.strip('\n').split(" ")
-                    status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,FileHandler=file_handler)
+                    status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data)
                     os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file))
             #os.system("""rm -f %s"""%(exception_dir_file))
     if len(exception_file_list) > 0:
