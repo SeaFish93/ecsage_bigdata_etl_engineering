@@ -244,7 +244,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
      if len(exception_file_list) > 0:
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
         wait_for_celery_status(StatusList=celery_task_id)
-        os.system("""rm -f %s"""%(celery_task_data_file++".%s"%n))
+        os.system("""rm -f %s"""%(celery_task_data_file +".%s"%n))
         print("重试异常完成！！！")
      n = n + 1
      if len(exception_file_list) == 0:
