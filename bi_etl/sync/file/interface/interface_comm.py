@@ -97,9 +97,10 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
            else:
              time.sleep(2)
        else:
-           os.system("""echo '%s'>>%s""" % (account_id, DataFile + ".file_%s" % (hostname)))
-           for data in resp_datas:
-              os.system("""echo '%s'>>%s""" % (data.decode(), DataFile + ".%s" % (hostname)))
+           if code == 0:
+             os.system("""echo '%s'>>%s""" % (account_id, DataFile + ".file_%s" % (hostname)))
+             for data in resp_datas:
+                os.system("""echo '%s'>>%s""" % (data.decode(), DataFile + ".%s" % (hostname)))
            set_run = False
        n = n + 1
     return code
@@ -127,4 +128,5 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
       code = eval(resp_data.decode())["code"]
     except Exception as e:
       code = 0
+      return_resp_data = resp.iter_lines()
     return code,return_resp_data
