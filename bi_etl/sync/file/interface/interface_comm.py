@@ -10,6 +10,7 @@ import os
 import datetime
 import socket
 import time
+import logging
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 hostname = socket.gethostname()
 
@@ -100,7 +101,8 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
            if code == 0:
              os.system("""echo '%s'>>%s""" % (account_id, DataFile + ".file_%s" % (hostname)))
              for data in resp_datas:
-                os.system("""echo '%s'>>%s""" % (data.decode(), DataFile + ".%s" % (hostname)))
+                 logging.info(data.decode())
+                #os.system("""echo '%s'>>%s""" % (data.decode(), DataFile + ".%s" % (hostname)))
            set_run = False
        n = n + 1
     return code
