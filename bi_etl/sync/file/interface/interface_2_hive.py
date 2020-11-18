@@ -121,10 +121,12 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
            on a.media_type = b.media_type
            and a.account_id = b.account_id
            and a.service_code = b.service_code
+           and a.exec_date = b.exec_date
            where b.service_code is null
+             and a.exec_date = '%s'
            group by a.account_id, a.media_type, a.service_code
           )
-       """
+       """%(ExecDate)
        group_by = """media_type"""
        select_session = etl_md
     else:
@@ -171,9 +173,11 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                    on a.media_type = b.media_type
                    and a.account_id = b.account_id
                    and a.service_code = b.service_code
+                   and a.exec_date = b.exec_date
                    where b.service_code is null
+                     and a.exec_date = '%s'
                    group by a.account_id, a.media_type, a.service_code )
-               """
+               """%(ExecDate)
                select_session = etl_md
                group_by = """media_type"""
            else:
