@@ -27,7 +27,7 @@ def main(TaskInfo,**kwargs):
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
     get_oe_async_tasks_status(MediaType=media_type,ExecDate=exec_date)
-    get_oe_async_tasks_data(MediaType=media_type,ExecDate=exec_date)
+    #get_oe_async_tasks_data(MediaType=media_type,ExecDate=exec_date)
 
 def get_oe_async_tasks_status(MediaType="",ExecDate=""):
     media_type = MediaType
