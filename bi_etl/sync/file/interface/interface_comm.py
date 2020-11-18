@@ -100,7 +100,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
            if code == 0:
              os.system("""echo '%s'>>%s""" % (account_id, DataFile + ".file_%s" % (hostname)))
              for data in resp_datas:
-                os.system("""echo '%s'>>%s""" % (data.decode(), DataFile + ".%s" % (hostname)))
+                os.system("""echo '%s'>>%s""" % (str(data.decode()).replace("""'""","").replace("""`""",""), DataFile + ".%s" % (hostname)))
            set_run = False
        n = n + 1
     return code
