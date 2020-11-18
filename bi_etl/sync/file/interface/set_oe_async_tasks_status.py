@@ -230,7 +230,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
     while run_true:
      exception_file_list = []
      target_file = os.listdir(AsyncAccountDir)
-    for files in target_file:
+     for files in target_file:
         if exception_file in files:
             exception_file_list.append(files)
             exception_dir_file = """%s/%s"""%(AsyncAccountDir,files)
@@ -241,11 +241,11 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                     status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data)
                     os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file+".%s"%n))
             os.system("""rm -f %s"""%(exception_dir_file))
-    if len(exception_file_list) > 0:
+     if len(exception_file_list) > 0:
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
         wait_for_celery_status(StatusList=celery_task_id)
         os.system("""rm -f %s"""%(celery_task_data_file++".%s"%n))
         print("重试异常完成！！！")
-    n = n + 1
-     #if len(exception_file_list) == 0:
-     #    run_true = False
+     n = n + 1
+     if len(exception_file_list) == 0:
+         run_true = False
