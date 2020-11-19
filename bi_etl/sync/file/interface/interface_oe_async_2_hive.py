@@ -229,9 +229,9 @@ def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountD
     load_sqls = ""
     print("hadoop fs -rmr %s*" % (hdfs_dir+"/"+data_file), "************************************")
     print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
-    ok_data_1 = os.system("hadoop fs -rmr %s*" % (hdfs_dir+"/"+data_file))
+    os.system("hadoop fs -rmr %s*" % (hdfs_dir+"/"+data_file))
     ok_data = os.system("hadoop fs -put %s* %s" % (DataFile, hdfs_dir))
-    if ok_data != 0 and ok_data_1 != 0:
+    if ok_data != 0:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
                                TargetTable="%s.%s" % (TargetDb, TargetTable),
