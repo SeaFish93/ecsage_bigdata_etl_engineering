@@ -26,8 +26,8 @@ def main(TaskInfo,**kwargs):
     media_type = TaskInfo[1]
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
-    get_oe_async_tasks_status(MediaType=media_type,ExecDate=exec_date)
-    #get_oe_async_tasks_data(MediaType=media_type,ExecDate=exec_date)
+    #get_oe_async_tasks_status(MediaType=media_type,ExecDate=exec_date)
+    get_oe_async_tasks_data(MediaType=media_type,ExecDate=exec_date)
 
 def get_oe_async_tasks_status(MediaType="",ExecDate=""):
     media_type = MediaType
@@ -223,7 +223,7 @@ def get_oe_async_tasks_data(MediaType="",ExecDate=""):
     ######load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface")
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
-    async_data_file = """%s/%s.last_runned"""%(AsyncAccountDir,DataFile.split("/")[-1])
+    async_data_file = """%s/%s"""%(AsyncAccountDir,DataFile.split("/")[-1])
     celery_task_data_file = """%s/%s.last_runned"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
     async_data_exception_file = """%s/%s.last_runned""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
     run_true = True
