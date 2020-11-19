@@ -218,9 +218,12 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     print("等待重试异常任务！！！")
     time.sleep(60)
     rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file)
-    #time.sleep(30)
+    time.sleep(30)
     #上传至hdfs
+    get_local_file_hdfs(TargetHandle=target_handle, TargetDb=target_db, TargetTable=target_table,DataFile=async_data_file,ExecDate=ExecDate)
 
+def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",DataFile="",ExecDate=""):
+    pass
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
