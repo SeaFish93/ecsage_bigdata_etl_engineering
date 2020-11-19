@@ -188,9 +188,9 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     async_data_file = """%s/%s_%s_data.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
     celery_task_data_file = """%s/%s_%s_celery_status.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
     os.system("""mkdir -p %s""" % (async_account_file))
-    os.system("""rm -f %s*""" % (async_data_file))
-    os.system("""rm -f %s*""" % (async_data_exception_file))
-    os.system("""rm -f %s*""" % (celery_task_data_file))
+    os.system("""rm -f %s/*""" % (async_account_file))
+    #os.system("""rm -f %s*""" % (async_data_exception_file))
+    #os.system("""rm -f %s*""" % (celery_task_data_file))
     # 获取子账户
     source_data_sql = """
         select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
