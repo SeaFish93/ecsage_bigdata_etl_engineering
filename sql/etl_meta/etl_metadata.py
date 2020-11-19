@@ -144,7 +144,7 @@ class EtlMetaDataSQL():
            ,update_user
            ,create_time
            ,update_time
-    from metadb.interface_account_tasks_info
+    from metadb.interface_oe_async_tasks_info
     where status = 1
       and dag_id = '%s'
   """ % ("##{dag_id}##")
