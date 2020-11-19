@@ -243,7 +243,7 @@ def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountD
         set_exit(LevelStatu="red", MSG=msg)
     for files in target_file:
         if data_file in files:
-            print(files,"==================================")
+            print(data_file,"==================================")
             load_sql = """load data inpath '/tmp/datafolder_new1/all.log.bd17-node.bak' INTO TABLE etl_mid.test_test;\n"""
             load_sqls = load_sql + load_sqls
 
