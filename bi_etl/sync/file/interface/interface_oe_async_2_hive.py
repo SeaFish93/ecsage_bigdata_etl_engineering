@@ -244,7 +244,7 @@ def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountD
     for files in target_file:
         if data_file in files:
             print(data_file,"==================================")
-            load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s.%s;\n"""%(hdfs_dir,data_file,TargetDb,TargetTable)
+            load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s.%s;\n"""%(hdfs_dir,files,TargetDb,TargetTable)
             load_sqls = load_sql + load_sqls
     print(load_sqls,"##############################3")
 
