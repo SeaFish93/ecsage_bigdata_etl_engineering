@@ -75,7 +75,6 @@ def get_oe_save_exception_file(ExecData="",AsyncNotemptyFile="",AsyncStatusExcep
     token = get_data[3]
     task_name = get_data[5]
     if len(AsyncNotemptyFile) >0:
-       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", "/tmp/%s" % (AsyncNotemptyFile.split("/")[-1])))
        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
     os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
 
@@ -101,7 +100,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
              time.sleep(2)
        else:
            if code == 0:
-             os.system("""echo '%s'>>%s""" % (account_id, DataFile + ".file_%s" % (hostname)))
+             os.system("""echo '%s'>>%s""" % (account_id, "file."+DataFile + "_%s" % (hostname)))
              log = Logger("""%s.%s"""% (DataFile,hostname),level='info')
              for data in resp_datas:
                  log.logger.info(data.decode())
