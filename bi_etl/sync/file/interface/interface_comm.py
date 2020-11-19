@@ -102,9 +102,8 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
            if code == 0:
              #os.system("""echo '%s'>>%s""" % (account_id, "file."+DataFile + "_%s" % (hostname)))
              log = Logger("""%s.%s"""% (DataFile,hostname),level='info')
-             log.logger.info(resp_datas.decode())
-             #for data in resp_datas:
-             #    log.logger.info(data.decode())
+             for data in resp_datas:
+                 log.logger.info(data.decode())
            set_run = False
        n = n + 1
     return code
@@ -124,12 +123,12 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
         'Access-Token': Token,
         'Connection': "close"
     }
-    resp_data = ""
+    return_resp_data = ""
     try:
       resp = requests.get(url, json=params, headers=headers)
       resp_data = resp.content
-      #return_resp_data = resp.iter_lines()
+      return_resp_data = resp.iter_lines()
       code = eval(resp_data.decode())["code"]
     except Exception as e:
       code = 0
-    return code,resp_data
+    return code,return_resp_data
