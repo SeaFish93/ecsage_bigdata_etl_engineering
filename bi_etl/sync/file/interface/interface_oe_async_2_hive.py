@@ -183,10 +183,10 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     target_handle = TaskInfo[8]
     target_db = TaskInfo[9]
     target_table = TaskInfo[10]
-    async_account_file = "/home/ecsage_data/oceanengine/async"
-    async_data_exception_file = """%s/%s_%s_exception_%s.%s.log""" % (AirflowDagId,AirflowTaskId,async_account_file, media_type,ExecDate)
-    async_data_file = """%s/%s_%s_data_%s.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId, media_type,ExecDate)
-    celery_task_data_file = """%s/%s_%s_celery_status_%s.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,media_type,ExecDate)
+    async_account_file = "/home/ecsage_data/oceanengine/async/%s"%(media_type)
+    async_data_exception_file = """%s/%s_%s_exception.%s.log""" % (AirflowDagId,AirflowTaskId,async_account_file,ExecDate)
+    async_data_file = """%s/%s_%s_data.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
+    celery_task_data_file = """%s/%s_%s_celery_status.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s*""" % (async_data_file))
     os.system("""rm -f %s*""" % (async_data_exception_file))
