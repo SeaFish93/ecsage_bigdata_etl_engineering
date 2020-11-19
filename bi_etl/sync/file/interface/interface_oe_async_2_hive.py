@@ -244,8 +244,9 @@ def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountD
     for files in target_file:
         if data_file in files:
             print(data_file,"==================================")
-            load_sql = """load data inpath '/tmp/datafolder_new1/all.log.bd17-node.bak' INTO TABLE etl_mid.test_test;\n"""
+            load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s.%s;\n"""%(hdfs_dir,data_file,TargetDb,TargetTable)
             load_sqls = load_sql + load_sqls
+    print(load_sqls,"##############################3")
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
