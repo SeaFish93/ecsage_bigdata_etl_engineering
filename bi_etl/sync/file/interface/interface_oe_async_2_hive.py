@@ -222,8 +222,30 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     #上传至hdfs
     get_local_file_hdfs(TargetHandle=target_handle, TargetDb=target_db, TargetTable=target_table,DataFile=async_data_file,ExecDate=ExecDate)
 
-def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",DataFile="",ExecDate=""):
-    pass
+def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountDir="",DataFile="",ExecDate=""):
+    target_file = os.listdir(AsyncAccountDir)
+    data_file = DataFile.split("/")[-1]
+    hdfs_dir = "/tmp/datafolder_new"
+    load_sqls = ""
+    print("hadoop fs -rmr %s*" % (hdfs_dir+"/"+data_file), "************************************")
+    print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
+    ok_data_1 = os.system("hadoop fs -rmr %s*" % (hdfs_dir+"/"+data_file))
+    ok_data = os.system("hadoop fs -put %s* %s" % (DataFile, hdfs_dir))
+    if ok_data != 0 and ok_data_1 != 0:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDb, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="上传本地数据文件至HDFS出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    for files in target_file:
+        if data_file in files:
+            print(files,"==================================")
+            load_sql = """load data inpath '/tmp/datafolder_new1/all.log.bd17-node.bak' INTO TABLE etl_mid.test_test;\n"""
+            load_sqls = load_sql + load_sqls
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
