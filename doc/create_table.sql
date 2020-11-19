@@ -712,5 +712,28 @@ select media_id
 from metadb.interface_account_tasks_info
 where status = 1
 
+CREATE TABLE `interface_oe_async_tasks_info` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `media_type` int(10) NOT NULL COMMENT '所属媒体平台类型：2、201、203，只有是采集接口时必须填',
+  `task_id` varchar(200) NOT NULL COMMENT '任务名称',
+  `dag_id` varchar(200) NOT NULL COMMENT 'dag名称',
+  `task_type` int(10) NOT NULL COMMENT '任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步',
+   source_handle  varchar(200) comment'来源端handle',
+   source_db      varchar(200) comment'来源端db',
+   source_table   varchar(200) comment'来源端表',
+   target_handle  varchar(200) comment'目标端handle',
+   target_db      varchar(200) comment'目标端db',
+   target_table   varchar(200) comment'目标端表',
+   interface_group_by varchar(1000) comment'接口groupby字段，多个字段以英文逗号分隔',
+   key_columns    varchar(200) comment'业务主键字段，多个字段以英文逗号分隔',
+   select_exclude_columns varchar(200) comment'剔除字段，多个字段以英文逗号分隔',
+  `status` int(2) NOT NULL DEFAULT '0' COMMENT '是否有效，1：有效，0：无效',
+  `comments` varchar(512) DEFAULT NULL COMMENT '备注',
+  `create_user` varchar(32) DEFAULT NULL COMMENT '创建者',
+  `update_user` varchar(32) DEFAULT NULL COMMENT '最后更新者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='头条异步任务配置表'
 
 

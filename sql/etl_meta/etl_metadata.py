@@ -122,6 +122,33 @@ class EtlMetaDataSQL():
       and dag_id = '%s'
   """ % ("##{dag_id}##")
 
+  #获取oe异步任务
+  get_interface_oe_async_tasks_sql = """
+    select id
+           ,media_type
+           ,task_id
+           ,dag_id
+           ,task_type
+           ,source_handle
+           ,source_db
+           ,source_table
+           ,target_handle
+           ,target_db
+           ,target_table
+           ,interface_group_by
+           ,key_columns
+           ,select_exclude_columns
+           ,status
+           ,comments
+           ,create_user
+           ,update_user
+           ,create_time
+           ,update_time
+    from metadb.interface_account_tasks_info
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
+
   #删除etl作业重跑每天条数记录表
   delete_etl_job_rows_sql = """
     delete from metadb.etl_job_rows 
