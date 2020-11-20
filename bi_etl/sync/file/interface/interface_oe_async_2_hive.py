@@ -344,9 +344,9 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     target_db = TaskInfo[9]
     target_table = TaskInfo[10]
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
-    cols = get_table_columns_info(HiveSession=hive_session, SourceDB=source_db, SourceTable=source_table, TargetDB=target_db,
+    select_target_columns, assign_target_columns,select_source_columns, assign_source_columns = get_table_columns_info(HiveSession=hive_session, SourceDB=source_db, SourceTable=source_table, TargetDB=target_db,
                            TargetTable=target_table,IsTargetPartition="Y")
-    print(cols,"========================")
+    print(select_target_columns,"========================")
     ###### #获取源表字段
     ###### ok,source_column_list = hive_session.get_column_info(source_db,source_table)
     ###### source_columns_list = []
