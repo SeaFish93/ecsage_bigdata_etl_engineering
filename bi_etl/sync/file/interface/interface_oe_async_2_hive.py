@@ -408,11 +408,11 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                     #判断此任务是否有创建，若是没有，则调用创建，只限两次，第三次还没创建，自动放弃
                     status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data)
                     os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file+".%s"%n))
-            os.system("""rm -f %s"""%(exception_dir_file))
+            os.system("""mv %s %s"""%(exception_dir_file,AsyncAccountDir+"/exception_%s.log"%(n)))
      if len(exception_file_list) > 0:
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
         wait_for_celery_status(StatusList=celery_task_id)
-        os.system("""rm -f %s"""%(celery_task_data_file +".%s"%n))
+        #os.system("""mv -f %s"""%(celery_task_data_file +".%s"%n))
         print("重试异常完成！！！")
      if len(exception_file_list) == 0 or n == 10:
          if len(exception_file_list) >0:
