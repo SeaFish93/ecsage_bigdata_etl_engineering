@@ -343,10 +343,27 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     beeline_handler = "beeline"
     target_db = TaskInfo[9]
     target_table = TaskInfo[10]
+    key_cols = TaskInfo[12]
+    if len(key_cols) == 0 or key_cols is None:
+        print("请指定业务主键字段！！！")
+    key = ""
+    for keys in key_cols.split(","):
+       key = key + ",`" + keys + "`"
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     select_target_columns, assign_target_columns,select_source_columns, assign_source_columns = get_table_columns_info(HiveSession=hive_session, SourceDB=source_db, SourceTable=source_table, TargetDB=target_db,
                            TargetTable=target_table,IsTargetPartition="Y")
-    print(select_target_columns,"========================")
+    print(key,"##########",select_target_columns,"========================")
+    insert_sql = """
+       insert overwrite table %s.%s
+       partition(etl_date='%s')
+       select %s
+       from(select %s,row_number()over(partition by %s order by 1) as rn
+            from %s.%s
+            where etl_date = '%s'
+           ) tmp
+       where rn = 1
+    """%(target_db,target_table,ExecDate,select_target_columns,select_target_columns,"",source_db,source_table,ExecDate)
+    print(insert_sql)
     ###### #获取源表字段
     ###### ok,source_column_list = hive_session.get_column_info(source_db,source_table)
     ###### source_columns_list = []
