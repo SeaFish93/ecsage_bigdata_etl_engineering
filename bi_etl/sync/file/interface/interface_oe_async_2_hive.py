@@ -260,7 +260,7 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
         set_exit(LevelStatu="red", MSG=msg)
     #获取列名
     get_source_columns = os.popen("head -1 %s/%s" % (AsyncAccountDir,data_file_list[0]))
-    source_columns_list = get_source_columns.read().split("INFO: ")
+    source_columns_list = get_source_columns.read().split("##@@####")
     if len(source_columns_list) <= 1:
        print("获取字段出现异常！！！")
     source_columns = source_columns_list[1]
@@ -315,6 +315,17 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
      ;
     """%(etl_mid_table,ExecDate,MediaType,select_colums.replace(",","",1),etl_mid_tmp_table,source_columns.strip())
     print(insert_sql)
+    ok = beeline_session.execute_sql(insert_sql)
+    if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDb, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="hdfs文件落地至etl_mid出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
