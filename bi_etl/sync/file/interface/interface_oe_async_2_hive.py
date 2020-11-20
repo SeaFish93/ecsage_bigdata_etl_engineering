@@ -227,26 +227,29 @@ def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountD
     data_file = DataFile.split("/")[-1]
     hdfs_dir = "/tmp/datafolder_new"
     load_sqls = ""
-    print("hadoop fs -rmr %s*" % (hdfs_dir+"/"+data_file), "************************************")
-    print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
-    os.system("hadoop fs -rmr %s*" % (hdfs_dir+"/"+data_file))
-    ok_data = os.system("hadoop fs -put %s* %s" % (DataFile, hdfs_dir))
-    if ok_data != 0:
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                               TargetTable="%s.%s" % (TargetDb, TargetTable),
-                               BeginExecDate=ExecDate,
-                               EndExecDate=ExecDate,
-                               Status="Error",
-                               Log="上传本地数据文件至HDFS出现异常！！！",
-                               Developer="developer")
-        set_exit(LevelStatu="red", MSG=msg)
     for files in target_file:
         if data_file in files:
             print(data_file,"==================================")
             load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s.%s;\n"""%(hdfs_dir,files,TargetDb,TargetTable)
             load_sqls = load_sql + load_sqls
-    print(load_sqls,"##############################3")
+    if len(load_sqls) >0:
+        print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
+        print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
+        os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
+        ok_data = os.system("hadoop fs -put %s* %s" % (DataFile, hdfs_dir))
+        if ok_data != 0:
+            msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                   SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                   TargetTable="%s.%s" % (TargetDb, TargetTable),
+                                   BeginExecDate=ExecDate,
+                                   EndExecDate=ExecDate,
+                                   Status="Error",
+                                   Log="上传本地数据文件至HDFS出现异常！！！",
+                                   Developer="developer")
+            set_exit(LevelStatu="red", MSG=msg)
+        print(load_sqls,"##############################")
+    else:
+        print("API采集没执行！！！")
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
