@@ -281,7 +281,8 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     create_tmp_sql = """
      drop table if exists %s;
      create table %s(
-       request_data string
+       request_data string,
+       extract_system_time string
      )row format delimited fields terminated by '\\001'
      ;
     """%(etl_mid_tmp_table,etl_mid_tmp_table)
