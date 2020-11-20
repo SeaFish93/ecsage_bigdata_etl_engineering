@@ -29,8 +29,9 @@ def main(TaskInfo,**kwargs):
     exec_date = airflow.execution_date_utc8_str[0:10]
     """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步"""
     if task_type == 2:
-       #get_oe_async_tasks_status(MediaType=media_type,ExecDate=exec_date)
        get_oe_async_tasks_data(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
+    elif task_type == 3:
+       get_etl_mid_2_ods(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
 
 def get_oe_async_tasks_status(MediaType="",ExecDate=""):
     media_type = MediaType
@@ -221,9 +222,10 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file)
     time.sleep(30)
     #上传至hdfs
-    get_local_file_hdfs(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
+    get_local_file_2_hive(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
 
-def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline="",TargetDb="",TargetTable="",AsyncAccountDir="",DataFile="",ExecDate=""):
+#本地数据落地至hive
+def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline="",TargetDb="",TargetTable="",AsyncAccountDir="",DataFile="",ExecDate=""):
     etl_mid_tmp_table = """%s.%s_%s_tmp""" % (TargetDb, TargetTable, MediaType)
     etl_mid_table = """%s.%s""" % (TargetDb, TargetTable)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=TargetHandleBeeline)
@@ -237,11 +239,12 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
         if data_file in files:
             data_file_list.append(files)
             if n == 0:
-               load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s;\n"""%(hdfs_dir,files,etl_mid_tmp_table)
+               load_sql_0 = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s;\n"""%(hdfs_dir,files,etl_mid_tmp_table)
             else:
                 load_sql = """load data inpath '%s/%s' INTO TABLE %s;\n"""%(hdfs_dir,files,etl_mid_tmp_table)
             load_sqls = load_sql + load_sqls
             n = n + 1
+    load_sqls = load_sql_0 + load_sqls
     if len(load_sqls) == 0:
         print("API采集没执行！！！")
     print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
@@ -325,6 +328,15 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
                                Log="hdfs文件落地至etl_mid出现异常！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
+
+#落地数据至ods
+def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
+    media_type = MediaType
+    target_handle = TaskInfo[8]
+    beeline_handler = "beeline"
+    target_db = TaskInfo[9]
+    target_table = TaskInfo[10]
+
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
