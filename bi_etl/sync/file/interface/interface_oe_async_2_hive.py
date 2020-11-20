@@ -344,14 +344,18 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     target_table = TaskInfo[10]
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     #获取源表字段
-    sql = """"""
     ok,source_column_list = hive_session.get_column_info(source_db,source_table)
-    source_columns = ""
+    source_columns_list = []
     #获取目标表字段
     ok, target_column_list = hive_session.get_column_info(target_db, target_table)
-    target_columns = ""
-    print(source_column_list,"=========================")
-    print(target_column_list, "###################################")
+    target_columns_list = []
+    for source_col in source_column_list:
+        source_columns_list.append(source_col)
+    for target_col in target_column_list:
+        target_columns_list.append(target_col)
+    #获取etl_mid与ods的差异
+    diff_source_target_columns = set(source_columns_list).difference(set(target_columns_list))
+    print(diff_source_target_columns,"=======================================")
 
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
