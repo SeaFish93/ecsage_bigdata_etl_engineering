@@ -268,7 +268,9 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
         set_exit(LevelStatu="red", MSG=msg)
     #获取列名
     get_source_columns = os.popen("head -1 %s/%s" % (AsyncAccountDir,data_file_list[0]))
-    source_columns_list = get_source_columns.read().split("- INFO:")
+    #source_columns_list = get_source_columns.read().split("- INFO:")
+    source_columns_list = """campaign_id,deep_convert_rate,ad_id,ctr,show,avg_show_cost,creative_id,convert_cost,convert,deep_convert_cost,advertiser_id,cost,deep_convert,avg_click_cost,ad_name,ca
+mpaign_name,convert_rate,click""".split(",")
     if len(source_columns_list) <= 1:
        print("获取字段出现异常！！！")
     source_columns = source_columns_list[1]
@@ -315,7 +317,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
      partition(etl_date = '%s',request_type = '%s')
      select %s,FROM_UNIXTIME(UNIX_TIMESTAMP()) as extract_system_time
      from(select split(request_data,',') as request_data 
-          from(select regexp_replace(regexp_extract(a.request_data,'(- INFO:.*)',1),'- INFO:','') as request_data
+          from(select a.request_data
                from %s a 
               ) tmp
           where trim(request_data) != 'empty result'
