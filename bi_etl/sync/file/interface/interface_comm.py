@@ -103,7 +103,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
              #os.system("""echo '%s'>>%s""" % (account_id, "file."+DataFile + "_%s" % (hostname)))
              log = Logger("""%s.%s"""% (DataFile,hostname),level='info')
              for data in resp_datas:
-                 log.logger.info(data.decode())
+                 log.logger.info("##@@####"+data.decode())
            set_run = False
        n = n + 1
     return code
