@@ -252,7 +252,7 @@ def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountD
         print(load_sqls,"##############################")
         #获取列名
         get_source_columns = os.popen("head -1 %s/%s" % (AsyncAccountDir,data_file_list[0]))
-        source_columns = get_source_columns.read().split()[0]
+        source_columns = get_source_columns.read()
         print(source_columns,"++++++++++++++++++++++++++++++++++++++++++++++++++++")
         #创建etl_mid临时表，以英文逗号分隔
         #####create_sql = """
