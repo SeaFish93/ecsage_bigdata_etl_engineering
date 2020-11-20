@@ -99,7 +99,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
              time.sleep(2)
        else:
            if code == 0:
-             #os.system("""echo '%s'>>%s""" % (account_id, "file."+DataFile + "_%s" % (hostname)))
+             os.system("""echo '%s'>>%s""" % (account_id, DataFile + "test_%s" % (hostname)))
              log = Logger("""%s.%s"""% (DataFile,hostname),level='info')
              for data in resp_datas:
                  log.logger.info(data.decode())
