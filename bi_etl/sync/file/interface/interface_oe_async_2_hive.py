@@ -181,6 +181,7 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",TableName=""):
 def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
     media_type = MediaType
     target_handle = TaskInfo[8]
+    beeline_handler = "beeline"
     target_db = TaskInfo[9]
     target_table = TaskInfo[10]
     async_account_file = "/home/ecsage_data/oceanengine/async/%s"%(media_type)
@@ -220,9 +221,10 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     ##########rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file)
     ##########time.sleep(30)
     #上传至hdfs
-    get_local_file_hdfs(MediaType=MediaType,TargetHandle=target_handle, TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
+    get_local_file_hdfs(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
 
-def get_local_file_hdfs(MediaType="",TargetHandle="",TargetDb="",TargetTable="",AsyncAccountDir="",DataFile="",ExecDate=""):
+def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline="",TargetDb="",TargetTable="",AsyncAccountDir="",DataFile="",ExecDate=""):
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler=TargetHandleBeeline)
     target_file = os.listdir(AsyncAccountDir)
     data_file = DataFile.split("/")[-1]
     hdfs_dir = "/tmp/datafolder_new"
@@ -266,8 +268,11 @@ def get_local_file_hdfs(MediaType="",TargetHandle="",TargetDb="",TargetTable="",
        %s
      )partitioned by(etl_date string,request_type string)
      row format delimited fields terminated by ','
+     ;
     """%(etl_mid_table,columns.replace(",","",1))
-    print(create_sql,"#############################")
+    beeline_session.execute_sql(create_sql)
+    #hdfs文件落地至hive
+    ok = beeline_session.execute_sql(load_sqls)
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
