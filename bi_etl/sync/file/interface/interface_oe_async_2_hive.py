@@ -345,7 +345,15 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     target_table = TaskInfo[10]
     key_cols = TaskInfo[12]
     if len(key_cols) == 0 or key_cols is None:
-        print("请指定业务主键字段！！！")
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % (source_db, source_table),
+                               TargetTable="%s.%s" % (target_db, target_table),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="请确认任务配置指定业务主键字段是否准确！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
     key = ""
     for keys in key_cols.split(","):
        key = key + ",`" + keys + "`"
@@ -353,7 +361,6 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     select_target_columns, assign_target_columns,select_source_columns, assign_source_columns = get_table_columns_info(HiveSession=hive_session, SourceDB=source_db, SourceTable=source_table, TargetDB=target_db,
                            TargetTable=target_table,IsTargetPartition="Y")
-    print(key,"##########",select_target_columns,"========================")
     insert_sql = """
        insert overwrite table %s.%s
        partition(etl_date='%s')
@@ -364,24 +371,17 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
            ) tmp
        where rn = 1
     """%(target_db,target_table,ExecDate,select_target_columns,select_target_columns,key,source_db,source_table,ExecDate)
-    print(insert_sql)
-    ###### #获取源表字段
-    ###### ok,source_column_list = hive_session.get_column_info(source_db,source_table)
-    ###### source_columns_list = []
-    ###### #获取目标表字段
-    ###### ok, target_column_list = hive_session.get_column_info(target_db, target_table)
-    ###### target_columns_list = []
-    ###### for source_col in source_column_list:
-    ######     source_columns_list.append(source_col[0])
-    ###### for target_col in target_column_list:
-    ######     target_columns_list.append(target_col[0])
-    ###### #获取etl_mid与ods的差异
-    ###### diff_source_target_columns = set(source_columns_list).difference(set(target_columns_list))
-    ###### print(diff_source_target_columns,"=======================================")
-    ###### #ods不加差异字段
-    ###### alter_sql = """
-
-    ######"""
+    ok = hive_session.execute_sql(insert_sql)
+    if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % (source_db, source_table),
+                               TargetTable="%s.%s" % (target_db, target_table),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="写入ods出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
 
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
