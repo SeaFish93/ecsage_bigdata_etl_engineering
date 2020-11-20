@@ -349,6 +349,7 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     key = ""
     for keys in key_cols.split(","):
        key = key + ",`" + keys + "`"
+    key = key.replace(",","",1)
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     select_target_columns, assign_target_columns,select_source_columns, assign_source_columns = get_table_columns_info(HiveSession=hive_session, SourceDB=source_db, SourceTable=source_table, TargetDB=target_db,
                            TargetTable=target_table,IsTargetPartition="Y")
@@ -362,7 +363,7 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
             where etl_date = '%s'
            ) tmp
        where rn = 1
-    """%(target_db,target_table,ExecDate,select_target_columns,select_target_columns,"",source_db,source_table,ExecDate)
+    """%(target_db,target_table,ExecDate,select_target_columns,select_target_columns,key,source_db,source_table,ExecDate)
     print(insert_sql)
     ###### #获取源表字段
     ###### ok,source_column_list = hive_session.get_column_info(source_db,source_table)
