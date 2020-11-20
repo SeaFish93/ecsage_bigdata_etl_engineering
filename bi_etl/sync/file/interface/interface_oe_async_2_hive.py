@@ -188,37 +188,37 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     async_data_file = """%s/%s_%s_data.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
     celery_task_data_file = """%s/%s_%s_celery_status.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
     os.system("""mkdir -p %s""" % (async_account_file))
-    #os.system("""rm -f %s/*""" % (async_account_file))
-    #os.system("""rm -f %s*""" % (async_data_exception_file))
-    #os.system("""rm -f %s*""" % (celery_task_data_file))
+    os.system("""rm -f %s/*""" % (async_account_file))
+    os.system("""rm -f %s*""" % (async_data_exception_file))
+    os.system("""rm -f %s*""" % (celery_task_data_file))
     # 获取子账户
-    ######### source_data_sql = """
-    #########     select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-    #########     from metadb.oe_valid_account_interface a
-    #########     left join metadb.oe_not_valid_account_interface b
-    #########     on a.media_type = b.media_type
-    #########     and a.account_id = b.account_id
-    #########     and a.service_code = b.service_code
-    #########     and a.exec_date = b.exec_date
-    #########     where b.service_code is null
-    #########       and a.media_type = %s
-    #########       and a.exec_date = '%s'
-    #########     group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-    #########     """ % (media_type,ExecDate)
-    ######### ok, datas = etl_md.get_all_rows(source_data_sql)
-    ######### for get_data in datas:
-    #########     status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate)
-    #########     os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
-    #########
-    ######### #获取状态
-    ######### celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
-    ######### print("正在等待celery队列执行完成！！！")
-    ######### wait_for_celery_status(StatusList=celery_task_id)
-    ######### print("celery队列执行完成！！！")
-    ######### print("等待重试异常任务！！！")
-    ######### time.sleep(60)
-    ######### rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file)
-    ######### time.sleep(30)
+    source_data_sql = """
+        select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+        from metadb.oe_valid_account_interface a
+        left join metadb.oe_not_valid_account_interface b
+        on a.media_type = b.media_type
+        and a.account_id = b.account_id
+        and a.service_code = b.service_code
+        and a.exec_date = b.exec_date
+        where b.service_code is null
+          and a.media_type = %s
+          and a.exec_date = '%s'
+        group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+        """ % (media_type,ExecDate)
+    ok, datas = etl_md.get_all_rows(source_data_sql)
+    for get_data in datas:
+        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate)
+        os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
+
+    #获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
+    print("正在等待celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("celery队列执行完成！！！")
+    print("等待重试异常任务！！！")
+    time.sleep(60)
+    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file)
+    time.sleep(30)
     #上传至hdfs
     get_local_file_hdfs(TargetHandle=target_handle, TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
 
