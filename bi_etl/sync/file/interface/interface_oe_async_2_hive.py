@@ -234,6 +234,8 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     hdfs_dir = "/tmp/datafolder_new"
     data_file_list = []
     load_sqls = ""
+    load_sql_0 = ""
+    load_sql = ""
     n = 0
     for files in target_file:
         if data_file in files:
