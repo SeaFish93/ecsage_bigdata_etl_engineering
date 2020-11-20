@@ -340,12 +340,11 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     source_table = TaskInfo[7]
     target_handle = TaskInfo[8]
     hive_handler = "hive"
-    beeline_handler = "beeline"
     target_db = TaskInfo[9]
     target_table = TaskInfo[10]
     key_cols = TaskInfo[12]
     if len(key_cols) == 0 or key_cols is None:
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+        msg = get_alert_info_d(DagId=AirflowDagId, TaskId=AirflowTaskId,
                                SourceTable="%s.%s" % (source_db, source_table),
                                TargetTable="%s.%s" % (target_db, target_table),
                                BeginExecDate=ExecDate,
@@ -373,7 +372,7 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     """%(target_db,target_table,ExecDate,select_target_columns,select_target_columns,key,source_db,source_table,ExecDate)
     ok = hive_session.execute_sql(insert_sql)
     if ok is False:
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+        msg = get_alert_info_d(DagId=AirflowTaskId, TaskId=AirflowTaskId,
                                SourceTable="%s.%s" % (source_db, source_table),
                                TargetTable="%s.%s" % (target_db, target_table),
                                BeginExecDate=ExecDate,
