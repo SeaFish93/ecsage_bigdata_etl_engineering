@@ -260,14 +260,13 @@ def get_local_file_hdfs(MediaType="",TargetHandle="",TargetDb="",TargetTable="",
     for source_column in source_columns.split(","):
         columns = columns + ",`" + source_column.strip() + "` string"
     #创建etl_mid临时表，以英文逗号分隔
-    etl_mid_table = """%s.%s"""%("etl_mid",TargetTable+"_%s"%(MediaType))
+    etl_mid_table = """%s.%s"""%(TargetDb,TargetTable)
     create_sql = """
-     drop table if exists %s;
-     create table %s(
+     create table if not exists %s(
        %s
-     )
+     )partitioned by(etl_date string,request_type string)
      row format delimited fields terminated by ','
-    """%(etl_mid_table,etl_mid_table,columns.replace(",","",1))
+    """%(etl_mid_table,columns.replace(",","",1))
     print(create_sql,"#############################")
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
