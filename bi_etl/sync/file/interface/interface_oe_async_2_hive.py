@@ -224,6 +224,8 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     get_local_file_hdfs(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
 
 def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline="",TargetDb="",TargetTable="",AsyncAccountDir="",DataFile="",ExecDate=""):
+    etl_mid_tmp_table = """%s.%s_%s_tmp""" % (TargetDb, TargetTable, MediaType)
+    etl_mid_table = """%s.%s""" % (TargetDb, TargetTable)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=TargetHandleBeeline)
     target_file = os.listdir(AsyncAccountDir)
     data_file = DataFile.split("/")[-1]
@@ -235,9 +237,9 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
         if data_file in files:
             data_file_list.append(files)
             if n == 0:
-               load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s.%s partition(etl_date='%s',request_type='%s');\n"""%(hdfs_dir,files,TargetDb,TargetTable,ExecDate,MediaType)
+               load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s;\n"""%(hdfs_dir,files,etl_mid_tmp_table)
             else:
-                load_sql = """load data inpath '%s/%s' INTO TABLE %s.%s partition(etl_date='%s',request_type='%s');\n"""%(hdfs_dir,files,TargetDb,TargetTable,ExecDate,MediaType)
+                load_sql = """load data inpath '%s/%s' INTO TABLE %s;\n"""%(hdfs_dir,files,etl_mid_tmp_table)
             load_sqls = load_sql + load_sqls
             n = n + 1
     if len(load_sqls) == 0:
@@ -267,17 +269,34 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
     for source_column in source_columns.split(","):
         columns = columns + ",`" + source_column.strip() + "` string"
     #创建etl_mid临时表，以英文逗号分隔
-    etl_mid_table = """%s.%s"""%(TargetDb,TargetTable)
-    create_sql = """
-     create table if not exists %s(
-       %s
-     )partitioned by(etl_date string,request_type string)
-     row format delimited fields terminated by ','
+    create_tmp_sql = """
+     drop table if exists %s;
+     create table %s(
+       request_data string
+     )row format delimited fields terminated by '\\001'
      ;
-    """%(etl_mid_table,columns.replace(",","",1))
+    """%(etl_mid_tmp_table,etl_mid_tmp_table)
+    beeline_session.execute_sql(create_tmp_sql)
+    create_sql = """
+         create table if not exists %s(
+           %s
+         )partitioned by(etl_date string,request_type string)
+         row format delimited fields terminated by ','
+         ;
+        """ % (etl_mid_table, columns.replace(",", "", 1))
     beeline_session.execute_sql(create_sql)
     #hdfs文件落地至hive
     ok = beeline_session.execute_sql(load_sqls)
+    if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDb, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="hdfs文件落地至hive出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
