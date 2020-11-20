@@ -265,8 +265,12 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
        print("获取字段出现异常！！！")
     source_columns = source_columns_list[1]
     columns = ""
+    select_colums = ""
+    col_n = 0
     for source_column in source_columns.split(","):
         columns = columns + ",`" + source_column.strip() + "` string"
+        select_colums = select_colums + "," + "request_data[%s]"%(col_n)
+        col_n = col_n + 1
     #创建etl_mid临时表，以英文逗号分隔
     create_tmp_sql = """
      drop table if exists %s;
@@ -284,7 +288,7 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
          ;
         """ % (etl_mid_table, columns.replace(",", "", 1))
     beeline_session.execute_sql(create_sql)
-    #hdfs文件落地至hive
+    #load hdfs文件落地至hive
     ok = beeline_session.execute_sql(load_sqls)
     if ok is False:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -296,6 +300,21 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
                                Log="hdfs文件落地至hive出现异常！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
+    #落地至etl_mid
+    insert_sql = """
+     insert overwrite table %s
+     partitions(etl_date = '%s',request_type = '%s')
+     select %s
+     from(select split(request_data,',') as request_data 
+          from(select regexp_replace(regexp_extract(a.request_data,'(INFO: ##@@####.*)',1),'INFO: ##@@####','') as request_data
+               from %s a 
+              ) tmp
+          where request_data != 'empty result'
+          and request_data != '%s'
+     ) tmp1
+     ;
+    """%(etl_mid_table,ExecDate,MediaType,select_colums.replace(",","",1),etl_mid_tmp_table,source_columns.strip())
+    print(insert_sql)
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
