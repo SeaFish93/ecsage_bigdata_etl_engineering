@@ -39,13 +39,13 @@ CELERY_PREFETCH_MULTIPLIER = 4
 ######
 ######
 ####### 将日志输出到文件
-hostname = socket.gethostname()
-fh = logging.FileHandler("""/home/ecsage_data/oceanengine/account/celery_worker.log.%s"""%(hostname)) # 这里注意不要使用TimedRotatingFileHandler，celery的每个进程都会切分，导致日志丢失
-root_logger = logging.getLogger() # 返回logging.root
-root_logger.setLevel(logging.DEBUG)
+#hostname = socket.gethostname()
+#fh = logging.FileHandler("""/home/ecsage_data/oceanengine/account/celery_worker.log.%s"""%(hostname)) # 这里注意不要使用TimedRotatingFileHandler，celery的每个进程都会切分，导致日志丢失
+#root_logger = logging.getLogger() # 返回logging.root
+#root_logger.setLevel(logging.DEBUG)
 #fh.setFormatter(formatter)
-fh.setLevel(logging.DEBUG)
-root_logger.addHandler(fh)
+#fh.setLevel(logging.DEBUG)
+#root_logger.addHandler(fh)
 
 # 将日志输出到控制台
 #### sh = logging.StreamHandler()
