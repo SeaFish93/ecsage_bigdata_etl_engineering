@@ -230,11 +230,16 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
     hdfs_dir = "/tmp/datafolder_new"
     data_file_list = []
     load_sqls = ""
+    n = 0
     for files in target_file:
         if data_file in files:
             data_file_list.append(files)
-            load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s.%s;\n"""%(hdfs_dir,files,TargetDb,TargetTable)
+            if n == 0:
+               load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s.%s partition(etl_date='%s',request_type='%s');\n"""%(hdfs_dir,files,TargetDb,TargetTable,ExecDate,MediaType)
+            else:
+                load_sql = """load data inpath '%s/%s' INTO TABLE %s.%s partition(etl_date='%s',request_type='%s');\n"""%(hdfs_dir,files,TargetDb,TargetTable,ExecDate,MediaType)
             load_sqls = load_sql + load_sqls
+            n = n + 1
     if len(load_sqls) == 0:
         print("API采集没执行！！！")
     print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
