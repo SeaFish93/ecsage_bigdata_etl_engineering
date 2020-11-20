@@ -219,8 +219,8 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
-    time.sleep(60)
-    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file)
+    #time.sleep(60)
+    #rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file)
     time.sleep(30)
     #上传至hdfs
     get_local_file_2_hive(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
