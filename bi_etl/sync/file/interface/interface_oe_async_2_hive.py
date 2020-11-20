@@ -258,7 +258,7 @@ def get_local_file_hdfs(MediaType="",TargetHandle="",TargetDb="",TargetTable="",
     source_columns = source_columns_list[1]
     columns = ""
     for source_column in source_columns.split(","):
-        columns = columns + "," + source_column.strip() + " string"
+        columns = columns + ",`" + source_column.strip() + "` string"
     #创建etl_mid临时表，以英文逗号分隔
     etl_mid_table = """%s.%s"""%("etl_mid",TargetTable+"_%s"%(MediaType))
     create_sql = """
