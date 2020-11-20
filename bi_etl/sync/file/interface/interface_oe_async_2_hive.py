@@ -303,7 +303,7 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
     #落地至etl_mid
     insert_sql = """
      insert overwrite table %s
-     partitions(etl_date = '%s',request_type = '%s')
+     partition(etl_date = '%s',request_type = '%s')
      select %s
      from(select split(request_data,',') as request_data 
           from(select regexp_replace(regexp_extract(a.request_data,'(INFO: ##@@####.*)',1),'INFO: ##@@####','') as request_data
