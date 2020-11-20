@@ -11,6 +11,8 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data
 #from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
+from celery.utils.log import get_task_logger
+
 import time
 import socket
 
@@ -39,7 +41,8 @@ def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatus
 #定义oe任务数据
 @app.task
 def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate="",LogSession=""):
-    logger = get_oe_async_tasks_data.get_logger(logfile ="%s/tasks.log"%(DataFile))
+    logger = get_task_logger(logfile ="%s/tasks.log"%(DataFile))
+    #logger = get_oe_async_tasks_data.get_logger(logfile ="%s/tasks.log"%(DataFile))
     account_id = ExecData[0]
     #log = Logger("""%s.%s"""% (DataFile,hostname),level='info')
     set_true = True
