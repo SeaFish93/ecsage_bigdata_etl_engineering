@@ -236,8 +236,9 @@ def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountD
     if len(load_sqls) >0:
         print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
         print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
-        os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
-        ok_data = os.system("hadoop fs -put %s* %s" % (DataFile, hdfs_dir))
+        #####os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
+        #####ok_data = os.system("hadoop fs -put %s* %s" % (DataFile, hdfs_dir))
+        ok_data = 0
         if ok_data != 0:
             msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                    SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
@@ -250,9 +251,16 @@ def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountD
             set_exit(LevelStatu="red", MSG=msg)
         print(load_sqls,"##############################")
         #获取列名
-        get_source_columns = os.popen("head -1 %s/" % (AsyncAccountDir,data_file_list[0]))
+        get_source_columns = os.popen("head -1 %s/%s" % (AsyncAccountDir,data_file_list[0]))
         source_columns = get_source_columns.read().split()[0]
         print(source_columns,"++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        #创建etl_mid临时表，以英文逗号分隔
+        #####create_sql = """
+        ##### drop table if exists %s.%s;
+        ##### create table %s.%s(
+        #####
+        ##### )
+        #####"""
     else:
         print("API采集没执行！！！")
 
