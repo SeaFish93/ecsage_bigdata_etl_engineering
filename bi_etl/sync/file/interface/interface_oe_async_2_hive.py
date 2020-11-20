@@ -281,8 +281,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     create_tmp_sql = """
      drop table if exists %s;
      create table %s(
-       request_data string,
-       extract_system_time string
+       request_data string
      )row format delimited fields terminated by '\\001'
      ;
     """%(etl_mid_tmp_table,etl_mid_tmp_table)
@@ -290,6 +289,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     create_sql = """
          create table if not exists %s(
            %s
+           ,extract_system_time string
          )partitioned by(etl_date string,request_type string)
          row format delimited fields terminated by ','
          ;
@@ -311,7 +311,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     insert_sql = """
      insert overwrite table %s
      partition(etl_date = '%s',request_type = '%s')
-     select %s
+     select %s,FROM_UNIXTIME(UNIX_TIMESTAMP()) as extract_system_time
      from(select split(request_data,',') as request_data 
           from(select regexp_replace(regexp_extract(a.request_data,'(INFO: ##@@####.*)',1),'INFO: ##@@####','') as request_data
                from %s a 
