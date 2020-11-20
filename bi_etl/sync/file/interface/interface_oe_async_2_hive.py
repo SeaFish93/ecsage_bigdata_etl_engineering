@@ -309,8 +309,8 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
           from(select regexp_replace(regexp_extract(a.request_data,'(INFO: ##@@####.*)',1),'INFO: ##@@####','') as request_data
                from %s a 
               ) tmp
-          where request_data != 'empty result'
-          and request_data != '%s'
+          where trim(request_data) != 'empty result'
+          and md5(trim(request_data)) != md5('%s')
      ) tmp1
      ;
     """%(etl_mid_table,ExecDate,MediaType,select_colums.replace(",","",1),etl_mid_tmp_table,source_columns.strip())
