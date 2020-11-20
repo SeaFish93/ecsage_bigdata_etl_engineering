@@ -314,7 +314,6 @@ def get_local_file_hdfs(MediaType="",TargetHandleHive="", TargetHandleBeeline=""
      ) tmp1
      ;
     """%(etl_mid_table,ExecDate,MediaType,select_colums.replace(",","",1),etl_mid_tmp_table,source_columns.strip())
-    print(insert_sql)
     ok = beeline_session.execute_sql(insert_sql)
     if ok is False:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
