@@ -233,36 +233,40 @@ def get_local_file_hdfs(TargetHandle="",TargetDb="",TargetTable="",AsyncAccountD
             data_file_list.append(files)
             load_sql = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s.%s;\n"""%(hdfs_dir,files,TargetDb,TargetTable)
             load_sqls = load_sql + load_sqls
-    if len(load_sqls) >0:
-        print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
-        print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
-        #####os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
-        #####ok_data = os.system("hadoop fs -put %s* %s" % (DataFile, hdfs_dir))
-        ok_data = 0
-        if ok_data != 0:
-            msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                                   SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                                   TargetTable="%s.%s" % (TargetDb, TargetTable),
-                                   BeginExecDate=ExecDate,
-                                   EndExecDate=ExecDate,
-                                   Status="Error",
-                                   Log="上传本地数据文件至HDFS出现异常！！！",
-                                   Developer="developer")
-            set_exit(LevelStatu="red", MSG=msg)
-        print(load_sqls,"##############################")
-        #获取列名
-        get_source_columns = os.popen("head -1 %s/%s" % (AsyncAccountDir,data_file_list[0]))
-        source_columns_list = get_source_columns.read().split("INFO: ")
-        print(source_columns_list[1],"++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        #创建etl_mid临时表，以英文逗号分隔
-        #####create_sql = """
-        ##### drop table if exists %s.%s;
-        ##### create table %s.%s(
-        #####
-        ##### )
-        #####"""
-    else:
+    if len(load_sqls) == 0:
         print("API采集没执行！！！")
+    print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
+    print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
+    #####os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
+    #####ok_data = os.system("hadoop fs -put %s* %s" % (DataFile, hdfs_dir))
+    ok_data = 0
+    if ok_data != 0:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDb, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="上传本地数据文件至HDFS出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    #获取列名
+    get_source_columns = os.popen("head -1 %s/%s" % (AsyncAccountDir,data_file_list[0]))
+    source_columns_list = get_source_columns.read().split("INFO: ")
+    if len(source_columns_list) <= 1:
+       print("获取字段出现异常！！！")
+    source_columns = source_columns_list[1]
+    columns = ""
+    for source_column in source_columns.split(","):
+        columns = columns + "," + source_column.strip() + " string"
+    print(columns,"###########################################")
+    #创建etl_mid临时表，以英文逗号分隔
+    #####create_sql = """
+    ##### drop table if exists %s.%s;
+    ##### create table %s.%s(
+    #####
+    ##### )
+    #####"""
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
