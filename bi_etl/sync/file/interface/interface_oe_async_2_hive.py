@@ -210,7 +210,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
         group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
         """ % (media_type,ExecDate)
     ok, datas = etl_md.get_all_rows(source_data_sql)
-    log = Logger("""%s"""% (DataFile),level='info')
+    log = Logger("""%s"""% (async_data_file),level='info')
     for get_data in datas:
         status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession=log)
         os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
