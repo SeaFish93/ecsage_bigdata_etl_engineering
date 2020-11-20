@@ -350,9 +350,9 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     ok, target_column_list = hive_session.get_column_info(target_db, target_table)
     target_columns_list = []
     for source_col in source_column_list:
-        source_columns_list.append(source_col)
+        source_columns_list.append(source_col[0])
     for target_col in target_column_list:
-        target_columns_list.append(target_col)
+        target_columns_list.append(target_col[0])
     #获取etl_mid与ods的差异
     diff_source_target_columns = set(source_columns_list).difference(set(target_columns_list))
     print(diff_source_target_columns,"=======================================")
