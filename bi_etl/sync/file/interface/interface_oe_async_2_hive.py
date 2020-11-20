@@ -383,6 +383,9 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
 
+#落地数据至snap
+def get_etl_mid_2_snap(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
+    pass
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
