@@ -10,7 +10,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_status_content_content
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
+#from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
 import time
 import socket
 
@@ -38,14 +38,14 @@ def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatus
 
 #定义oe任务数据
 @app.task
-def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""):
+def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate="",LogSession=""):
     account_id = ExecData[0]
-    log = Logger("""%s.%s"""% (DataFile,hostname),level='info')
+    #log = Logger("""%s.%s"""% (DataFile,hostname),level='info')
     set_true = True
     n = 1
     print("执行子账户：%s"%(account_id))
     while set_true:
-       code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData,LogSession=log)
+       code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData,LogSession=LogSession)
        if code != 0:
          if n > 3:
             print("异常子账户：%s" % (account_id))
