@@ -13,6 +13,7 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status as get_oe_async_tasks_status_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data as get_oe_async_tasks_data_celery
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
 import os
 import time
 
@@ -209,8 +210,9 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
         group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
         """ % (media_type,ExecDate)
     ok, datas = etl_md.get_all_rows(source_data_sql)
+    log = Logger("""%s"""% (DataFile),level='info')
     for get_data in datas:
-        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate)
+        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession=log)
         os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
 
     #获取状态
