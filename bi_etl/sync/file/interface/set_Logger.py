@@ -19,19 +19,36 @@ from logging import handlers
 #####    log.logger.info('info')
 #####    #Logger('error.log', level='error').logger.error('error')
 
-import logging
-
-class Logger(object):
-   def __init__(self,filename=""):
-     self.logger = logging.getLogger()
-     self.logger.setLevel(level = logging.INFO)
-     handler = logging.FileHandler(filename)
-     handler.setLevel(logging.INFO)
-     #formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-     formatter = logging.Formatter('%(message)s')
-     handler.setFormatter(formatter)
-     self.logger.addHandler(handler)
+#####import logging
+#####
+#####class Logger(object):
+#####   def __init__(self,filename=""):
+#####     self.logger = logging.getLogger()
+#####     self.logger.setLevel(level = logging.INFO)
+#####     handler = logging.FileHandler(filename)
+#####     handler.setLevel(logging.INFO)
+#####     #formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+#####     formatter = logging.Formatter('%(message)s')
+#####     handler.setFormatter(formatter)
+#####     self.logger.addHandler(handler)
 
 #### if __name__ == '__main__':
 ####   log = Logger('all.log')
 ####   log.logger.info("Start print log")
+
+from logging import getLogger, INFO
+from cloghandler import ConcurrentRotatingFileHandler
+import os
+
+class Logger(object):
+  def __init__(self,filename=""):
+    self.logger = getLogger()
+    # Use an absolute path to prevent file rotation trouble.
+    logfile = os.path.abspath(filename)
+    # Rotate log after reaching 512K, keep 5 old copies.
+    rotateHandler = ConcurrentRotatingFileHandler(logfile, "a", 800*1024*1024)
+    self.logger.addHandler(rotateHandler)
+    self.logger.setLevel(INFO)
+#if __name__ == '__main__':
+#  log = Logger('all.log')
+#  log.logger.info("Start print log")
