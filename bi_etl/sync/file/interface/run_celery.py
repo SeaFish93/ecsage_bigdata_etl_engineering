@@ -7,5 +7,6 @@ do
  kill -9 $line
 done
 
+nohup ./redis-server redis.conf >/usr/local/python3/lib/python3.7/site-packages/airflow/logs/redis.log 2>&1 &
 
 """
