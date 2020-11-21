@@ -78,7 +78,7 @@ def get_oe_save_exception_file(ExecData="",AsyncNotemptyFile="",AsyncStatusExcep
        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
     os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
 
-def set_oe_async_tasks_data(DataFile="",ExecData=""):
+def set_oe_async_tasks_data(DataFile="",ExecData="",Log=""):
     get_data = ExecData
     media_type = get_data[1]
     service_code = get_data[2]
@@ -100,13 +100,8 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
        else:
            if code == 0:
              os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
-             #log = Logger("""%s.%s"""% (DataFile,hostname),level='info')
              for data in resp_datas:
-                 #LogSession.logger.info(data.decode())
-                 cat_comm = """cat >> %s.%s << EOF
-%s
-EOF"""%(DataFile,hostname,data.decode())
-                 os.system(cat_comm)
+                 Log.info(data.decode())
            set_run = False
        n = n + 1
     return code
