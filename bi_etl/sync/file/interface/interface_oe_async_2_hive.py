@@ -269,17 +269,17 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     #获取列名
     get_source_columns = os.popen("head -1 %s/%s" % (AsyncAccountDir,data_file_list[0]))
     #source_columns_list = get_source_columns.read().split("- INFO:")
-    source_columns_list = """campaign_id,deep_convert_rate,ad_id,ctr,show,avg_show_cost,creative_id,convert_cost,convert,deep_convert_cost,advertiser_id,cost,deep_convert,avg_click_cost,ad_name,ca
-mpaign_name,convert_rate,click""".split(",")
+    source_columns = """campaign_id,deep_convert_rate,ad_id,ctr,show,avg_show_cost,creative_id,convert_cost,convert,deep_convert_cost,advertiser_id,cost,deep_convert,avg_click_cost,ad_name,ca
+mpaign_name,convert_rate,click"""
+    source_columns_list = source_columns.split(",")
     if len(source_columns_list) <= 1:
        print("获取字段出现异常！！！")
     #source_columns = source_columns_list[1]
-    source_columns = source_columns_list
     columns = ""
     select_colums = ""
     col_n = 0
     #for source_column in source_columns.split(","):
-    for source_column in source_columns:
+    for source_column in source_columns.split(","):
         columns = columns + ",`" + source_column.strip() + "` string"
         select_colums = select_colums + "," + "request_data[%s]"%(col_n)
         col_n = col_n + 1
