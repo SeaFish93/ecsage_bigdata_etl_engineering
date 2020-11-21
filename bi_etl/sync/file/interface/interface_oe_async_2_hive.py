@@ -13,7 +13,7 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status as get_oe_async_tasks_status_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data as get_oe_async_tasks_data_celery
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
-#from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
 import os
 import time
 
@@ -34,6 +34,8 @@ def main(TaskInfo,**kwargs):
        get_oe_async_tasks_data(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
     elif task_type == 3:
        get_etl_mid_2_ods(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
+    elif task_type == 4:
+       get_ods_2_snap(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
 
 def get_oe_async_tasks_status(MediaType="",ExecDate=""):
     media_type = MediaType
@@ -390,8 +392,18 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
         set_exit(LevelStatu="red", MSG=msg)
 
 #落地数据至snap
-def get_etl_mid_2_snap(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
-    pass
+def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",TaskInfo="",ExecDate=""):
+    source_db = TaskInfo[6]
+    source_table = TaskInfo[7]
+    hive_handler = "hive"
+    beeline_handler = "beeline"
+    target_db = TaskInfo[9]
+    target_table = TaskInfo[10]
+
+    hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
+    exec_snap_hive_table(AirflowDagId=AirflowDagId, AirflowTaskId=AirflowTaskId, HiveSession=hive_session, BeelineSession=beeline_handler,
+                         SourceDB=source_db,SourceTable=source_table,TargetDB=target_db, TargetTable=target_table, IsReport=1,
+                         KeyColumns="", ExecDate=ExecDate)
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile=""):
     exception_file = ExceptionFile.split("/")[-1]
