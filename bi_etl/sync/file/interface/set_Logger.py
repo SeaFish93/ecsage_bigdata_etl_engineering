@@ -41,14 +41,14 @@ from cloghandler import ConcurrentRotatingFileHandler
 import os
 
 class Logger(object):
-  def __init__(self,filename=""):
+  def __init__(self,filename="",level=""):
     self.logger = getLogger()
     # Use an absolute path to prevent file rotation trouble.
     logfile = os.path.abspath(filename)
     # Rotate log after reaching 512K, keep 5 old copies.
     rotateHandler = ConcurrentRotatingFileHandler(logfile, "a", 800*1024*1024)
     self.logger.addHandler(rotateHandler)
-    self.logger.setLevel(INFO)
+    self.logger.setLevel(level)
 #if __name__ == '__main__':
 #  log = Logger('all.log')
 #  log.logger.info("Start print log")
