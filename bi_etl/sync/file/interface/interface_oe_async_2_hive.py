@@ -273,11 +273,13 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
 mpaign_name,convert_rate,click""".split(",")
     if len(source_columns_list) <= 1:
        print("获取字段出现异常！！！")
-    source_columns = source_columns_list[1]
+    #source_columns = source_columns_list[1]
+    source_columns = source_columns_list
     columns = ""
     select_colums = ""
     col_n = 0
-    for source_column in source_columns.split(","):
+    #for source_column in source_columns.split(","):
+    for source_column in source_columns:
         columns = columns + ",`" + source_column.strip() + "` string"
         select_colums = select_colums + "," + "request_data[%s]"%(col_n)
         col_n = col_n + 1
