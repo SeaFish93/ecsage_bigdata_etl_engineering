@@ -99,11 +99,16 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
              time.sleep(2)
        else:
            if code == 0:
-             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
              for data in resp_datas:
+                 shell_cmd = """
+                 cat >> index.html << endwritefilewwwww
+%s
+endwritefilewwwww"""%(data.decode())
+                 os.system(shell_cmd)
+                 os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
                  #pass
-                 LogSession.write(data.decode())
-                 LogSession.flush()
+                 #LogSession.write(data.decode())
+                 #LogSession.flush()
                  #LogSession.info(data.decode())
            set_run = False
        n = n + 1
