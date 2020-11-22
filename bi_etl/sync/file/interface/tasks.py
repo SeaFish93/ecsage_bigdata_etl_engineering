@@ -39,7 +39,7 @@ def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatus
       n = n + 1
 
 #定义oe任务数据
-@app.task
+@app.task(time_limit=600)
 def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate="",LogSession=""):
     #logger = get_task_logger(logfile ="%s/tasks.log"%(DataFile))
     #logger = get_oe_async_tasks_data.get_logger(logfile ="%s/tasks.log"%(DataFile))
