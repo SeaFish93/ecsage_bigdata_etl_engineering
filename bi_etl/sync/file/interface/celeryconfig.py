@@ -16,8 +16,9 @@ CELERY_MAX_TASKS_PER_CHILD = 40
 CELERY_CONCURRENCY = 20
 #the amount that a celery worker get task from broker each time
 CELERY_PREFETCH_MULTIPLIER = 4
-
-
+CELERY_TASK_SERIALIZER = 'pickle'
+CELERY_RESULT_SERIALIZER = 'pickle'
+CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 ######import logging
 ######import socket
 ######
