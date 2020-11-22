@@ -216,9 +216,9 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     ok, datas = etl_md.get_all_rows(source_data_sql)
     #log = Logger("""%s"""% (async_data_file),level='info')
     #log = Logger("""%s"""% (async_data_file))
-    OpenFile = open(async_data_file, mode="w")
+    #OpenFile = open(async_data_file, mode="w")
     for get_data in datas:
-        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession=OpenFile)
+        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession="OpenFile")
         os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
 
     #获取状态
