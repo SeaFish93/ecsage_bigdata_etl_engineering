@@ -102,7 +102,9 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
              os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
              for data in resp_datas:
                  #pass
-                 LogSession.info(data.decode())
+                 LogSession.write(data.decode())
+                 LogSession.flush()
+                 #LogSession.info(data.decode())
            set_run = False
        n = n + 1
     return code
