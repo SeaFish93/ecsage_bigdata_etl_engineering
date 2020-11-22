@@ -14,7 +14,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data as get_oe_async_tasks_data_celery
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
+#from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
 import os
 import time
 
