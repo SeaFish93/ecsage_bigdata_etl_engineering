@@ -215,9 +215,10 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
         """ % (media_type,ExecDate)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     #log = Logger("""%s"""% (async_data_file),level='info')
-    log = Logger("""%s"""% (async_data_file))
+    #log = Logger("""%s"""% (async_data_file))
+    OpenFile = open(async_data_file, mode="w")
     for get_data in datas:
-        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession=log.logger)
+        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession=OpenFile)
         os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
 
     #获取状态
@@ -226,6 +227,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
+    eixt(0)
     time.sleep(60)
     rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,LogSession=log.logger)
     print("等待重试异常任务完成！！！")
