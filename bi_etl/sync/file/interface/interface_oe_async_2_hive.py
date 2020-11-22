@@ -211,7 +211,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
           and a.media_type = %s
           and a.exec_date = '%s'
         group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-        limit 1
+        -- limit 1
         """ % (media_type,ExecDate)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     #log = Logger("""%s"""% (async_data_file),level='info')
