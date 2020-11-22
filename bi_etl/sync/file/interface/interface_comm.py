@@ -98,20 +98,27 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
            else:
              time.sleep(2)
        else:
+           status = 1
            if code == 0:
              for data in resp_datas:
                  shell_cmd = """
                  cat >> %s << endwritefilewwwww
 %s
 endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode())
-                 os.system(shell_cmd)
-                 os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
+                 try:
+                   status = os.system(shell_cmd)
+                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
+                 except Exception as e:
+                   status = os.system(shell_cmd)
+                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))  
                  #pass
                  #LogSession.write(data.decode())
                  #LogSession.flush()
                  #LogSession.info(data.decode())
            set_run = False
        n = n + 1
+    if status != 0:
+      code = 40105   
     return code
 
 #获取oe异步任务数据
