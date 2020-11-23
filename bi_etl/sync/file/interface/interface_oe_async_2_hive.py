@@ -128,6 +128,12 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     #print("等待重试异常任务完成！！！")
 def run_get_oe_async_tasks_create(Sql="",AsyncTaskFile="",AsyncTaskExceptionFile="",ExecDate="",CeleryTaskStatusFile="",Flag="",arg=None):
   if arg is not None or len(arg) > 0:
+    Sql = arg["Sql"]
+    AsyncTaskFile = arg["AsyncTaskFile"]
+    AsyncTaskExceptionFile = arg["AsyncTaskExceptionFile"]
+    ExecDate = arg["ExecDate"]
+    CeleryTaskStatusFile = arg["CeleryTaskStatusFile"]
+    Flag = arg["Flag"]
     ok, all_rows = etl_md.get_all_rows(Sql)
     n = 1
     for data in all_rows:
