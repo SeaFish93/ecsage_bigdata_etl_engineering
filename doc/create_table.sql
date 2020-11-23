@@ -321,7 +321,17 @@ inner join metadb.dags_info b
 on a.check_dag_id = b.dag_id
 where b.status = 1
   and a.check_state = 1
+    union all
+select a.dag_id
+       ,a.task_id
+       ,b.schedule_interval
+from metadb.interface_oe_async_tasks_info a
+inner join metadb.dags_info b
+on a.dag_id = b.dag_id
+where b.status = 1
+  and a.status = 1
 ;
+
 create table metadb.etl_tasks_info
 (
 id                    int  not null AUTO_INCREMENT COMMENT '自增主键',
