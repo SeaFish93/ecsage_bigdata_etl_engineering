@@ -156,7 +156,6 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
 
 #定义设置头条异步任务创建
 def set_oe_async_tasks_create(AccountId="",AsyncTaskName="",Fields="",ExecDate="",Token="",GroupBy=""):
-    print(Fields,GroupBy,"############################")
     open_api_domain = "https://ad.toutiao.com"
     path = "/open_api/2/async_task/create/"
     url = open_api_domain + path
