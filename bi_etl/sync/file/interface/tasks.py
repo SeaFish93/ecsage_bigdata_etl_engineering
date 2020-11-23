@@ -41,12 +41,12 @@ def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExcep
                                        ExecDate=ExecDate,GroupBy=group_by, Fields=fields,Token=token)
          set_true = False
       except Exception as e:
-         if n > 3:
+         #if n > 3:
             print("异常创建子账户：%s" % (account_id))
             get_oe_save_exception_file(ExceptionType="create",ExecData=ExecData,AsyncNotemptyFile=AsyncTaskFile,AsyncStatusExceptionFile=AsyncTaskExceptionFile,ExecDate=ExecDate)
             set_true = False
-         else:
-          time.sleep(5)
+         #else:
+         # time.sleep(5)
       n = n + 1
 
 #定义oe任务状态
