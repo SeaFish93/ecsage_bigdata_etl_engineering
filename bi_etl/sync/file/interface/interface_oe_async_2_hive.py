@@ -69,7 +69,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
               and a.media_type = %s
               and a.exec_date = '%s'
             group by a.account_id,a.media_type,a.service_code,a.token_data
-            -- limit 1
+            limit 1
             """ % (interface_flag,group_by,fields,media_type, ExecDate)
     ok, all_rows = etl_md.get_all_rows(source_data_sql)
     n = 1
