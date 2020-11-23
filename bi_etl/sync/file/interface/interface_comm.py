@@ -211,9 +211,8 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
     task_id = resp_data["data"]["task_id"]
     task_name = resp_data["data"]["task_name"]
     async_task_file = """%s.%s"""%(AsyncTaskFile,hostname)
-    print(async_task_file,"================")
     """
     /home/ecsage_data/oceanengine/async/%s/%s/%s
     """
     os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, async_task_file))
-    os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, "/home/ecsage_data/oceanengine/async/ttttttt.%s"%(hostname)))
+    #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, "/home/ecsage_data/oceanengine/async/ttttttt.%s"%(hostname)))
