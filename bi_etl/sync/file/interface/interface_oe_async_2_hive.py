@@ -89,13 +89,13 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' "%(media_type,interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
                     TableName="oe_async_create_task", Columns=columns)
-    #print("等待重试异常任务！！！")
-    # exit(0)
-    #time.sleep(60)
-    #rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file,
-    #                               DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,
-    #                               LogSession="log.logger")
-    #print("等待重试异常任务完成！！！")
+    print("等待重试异常任务！！！")
+    # exit(0) create
+    time.sleep(60)
+    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
+                                   DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
+                                   LogSession="log.logger",InterfaceFlag="create",ExecDate=ExecDate)
+    print("等待重试异常任务完成！！！")
 def run_get_oe_async_tasks_create(Sql="",AsyncTaskFile="",AsyncTaskExceptionFile="",ExecDate="",CeleryTaskStatusFile="",Flag="",arg=None):
   if arg is not None or len(arg) > 0:
     Sql = arg["Sql"]
@@ -354,7 +354,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     print("等待重试异常任务！！！")
     #exit(0)
     time.sleep(60)
-    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,LogSession="log.logger")
+    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,LogSession="log.logger",InterfaceFlag="data")
     print("等待重试异常任务完成！！！")
     time.sleep(30)
     #上传至hdfs
@@ -537,7 +537,7 @@ def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",TaskInfo="",ExecDate=""):
                          SourceDB=source_db,SourceTable=source_table,TargetDB=target_db, TargetTable=target_table, IsReport=1,
                          KeyColumns="", ExecDate=ExecDate)
 
-def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",LogSession=""):
+def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",LogSession="",InterfaceFlag="",ExecDate=""):
     exception_file = ExceptionFile.split("/")[-1]
     async_data_file = """%s/%s"""%(AsyncAccountDir,DataFile.split("/")[-1])
     celery_task_data_file = """%s/%s.last_runned"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
@@ -556,7 +556,12 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                 for data in array:
                     get_data = data.strip('\n').split(" ")
                     #判断此任务是否有创建，若是没有，则调用创建，只限两次，第三次还没创建，自动放弃
-                    status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data,LogSession=LogSession)
+                    if InterfaceFlag == "data":
+                       status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data,LogSession=LogSession)
+                    elif InterfaceFlag == "create":
+                        status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (n),AsyncTaskFile=async_data_file,
+                                                                           AsyncTaskExceptionFile=async_data_exception_file,
+                                                                           ExecData=data, ExecDate=ExecDate)
                     os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file+".%s"%n))
             os.system("""mv %s %s"""%(exception_dir_file,AsyncAccountDir+"/exception_%s.log"%(n)))
      if len(exception_file_list) > 0:
