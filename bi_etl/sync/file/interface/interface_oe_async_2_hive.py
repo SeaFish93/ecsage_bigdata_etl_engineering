@@ -96,6 +96,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
                                    DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
                                    LogSession="log.logger",InterfaceFlag="create",ExecDate=ExecDate)
     print("等待重试异常任务完成！！！")
+
 def run_get_oe_async_tasks_create(Sql="",AsyncTaskFile="",AsyncTaskExceptionFile="",ExecDate="",CeleryTaskStatusFile="",Flag="",arg=None):
   if arg is not None or len(arg) > 0:
     Sql = arg["Sql"]

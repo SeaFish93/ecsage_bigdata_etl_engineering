@@ -84,8 +84,11 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
         media_type = ExecData[2]
         service_code = ExecData[3]
         token = ExecData[6]
+        group_by = str(ExecData[4])
+        fields = ExecData[5]
         #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (media_type, token, service_code, account_id, 0, 999999, interface_flag, AsyncNotemptyFile))
-        os.system("""echo "%s %s %s %s">>%s """ % (media_type,token, service_code, account_id, AsyncStatusExceptionFile+".%s"%(hostname)))
+        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code,group_by,
+                                                   fields,token, AsyncStatusExceptionFile+".%s"%(hostname)))
 def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
     get_data = ExecData
     media_type = get_data[1]
@@ -212,7 +215,8 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
     task_name = resp_data["data"]["task_name"]
     async_task_file = """%s.%s"""%(AsyncTaskFile,hostname)
     """
-    /home/ecsage_data/oceanengine/async/%s/%s/%s
+     select a.account_id,'%s' as interface_flag,a.media_type,a.service_code,'%s' as group_by
+                   ,'%s' as fields,a.token_data
     """
-    os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, async_task_file))
+    os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (AccountId,InterfaceFlag,MediaType,ServiceCode, "##","##",token, task_id, task_name, async_task_file))
     #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, "/home/ecsage_data/oceanengine/async/ttttttt.%s"%(hostname)))
