@@ -554,16 +554,18 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
             exception_dir_file = """%s/%s"""%(AsyncAccountDir,files)
             with open(exception_dir_file) as lines:
                 array = lines.readlines()
+                i = 1
                 for data in array:
                     get_data = data.strip('\n').split(" ")
                     #判断此任务是否有创建，若是没有，则调用创建，只限两次，第三次还没创建，自动放弃
                     if InterfaceFlag == "data":
                        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data,LogSession=LogSession)
                     elif InterfaceFlag == "create":
-                        status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (n),AsyncTaskFile=async_data_file,
+                        status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i),AsyncTaskFile=async_data_file,
                                                                            AsyncTaskExceptionFile=async_data_exception_file,
                                                                            ExecData=data, ExecDate=ExecDate)
                     os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file+".%s"%n))
+                    i = i + 1
             os.system("""mv %s %s"""%(exception_dir_file,AsyncAccountDir+"/exception_%s.log"%(n)))
      if len(exception_file_list) > 0:
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
