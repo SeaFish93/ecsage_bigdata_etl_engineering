@@ -66,18 +66,25 @@ def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
     return resp_data
 
 #写入异常文件
-def get_oe_save_exception_file(ExecData="",AsyncNotemptyFile="",AsyncStatusExceptionFile="",ExecDate=""):
-    get_data = ExecData
-    media_type = get_data[1]
-    service_code = get_data[2]
-    account_id = get_data[0]
-    task_id = get_data[4]
-    token = get_data[3]
-    task_name = get_data[5]
-    if len(AsyncNotemptyFile) >0:
-       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
-    os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
-
+def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile="",AsyncStatusExceptionFile="",ExecDate=""):
+    if ExceptionType !="create":
+       get_data = ExecData
+       media_type = get_data[1]
+       service_code = get_data[2]
+       account_id = get_data[0]
+       task_id = get_data[4]
+       token = get_data[3]
+       task_name = get_data[5]
+       if len(AsyncNotemptyFile) >0:
+          os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
+       os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
+    else:
+        account_id = ExecData[0]
+        interface_flag = ExecData[1]
+        media_type = ExecData[2]
+        service_code = ExecData[3]
+        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (media_type, "token_data", service_code, account_id, 0, 999999, interface_flag, AsyncNotemptyFile))
+        os.system("""echo "%s %s %s %s">>%s """ % (media_type,"token_data", service_code, account_id, AsyncStatusExceptionFile))
 def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
     get_data = ExecData
     media_type = get_data[1]
@@ -145,3 +152,61 @@ def get_oe_async_tasks_data(Token="",AccountId="",TaskId=""):
     except Exception as e:
       code = 0
     return code,return_resp_data
+
+#定义设置头条异步任务创建
+def set_oe_async_tasks_create(AccountId="",AsyncTaskName="",Fields="",ExecDate="",Token="",GroupBy=""):
+    open_api_domain = "https://ad.toutiao.com"
+    path = "/open_api/2/async_task/create/"
+    url = open_api_domain + path
+    if Fields is None or len(Fields) == 0:
+        params = {
+            "advertiser_id": AccountId,
+            "task_name": "%s" % (AsyncTaskName),
+            "task_type": "REPORT",
+            "force": "true",
+            "task_params": {"start_date": ExecDate,
+                            "end_date": ExecDate,
+                            "group_by": GroupBy
+                            }
+        }
+    else:
+        params = {
+            "advertiser_id": AccountId,
+            "task_name": "%s" % (AsyncTaskName),
+            "task_type": "REPORT",
+            "force": "true",
+            "task_params": {"start_date": ExecDate,
+                            "end_date": ExecDate,
+                            "group_by": GroupBy,
+                            "fields": Fields
+                            }
+        }
+    headers = {
+        'Content-Type': "application/json",
+        'Access-Token': Token,
+        'Connection': "close"
+    }
+    resp = requests.post(url, json=params, headers=headers)
+    resp_data = resp.json()
+    return resp_data
+
+#执行头条异步任务创建
+def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",AccountId="",AsyncTaskName="",AsyncTaskFile="",ExecDate="",GroupBy="",Fields=""):
+    n = 1
+    set_run = True
+    token = get_oe_account_token(ServiceCode=ServiceCode)
+    resp_data = ""
+    while set_run:
+        resp_data = set_oe_async_tasks_create(AccountId=AccountId, AsyncTaskName=AsyncTaskName, Fields=Fields,
+                                              ExecDate=ExecDate, Token=token, GroupBy=GroupBy)
+        code = resp_data["code"]
+        if code == 40105:
+            token = get_oe_account_token(ServiceCode=ServiceCode)
+            if n > 3:
+              set_run = False
+        else:
+            set_run = False
+        n = n + 1
+    task_id = resp_data["data"]["task_id"]
+    task_name = resp_data["data"]["task_name"]
+    os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, AsyncTaskFile))

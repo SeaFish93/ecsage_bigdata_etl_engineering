@@ -12,6 +12,8 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status as get_oe_async_tasks_status_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data as get_oe_async_tasks_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create as get_oe_async_tasks_create_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
 #from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
@@ -30,13 +32,52 @@ def main(TaskInfo,**kwargs):
     task_type = TaskInfo[4]
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
-    """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步"""
+    """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token"""
     if task_type == 2:
        get_oe_async_tasks_data(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
     elif task_type == 3:
        get_etl_mid_2_ods(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
     elif task_type == 4:
        get_ods_2_snap(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
+    elif task_type == 5:
+       get_oe_async_tasks_token(MediaType=media_type)
+
+def get_oe_async_tasks_token(MediaType=""):
+    mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
+    token_file = """/tmp/oe_token.log.log"""
+    os.system("""rm -f %s"""%(token_file))
+    media_types = MediaType.split(",")
+    get_media_type = ""
+    for media_type in media_types:
+        get_media_type = get_media_type + "," + media_type
+    get_media_type = get_media_type.replace(",","",1)
+    get_service_code_sql = """
+             select  service_code
+             from big_data_mdg.media_advertiser a
+             where media in (%s)
+             group by service_code
+            """ % (get_media_type)
+    ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
+    token_dict = {}
+    for data in all_rows:
+        token = get_oe_account_token(ServiceCode=data[0])
+        token_dict["%s"%(data[0])] = token
+    #子账户对应代理商
+    get_account_sql = """
+                 select  account_id, media, service_code
+                 from big_data_mdg.media_advertiser a
+                 where media in (%s)
+                 group by account_id, media, service_code
+                """ % (get_media_type)
+    ok, all_rows = mysql_session.get_all_rows(get_account_sql)
+    for data in all_rows:
+        tokens = token_dict["%s"%(data[2])]
+        os.system("""echo "%s %s %s %s">>%s """ % (data[0], data[1],data[2],tokens,token_file))
+    insert_sql = """
+          load data local infile '%s' into table metadb.media_advertiser fields terminated by ' ' lines terminated by '\\n' (account_id, media_type, service_code,token_code)
+        """ % (token_file)
+    etl_md.execute_sql("""delete from metadb.media_advertiser""")
+    etl_md.local_file_to_mysql(sql=insert_sql)
 
 def get_oe_async_tasks_status(MediaType="",ExecDate=""):
     media_type = MediaType
@@ -185,7 +226,7 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",TableName=""):
                 set_exit(LevelStatu="red", MSG=msg)
 
 def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
-    media_type = MediaType
+    media_type = int(MediaType)
     target_handle = TaskInfo[8]
     beeline_handler = "beeline"
     target_db = TaskInfo[9]
@@ -349,7 +390,7 @@ mpaign_name,convert_rate,click"""
 
 #落地数据至ods
 def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
-    media_type = MediaType
+    media_type = int(MediaType)
     source_handler = TaskInfo[5]
     source_db = TaskInfo[6]
     source_table = TaskInfo[7]
