@@ -552,6 +552,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
         if exception_file in files:
             exception_file_list.append(files)
             exception_dir_file = """%s/%s"""%(AsyncAccountDir,files)
+            print(exception_dir_file,"#####################################")
             with open(exception_dir_file) as lines:
                 array = lines.readlines()
                 i = 1
