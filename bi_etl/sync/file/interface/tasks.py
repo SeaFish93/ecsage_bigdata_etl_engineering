@@ -18,7 +18,7 @@ import socket
 hostname = socket.gethostname()
 
 #定义oe任务创建
-@app.task
+@app.task(rate_limit='5/s')
 def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
