@@ -86,6 +86,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     print("celery队列执行完成！！！")
     #保存MySQL
     columns = """media_type,token_data,service_code,account_id,task_id,task_name,interface_flag"""
+    etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' "%(media_type,interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
                     TableName="oe_async_create_task", Columns=columns)
     #print("等待重试异常任务！！！")
