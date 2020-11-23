@@ -83,8 +83,9 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
         interface_flag = ExecData[1]
         media_type = ExecData[2]
         service_code = ExecData[3]
-        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (media_type, "token_data", service_code, account_id, 0, 999999, interface_flag, AsyncNotemptyFile))
-        os.system("""echo "%s %s %s %s">>%s """ % (media_type,"token_data", service_code, account_id, AsyncStatusExceptionFile))
+        token = ExecData[6]
+        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (media_type, token, service_code, account_id, 0, 999999, interface_flag, AsyncNotemptyFile))
+        os.system("""echo "%s %s %s %s">>%s """ % (media_type,token, service_code, account_id, AsyncStatusExceptionFile))
 def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
     get_data = ExecData
     media_type = get_data[1]
@@ -191,10 +192,10 @@ def set_oe_async_tasks_create(AccountId="",AsyncTaskName="",Fields="",ExecDate="
     return resp_data
 
 #执行头条异步任务创建
-def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",AccountId="",AsyncTaskName="",AsyncTaskFile="",ExecDate="",GroupBy="",Fields=""):
+def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",AccountId="",AsyncTaskName="",AsyncTaskFile="",ExecDate="",GroupBy="",Fields="",Token=""):
     n = 1
     set_run = True
-    token = get_oe_account_token(ServiceCode=ServiceCode)
+    token = Token
     resp_data = ""
     while set_run:
         resp_data = set_oe_async_tasks_create(AccountId=AccountId, AsyncTaskName=AsyncTaskName, Fields=Fields,

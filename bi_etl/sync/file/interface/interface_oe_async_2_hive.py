@@ -41,7 +41,50 @@ def main(TaskInfo,**kwargs):
        get_ods_2_snap(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
     elif task_type == 5:
        get_oe_async_tasks_token(MediaType=media_type)
+    elif task_type == 1:
+       get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
 
+#创建oe异步任务
+def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
+    media_type = int(MediaType)
+    interface_flag = TaskInfo[20]
+    group_by = TaskInfo[11]
+    fields = TaskInfo[21]
+    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s/%s"%(AirflowDagId,AirflowTaskId,media_type)
+    async_create_task_file = """%s/async_create_%s.log"""%(async_account_file, media_type)
+    async_task_exception_file = """%s/async_exception_%s.log"""%(async_account_file, media_type)
+    celery_task_status_file = """%s/celery_task_status_%s.log"""%(async_account_file, media_type)
+    os.system("""mkdir -p %s"""%(async_account_file))
+    os.system("""rm -f %s/*""" % (async_account_file))
+    account_sql = """
+      select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+      from metadb.media_advertiser
+      where media_type = %s
+    """%(interface_flag,group_by,fields,media_type)
+    ok,all_rows = etl_md.get_all_rows(account_sql)
+    n = 1
+    for data in all_rows:
+       status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="T%s"%(n), AsyncTaskFile=async_create_task_file, AsyncTaskExceptionFile=async_task_exception_file,ExecData=data,ExecDate=ExecDate)
+       os.system("""echo "%s %s %s %s %s">>%s""" % (status_id,data[0],data[1],data[2],data[3], celery_task_status_file))
+       n = n + 1
+    # 获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+    print("正在等待celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("celery队列执行完成！！！")
+    #保存MySQL
+    columns = """media_type,token_data,service_code,account_id,task_id,task_name,interface_flag"""
+    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
+                    TableName="oe_async_create_task", Columns=columns)
+    #print("等待重试异常任务！！！")
+    # exit(0)
+    #time.sleep(60)
+    #rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file,
+    #                               DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,
+    #                               LogSession="log.logger")
+    #print("等待重试异常任务完成！！！")
+
+#存储token
 def get_oe_async_tasks_token(MediaType=""):
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
     token_file = """/tmp/oe_token.log.log"""
@@ -77,7 +120,18 @@ def get_oe_async_tasks_token(MediaType=""):
           load data local infile '%s' into table metadb.media_advertiser fields terminated by ' ' lines terminated by '\\n' (account_id, media_type, service_code,token_code)
         """ % (token_file)
     etl_md.execute_sql("""delete from metadb.media_advertiser""")
-    etl_md.local_file_to_mysql(sql=insert_sql)
+    ok = etl_md.local_file_to_mysql(sql=insert_sql)
+    if ok is False:
+        msg = "获取token出现异常！！！"
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % ("", ""),
+                               BeginExecDate="",
+                               EndExecDate="",
+                               Status="Error",
+                               Log=msg,
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
 
 def get_oe_async_tasks_status(MediaType="",ExecDate=""):
     media_type = MediaType
@@ -119,9 +173,10 @@ def get_oe_async_tasks_status(MediaType="",ExecDate=""):
     print("重试异常任务执行完成！！！")
     time.sleep(60)
     #落地有数据
-    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface")
+    columns = """exec_date,account_id,media_type,service_code,token_data,task_id,task_name"""
+    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface",Columns=columns)
     #落地没数据
-    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface")
+    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface",Columns=columns)
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(CeleryTaskId)
@@ -203,15 +258,15 @@ def get_celery_status_list(CeleryTaskStatusFile=""):
                 celery_task_id.append(get_data1[0])
     return celery_task_id,status_wait
 
-def load_data_mysql(AsyncAccountFile="",DataFile="",TableName=""):
+def load_data_mysql(AsyncAccountFile="",DataFile="",TableName="",Columns=""):
     target_file = os.listdir(AsyncAccountFile)
     for files in target_file:
         if DataFile.split("/")[-1] in files:
             print(files, "###############################################")
             # 记录子账户
             insert_sql = """
-                  load data local infile '%s' into table metadb.%s fields terminated by ' ' lines terminated by '\\n' (exec_date,account_id,media_type,service_code,token_data,task_id,task_name)
-               """ % (AsyncAccountFile + "/" + files,TableName)
+                  load data local infile '%s' into table metadb.%s fields terminated by ' ' lines terminated by '\\n' (%s)
+               """ % (AsyncAccountFile + "/" + files,TableName,Columns)
             ok = etl_md.local_file_to_mysql(sql=insert_sql)
             if ok is False:
                 msg = "写入MySQL出现异常！！！\n%s" % (DataFile)

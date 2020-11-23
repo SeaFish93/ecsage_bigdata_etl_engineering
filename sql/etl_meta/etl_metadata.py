@@ -144,6 +144,8 @@ class EtlMetaDataSQL():
            ,update_user
            ,create_time
            ,update_time
+           ,interface_flag
+           ,interface_fields
     from metadb.interface_oe_async_tasks_info
     where status = 1
       and dag_id = '%s'

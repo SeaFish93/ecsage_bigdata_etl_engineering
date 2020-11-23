@@ -17,7 +17,7 @@ import socket
 
 hostname = socket.gethostname()
 
-#定义oe任务状态
+#定义oe任务创建
 @app.task
 def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
@@ -26,6 +26,7 @@ def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExcep
     service_code = ExecData[3]
     group_by = ExecData[4]
     fields = ExecData[5]
+    token = ExecData[6]
     if fields == "" or fields is None or len(fields) == 0 or fields == "NULL" or fields == "null":
         fields = []
     else:
@@ -37,7 +38,7 @@ def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExcep
       try:
          get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
                                        AccountId=account_id, AsyncTaskName=AsyncTaskName, AsyncTaskFile=AsyncTaskFile,
-                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields)
+                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields,Token=token)
          set_true = False
       except Exception as e:
          if n > 3:
