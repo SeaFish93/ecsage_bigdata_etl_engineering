@@ -24,7 +24,7 @@ def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExcep
     interface_flag = ExecData[1]
     media_type = ExecData[2]
     service_code = ExecData[3]
-    group_by = ExecData[4]
+    group_by = str(ExecData[4]).split(",")
     fields = ExecData[5]
     token = ExecData[6]
     if fields == "" or fields is None or len(fields) == 0 or fields == "NULL" or fields == "null":
