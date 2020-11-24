@@ -154,7 +154,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
                     TableName="oe_async_create_task", Columns=columns)
     print("等待重试异常任务！！！")
     # exit(0) create
-    time.sleep(60)
+    #time.sleep(60)
     rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
                                    DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
                                    LogSession="log.logger",InterfaceFlag="create",ExecDate=ExecDate)
@@ -625,6 +625,9 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                     if InterfaceFlag == "data":
                        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data,LogSession=LogSession)
                     elif InterfaceFlag == "create":
+                        if i == 1:
+                          print("sleep 6分钟！！！")
+                          time.sleep(360)
                         status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i),AsyncTaskFile=async_data_file,
                                                                            AsyncTaskExceptionFile=async_data_exception_file,
                                                                            ExecData=get_data, ExecDate=ExecDate)
