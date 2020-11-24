@@ -448,17 +448,19 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
     print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
     os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
-    ok_data = os.system("hadoop fs -put %s* %s" % (DataFile, hdfs_dir))
-    if ok_data != 0:
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                               TargetTable="%s.%s" % (TargetDb, TargetTable),
-                               BeginExecDate=ExecDate,
-                               EndExecDate=ExecDate,
-                               Status="Error",
-                               Log="上传本地数据文件至HDFS出现异常！！！",
-                               Developer="developer")
-        set_exit(LevelStatu="red", MSG=msg)
+    th = []
+    i = 0
+    for data_files in data_file_list:
+        etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
+                               my_run=local_hdfs_thread,
+                               TargetDb=TargetDb,TargetTable=TargetTable,ExecDate=ExecDate,
+                               DataFile="""%s/%s"""%(AsyncAccountDir,data_files),HDFSDir=hdfs_dir
+                           )
+        etl_thread.start()
+        th.append(etl_thread)
+        i = i+1
+    for etl_th in th:
+        etl_th.join()
     #获取列名
     get_source_columns = os.popen("""grep -v 'empty result' %s/%s |head -1""" % (AsyncAccountDir,data_file_list[0]))
     source_columns = get_source_columns.read().split()[0]
@@ -530,6 +532,20 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
 
+#多线程上传hdfs
+def local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFile="",HDFSDir="",arg=None):
+    if arg is not None or len(arg) > 0:
+       ok_data = os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
+       if ok_data != 0:
+           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                  TargetTable="%s.%s" % (TargetDb, TargetTable),
+                                  BeginExecDate=ExecDate,
+                                  EndExecDate=ExecDate,
+                                  Status="Error",
+                                  Log="上传本地数据文件至HDFS出现异常！！！",
+                                  Developer="developer")
+           set_exit(LevelStatu="red", MSG=msg)
 #落地数据至ods
 def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
     media_type = int(MediaType)
