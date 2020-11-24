@@ -535,6 +535,11 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
 #多线程上传hdfs
 def local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFile="",HDFSDir="",arg=None):
     if arg is not None or len(arg) > 0:
+       TargetDb = arg["TargetDb"]
+       TargetTable = arg["TargetTable"]
+       ExecDate = arg["ExecDate"]
+       DataFile = arg["DataFile"]
+       HDFSDir = arg["HDFSDir"]
        ok_data = os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
        if ok_data != 0:
            msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
