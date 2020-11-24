@@ -53,7 +53,7 @@ def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExcep
             get_oe_save_exception_file(ExceptionType="create",ExecData=ExecData,AsyncNotemptyFile=AsyncTaskFile,AsyncStatusExceptionFile=AsyncTaskExceptionFile,ExecDate=ExecDate)
             set_true = False
          else:
-          time.sleep(2)
+          time.sleep(360)
       n = n + 1
 
 #定义oe任务状态
