@@ -135,7 +135,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
                                )
         etl_thread.start()
         th.append(etl_thread)
-        time.sleep(60)
+        time.sleep(10)
         i = i + 1
     for etl_th in th:
         etl_th.join()
