@@ -387,6 +387,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     beeline_handler = "beeline"
     target_db = TaskInfo[9]
     target_table = TaskInfo[10]
+    interface_flag = TaskInfo[20]
     async_account_file = "/home/ecsage_data/oceanengine/async/%s"%(media_type)
     async_data_exception_file = """%s/%s_%s_exception.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
     async_data_file = """%s/%s_%s_data.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
@@ -397,23 +398,12 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     os.system("""rm -f %s*""" % (celery_task_data_file))
     # 获取子账户
     source_data_sql = """
-        select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-        from metadb.oe_valid_account_interface a
-        left join metadb.oe_not_valid_account_interface b
-        on a.media_type = b.media_type
-        and a.account_id = b.account_id
-        and a.service_code = b.service_code
-        and a.exec_date = b.exec_date
-        where b.service_code is null
-          and a.media_type = %s
-          and a.exec_date = '%s'
-        group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-        -- limit 1
-        """ % (media_type,ExecDate)
+        select  a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name 
+        from metadb.oe_async_create_task_interface a
+        where interface_flag = '%s'
+          and media_type = %s
+    """ % (interface_flag,media_type)
     ok, datas = etl_md.get_all_rows(source_data_sql)
-    #log = Logger("""%s"""% (async_data_file),level='info')
-    #log = Logger("""%s"""% (async_data_file))
-    #OpenFile = open(async_data_file, mode="w")
     for get_data in datas:
         status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession="OpenFile")
         os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
