@@ -26,8 +26,29 @@ def main(TaskInfo,**kwargs):
     media_type = TaskInfo[1]
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
-    get_oe_async_tasks_status(MediaType=media_type,ExecDate=exec_date)
-    #get_oe_async_tasks_data(MediaType=media_type,ExecDate=exec_date)
+    if int(media_type) != 999999:
+       get_oe_async_tasks_status(MediaType=media_type,ExecDate=exec_date)
+    else:
+       get_data_2_mysql(ExecDate=exec_date)
+
+def get_data_2_mysql(ExecDate=""):
+    insert_sql = """
+      insert into metadb.`oe_account_interface`
+      select a.account_id, a.media_type, a.service_code,a.token_data,a.exec_date
+      from metadb.oe_valid_account_interface a
+      left join metadb.oe_not_valid_account_interface b
+      on a.media_type = b.media_type
+      and a.account_id = b.account_id
+      and a.service_code = b.service_code
+      and a.exec_date = b.exec_date
+      where b.service_code is null
+        and a.exec_date = '%s'
+      group by a.account_id, a.media_type, a.service_code,a.token_data,a.exec_date
+    """%(ExecDate)
+    etl_md.execute_sql("delete from metadb.oe_account_interface where exec_date = '%s' "%(ExecDate))
+    etl_md.execute_sql(insert_sql)
+    etl_md.execute_sql("truncate table metadb.oe_valid_account_interface")
+    etl_md.execute_sql("truncate table metadb.oe_not_valid_account_interface")
 
 def get_oe_async_tasks_status(MediaType="",ExecDate=""):
     media_type = MediaType
