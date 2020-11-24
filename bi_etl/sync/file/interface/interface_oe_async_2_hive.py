@@ -658,7 +658,6 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
         wait_for_celery_status(StatusList=celery_task_id)
         #os.system("""mv -f %s"""%(celery_task_data_file +".%s"%n))
-        print("重试异常完成！！！")
      if len(exception_file_list) == 0 or n == 1:
          if len(exception_file_list) >0:
              print("还有特别子账户出现异常！！！")
