@@ -460,10 +460,8 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
     #获取列名
-    get_source_columns = os.popen("head -1 %s/%s" % (AsyncAccountDir,data_file_list[0]))
-    #source_columns_list = get_source_columns.read().split("- INFO:")
-    source_columns = """campaign_id,deep_convert_rate,ad_id,ctr,show,avg_show_cost,creative_id,convert_cost,convert,deep_convert_cost,advertiser_id,cost,deep_convert,avg_click_cost,ad_name,ca
-mpaign_name,convert_rate,click"""
+    get_source_columns = os.popen("""grep -v 'empty result' %s/%s |head -1""" % (AsyncAccountDir,data_file_list[0]))
+    source_columns = get_source_columns.read().split()[0]
     source_columns_list = source_columns.split(",")
     if len(source_columns_list) <= 1:
        print("获取字段出现异常！！！")
