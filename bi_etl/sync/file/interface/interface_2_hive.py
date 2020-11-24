@@ -116,15 +116,8 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
        where = """media_type"""
        table = """
           (select a.account_id, a.media_type, a.service_code 
-           from metadb.oe_valid_account_interface a
-           left join metadb.oe_not_valid_account_interface b
-           on a.media_type = b.media_type
-           and a.account_id = b.account_id
-           and a.service_code = b.service_code
-           and a.exec_date = b.exec_date
-           where b.service_code is null
-             and a.exec_date = '%s'
-           group by a.account_id, a.media_type, a.service_code
+           from metadb.oe_account_interface a
+           where a.exec_date = '%s'
           )
        """%(ExecDate)
        group_by = """media_type"""
@@ -168,15 +161,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                where = """media_type"""
                table = """
                   (select a.account_id, a.media_type, a.service_code 
-                   from metadb.oe_valid_account_interface a
-                   left join metadb.oe_not_valid_account_interface b
-                   on a.media_type = b.media_type
-                   and a.account_id = b.account_id
-                   and a.service_code = b.service_code
-                   and a.exec_date = b.exec_date
-                   where b.service_code is null
-                     and a.exec_date = '%s'
-                   group by a.account_id, a.media_type, a.service_code )
+                   from metadb.oe_account_interface a
+                   where a.exec_date = '%s'
+                   )
                """%(ExecDate)
                select_session = etl_md
                group_by = """media_type"""

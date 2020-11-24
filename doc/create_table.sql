@@ -798,5 +798,14 @@ CREATE TABLE metadb.`interface_oe_async_tasks_info` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8 COMMENT='头条异步任务配置表'
 
-
+CREATE TABLE metadb.oe_account_interface (
+  `account_id` varchar(80) DEFAULT NULL COMMENT '子账户id',
+  `media_type` int(11) DEFAULT NULL,
+  `service_code` varchar(80) DEFAULT NULL COMMENT '代理商凭证',
+  `token_data` varchar(100) DEFAULT NULL COMMENT 'token',
+  `exec_date` varchar(40) DEFAULT NULL COMMENT '筛选日期',
+  KEY `index_exec_date_account_id` (`exec_date`,`account_id`),
+  KEY `index_exec_date` (`exec_date`),
+  KEY `index_exec_date_media_type` (`exec_date`,`media_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
 
