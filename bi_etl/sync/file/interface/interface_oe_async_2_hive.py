@@ -142,7 +142,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
                    ,'%s' as fields,a.token_data
             from metadb.oe_account_interface a
             where a.exec_date = '%s'
-              and a.account_id not in ('1679044314152973','1660110007448584','1676144354433037')
+            --  and a.account_id not in ('1679044314152973','1660110007448584','1676144354433037')
             """ % (interface_flag,group_by,fields, ExecDate)
     ok, all_rows = etl_md.get_all_rows(source_data_sql)
     n = 1
@@ -551,6 +551,7 @@ def local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFile="",HDFSDir
                                   Log="上传本地数据文件至HDFS出现异常！！！",
                                   Developer="developer")
            set_exit(LevelStatu="red", MSG=msg)
+
 #落地数据至ods
 def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
     media_type = int(MediaType)
