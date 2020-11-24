@@ -23,7 +23,7 @@ def get_test(string=""):
     now = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime())
     print(now,"=================================")
 #定义oe任务创建
-@app.task(name='tasks.get_oe_async_tasks_create',rate_limit='50/s')
+@app.task(name='tasks.get_oe_async_tasks_create',rate_limit='20/s')
 def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
