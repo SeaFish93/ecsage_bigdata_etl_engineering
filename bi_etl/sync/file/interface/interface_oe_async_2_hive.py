@@ -142,6 +142,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
                    ,'%s' as fields,a.token_data
             from metadb.oe_account_interface a
             where a.exec_date = '%s'
+              and a.account_id not in ('1679044314152973','1660110007448584','1676144354433037')
             """ % (interface_flag,group_by,fields, ExecDate)
     ok, all_rows = etl_md.get_all_rows(source_data_sql)
     n = 1
@@ -157,18 +158,15 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     print("正在等待celery队列执行完成！！！")
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
-    #保存MySQL
-    columns = """media_type,token_data,service_code,account_id,task_id,task_name,interface_flag"""
-    etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' "%(media_type,interface_flag))
-    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
-                    TableName="oe_async_create_task", Columns=columns)
     print("等待重试异常任务！！！")
-    # exit(0) create
-    #time.sleep(60)
     rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
                                    DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
                                    LogSession="log.logger",InterfaceFlag="create",ExecDate=ExecDate)
     print("等待重试异常任务完成！！！")
+    # 保存MySQL
+    columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data,task_id,task_name"""
+    etl_md.execute_sql("delete from metadb.oe_async_create_task_interface where interface_flag='%s' " % (interface_flag))
+    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,TableName="oe_async_create_task_interface", Columns=columns)
 
 def run_get_oe_async_tasks_create(Sql="",AsyncTaskFile="",AsyncTaskExceptionFile="",ExecDate="",CeleryTaskStatusFile="",Flag="",arg=None):
   if arg is not None or len(arg) > 0:

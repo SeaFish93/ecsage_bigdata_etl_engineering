@@ -809,3 +809,15 @@ CREATE TABLE metadb.oe_account_interface (
   KEY `index_exec_date_media_type` (`exec_date`,`media_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 
+CREATE TABLE `oe_async_create_task_interface` (
+  `media_type` int(11) DEFAULT NULL,
+  `token_data` varchar(1000) DEFAULT NULL COMMENT 'token',
+  `service_code` varchar(500) DEFAULT NULL COMMENT '代理商凭证',
+  `account_id` varchar(1000) DEFAULT NULL COMMENT '子账户id',
+  `task_id` varchar(1000) DEFAULT NULL COMMENT '异步任务id',
+  `task_name` varchar(1000) DEFAULT NULL COMMENT '异步任务名称',
+  `interface_flag` varchar(500) DEFAULT NULL COMMENT '异步任务接口标识',
+   group_by  varchar(1000) comment'接口groupby',
+   fields   longtext comment'接口指定指标字段'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='巨量异步创建任务'
+
