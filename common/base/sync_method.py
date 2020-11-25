@@ -250,7 +250,7 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
     target_table_columns = target_table_columns_list[2]
     # 找出目标表在源表不一致的字段
     diff_target_source_column = set(target_table_columns).difference(set(SourceTableColumn))
-    #print(diff_target_source_column,"#######################")
+    print(diff_target_source_column,"=========#######################")
     select_target_columns = ""
     assign_target_columns = ""
     select_source_columns = ""
