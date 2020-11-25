@@ -265,6 +265,7 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
         elif IsTargetPartition == "Y" and target_table_column == "etl_date":
             pass
         elif target_table_column in diff_target_source_column:
+            print(target_table_column,"**************************************")
             select_target_columns = select_target_columns + """,`%s`""" % (target_table_column)
             assign_target_columns = assign_target_columns + """,a.`%s`""" % (target_table_column)
             select_source_columns = select_source_columns + """,null as %s""" % (target_table_column)
