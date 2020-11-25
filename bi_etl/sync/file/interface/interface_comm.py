@@ -214,6 +214,7 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
         elif code == 40002:
             resp_data["data"]["task_name"] = mess
             resp_data["data"]["task_id"] = 999999
+            set_run = False
         else:
             set_run = False
         n = n + 1

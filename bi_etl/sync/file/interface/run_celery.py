@@ -7,6 +7,6 @@ do
  kill -9 $line
 done
 
-nohup ./redis-server redis.conf >/usr/local/python3/lib/python3.7/site-packages/airflow/logs/redis.log 2>&1 &
+nohup /usr/redis/bin/redis-server /usr/redis/bin/redis.conf >/usr/local/python3/lib/python3.7/site-packages/airflow/logs/redis.log 2>&1 &
 redis-cli -h 192.168.30.17 -p 9543 -a 1qazXSW2 -n 0 ltrim transcode 0 196
 """
