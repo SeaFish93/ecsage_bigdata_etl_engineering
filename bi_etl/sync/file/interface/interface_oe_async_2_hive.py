@@ -142,7 +142,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
                    ,'%s' as fields,a.token_data
             from metadb.oe_account_interface a
             where a.exec_date = '%s'
-            --  and a.account_id = '1645016270409747'
+              and a.account_id = '1645016270409747'
             """ % (interface_flag,group_by,fields, ExecDate)
     ok, all_rows = etl_md.get_all_rows(source_data_sql)
     n = 1
@@ -646,7 +646,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                         if sleep_true:
                           print("sleep %s分钟！！！"%(sleep_init))
                           sleep_true = False
-                          time.sleep(sleep_init)
+                          time.sleep(sleep_init*60)
                           sleep_init = sleep_init + 3
                         status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i),AsyncTaskFile=async_data_file,
                                                                            AsyncTaskExceptionFile=async_data_exception_file,
