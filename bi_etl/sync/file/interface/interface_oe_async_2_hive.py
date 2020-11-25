@@ -657,8 +657,9 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                     sleep_n = 0
             os.system("""mv %s %s"""%(exception_dir_file,AsyncAccountDir+"/exception_%s.log"%(n)))
      if len(exception_file_list) > 0:
+        time.sleep(60)
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
-        wait_for_celery_status(StatusList=celery_task_id)
+        #wait_for_celery_status(StatusList=celery_task_id)
         #os.system("""mv -f %s"""%(celery_task_data_file +".%s"%n))
      if len(exception_file_list) == 0 or n == 1:
          if len(exception_file_list) >0:
