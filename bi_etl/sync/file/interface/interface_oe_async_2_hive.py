@@ -590,7 +590,7 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
             where etl_date = '%s'
            ) tmp
        where rn = 1
-    """%(target_db,target_table,ExecDate,select_target_columns,select_target_columns,key,source_db,source_table,ExecDate)
+    """%(target_db,target_table,ExecDate,select_target_columns,select_source_columns,key,source_db,source_table,ExecDate)
     ok = hive_session.execute_sql(insert_sql)
     if ok is False:
         msg = get_alert_info_d(DagId=AirflowTaskId, TaskId=AirflowTaskId,
