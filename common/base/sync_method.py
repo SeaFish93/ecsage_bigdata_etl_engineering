@@ -250,7 +250,7 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
     target_table_columns = target_table_columns_list[2]
     # 找出目标表在源表不一致的字段
     diff_target_source_column = set(target_table_columns).difference(set(SourceTableColumn))
-    print(diff_target_source_column,"#######################")
+    #print(diff_target_source_column,"#######################")
     select_target_columns = ""
     assign_target_columns = ""
     select_source_columns = ""
@@ -262,6 +262,7 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
             select_source_columns = select_source_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
             assign_source_columns = assign_source_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
         elif IsTargetPartition == "Y" and target_table_column == "etl_date":
+            print(diff_target_source_column, "#######################")
             pass
         elif target_table_column in diff_target_source_column:
             select_target_columns = select_target_columns + """,`%s`""" % (target_table_column)
