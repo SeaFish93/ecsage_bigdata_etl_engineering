@@ -204,7 +204,7 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
     while set_run:
         resp_data = set_oe_async_tasks_create(AccountId=AccountId, AsyncTaskName=AsyncTaskName, Fields=Fields,
                                               ExecDate=ExecDate, Token=token, GroupBy=GroupBy)
-        mess = str(resp_data)
+        mess = str(resp_data).replace(" ","")
         code = resp_data["code"]
         if code == 40105:
             token = get_oe_account_token(ServiceCode=ServiceCode)
