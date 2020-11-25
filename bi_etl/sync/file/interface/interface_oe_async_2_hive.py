@@ -142,7 +142,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
                    ,'%s' as fields,a.token_data
             from metadb.oe_account_interface a
             where a.exec_date = '%s'
-            --  and a.account_id not in ('1679044314152973','1660110007448584','1676144354433037')
+              and a.account_id = '1645016270409747'
             """ % (interface_flag,group_by,fields, ExecDate)
     ok, all_rows = etl_md.get_all_rows(source_data_sql)
     n = 1
