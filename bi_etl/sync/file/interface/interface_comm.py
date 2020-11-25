@@ -115,7 +115,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
                  shell_cmd = """
                  cat >> %s << endwritefilewwwww
 %s
-endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode().replace("""`""","%%@@%%").replace("'","%%&&%%"))
+endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode("utf8","ignore").replace("""`""","%%@@%%").replace("'","%%&&%%"))
                  try:
                    status = os.system(shell_cmd)
                    os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
