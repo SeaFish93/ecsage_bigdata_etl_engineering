@@ -156,8 +156,8 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     #获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
     print("正在等待celery队列执行完成！！！")
-    time.sleep(180)
-    #wait_for_celery_status(StatusList=celery_task_id)
+    #time.sleep(180)
+    wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
     rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
@@ -659,7 +659,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
      if len(exception_file_list) > 0:
         time.sleep(60)
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
-        #wait_for_celery_status(StatusList=celery_task_id)
+        wait_for_celery_status(StatusList=celery_task_id)
         #os.system("""mv -f %s"""%(celery_task_data_file +".%s"%n))
      if len(exception_file_list) == 0 or n == 1:
          if len(exception_file_list) >0:
