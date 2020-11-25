@@ -629,6 +629,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
      exception_file_list = []
      target_file = os.listdir(AsyncAccountDir)
      sleep_n = 0
+     sleep_init = 3
      sleep_true = True
      for files in target_file:
         if exception_file in files:
@@ -645,9 +646,10 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data,LogSession=LogSession)
                     elif InterfaceFlag == "create":
                         if sleep_n == 1 and sleep_true:
-                          print("sleep 6分钟！！！")
+                          print("sleep %s分钟！！！"%(sleep_init))
                           sleep_true = False
-                          time.sleep(360)
+                          time.sleep(sleep_init)
+                          sleep_init = sleep_init + 2
                         status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i),AsyncTaskFile=async_data_file,
                                                                            AsyncTaskExceptionFile=async_data_exception_file,
                                                                            ExecData=get_data, ExecDate=ExecDate)
