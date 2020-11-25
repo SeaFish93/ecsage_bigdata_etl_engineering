@@ -580,7 +580,6 @@ def get_etl_mid_2_ods(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     select_target_columns, assign_target_columns,select_source_columns, assign_source_columns = get_table_columns_info(HiveSession=hive_session, SourceDB=source_db, SourceTable=source_table, TargetDB=target_db,
                            TargetTable=target_table,IsTargetPartition="Y")
-    print(select_source_columns, "============")
     insert_sql = """
        insert overwrite table %s.%s
        partition(etl_date='%s')

@@ -122,7 +122,7 @@ endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode("utf8","ignore").rep
                  except Exception as e:
                    status = 1
                    #status = os.system(shell_cmd)
-                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))  
+                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s" % (hostname)))
                  #pass
                  #LogSession.write(data.decode())
                  #LogSession.flush()
