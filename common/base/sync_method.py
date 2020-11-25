@@ -256,18 +256,13 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
     select_source_columns = ""
     assign_source_columns = ""
     for target_table_column in target_table_columns:
+        print(target_table_column,"############################################3")
         if target_table_column in diff_target_source_column and target_table_column == "extract_system_time":
             select_target_columns = select_target_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
             assign_target_columns = assign_target_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
             select_source_columns = select_source_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
             assign_source_columns = assign_source_columns + """,%s as extract_system_time""" % ("FROM_UNIXTIME(UNIX_TIMESTAMP())")
         elif IsTargetPartition == "Y" and target_table_column == "etl_date":
-          if target_table_column in diff_target_source_column:
-            print("================================================================")
-            select_target_columns = select_target_columns + """,`%s`""" % (target_table_column)
-            assign_target_columns = assign_target_columns + """,a.`%s`""" % (target_table_column)
-            select_source_columns = select_source_columns + """,null as %s""" % (target_table_column)
-            assign_source_columns = assign_source_columns + """,null as %s""" % (target_table_column)
             pass
         elif target_table_column in diff_target_source_column:
             select_target_columns = select_target_columns + """,`%s`""" % (target_table_column)
