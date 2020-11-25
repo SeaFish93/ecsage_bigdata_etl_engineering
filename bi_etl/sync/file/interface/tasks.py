@@ -42,8 +42,8 @@ def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExcep
     print("执行创建子账户：%s"%(account_id))
     while set_true:
       try:
-        if int(AsyncTaskName)%2 == 0:
-         time.sleep(2)
+        #if int(AsyncTaskName)%2 == 0:
+        # time.sleep(2)
         get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
                                        AccountId=account_id, AsyncTaskName=AsyncTaskName, AsyncTaskFile=AsyncTaskFile,
                                        ExecDate=ExecDate,GroupBy=group_by, Fields=fields,Token=token)
