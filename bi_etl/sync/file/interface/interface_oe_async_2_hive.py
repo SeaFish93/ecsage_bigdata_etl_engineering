@@ -156,7 +156,8 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     #获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
     print("正在等待celery队列执行完成！！！")
-    wait_for_celery_status(StatusList=celery_task_id)
+    time.sleep(300)
+    #wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
     rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
