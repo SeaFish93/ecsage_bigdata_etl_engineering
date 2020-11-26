@@ -691,7 +691,8 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
         sql = """
           select distinct a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
           from metadb.oe_async_exception_create_tasks_interface a
-        """
+          where interface_flag = '%s'
+        """% (InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
            print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
@@ -710,8 +711,9 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
            ex_sql = """
                      select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
                      from metadb.oe_async_exception_create_tasks_interface a
+                     where interface_flag = '%s'
                      limit 1
-              """
+              """% (InterfaceFlag)
            ok, ex_datas = etl_md.get_all_rows(ex_sql)
            if ex_datas is not None and len(ex_datas) > 0:
                print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
@@ -720,10 +722,10 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
                else:
                  time.sleep(180)
     ex_sql = """
-                         select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
-                         from metadb.oe_async_exception_create_tasks_interface a
-                       --  limit 1
-             """
+         select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+         from metadb.oe_async_exception_create_tasks_interface a
+         where interface_flag = '%s'
+    """% (InterfaceFlag)
     ok, ex_datas = etl_md.get_all_rows(ex_sql)
     if ex_datas is not None and len(ex_datas) > 0:
         print("还有特别异常任务存在！！！")
