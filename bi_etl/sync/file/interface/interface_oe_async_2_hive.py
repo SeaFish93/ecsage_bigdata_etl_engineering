@@ -115,8 +115,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     print("celery队列执行完成！！！")
     # 保存MySQL
     columns = """media_type,token_data,service_code,account_id,task_id,task_name,interface_flag"""
-    etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' " % (
-    media_type, interface_flag))
+    etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' " % (media_type, interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
                     TableName="oe_async_create_task", Columns=columns)
     print("等待重试异常任务！！！")
@@ -673,8 +672,6 @@ def save_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",InterfaceFla
       if exception_file in files:
          exception_file_list.append((AsyncAccountDir, files))
     if exception_file_list is not None and len(exception_file_list) > 0 :
-       delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
-       etl_md.execute_sql(delete_sql)
        for file in exception_file_list:
            columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data"""
            load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],TableName="oe_async_exception_create_tasks_interface", Columns=columns)
@@ -685,6 +682,8 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
     celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
     async_data_exception_file = """%s/%s""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
     #先保留第一次
+    delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+    etl_md.execute_sql(delete_sql)
     save_exception_create_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag)
     #
     n = 3
