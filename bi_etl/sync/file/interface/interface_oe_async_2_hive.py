@@ -115,8 +115,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     print("celery队列执行完成！！！")
     # 保存MySQL
     columns = """media_type,token_data,service_code,account_id,task_id,task_name,interface_flag"""
-    etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' " % (
-    media_type, interface_flag))
+    etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' " % (media_type, interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
                     TableName="oe_async_create_task", Columns=columns)
     print("等待重试异常任务！！！")
@@ -160,9 +159,9 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
-    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
+    rerun_exception_create_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
                                    DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
-                                   LogSession="log.logger",InterfaceFlag="create",ExecDate=ExecDate)
+                                   LogSession="log.logger",InterfaceFlag=interface_flag,ExecDate=ExecDate)
     print("等待重试异常任务完成！！！")
     # 保存MySQL
     columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data,task_id,task_name"""
@@ -625,7 +624,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
     async_data_exception_file = """%s/%s.last_runned""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
     run_true = True
     n = 0
-    sleep_init = 3
+    sleep_init = 6
     while run_true:
      exception_file_list = []
      target_file = os.listdir(AsyncAccountDir)
@@ -658,8 +657,76 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
         wait_for_celery_status(StatusList=celery_task_id)
         #os.system("""mv -f %s"""%(celery_task_data_file +".%s"%n))
-     if len(exception_file_list) == 0 or n == 1:
+     if len(exception_file_list) == 0 or n == 3:
          if len(exception_file_list) >0:
              print("还有特别子账户出现异常！！！")
          run_true = False
      n = n + 1
+
+#
+def save_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",InterfaceFlag=""):
+    exception_file = ExceptionFile.split("/")[-1]
+    exception_file_list = []
+    target_file = os.listdir(AsyncAccountDir)
+    for files in target_file:
+      if exception_file in files:
+         exception_file_list.append((AsyncAccountDir, files))
+    if exception_file_list is not None and len(exception_file_list) > 0 :
+       for file in exception_file_list:
+           columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data"""
+           load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],TableName="oe_async_exception_create_tasks_interface", Columns=columns)
+           os.system("""rm -f %s/%s"""%(file[0],file[1]))
+
+def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",LogSession="",InterfaceFlag="",ExecDate=""):
+    async_data_file = """%s/%s"""%(AsyncAccountDir,DataFile.split("/")[-1])
+    celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
+    async_data_exception_file = """%s/%s""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
+    #先保留第一次
+    delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+    etl_md.execute_sql(delete_sql)
+    save_exception_create_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag)
+    #
+    n = 3
+    for i in range(n):
+        sql = """
+          select distinct a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+          from metadb.oe_async_exception_create_tasks_interface a
+          where interface_flag = '%s'
+        """% (InterfaceFlag)
+        ok,datas = etl_md.get_all_rows(sql)
+        if datas is not None and len(datas) > 0:
+           print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           for data in datas:
+               status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i), AsyncTaskFile=async_data_file,
+                                                              AsyncTaskExceptionFile=async_data_exception_file,
+                                                              ExecData=data, ExecDate=ExecDate)
+               os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
+           celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
+           wait_for_celery_status(StatusList=celery_task_id)
+           delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+           etl_md.execute_sql(delete_sql)
+           save_exception_create_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag)
+           print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           #判断结果是否还有异常
+           ex_sql = """
+                     select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+                     from metadb.oe_async_exception_create_tasks_interface a
+                     where interface_flag = '%s'
+                     limit 1
+              """% (InterfaceFlag)
+           ok, ex_datas = etl_md.get_all_rows(ex_sql)
+           if ex_datas is not None and len(ex_datas) > 0:
+               print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+               if i == 0:
+                 time.sleep(360)
+               else:
+                 time.sleep(180)
+    ex_sql = """
+         select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+         from metadb.oe_async_exception_create_tasks_interface a
+         where interface_flag = '%s'
+    """% (InterfaceFlag)
+    ok, ex_datas = etl_md.get_all_rows(ex_sql)
+    if ex_datas is not None and len(ex_datas) > 0:
+        print("还有特别异常任务存在！！！")
+        print(ex_datas[0])

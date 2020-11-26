@@ -53,6 +53,7 @@ def main(TaskInfo, Level,**kwargs):
     is_report = TaskInfo[28]
     key_columns = TaskInfo[29]
     commit_num = TaskInfo[31]
+    exclude_account_id = TaskInfo[34]
     #regexp_extract_column = TaskInfo[30]
     #if regexp_extract_column is None or len(regexp_extract_column) == 0:
     #    regexp_extract_column = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list')"""
@@ -73,6 +74,7 @@ def main(TaskInfo, Level,**kwargs):
                       ,FileDirName = file_dir_name,DataJsonRequest=data_json_request
                       ,InterfaceModule = interface_module,CommitNum=commit_num
                       ,DB=target_db, Table=target_table,ExecDate=exec_date,IsReport=is_report
+                      ,Exclude_Account_id=exclude_account_id
                      )
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
@@ -86,6 +88,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ,FileDirName = ""
                                    ,InterfaceModule = "",CommitNum=""
                                    ,DB="", Table="",ExecDate="",IsReport=""
+                                   ,Exclude_Account_id=""
                                    ):
     data_json = DataJson
     etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
@@ -98,6 +101,10 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
            delete_type = "not_delete"
     else:
        delete_type = "not_delete"
+    if Exclude_Account_id is not None and len(Exclude_Account_id) > 0:
+        exclude_account_id="""a.account_id not in (%s)"""%(Exclude_Account_id)
+    else:
+        exclude_account_id="""1=1"""
     print("开始执行调用接口")
     data_dir = conf.get("Interface", InterfaceModule)
     file_dir = "%s" % (data_dir) + "/" + airflow.ds_nodash_utc8 + "/%s/%s" % (airflow.dag,request_type)
@@ -117,9 +124,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
        table = """
           (select a.account_id, a.media_type, a.service_code 
            from metadb.oe_account_interface a
-           where a.exec_date = '%s'
+           where a.exec_date = '%s' and %s
           )
-       """%(ExecDate)
+       """%(ExecDate,exclude_account_id)
        group_by = """media_type"""
        select_session = etl_md
     else:
@@ -162,9 +169,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                table = """
                   (select a.account_id, a.media_type, a.service_code 
                    from metadb.oe_account_interface a
-                   where a.exec_date = '%s'
+                   where a.exec_date = '%s' and %s
                    )
-               """%(ExecDate)
+               """%(ExecDate,exclude_account_id)
                select_session = etl_md
                group_by = """media_type"""
            else:

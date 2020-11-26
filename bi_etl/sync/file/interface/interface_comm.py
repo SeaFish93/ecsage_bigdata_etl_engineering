@@ -138,16 +138,18 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
     resp_datas = ""
     n = 1
     set_run = True
+    code = 0
     while set_run:
        code,resp_datas = get_oe_async_tasks_data(Token=token, AccountId=account_id, TaskId=task_id)
        if code == 40105:
            token = get_oe_account_token(ServiceCode=service_code)
            if n >2:
              set_run = False
+             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s" % (hostname)))
            else:
              time.sleep(2)
        else:
-           status = 1
+           os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s" % (hostname)))
            if code == 0:
              for data in resp_datas:
                  shell_cmd = """
@@ -155,20 +157,12 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
 %s
 endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode("utf8","ignore").replace("""`""","%%@@%%").replace("'","%%&&%%"))
                  try:
-                   status = os.system(shell_cmd)
+                   os.system(shell_cmd)
                    os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
                  except Exception as e:
-                   status = 1
-                   #status = os.system(shell_cmd)
                    os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s" % (hostname)))
-                 #pass
-                 #LogSession.write(data.decode())
-                 #LogSession.flush()
-                 #LogSession.info(data.decode())
            set_run = False
        n = n + 1
-    if status != 0:
-      code = 40105   
     return code
 
 #获取oe异步任务数据
@@ -244,14 +238,16 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
                                               ExecDate=ExecDate, Token=token, GroupBy=GroupBy)
         mess = str(resp_data).replace(" ","")
         code = resp_data["code"]
-        if code == 40105:
+        if code == 40105 or code == 40104:
             token = get_oe_account_token(ServiceCode=ServiceCode)
             if n > 3:
+              resp_data["data"]["task_name"] = mess
+              resp_data["data"]["task_id"] = 40105
               set_run = False
         #没权限创建
         elif code == 40002:
             resp_data["data"]["task_name"] = mess
-            resp_data["data"]["task_id"] = 999999
+            resp_data["data"]["task_id"] = 40002
             set_run = False
         else:
             set_run = False
