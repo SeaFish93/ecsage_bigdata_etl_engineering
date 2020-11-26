@@ -237,7 +237,7 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
                                               ExecDate=ExecDate, Token=token, GroupBy=GroupBy)
         mess = str(resp_data).replace(" ","")
         code = resp_data["code"]
-        if code == 40105:
+        if code == 40105 or code == 40104:
             token = get_oe_account_token(ServiceCode=ServiceCode)
             if n > 3:
               resp_data["data"]["task_name"] = mess

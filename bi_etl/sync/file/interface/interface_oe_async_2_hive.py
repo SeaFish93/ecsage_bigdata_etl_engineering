@@ -687,7 +687,8 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
     #先保留第一次
     save_exception_create_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag)
     #
-    for i in range(3):
+    n = 3
+    for i in range(n):
         sql = """
           select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
           from metadb.oe_async_exception_create_tasks_interface a
