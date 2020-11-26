@@ -247,11 +247,13 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
         if code == 40105:
             token = get_oe_account_token(ServiceCode=ServiceCode)
             if n > 3:
+              resp_data["data"]["task_name"] = mess
+              resp_data["data"]["task_id"] = 40105
               set_run = False
         #没权限创建
         elif code == 40002:
             resp_data["data"]["task_name"] = mess
-            resp_data["data"]["task_id"] = 999999
+            resp_data["data"]["task_id"] = 40002
             set_run = False
         else:
             set_run = False
