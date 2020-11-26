@@ -625,7 +625,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
     async_data_exception_file = """%s/%s.last_runned""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
     run_true = True
     n = 0
-    sleep_init = 3
+    sleep_init = 6
     while run_true:
      exception_file_list = []
      target_file = os.listdir(AsyncAccountDir)
@@ -658,7 +658,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
         celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
         wait_for_celery_status(StatusList=celery_task_id)
         #os.system("""mv -f %s"""%(celery_task_data_file +".%s"%n))
-     if len(exception_file_list) == 0 or n == 1:
+     if len(exception_file_list) == 0 or n == 3:
          if len(exception_file_list) >0:
              print("还有特别子账户出现异常！！！")
          run_true = False
