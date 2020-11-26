@@ -671,7 +671,7 @@ def save_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",InterfaceFla
     target_file = os.listdir(AsyncAccountDir)
     for files in target_file:
       if exception_file in files:
-         exception_file_list.append(AsyncAccountDir, files)
+         exception_file_list.append((AsyncAccountDir, files))
     if exception_file_list is not None and len(exception_file_list) > 0 :
        delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
        etl_md.execute_sql(delete_sql)
