@@ -162,7 +162,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     print("等待重试异常任务！！！")
     rerun_exception_create_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
                                    DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
-                                   LogSession="log.logger",InterfaceFlag="create",ExecDate=ExecDate)
+                                   LogSession="log.logger",InterfaceFlag=interface_flag,ExecDate=ExecDate)
     print("等待重试异常任务完成！！！")
     # 保存MySQL
     columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data,task_id,task_name"""
