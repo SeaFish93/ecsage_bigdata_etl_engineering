@@ -138,7 +138,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
     resp_datas = ""
     n = 1
     set_run = True
-    status = 1
+    code = 0
     while set_run:
        code,resp_datas = get_oe_async_tasks_data(Token=token, AccountId=account_id, TaskId=task_id)
        if code == 40105:
@@ -156,20 +156,12 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
 %s
 endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode("utf8","ignore").replace("""`""","%%@@%%").replace("'","%%&&%%"))
                  try:
-                   status = os.system(shell_cmd)
+                   os.system(shell_cmd)
                    os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
                  except Exception as e:
-                   status = 1
-                   #status = os.system(shell_cmd)
                    os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s" % (hostname)))
-                 #pass
-                 #LogSession.write(data.decode())
-                 #LogSession.flush()
-                 #LogSession.info(data.decode())
            set_run = False
        n = n + 1
-    if status != 0:
-      code = 40105   
     return code
 
 #获取oe异步任务数据
