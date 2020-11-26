@@ -10,44 +10,86 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_status_content_content
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_set_oe_async_tasks_create
+
 import time
 import socket
 
 hostname = socket.gethostname()
 
+#定义oe任务创建
+@app.task(name='tasks.get_test',rate_limit='5/m')
+def get_test(string=""):
+    now = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime())
+    print(now,"=================================")
+
+#定义oe任务创建
+@app.task(name='tasks.get_oe_async_tasks_create',rate_limit='20/s')
+def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
+    account_id = ExecData[0]
+    interface_flag = ExecData[1]
+    media_type = ExecData[2]
+    service_code = ExecData[3]
+    group_by = str(ExecData[4]).split(",")
+    fields = ExecData[5]
+    token = ExecData[6]
+    if fields == "" or fields is None or len(fields) == 0 or fields == "NULL" or fields == "null":
+        fields = []
+    else:
+        fields = fields.split(",")
+    set_true = True
+    n = 1
+    print("执行创建子账户：%s"%(account_id))
+    while set_true:
+      try:
+        #if int(AsyncTaskName)%2 == 0:
+        # time.sleep(2)
+        get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
+                                       AccountId=account_id, AsyncTaskName=AsyncTaskName, AsyncTaskFile=AsyncTaskFile,
+                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields,Token=token)
+        set_true = False
+      except Exception as e:
+         #if n > 3:
+         print("异常创建子账户：%s" % (account_id))
+         get_oe_save_exception_file(ExceptionType="create",ExecData=ExecData,AsyncNotemptyFile=AsyncTaskFile,AsyncStatusExceptionFile=AsyncTaskExceptionFile,ExecDate=ExecDate)
+         set_true = False
+         #else:
+         # time.sleep(360)
+      n = n + 1
+
 #定义oe任务状态
 @app.task
-def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData=""):
+def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     set_true = True
     n = 1
-    print("执行子账户：%s"%(account_id))
+    print("执行状态子账户：%s"%(account_id))
     while set_true:
       try:
-         set_oe_async_status_content_content(ExecData=ExecData,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile)
+         set_oe_async_status_content_content(ExecData=ExecData,AsyncNotemptyFile=AsyncNotemptyFile,AsyncEmptyFile=AsyncEmptyFile,ExecDate=ExecDate)
          set_true = False
       except Exception as e:
          if n > 3:
-            print("异常子账户：%s" % (account_id))
-            get_oe_save_exception_file(ExecData=ExecData,AsyncNotemptyFile=AsyncNotemptyFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile)
+            print("异常状态子账户：%s" % (account_id))
+            get_oe_save_exception_file(ExceptionType="status",ExecData=ExecData,AsyncNotemptyFile=AsyncNotemptyFile,AsyncStatusExceptionFile=AsyncStatusExceptionFile,ExecDate=ExecDate)
             set_true = False
          else:
           time.sleep(2)
       n = n + 1
 
 #定义oe任务数据
-@app.task
-def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData=""):
+@app.task(time_limit=600)
+def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate="",LogSession=""):
     account_id = ExecData[0]
     set_true = True
     n = 1
-    print("执行子账户：%s"%(account_id))
+    print("执行数据子账户：%s"%(account_id))
     while set_true:
-       code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData)
+       code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData,LogSession=LogSession)
        if code != 0:
          if n > 3:
-            print("异常子账户：%s" % (account_id))
-            get_oe_save_exception_file(ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile)
+            print("异常数据子账户：%s" % (account_id))
+            get_oe_save_exception_file(ExceptionType="data",ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile,ExecDate=ExecDate)
             set_true = False
          else:
             time.sleep(2)

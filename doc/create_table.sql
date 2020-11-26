@@ -321,7 +321,17 @@ inner join metadb.dags_info b
 on a.check_dag_id = b.dag_id
 where b.status = 1
   and a.check_state = 1
+    union all
+select a.dag_id
+       ,a.task_id
+       ,b.schedule_interval
+from metadb.interface_oe_async_tasks_info a
+inner join metadb.dags_info b
+on a.dag_id = b.dag_id
+where b.status = 1
+  and a.status = 1
 ;
+
 create table metadb.etl_tasks_info
 (
 id                    int  not null AUTO_INCREMENT COMMENT '自增主键',
@@ -712,5 +722,102 @@ select media_id
 from metadb.interface_account_tasks_info
 where status = 1
 
+CREATE TABLE `interface_oe_async_tasks_info` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `media_type` int(10) NOT NULL COMMENT '所属媒体平台类型：2、201、203，只有是采集接口时必须填',
+  `task_id` varchar(200) NOT NULL COMMENT '任务名称',
+  `dag_id` varchar(200) NOT NULL COMMENT 'dag名称',
+  `task_type` int(10) NOT NULL COMMENT '任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步',
+   source_handle  varchar(200) comment'来源端handle',
+   source_db      varchar(200) comment'来源端db',
+   source_table   varchar(200) comment'来源端表',
+   target_handle  varchar(200) comment'目标端handle',
+   target_db      varchar(200) comment'目标端db',
+   target_table   varchar(200) comment'目标端表',
+   interface_group_by varchar(1000) comment'接口groupby字段，多个字段以英文逗号分隔',
+   key_columns    varchar(200) comment'业务主键字段，多个字段以英文逗号分隔',
+   select_exclude_columns varchar(200) comment'剔除字段，多个字段以英文逗号分隔',
+  `status` int(2) NOT NULL DEFAULT '0' COMMENT '是否有效，1：有效，0：无效',
+  `comments` varchar(512) DEFAULT NULL COMMENT '备注',
+  `create_user` varchar(32) DEFAULT NULL COMMENT '创建者',
+  `update_user` varchar(32) DEFAULT NULL COMMENT '最后更新者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='头条异步任务配置表'
 
+insert into metadb.interface_oe_async_tasks_info (
+  `media_type` -- int(10) NOT NULL COMMENT '所属媒体平台类型：2、201、203，只有是采集接口时必须填',
+  ,`task_id`  -- varchar(200) NOT NULL COMMENT '任务名称',
+  ,`dag_id` -- varchar(200) NOT NULL COMMENT 'dag名称',
+  ,`task_type` -- int(10) NOT NULL COMMENT '任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步',
+  , target_handle -- varchar(200) comment'目标端handle',
+  , target_db    --  varchar(200) comment'目标端db',
+  , target_table --  varchar(200) comment'目标端表',
+  , key_columns   -- varchar(200) comment'业务主键字段，多个字段以英文逗号分隔',
+  ,`status`  -- int(2) NOT NULL DEFAULT '0' COMMENT '是否有效，1：有效，0：无效',
+)
+select '2','etl_mid_oe_getcreativereport_creativereport','day_oe_async_creativereport_interface_auto',2,'hive','etl_mid','oe_getcreativereport_creativereport'
+,'creative_id',1
+
+create table metadb.oe_service_token_interface(
+service_code  varchar(100)  comment'服务商'
+,token_code   varchar(500)  comment'token'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='头条代理商token'
+
+
+create table metadb.media_advertiser(
+media_type    int   comment'服务商类型'
+,account_id     varchar(500)  comment'子账户'
+,service_code  varchar(100)  comment'服务商'
+,token_code   varchar(500)  comment'token'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='头条子账户表'
+
+
+CREATE TABLE metadb.`interface_oe_async_tasks_info` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `media_type` varchar(100) NOT NULL COMMENT '所属媒体平台类型：2、201、203，只有是采集接口时必须填',
+  `task_id` varchar(200) NOT NULL COMMENT '任务名称',
+  `dag_id` varchar(200) NOT NULL COMMENT 'dag名称',
+  `task_type` int(10) NOT NULL COMMENT '任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步',
+  `source_handle` varchar(200) DEFAULT NULL COMMENT '来源端handle',
+  `source_db` varchar(200) DEFAULT NULL COMMENT '来源端db',
+  `source_table` varchar(200) DEFAULT NULL COMMENT '来源端表',
+  `target_handle` varchar(200) DEFAULT NULL COMMENT '目标端handle',
+  `target_db` varchar(200) DEFAULT NULL COMMENT '目标端db',
+  `target_table` varchar(200) DEFAULT NULL COMMENT '目标端表',
+  `interface_group_by` varchar(1000) DEFAULT NULL COMMENT '接口groupby字段，多个字段以英文逗号分隔',
+  `key_columns` varchar(200) DEFAULT NULL COMMENT '业务主键字段，多个字段以英文逗号分隔',
+  `select_exclude_columns` varchar(200) DEFAULT NULL COMMENT '剔除字段，多个字段以英文逗号分隔',
+  `status` int(2) NOT NULL DEFAULT '0' COMMENT '是否有效，1：有效，0：无效',
+  `comments` varchar(512) DEFAULT NULL COMMENT '备注',
+  `create_user` varchar(32) DEFAULT NULL COMMENT '创建者',
+  `update_user` varchar(32) DEFAULT NULL COMMENT '最后更新者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8 COMMENT='头条异步任务配置表'
+
+CREATE TABLE metadb.oe_account_interface (
+  `account_id` varchar(80) DEFAULT NULL COMMENT '子账户id',
+  `media_type` int(11) DEFAULT NULL,
+  `service_code` varchar(80) DEFAULT NULL COMMENT '代理商凭证',
+  `token_data` varchar(100) DEFAULT NULL COMMENT 'token',
+  `exec_date` varchar(40) DEFAULT NULL COMMENT '筛选日期',
+  KEY `index_exec_date_account_id` (`exec_date`,`account_id`),
+  KEY `index_exec_date` (`exec_date`),
+  KEY `index_exec_date_media_type` (`exec_date`,`media_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE `oe_async_create_task_interface` (
+  `media_type` int(11) DEFAULT NULL,
+  `token_data` varchar(1000) DEFAULT NULL COMMENT 'token',
+  `service_code` varchar(500) DEFAULT NULL COMMENT '代理商凭证',
+  `account_id` varchar(1000) DEFAULT NULL COMMENT '子账户id',
+  `task_id` varchar(1000) DEFAULT NULL COMMENT '异步任务id',
+  `task_name` varchar(1000) DEFAULT NULL COMMENT '异步任务名称',
+  `interface_flag` varchar(500) DEFAULT NULL COMMENT '异步任务接口标识',
+   group_by  varchar(1000) comment'接口groupby',
+   fields   longtext comment'接口指定指标字段'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='巨量异步创建任务'
 

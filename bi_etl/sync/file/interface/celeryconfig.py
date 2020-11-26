@@ -1,6 +1,4 @@
-from kombu import Queue
-from kombu import Exchange
-#broker use rabbitmq
+#broker use redis
 BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/0'
 #backend use redis
 CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/1'
@@ -14,3 +12,6 @@ CELERY_MAX_TASKS_PER_CHILD = 40
 CELERY_CONCURRENCY = 20
 #the amount that a celery worker get task from broker each time
 CELERY_PREFETCH_MULTIPLIER = 4
+CELERY_TASK_SERIALIZER = 'pickle'
+CELERY_RESULT_SERIALIZER = 'pickle'
+CELERY_ACCEPT_CONTENT = ['pickle', 'json']

@@ -116,15 +116,10 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
        where = """media_type"""
        table = """
           (select a.account_id, a.media_type, a.service_code 
-           from metadb.oe_valid_account_interface a
-           left join metadb.oe_not_valid_account_interface b
-           on a.media_type = b.media_type
-           and a.account_id = b.account_id
-           and a.service_code = b.service_code
-           where b.service_code is null
-           group by a.account_id, a.media_type, a.service_code
+           from metadb.oe_account_interface a
+           where a.exec_date = '%s'
           )
-       """
+       """%(ExecDate)
        group_by = """media_type"""
        select_session = etl_md
     else:
@@ -166,14 +161,10 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                where = """media_type"""
                table = """
                   (select a.account_id, a.media_type, a.service_code 
-                   from metadb.oe_valid_account_interface a
-                   left join metadb.oe_not_valid_account_interface b
-                   on a.media_type = b.media_type
-                   and a.account_id = b.account_id
-                   and a.service_code = b.service_code
-                   where b.service_code is null
-                   group by a.account_id, a.media_type, a.service_code )
-               """
+                   from metadb.oe_account_interface a
+                   where a.exec_date = '%s'
+                   )
+               """%(ExecDate)
                select_session = etl_md
                group_by = """media_type"""
            else:
@@ -708,7 +699,20 @@ def wait_for_md5(FileDirNameList="",DB="", Table="",ExecDate=""):
         if is_md5_file is False:
            md5_file_false.append(file)
         else:
-           pass
+           file_md5_length = os.popen("cat %s|wc -L"%(file+".md5"))
+           file_length = file_md5_length.read().split()[0]
+           print(file,".md5",file_length,"==============================================")
+           if int(file_length) == 0:
+               msg = "生成为空异常md5文件！！！\n%s" % (file+".md5")
+               msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                      SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                      TargetTable="%s.%s" % (DB, Table),
+                                      BeginExecDate=ExecDate,
+                                      EndExecDate=ExecDate,
+                                      Status="Error",
+                                      Log=msg,
+                                      Developer="developer")
+               set_exit(LevelStatu="red", MSG=msg)
       if len(md5_file_false) > 0:
           wait_mins = 600
           if sleep_num <= wait_mins:
