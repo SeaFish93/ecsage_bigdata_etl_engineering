@@ -694,6 +694,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
           from metadb.oe_async_exception_create_tasks_interface a
         """
         ok,datas = etl_md.get_all_rows(sql)
+        print("第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
         for data in datas:
            status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i), AsyncTaskFile=async_data_file,
                                                               AsyncTaskExceptionFile=async_data_exception_file,
