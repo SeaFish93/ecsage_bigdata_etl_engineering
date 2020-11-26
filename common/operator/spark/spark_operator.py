@@ -7,6 +7,7 @@
 import os
 import sys
 from ecsage_bigdata_etl_engineering.common.base.base_operator import BaseDB
+from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 
 os.environ['SPARK_HOME'] = "/opt/spark"
 os.environ['PYSPARK_SUBMIT_ARGS'] = "--master yarn pyspark-shell"
@@ -84,38 +85,45 @@ class SparkNoSqlDB(BaseDB):
 
     # add by wangsong
     #spark sql读取MySQL、MsSQL、hive，返回dataframe
-    def get_df(self, db_type="", jdbc_host="", jdbc_user="", jdbc_password="", jdbc_default_db="",jdbc_port="", sql=""):
-        print(sql)
+    def get_db(self, SessionHandler="", DBType="", Sql=""):
+        print(Sql)
         df = None
         state = False
+        etl_md = EtlMetadata()
+        ok, get_handle = etl_md.execute_sql(sqlName="get_handle_sql",Parameter={"handle_code": SessionHandler},IsReturnData="Y")
+        jdbc_host = get_handle[0][0]
+        jdbc_user = get_handle[0][2]
+        jdbc_password = get_handle[0][3]
+        jdbc_port = get_handle[0][1]
+        jdbc_default_db = get_handle[0][4]
         try:
-            if db_type == "mysql":
+            if DBType == "mysql":
                 db_info = BaseDB(port=jdbc_port, host=jdbc_host, user=jdbc_user, password=jdbc_password)
                 df = self.conn.read \
                     .format("jdbc") \
                     .option("url", "jdbc:mysql://%s:%s/%s?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8" % (jdbc_host, jdbc_port, jdbc_default_db)) \
-                    .option("dbtable", """(""" + sql + """) t""") \
+                    .option("dbtable", """(""" + Sql + """) t""") \
                     .option("user", jdbc_user) \
                     .option("password", db_info.get_password()) \
                     .option("fetchsize",100000) \
                     .load()
-            elif db_type == "mssql":
+            elif DBType == "mssql":
                 db_info = BaseDB(port=jdbc_port, host=jdbc_host, user=jdbc_user, password=jdbc_password)
                 df = self.conn.read \
                     .format("jdbc") \
                     .option("url", "jdbc:sqlserver://%s:%s;DatabaseName=%s" % (jdbc_host, jdbc_port, jdbc_default_db)) \
-                    .option("dbtable", """(""" + sql + """) t""") \
+                    .option("dbtable", """(""" + Sql + """) t""") \
                     .option("user", jdbc_user) \
                     .option("password", db_info.get_password()) \
                     .option("fetchsize",10000) \
                     .load()
-            elif db_type == "hive":
-                df = self.conn.sql(sql)
+            elif DBType == "hive":
+                df = self.conn.sql(Sql)
             else:
                 pass
             state = True
         except Exception as e:
-            print("spark get df sql Error:" + sql)
+            print("spark get df sql Error:" + Sql)
             print(e)
         finally:
             return state, df
@@ -149,3 +157,22 @@ class SparkNoSqlDB(BaseDB):
     #处理文本
     def text(self):
         print(self.conn.read.text().rdd.foreach(lambda x:x))
+    
+    def get_csv(self,IsHeader="",FileDir=""):
+        state = False
+        df = None
+        if IsHeader == "Y":
+            header = "True"
+        else:
+            header = "False"
+        try:
+          file = FileDir.split("/")[-1]
+          os.system("""hadoop fs -rmr /tmp/jupyter/%s"""%(file))
+          os.system("""hadoop fs -put %s /tmp/jupyter/"""%(FileDir))
+          df = self.conn.read.options(header=header, inferSchema='True', delimiter=',').csv("/tmp/jupyter/%s"%(file))
+          state = True
+        except Exception as e:
+            print("spark select CSV Error:" + FileDir)
+            print(e)
+        finally:
+            return state,df

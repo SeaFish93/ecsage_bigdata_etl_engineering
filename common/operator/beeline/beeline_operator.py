@@ -7,6 +7,7 @@
 from ecsage_bigdata_etl_engineering.common.base.base_operator import BaseDB
 import os
 import time
+import subprocess
 
 
 class BeelineNoSqlDB(BaseDB):
@@ -24,18 +25,24 @@ class BeelineNoSqlDB(BaseDB):
         sql_file = "/tmp/tmp_%s_%s.sql" % (task_name, str(t))
         f = open(sql_file, mode="w")
         #f.write("set hive.server2.logging.operation.level=NONE;\n")
-        sql_set = ""
+        sql_set = """
+          set mapred.task.timeout=1800000;
+          set mapreduce.map.memory.mb=2048;
+          set hive.auto.convert.join=false;
+        """
         f.write(sql_set)
         f.write(sql)
         f.flush()
         # add by wangsong（print sql）
         print(sql_set)
         print("beeline exec sql：\n" + sql)
-        res = os.system("%s -f %s" % (self.conn, sql_file))
+        #res = os.system("%s -f %s" % (self.conn, sql_file))
+        (res, output) = subprocess.getstatusoutput("%s -f %s" % (self.conn, sql_file))
         os.system("rm %s" % sql_file)
         f.close()
         if res != 0:
             print("beeline execute_sql sql Error:" + sql)
+            print("错误日志：%s"%output)
             return False
         else:
             return True

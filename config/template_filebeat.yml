@@ -1,0 +1,6 @@
+- type: log
+  enable: true
+  paths:
+    - ##file_dir##
+  fields:
+    filename: ##file_name##

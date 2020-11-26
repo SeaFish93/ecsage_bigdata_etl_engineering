@@ -452,11 +452,11 @@ def get_source_data_sql(MysqlSession="",HiveSession="",SourceDB="",SourceTable="
     sql_list = []
     for column in source_table_column_list[3]:
       if "BIT" in str(column[2]).upper():
-          source_data_sql = source_data_sql + """,ifnull(cast(%s as decimal(34,0)),'')""" % (column[1])
+          source_data_sql = source_data_sql + """,ifnull(cast(%s as decimal(34,0)),'##None##')""" % (column[1])
       elif (not str(column[2]).upper() in MYSQL_2_HIVE and "INT" not in str(column[2]).upper()) or column[0]:
-          source_data_sql = source_data_sql + """,REPLACE( REPLACE( REPLACE( ifnull(%s,''), '|', '|'), '\\n', ' '), '\\r', ' ')""" % (column[1])
+          source_data_sql = source_data_sql + """,REPLACE( REPLACE( REPLACE( ifnull(%s,'##None##'), '|', '|'), '\\n', ' '), '\\r', ' ')""" % (column[1])
       else:
-          source_data_sql = source_data_sql + """,ifnull(%s,'')""" % (column[1])
+          source_data_sql = source_data_sql + """,ifnull(%s,'##None##')""" % (column[1])
     source_data_sql = """select CONCAT_WS('%s', %s)"""%("\001",source_data_sql.replace(",","",1))
     source_data_sql = source_data_sql + " from %s.%s t" % (SourceDB, SourceTable)
     #查看分区表是否存在

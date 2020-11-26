@@ -250,6 +250,7 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
     target_table_columns = target_table_columns_list[2]
     # 找出目标表在源表不一致的字段
     diff_target_source_column = set(target_table_columns).difference(set(SourceTableColumn))
+    print("差异字段：%s"%(diff_target_source_column))
     select_target_columns = ""
     assign_target_columns = ""
     select_source_columns = ""
@@ -271,7 +272,8 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
             select_target_columns = select_target_columns + """,`%s`""" % (target_table_column)
             assign_target_columns = assign_target_columns + """,a.`%s`""" % (target_table_column)
             select_source_columns = select_source_columns + """,`%s`""" % (target_table_column)
-            assign_source_columns = assign_source_columns + """,a.`%s`""" % (target_table_column)
+            case_when = """case when a.`%s` = '##None##' then null else a.`%s` end as %s"""%(target_table_column,target_table_column,target_table_column)
+            assign_source_columns = assign_source_columns + """,%s""" % (case_when)
     select_target_columns = select_target_columns.replace(",", "", 1)
     assign_target_columns = assign_target_columns.replace(",", "", 1)
     select_source_columns = select_source_columns.replace(",", "", 1)
