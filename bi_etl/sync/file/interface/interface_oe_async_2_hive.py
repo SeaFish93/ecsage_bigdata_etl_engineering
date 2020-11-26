@@ -690,7 +690,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
     n = 3
     for i in range(n):
         sql = """
-          select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+          select distinct a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
           from metadb.oe_async_exception_create_tasks_interface a
         """
         ok,datas = etl_md.get_all_rows(sql)
