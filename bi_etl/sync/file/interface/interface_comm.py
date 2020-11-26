@@ -20,38 +20,39 @@ hostname = socket.gethostname()
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):
     th = []
     i = 0
+    file_num = 0
     for data_files in DataFileList:
         etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-                               my_run=local_hdfs_thread,TargetDb=TargetDb,
-                               TargetTable=TargetTable, ExecDate=ExecDate,
-                               DataFile=data_files, HDFSDir=HDFSDir
+                               my_run=local_hdfs_thread,DataFile=data_files, HDFSDir=HDFSDir
                                )
         etl_thread.start()
         th.append(etl_thread)
         i = i + 1
     for etl_th in th:
         etl_th.join()
+    for data_files in DataFileList:
+        status = os.system("""hadoop fs -ls %s/%s"""%(HDFSDir,data_files.split("/")[-1]))
+        if int(status) == 0:
+            file_num = file_num + 1
+    if len(DataFileList) != file_num:
+       msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
+                              SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                              TargetTable="%s.%s" % (TargetDb, TargetTable),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="上传本地数据文件至HDFS出现异常！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
 
 
 #多线程上传hdfs
-def local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFile="",HDFSDir="",arg=None):
+def local_hdfs_thread(DataFile="",HDFSDir="",arg=None):
     if arg is not None or len(arg) > 0:
-       TargetDb = arg["TargetDb"]
-       TargetTable = arg["TargetTable"]
-       ExecDate = arg["ExecDate"]
        DataFile = arg["DataFile"]
        HDFSDir = arg["HDFSDir"]
-       ok_data = os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
-       if ok_data != 0:
-           msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
-                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                                  TargetTable="%s.%s" % (TargetDb, TargetTable),
-                                  BeginExecDate=ExecDate,
-                                  EndExecDate=ExecDate,
-                                  Status="Error",
-                                  Log="上传本地数据文件至HDFS出现异常！！！",
-                                  Developer="developer")
-           set_exit(LevelStatu="red", MSG=msg)
+       os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
+
 #创建创意
 #def
 def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEmptyFile="",ExecDate=""):
