@@ -451,19 +451,6 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
     if data_file_list is not None and len(data_file_list) > 0:
       get_local_hdfs_thread(TargetDb=TargetDb, TargetTable=TargetTable, ExecDate=ExecDate, DataFileList=data_file_list, HDFSDir=hdfs_dir)
-    ###### th = []
-    ###### i = 0
-    ###### for data_files in data_file_list:
-    ######     etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-    ######                            my_run=local_hdfs_thread,
-    ######                            TargetDb=TargetDb,TargetTable=TargetTable,ExecDate=ExecDate,
-    ######                            DataFile="""%s/%s"""%(AsyncAccountDir,data_files),HDFSDir=hdfs_dir
-    ######                        )
-    ######     etl_thread.start()
-    ######     th.append(etl_thread)
-    ######     i = i+1
-    ###### for etl_th in th:
-    ######     etl_th.join()
     #获取列名
     get_source_columns = os.popen("""grep -v 'empty result' %s |head -1""" % (data_file_list[0]))
     source_columns = get_source_columns.read().split()[0]
