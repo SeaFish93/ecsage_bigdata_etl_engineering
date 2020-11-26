@@ -145,6 +145,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
            token = get_oe_account_token(ServiceCode=service_code)
            if n >2:
              set_run = False
+             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s" % (hostname)))
            else:
              time.sleep(2)
        else:
