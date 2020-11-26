@@ -98,7 +98,8 @@ class EtlMetaDataSQL():
             ,regexp_extract_column
             ,commit_num      
             ,create_user          
-            ,update_user          
+            ,update_user
+            ,exclude_account_id          
     from metadb.interface_tasks_info_bak
     where status = 1
       and dag_id = '%s'
