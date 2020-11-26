@@ -138,6 +138,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
     resp_datas = ""
     n = 1
     set_run = True
+    status = 1
     while set_run:
        code,resp_datas = get_oe_async_tasks_data(Token=token, AccountId=account_id, TaskId=task_id)
        if code == 40105:
@@ -147,7 +148,6 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
            else:
              time.sleep(2)
        else:
-           status = 1
            if code == 0:
              for data in resp_datas:
                  shell_cmd = """
