@@ -18,7 +18,7 @@ import socket
 hostname = socket.gethostname()
 
 #定义oe任务创建
-@app.task(name='tasks.get_test',rate_limit='5/m')
+@app.task(rate_limit='5/m')
 def get_test(string=""):
     now = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime())
     print(now,"=================================")
