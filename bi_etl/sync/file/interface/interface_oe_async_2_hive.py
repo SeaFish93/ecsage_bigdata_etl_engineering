@@ -714,4 +714,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
               """
            ok, ex_datas = etl_md.get_all_rows(ex_sql)
            if ex_datas is not None and len(ex_datas) > 0:
-               time.sleep(360)
+               if i == 0:
+                 time.sleep(360)
+               else:
+                 time.sleep(180)
