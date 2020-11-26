@@ -13,6 +13,7 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status as get_oe_async_tasks_status_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data as get_oe_async_tasks_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create as get_oe_async_tasks_create_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
@@ -435,7 +436,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     n = 0
     for files in target_file:
         if data_file in files:
-            data_file_list.append(files)
+            data_file_list.append("""%s/%s"""%(AsyncAccountDir,files))
             if n == 0:
                load_sql_0 = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s;\n"""%(hdfs_dir,files,etl_mid_tmp_table)
             else:
@@ -448,21 +449,23 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
     print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
     os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
-    th = []
-    i = 0
-    for data_files in data_file_list:
-        etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-                               my_run=local_hdfs_thread,
-                               TargetDb=TargetDb,TargetTable=TargetTable,ExecDate=ExecDate,
-                               DataFile="""%s/%s"""%(AsyncAccountDir,data_files),HDFSDir=hdfs_dir
-                           )
-        etl_thread.start()
-        th.append(etl_thread)
-        i = i+1
-    for etl_th in th:
-        etl_th.join()
+    if data_file_list is not None and len(data_file_list) > 0:
+      get_local_hdfs_thread(TargetDb=TargetDb, TargetTable=TargetTable, ExecDate=ExecDate, DataFileList=data_file_list, HDFSDir=hdfs_dir)
+    ###### th = []
+    ###### i = 0
+    ###### for data_files in data_file_list:
+    ######     etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
+    ######                            my_run=local_hdfs_thread,
+    ######                            TargetDb=TargetDb,TargetTable=TargetTable,ExecDate=ExecDate,
+    ######                            DataFile="""%s/%s"""%(AsyncAccountDir,data_files),HDFSDir=hdfs_dir
+    ######                        )
+    ######     etl_thread.start()
+    ######     th.append(etl_thread)
+    ######     i = i+1
+    ###### for etl_th in th:
+    ######     etl_th.join()
     #获取列名
-    get_source_columns = os.popen("""grep -v 'empty result' %s/%s |head -1""" % (AsyncAccountDir,data_file_list[0]))
+    get_source_columns = os.popen("""grep -v 'empty result' %s |head -1""" % (data_file_list[0]))
     source_columns = get_source_columns.read().split()[0]
     source_columns_list = source_columns.split(",")
     if len(source_columns_list) <= 1:
