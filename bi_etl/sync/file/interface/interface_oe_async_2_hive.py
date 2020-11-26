@@ -709,6 +709,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
            ex_sql = """
                      select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
                      from metadb.oe_async_exception_create_tasks_interface a
+                     limit 1
               """
            ok, ex_datas = etl_md.get_all_rows(ex_sql)
            if ex_datas is not None and len(ex_datas) > 0:
