@@ -149,6 +149,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
            else:
              time.sleep(2)
        else:
+           os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s" % (hostname)))
            if code == 0:
              for data in resp_datas:
                  shell_cmd = """

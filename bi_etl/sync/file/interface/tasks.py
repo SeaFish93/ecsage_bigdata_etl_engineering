@@ -86,7 +86,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
     print("执行数据子账户：%s"%(account_id))
     while set_true:
        code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData,LogSession=LogSession)
-       if code != 0 and code not in [40105]:
+       if code != 0:
          if n > 3:
             print("异常数据子账户：%s" % (account_id))
             get_oe_save_exception_file(ExceptionType="data",ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile,ExecDate=ExecDate)
