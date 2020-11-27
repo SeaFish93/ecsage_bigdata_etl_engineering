@@ -14,6 +14,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data as get_oe_async_tasks_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create as get_oe_async_tasks_create_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all as get_oe_async_tasks_create_all_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all_exception as get_oe_async_tasks_create_all_exception_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
@@ -649,7 +650,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                           sleep_true = False
                           time.sleep(sleep_init*60)
                           sleep_init = sleep_init + 3
-                        status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (i),AsyncTaskFile=async_data_file,
+                        status_id = get_oe_async_tasks_create_all_exception_celery.delay(AsyncTaskName="%s" % (i),AsyncTaskFile=async_data_file,
                                                                            AsyncTaskExceptionFile=async_data_exception_file,
                                                                            ExecData=get_data, ExecDate=ExecDate)
                     os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file+".%s"%n))
