@@ -84,7 +84,7 @@ def main(TaskInfo, Level,**kwargs):
               os.makedirs(data_home)
           data_file = """%s/%s""" % (data_home, target_table + ".file")
           # hdfs存储临时数据文件目录
-          hdfs_dir = "/tmp/datafolder_new"
+          hdfs_dir = conf.get("Airflow_New", "hdfs_home") #"/tmp/datafolder_new"
           #保存MySQL主键，提供下游表使用
           set_mysql_key_column(MysqlSession=mysql_session, SourceDB=source_db, SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,ExecDate=exec_date)
           #执行数据文件入仓至临时表

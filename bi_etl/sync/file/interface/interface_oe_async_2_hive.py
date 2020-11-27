@@ -18,9 +18,11 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_token
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
+from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import os
 import time
 
+conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 #入口方法
@@ -428,7 +430,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=TargetHandleBeeline)
     target_file = os.listdir(AsyncAccountDir)
     data_file = DataFile.split("/")[-1]
-    hdfs_dir = "/tmp/datafolder_new"
+    hdfs_dir = conf.get("Airflow_New", "hdfs_home") #"/tmp/datafolder_new"
     data_file_list = []
     load_sqls = ""
     load_sql_0 = ""
@@ -445,7 +447,15 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
             n = n + 1
     load_sqls = load_sql_0 + load_sqls
     if len(load_sqls) == 0:
-        print("API采集没执行！！！")
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDb, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="API采集没执行！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
     print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
     print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
     os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))

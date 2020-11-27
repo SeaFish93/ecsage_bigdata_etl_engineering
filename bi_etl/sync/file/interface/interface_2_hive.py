@@ -12,6 +12,7 @@ from ecsage_bigdata_etl_engineering.common.base.curl import exec_interface_data_
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 
@@ -65,8 +66,7 @@ def main(TaskInfo, Level,**kwargs):
       data_json = ast.literal_eval(json.loads(data_json))
       if filter_modify_time_name is not None and len(filter_modify_time_name) > 0:
           data_json["filtering"]["%s" % (filter_modify_time_name)] = exec_date
-      if start_date_name is not None and len(start_date_name) > 0 and end_date_name is not None and len(
-              end_date_name) > 0:
+      if start_date_name is not None and len(start_date_name) > 0 and end_date_name is not None and len(end_date_name) > 0:
           data_json["%s" % (start_date_name)] = exec_date
           data_json["%s" % (end_date_name)] = exec_date
       #数据文件落地至临时表
@@ -277,50 +277,53 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
             """%(mid_table)
     HiveSession.execute_sql(mid_sql)
     load_num = 0
+    hdfs_dir = conf.get("Airflow_New", "hdfs_home") #"/tmp/datafolder_new"
+    load_table_sqls = ""
+    load_table_sql_0 = ""
     for data in LocalFileName:
         local_file = """%s""" % (data)
-        # 上传本地数据文件至HDFS
-        hdfs_dir = "/tmp/datafolder_new"
-        # 上传数据文件
-        print("""hadoop fs -moveFromLocal -f %s %s""" % (local_file, hdfs_dir), "************************************")
-        ok_data = os.system("hadoop fs -put %s %s" % (local_file, hdfs_dir))
-        if ok_data != 0:
-           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                                  TargetTable="%s.%s" % (DB, Table),
-                                  BeginExecDate=ExecDate,
-                                  EndExecDate=ExecDate,
-                                  Status="Error",
-                                  Log="上传本地数据文件至HDFS出现异常！！！",
-                                  Developer="developer")
-           set_exit(LevelStatu="red", MSG=msg)
        # 落地mid表
         if load_num == 0:
-           load_table_sql = """
+           load_table_sql_0 = """
                 load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {table_name}
                 partition(etl_date='{exec_date}',request_type='{request_type}',delete_type='{delete_type}')
+                ;\n
             """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate,request_type=RequestType,delete_type=DeleteType)
         else:
            load_table_sql = """
                 load data inpath '{hdfs_dir}/{file_name}' INTO TABLE {table_name}
                 partition(etl_date='{exec_date}',request_type='{request_type}',delete_type='{delete_type}')
-            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,
-                                   exec_date=ExecDate, request_type=RequestType,delete_type=DeleteType)
-        #ok_data = HiveSession.execute_sql(load_table_sql)
-        ok_data = BeelineSession.execute_sql(load_table_sql)
-        if ok_data is False:
-           # 删除临时表
-           HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
-           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                                  TargetTable="%s.%s" % (DB, Table),
-                                  BeginExecDate=ExecDate,
-                                  EndExecDate=ExecDate,
-                                  Status="Error",
-                                  Log="HDFS数据文件load入仓临时表出现异常！！！",
-                                  Developer="developer")
-           set_exit(LevelStatu="red", MSG=msg)
+                ;\n
+            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], table_name=mid_table,exec_date=ExecDate, request_type=RequestType,delete_type=DeleteType)
+        load_table_sqls = load_table_sql + load_table_sqls
         load_num = load_num + 1
+    load_table_sqls = load_table_sql_0 + load_table_sqls
+    if len(load_table_sql) == 0:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (DB, Table),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="API采集没执行！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    #上传hdfs
+    get_local_hdfs_thread(TargetDb=DB, TargetTable=Table, ExecDate=ExecDate, DataFileList=LocalFileName,HDFSDir=hdfs_dir)
+    #落地至hive
+    ok_data = BeelineSession.execute_sql(load_table_sqls)
+    if ok_data is False:
+       # 删除临时表
+       HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
+       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                              SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                              TargetTable="%s.%s" % (DB, Table),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="HDFS数据文件load入仓临时表出现异常！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
     #校验接口数据是否一致
     ####### sql = """
     #######     add file hdfs:///tmp/airflow/get_arrary.py;
