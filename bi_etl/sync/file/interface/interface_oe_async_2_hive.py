@@ -45,7 +45,8 @@ def main(TaskInfo,**kwargs):
     elif task_type == 5:
        get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 1:
-       get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
+       #get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
+       get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
 
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
@@ -99,16 +100,18 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     th = []
     i = 0
     for sql in sql_list:
-        etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-                               my_run=run_get_oe_async_tasks_create,
-                               Sql=sql, AsyncTaskFile=async_create_task_file,
-                               AsyncTaskExceptionFile=async_task_exception_file,
-                               ExecDate=ExecDate, CeleryTaskStatusFile=celery_task_status_file, Flag="%s" % (i)
-                               )
-        etl_thread.start()
-        th.append(etl_thread)
-        time.sleep(10)
-        i = i + 1
+        print(sql)
+        ############etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
+        ############                       my_run=run_get_oe_async_tasks_create,
+        ############                       Sql=sql, AsyncTaskFile=async_create_task_file,
+        ############                       AsyncTaskExceptionFile=async_task_exception_file,
+        ############                       ExecDate=ExecDate, CeleryTaskStatusFile=celery_task_status_file, Flag="%s" % (i)
+        ############                       )
+        ############etl_thread.start()
+        ############th.append(etl_thread)
+        ############time.sleep(10)
+        ############i = i + 1
+    exit(0)
     for etl_th in th:
         etl_th.join()
     # 获取状态
