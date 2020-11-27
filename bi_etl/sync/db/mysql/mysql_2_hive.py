@@ -704,8 +704,10 @@ def check_sync_row(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDat
        print(msg)
        if msg == """本次抽取导入为0！！！""" or msg == """历史数据降低大于十万条！！！""":
            status = "Warning"
+           level_statu = ""
        else:
            status = "Error"
+           level_statu = "red"
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                               SourceTable="%s.%s" % (SourceDB, SourceTable),
                               TargetTable="%s.%s" % (TargetDB, TargetTable),
@@ -714,4 +716,4 @@ def check_sync_row(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDat
                               Status=status,
                               Log=msg,
                               Developer=developer)
-       set_exit(LevelStatu="red", MSG=msg)
+       set_exit(LevelStatu=level_statu, MSG=msg)
