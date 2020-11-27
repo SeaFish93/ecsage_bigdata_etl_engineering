@@ -24,6 +24,40 @@ def get_test(string=""):
     print(now,"=================================")
 
 #定义oe任务创建
+@app.task(rate_limit='750/m')
+def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
+    account_id = ExecData[0]
+    interface_flag = ExecData[1]
+    media_type = ExecData[2]
+    service_code = ExecData[3]
+    group_by = str(ExecData[4]).split(",")
+    fields = ExecData[5]
+    token = ExecData[6]
+    if fields == "" or fields is None or len(fields) == 0 or fields == "NULL" or fields == "null":
+        fields = []
+    else:
+        fields = fields.split(",")
+    set_true = True
+    n = 1
+    print("执行创建子账户：%s"%(account_id))
+    while set_true:
+      try:
+        #if int(AsyncTaskName)%2 == 0:
+        # time.sleep(2)
+        get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
+                                       AccountId=account_id, AsyncTaskName=AsyncTaskName, AsyncTaskFile=AsyncTaskFile,
+                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields,Token=token)
+        set_true = False
+      except Exception as e:
+         #if n > 3:
+         print("异常创建子账户：%s" % (account_id))
+         get_oe_save_exception_file(ExceptionType="create",ExecData=ExecData,AsyncNotemptyFile=AsyncTaskFile,AsyncStatusExceptionFile=AsyncTaskExceptionFile,ExecDate=ExecDate)
+         set_true = False
+         #else:
+         # time.sleep(360)
+      n = n + 1
+
+#定义oe任务创建
 @app.task(rate_limit='10/s')
 def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
