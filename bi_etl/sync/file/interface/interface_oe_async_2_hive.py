@@ -69,7 +69,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
       from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
            from metadb.media_advertiser
           ) tmp,(select @row_num:=0) r
-          ) tmp1 where rn >=1 and rn < 10000
+          ) tmp1 where rn >=1 and rn < 2000
     """ % (interface_flag, group_by, fields)
     account_sql_2 = """
           select * from(
@@ -77,7 +77,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
           from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
                from metadb.media_advertiser
               ) tmp,(select @row_num:=0) r
-              ) tmp1 where rn >=10000 and rn < 20000
+              ) tmp1 where rn >=2000 and rn < 4000
         """ % (interface_flag, group_by, fields)
     account_sql_3 = """
               select * from(
@@ -85,7 +85,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
               from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
                    from metadb.media_advertiser
                   ) tmp,(select @row_num:=0) r
-                  ) tmp1 where rn >=20000 and rn < 30000
+                  ) tmp1 where rn >=4000 and rn < 6000
             """ % (interface_flag, group_by, fields)
     account_sql_4 = """
                   select * from(
@@ -93,12 +93,155 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
                   from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
                        from metadb.media_advertiser
                       ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=30000
+                      ) tmp1 where rn >=6000 and rn < 8000
                 """ % (interface_flag, group_by, fields)
-    sql_list.append(account_sql_1)
-    sql_list.append(account_sql_2)
-    sql_list.append(account_sql_3)
-    sql_list.append(account_sql_4)
+    account_sql_5 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=8000 and rn < 10000
+                """ % (interface_flag, group_by, fields)
+    account_sql_6 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=10000 and rn < 12000
+                """ % (interface_flag, group_by, fields)
+    account_sql_7 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=12000 and rn < 14000
+                """ % (interface_flag, group_by, fields)
+    account_sql_8 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=14000 and rn < 16000
+                """ % (interface_flag, group_by, fields)
+    account_sql_9 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=16000 and rn < 18000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_10 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=18000 and rn < 20000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_11 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=20000 and rn < 22000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_12 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=22000 and rn < 24000
+                """ % (interface_flag, group_by, fields)
+
+    account_sql_13 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=24000 and rn < 26000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_14 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=26000 and rn < 28000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_15 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=28000 and rn < 30000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_16 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=30000 and rn < 32000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_17 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=32000 and rn < 34000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_18 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=34000 and rn < 36000
+                """ % (interface_flag, group_by, fields)
+    account_sql_19 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=36000 and rn < 38000
+                """ % (interface_flag, group_by, fields)
+    account_sql_20 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=38000 and rn < 40000
+                """ % (interface_flag, group_by, fields)
+    account_sql_21 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=40000
+                """ % (interface_flag, group_by, fields)
+    for i in range(21):
+        sql_list.append(account_sql_%s(i+1))
     th = []
     i = 0
     for sql in sql_list:
