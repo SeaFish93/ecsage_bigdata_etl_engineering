@@ -68,7 +68,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
            from metadb.media_advertiser
           ) tmp,(select @row_num:=0) r
           ) tmp1 where rn >=1 and rn < 10000
-    """ % (interface_flag, group_by, fields, media_type)
+    """ % (interface_flag, group_by, fields)
     account_sql_2 = """
           select * from(
           select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
@@ -76,7 +76,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
                from metadb.media_advertiser
               ) tmp,(select @row_num:=0) r
               ) tmp1 where rn >=10000 and rn < 20000
-        """ % (interface_flag, group_by, fields, media_type)
+        """ % (interface_flag, group_by, fields)
     account_sql_3 = """
               select * from(
               select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
@@ -84,7 +84,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
                    from metadb.media_advertiser
                   ) tmp,(select @row_num:=0) r
                   ) tmp1 where rn >=20000 and rn < 30000
-            """ % (interface_flag, group_by, fields, media_type)
+            """ % (interface_flag, group_by, fields)
     account_sql_4 = """
                   select * from(
                   select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
@@ -92,7 +92,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
                        from metadb.media_advertiser
                       ) tmp,(select @row_num:=0) r
                       ) tmp1 where rn >=30000
-                """ % (interface_flag, group_by, fields, media_type)
+                """ % (interface_flag, group_by, fields)
     sql_list.append(account_sql_1)
     sql_list.append(account_sql_2)
     sql_list.append(account_sql_3)
