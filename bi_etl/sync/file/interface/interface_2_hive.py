@@ -298,7 +298,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
         load_table_sqls = load_table_sql + load_table_sqls
         load_num = load_num + 1
     load_table_sqls = load_table_sql_0 + load_table_sqls
-    if len(load_table_sql) == 0:
+    if len(load_table_sqls) == 0:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
                                TargetTable="%s.%s" % (DB, Table),
