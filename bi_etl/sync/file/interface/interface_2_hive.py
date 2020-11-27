@@ -280,6 +280,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
     hdfs_dir = conf.get("Airflow_New", "hdfs_home") #"/tmp/datafolder_new"
     load_table_sqls = ""
     load_table_sql_0 = ""
+    load_table_sql = ""
     for data in LocalFileName:
         local_file = """%s""" % (data)
        # 落地mid表
