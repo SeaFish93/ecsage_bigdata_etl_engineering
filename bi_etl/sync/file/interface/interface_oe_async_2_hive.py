@@ -47,8 +47,8 @@ def main(TaskInfo,**kwargs):
     elif task_type == 5:
        get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 1:
-       get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
-       #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
+       #get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
+       get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
 
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
