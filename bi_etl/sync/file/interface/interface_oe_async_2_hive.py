@@ -240,8 +240,27 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
                       ) tmp,(select @row_num:=0) r
                       ) tmp1 where rn >=40000
                 """ % (interface_flag, group_by, fields)
-    for i in range(21):
-        sql_list.append(account_sql_%s(i+1))
+    sql_list.append(account_sql_1)
+    sql_list.append(account_sql_2)
+    sql_list.append(account_sql_3)
+    sql_list.append(account_sql_4)
+    sql_list.append(account_sql_5)
+    sql_list.append(account_sql_6)
+    sql_list.append(account_sql_7)
+    sql_list.append(account_sql_8)
+    sql_list.append(account_sql_9)
+    sql_list.append(account_sql_10)
+    sql_list.append(account_sql_11)
+    sql_list.append(account_sql_12)
+    sql_list.append(account_sql_13)
+    sql_list.append(account_sql_14)
+    sql_list.append(account_sql_15)
+    sql_list.append(account_sql_16)
+    sql_list.append(account_sql_17)
+    sql_list.append(account_sql_18)
+    sql_list.append(account_sql_19)
+    sql_list.append(account_sql_20)
+    sql_list.append(account_sql_21)
     th = []
     i = 0
     for sql in sql_list:
