@@ -266,13 +266,13 @@ def get_select_column_info(HiveSession="",TargetDB="",TargetTable="",SourceTable
         elif target_table_column in diff_target_source_column:
             select_target_columns = select_target_columns + """,`%s`""" % (target_table_column)
             assign_target_columns = assign_target_columns + """,a.`%s`""" % (target_table_column)
-            select_source_columns = select_source_columns + """,null as %s""" % (target_table_column)
-            assign_source_columns = assign_source_columns + """,null as %s""" % (target_table_column)
+            select_source_columns = select_source_columns + """,null as `%s`""" % (target_table_column)
+            assign_source_columns = assign_source_columns + """,null as `%s`""" % (target_table_column)
         else:
             select_target_columns = select_target_columns + """,`%s`""" % (target_table_column)
             assign_target_columns = assign_target_columns + """,a.`%s`""" % (target_table_column)
             select_source_columns = select_source_columns + """,`%s`""" % (target_table_column)
-            case_when = """case when a.`%s` = '##None##' then null else a.`%s` end as %s"""%(target_table_column,target_table_column,target_table_column)
+            case_when = """case when a.`%s` = '##None##' then null else a.`%s` end as `%s`"""%(target_table_column,target_table_column,target_table_column)
             assign_source_columns = assign_source_columns + """,%s""" % (case_when)
     select_target_columns = select_target_columns.replace(",", "", 1)
     assign_target_columns = assign_target_columns.replace(",", "", 1)
