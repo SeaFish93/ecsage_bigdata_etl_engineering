@@ -100,18 +100,16 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     th = []
     i = 0
     for sql in sql_list:
-        print(sql)
-        ############etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-        ############                       my_run=run_get_oe_async_tasks_create,
-        ############                       Sql=sql, AsyncTaskFile=async_create_task_file,
-        ############                       AsyncTaskExceptionFile=async_task_exception_file,
-        ############                       ExecDate=ExecDate, CeleryTaskStatusFile=celery_task_status_file, Flag="%s" % (i)
-        ############                       )
-        ############etl_thread.start()
-        ############th.append(etl_thread)
-        ############time.sleep(10)
-        ############i = i + 1
-    exit(0)
+        etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
+                               my_run=run_get_oe_async_tasks_create,
+                               Sql=sql, AsyncTaskFile=async_create_task_file,
+                               AsyncTaskExceptionFile=async_task_exception_file,
+                               ExecDate=ExecDate, CeleryTaskStatusFile=celery_task_status_file, Flag="%s" % (i)
+                               )
+        etl_thread.start()
+        th.append(etl_thread)
+        time.sleep(10)
+        i = i + 1
     for etl_th in th:
         etl_th.join()
     # 获取状态
