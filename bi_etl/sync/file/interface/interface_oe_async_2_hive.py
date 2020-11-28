@@ -789,6 +789,13 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
     celery_task_data_file = """%s/%s.last_runned"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
     async_data_exception_file = """%s/%s.last_runned""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
     run_true = True
+
+    # 先保留第一次
+    delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (AirflowInstance)
+    etl_md.execute_sql(delete_sql)
+    columns = """account_id,media_type,service_code,token_data,task_id,task_name,interface_flag"""
+    table_name = "oe_async_exception_create_tasks_interface"
+    save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
     exit(0)
     n = 0
     sleep_init = 6
@@ -831,7 +838,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
      n = n + 1
 
 #
-def save_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",InterfaceFlag=""):
+def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",TableName="",Columns=""):
     exception_file = ExceptionFile.split("/")[-1]
     exception_file_list = []
     target_file = os.listdir(AsyncAccountDir)
@@ -840,8 +847,7 @@ def save_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",InterfaceFla
          exception_file_list.append((AsyncAccountDir, files))
     if exception_file_list is not None and len(exception_file_list) > 0 :
        for file in exception_file_list:
-           columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data"""
-           load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],TableName="oe_async_exception_create_tasks_interface", Columns=columns)
+           load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],TableName=TableName, Columns=Columns)
            os.system("""rm -f %s/%s"""%(file[0],file[1]))
 
 def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",LogSession="",InterfaceFlag="",ExecDate=""):
@@ -851,7 +857,9 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
     #先保留第一次
     delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
     etl_md.execute_sql(delete_sql)
-    save_exception_create_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag)
+    columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data"""
+    table_name = "oe_async_exception_create_tasks_interface"
+    save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
     n = 3
     for i in range(n):
@@ -872,7 +880,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
            wait_for_celery_status(StatusList=celery_task_id)
            delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
            etl_md.execute_sql(delete_sql)
-           save_exception_create_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag)
+           save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
            print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            #判断结果是否还有异常
            ex_sql = """
