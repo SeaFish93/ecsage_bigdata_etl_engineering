@@ -153,7 +153,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
     n = 1
     print("执行数据子账户：%s"%(account_id))
     while set_true:
-       code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData)
+       code = set_oe_async_tasks_data(DataFile=DataFile,ExecData=ExecData,AirflowInstance=AirflowInstance)
        if code != 0:
          if n > 3:
             print("异常数据子账户：%s" % (account_id))

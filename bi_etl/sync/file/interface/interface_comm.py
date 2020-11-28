@@ -128,7 +128,7 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
         #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (media_type, token, service_code, account_id, 0, 999999, interface_flag, AsyncNotemptyFile))
         os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code,group_by,
                                                    fields,token, AsyncStatusExceptionFile+".%s"%(hostname)))
-def set_oe_async_tasks_data(DataFile="",ExecData=""):
+def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
     get_data = ExecData
     media_type = get_data[1]
     service_code = get_data[2]
@@ -146,11 +146,11 @@ def set_oe_async_tasks_data(DataFile="",ExecData=""):
            token = get_oe_account_token(ServiceCode=service_code)
            if n >2:
              set_run = False
-             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s" % (hostname)))
+             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s_%s" % (AirflowInstance,hostname)))
            else:
              time.sleep(2)
        else:
-           os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s" % (hostname)))
+           os.system("""echo '%s %s'>>%s""" % (account_id,code, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s_%s" % (AirflowInstance,hostname)))
            if code == 0:
              for data in resp_datas:
                  shell_cmd = """
@@ -161,7 +161,7 @@ endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode("utf8","ignore").rep
                    os.system(shell_cmd)
                    os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
                  except Exception as e:
-                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s" % (hostname)))
+                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s_%s" % (AirflowInstance,hostname)))
            set_run = False
        n = n + 1
     return code
