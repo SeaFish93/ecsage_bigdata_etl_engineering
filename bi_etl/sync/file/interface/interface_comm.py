@@ -105,7 +105,7 @@ def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
     return resp_data
 
 #写入异常文件
-def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile="",AsyncStatusExceptionFile="",ExecDate=""):
+def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile="",AsyncStatusExceptionFile="",ExecDate="",AirflowInstance=""):
     if ExceptionType !="create":
        get_data = ExecData
        media_type = get_data[1]
@@ -116,7 +116,7 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
        task_name = get_data[5]
        if len(AsyncNotemptyFile) >0:
           os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
-       os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
+       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999",AirflowInstance, AsyncStatusExceptionFile + ".%s" % (hostname)))
     else:
         account_id = ExecData[0]
         interface_flag = ExecData[1]

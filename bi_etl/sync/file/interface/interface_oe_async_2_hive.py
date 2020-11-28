@@ -556,6 +556,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     target_db = TaskInfo[9]
     target_table = TaskInfo[10]
     interface_flag = TaskInfo[20]
+    airflow_instance = "%s.%s"%(AirflowDagId,AirflowTaskId)
     async_account_file = "/home/ecsage_data/oceanengine/async/%s"%(media_type)
     async_data_exception_file = """%s/%s_%s_exception.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
     async_data_file = """%s/%s_%s_data.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
@@ -573,7 +574,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     """ % (interface_flag,media_type)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     for get_data in datas:
-        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession="OpenFile")
+        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession="OpenFile",AirflowInstance=airflow_instance)
         os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
 
     #获取状态
@@ -582,7 +583,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
-    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,LogSession="log.logger",InterfaceFlag="data")
+    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,LogSession="log.logger",InterfaceFlag="data",AirflowInstance=airflow_instance)
     print("等待重试异常任务完成！！！")
     time.sleep(30)
     #上传至hdfs
@@ -782,12 +783,13 @@ def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",TaskInfo="",ExecDate=""):
                          SourceDB=source_db,SourceTable=source_table,TargetDB=target_db, TargetTable=target_table, IsReport=1,
                          KeyColumns="", ExecDate=ExecDate)
 
-def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",LogSession="",InterfaceFlag="",ExecDate=""):
+def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",LogSession="",InterfaceFlag="",ExecDate="",AirflowInstance=""):
     exception_file = ExceptionFile.split("/")[-1]
     async_data_file = """%s/%s"""%(AsyncAccountDir,DataFile.split("/")[-1])
     celery_task_data_file = """%s/%s.last_runned"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
     async_data_exception_file = """%s/%s.last_runned""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
     run_true = True
+    exit(0)
     n = 0
     sleep_init = 6
     while run_true:

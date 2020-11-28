@@ -147,7 +147,7 @@ def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatus
 
 #定义oe任务数据
 @app.task(time_limit=600)
-def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate="",LogSession=""):
+def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate="",LogSession="",AirflowInstance=""):
     account_id = ExecData[0]
     set_true = True
     n = 1
@@ -157,7 +157,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
        if code != 0:
          if n > 3:
             print("异常数据子账户：%s" % (account_id))
-            get_oe_save_exception_file(ExceptionType="data",ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile,ExecDate=ExecDate)
+            get_oe_save_exception_file(ExceptionType="data",ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile,ExecDate=ExecDate,AirflowInstance=AirflowInstance)
             set_true = False
          else:
             time.sleep(2)
