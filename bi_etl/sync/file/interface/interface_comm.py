@@ -142,7 +142,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
     code = 0
     while set_run:
        code,resp_datas = get_oe_async_tasks_data(Token=token, AccountId=account_id, TaskId=task_id)
-       if code == 40105:
+       if int(code) == 40105:
            token = get_oe_account_token(ServiceCode=service_code)
            if n >2:
              set_run = False
@@ -151,7 +151,7 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
              time.sleep(2)
        else:
            os.system("""echo '%s %s'>>%s""" % (account_id,code, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s_%s" % (AirflowInstance,hostname)))
-           if code == 0:
+           if int(code) == 0:
              for data in resp_datas:
                  try:
                    os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
