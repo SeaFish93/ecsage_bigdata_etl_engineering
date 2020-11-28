@@ -579,13 +579,13 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
 
     #获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
-    print("正在等待celery队列执行完成！！！")
+    print("正在等待celery队列执行完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     wait_for_celery_status(StatusList=celery_task_id)
-    print("celery队列执行完成！！！")
-    print("等待重试异常任务！！！")
+    print("celery队列执行完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    print("等待重试异常任务，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,
                                    InterfaceFlag=airflow_instance)
-    print("等待重试异常任务完成！！！")
+    print("等待重试异常任务完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     time.sleep(30)
     #上传至hdfs
     get_local_file_2_hive(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
@@ -785,7 +785,6 @@ def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",TaskInfo="",ExecDate=""):
                          KeyColumns="", ExecDate=ExecDate)
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag=""):
-    exception_file = ExceptionFile.split("/")[-1]
     async_data_file = """%s/%s"""%(AsyncAccountDir,DataFile.split("/")[-1])
     celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
     async_data_exception_file = """%s/%s""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
