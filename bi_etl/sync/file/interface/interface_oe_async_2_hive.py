@@ -822,7 +822,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
                          from metadb.oe_async_exception_create_tasks_interface a
                          where interface_flag = '%s'
                          limit 1
-                  """ % (InterfaceFlag)
+                  """ % (AirflowInstance)
             ok, ex_datas = etl_md.get_all_rows(ex_sql)
             if ex_datas is not None and len(ex_datas) > 0:
                 print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
@@ -831,52 +831,11 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
              select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
              from metadb.oe_async_exception_create_tasks_interface a
              where interface_flag = '%s'
-        """ % (InterfaceFlag)
+        """ % (AirflowInstance)
     ok, ex_datas = etl_md.get_all_rows(ex_sql)
     if ex_datas is not None and len(ex_datas) > 0:
         print("还有特别异常任务存在！！！")
         print(ex_datas[0])
-
-    exit(0)
-    n = 0
-    sleep_init = 6
-    while run_true:
-     exception_file_list = []
-     target_file = os.listdir(AsyncAccountDir)
-     sleep_true = True
-     for files in target_file:
-        if exception_file in files:
-            exception_file_list.append(files)
-            exception_dir_file = """%s/%s"""%(AsyncAccountDir,files)
-            with open(exception_dir_file) as lines:
-                array = lines.readlines()
-                i = 1
-                for data in array:
-                    get_data = data.strip('\n').split(" ")
-                    #判断此任务是否有创建，若是没有，则调用创建，只限两次，第三次还没创建，自动放弃
-                    if InterfaceFlag == "data":
-                       status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data,LogSession=LogSession)
-                    elif InterfaceFlag == "create":
-                        if sleep_true:
-                          print("sleep %s分钟！！！"%(sleep_init))
-                          sleep_true = False
-                          time.sleep(sleep_init*60)
-                          sleep_init = sleep_init + 3
-                        status_id = get_oe_async_tasks_create_all_exception_celery.delay(AsyncTaskName="%s" % (i),AsyncTaskFile=async_data_file,
-                                                                           AsyncTaskExceptionFile=async_data_exception_file,
-                                                                           ExecData=get_data, ExecDate=ExecDate)
-                    os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file+".%s"%n))
-                    i = i + 1
-            os.system("""mv %s %s"""%(exception_dir_file,AsyncAccountDir+"/exception_%s.log"%(n)))
-     if len(exception_file_list) > 0:
-        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
-        wait_for_celery_status(StatusList=celery_task_id)
-        #os.system("""mv -f %s"""%(celery_task_data_file +".%s"%n))
-     if len(exception_file_list) == 0 or n == 3:
-         if len(exception_file_list) >0:
-             print("还有特别子账户出现异常！！！")
-         run_true = False
-     n = n + 1
 
 #
 def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",TableName="",Columns=""):
