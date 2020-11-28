@@ -128,7 +128,7 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
         #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (media_type, token, service_code, account_id, 0, 999999, interface_flag, AsyncNotemptyFile))
         os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code,group_by,
                                                    fields,token, AsyncStatusExceptionFile+".%s"%(hostname)))
-def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
+def set_oe_async_tasks_data(DataFile="",ExecData=""):
     get_data = ExecData
     media_type = get_data[1]
     service_code = get_data[2]
