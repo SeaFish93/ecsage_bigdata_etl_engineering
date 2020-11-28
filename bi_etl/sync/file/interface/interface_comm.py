@@ -154,11 +154,12 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
            if code == 0:
              for data in resp_datas:
                  try:
+                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
                    shell_cmd = """
                    cat >> %s << endwritefilewwwww
 %s
 endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode("utf8","ignore").replace("""`""","%%@@%%").replace("'","%%&&%%"))
-                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
+                   #os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
                    os.system(shell_cmd)
                  except Exception as e:
                    os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s_%s" % (AirflowInstance,hostname)))
