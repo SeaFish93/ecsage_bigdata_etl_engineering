@@ -55,6 +55,7 @@ def get_sync_pages_number():
         celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
 
 def get_celery_job_status(CeleryTaskId=""):
+    print(CeleryTaskId,"$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     set_task = AsyncResult(CeleryTaskId)
     status = set_task.status
     print(status, "##############################")
