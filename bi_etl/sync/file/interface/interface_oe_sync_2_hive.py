@@ -54,6 +54,12 @@ def get_sync_pages_number():
         param_json = ast.literal_eval(json.loads(param_json))
         param_json["page"] = pages
         celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
+        os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status.log"))
+        # 获取状态
+        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+        print("正在等待celery队列执行完成！！！")
+        wait_for_celery_status(StatusList=celery_task_id)
+        print("celery队列执行完成！！！")
 
 def get_celery_job_status(CeleryTaskId=""):
     print(CeleryTaskId,"$$$$$$$$$$$$$$$$$$$$$$$$$$$")
@@ -65,6 +71,51 @@ def get_celery_job_status(CeleryTaskId=""):
        return True,value
     else:
        return False,value
+
+def get_celery_status_list(CeleryTaskStatusFile=""):
+    celery_task_id = []
+    status_wait = []
+    with open(CeleryTaskStatusFile) as lines:
+        array = lines.readlines()
+        for data in array:
+            get_data1 = data.strip('\n').split(" ")
+            if get_celery_job_status(CeleryTaskId=get_data1[0])[0] is False:
+                status_wait.append(get_data1[0])
+                celery_task_id.append(get_data1[0])
+    return celery_task_id,status_wait
+
+def wait_for_celery_status(StatusList=""):
+    status_false = []
+    run_wait = True
+    sleep_num = 1
+    while run_wait:
+      for status in StatusList:
+        #判断是否成功
+        if get_celery_job_status(CeleryTaskId=status)[0] is False:
+           status_false.append(status)
+        else:
+           pass
+      if len(status_false) > 0:
+          wait_mins = 600
+          if sleep_num <= wait_mins:
+              min = 60
+              print("等待第%s次%s秒"%(sleep_num,min))
+              time.sleep(min)
+          else:
+              msg = "等待celery队列完成超时！！！\n%s" % (status_false)
+              msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                     SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                     TargetTable="%s.%s" % ("", ""),
+                                     BeginExecDate="",
+                                     EndExecDate="",
+                                     Status="Error",
+                                     Log=msg,
+                                     Developer="developer")
+              set_exit(LevelStatu="red", MSG=msg)
+      else:
+          run_wait = False
+      status_false.clear()
+      sleep_num = sleep_num + 1
 
 if __name__ == '__main__':
     get_sync_pages_number()
