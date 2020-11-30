@@ -27,11 +27,19 @@ conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 def get_sync_pages_number():
+  print("begin %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  sql = """
+       select a.account_id, a.media_type, a.service_code 
+       from metadb.oe_account_interface a
+       where a.exec_date = '2020-11-29'
+    """
+  ok,db_data = etl_md.get_all_rows(sql)
+  for data in db_data:
     ParamJson = {"end_date": "2020-11-29", "page_size": "200", "start_date": "2020-11-29",
-                 "advertiser_id": 1654599060231176, "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
+                 "advertiser_id": data[0], "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
                  "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                  "page": 1,
-                 "service_code": "tt-1654599060231176"
+                 "service_code": data[2]
                  }
     ParamJson = str(ParamJson)
     UrlPath = "/open_api/2/report/creative/get/"
@@ -56,7 +64,7 @@ def get_sync_pages_number():
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status.log")
     print("正在等待celery队列执行完成！！！")
     wait_for_celery_status(StatusList=celery_task_id)
-    print("celery队列执行完成！！！")
+    print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
