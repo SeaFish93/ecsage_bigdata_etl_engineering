@@ -28,7 +28,7 @@ etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 def get_celery_job_status(CeleryTaskId=""):
     print(CeleryTaskId,"$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-    set_task = AsyncResult(id=CeleryTaskId)
+    set_task = AsyncResult(id=str(CeleryTaskId))
     status = set_task.status
     print(status, "##############################")
     if status == "SUCCESS":
