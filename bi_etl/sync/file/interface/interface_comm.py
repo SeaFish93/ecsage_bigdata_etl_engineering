@@ -20,38 +20,39 @@ hostname = socket.gethostname()
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):
     th = []
     i = 0
+    file_num = 0
     for data_files in DataFileList:
         etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-                               my_run=local_hdfs_thread,TargetDb=TargetDb,
-                               TargetTable=TargetTable, ExecDate=ExecDate,
-                               DataFile=data_files, HDFSDir=HDFSDir
+                               my_run=local_hdfs_thread,DataFile=data_files, HDFSDir=HDFSDir
                                )
         etl_thread.start()
         th.append(etl_thread)
         i = i + 1
     for etl_th in th:
         etl_th.join()
+    for data_files in DataFileList:
+        status = os.system("""hadoop fs -ls %s/%s"""%(HDFSDir,data_files.split("/")[-1]))
+        if int(status) == 0:
+            file_num = file_num + 1
+    if len(DataFileList) != file_num:
+       msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
+                              SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                              TargetTable="%s.%s" % (TargetDb, TargetTable),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="上传本地数据文件至HDFS出现异常！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
 
 
 #多线程上传hdfs
-def local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFile="",HDFSDir="",arg=None):
+def local_hdfs_thread(DataFile="",HDFSDir="",arg=None):
     if arg is not None or len(arg) > 0:
-       TargetDb = arg["TargetDb"]
-       TargetTable = arg["TargetTable"]
-       ExecDate = arg["ExecDate"]
        DataFile = arg["DataFile"]
        HDFSDir = arg["HDFSDir"]
-       ok_data = os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
-       if ok_data != 0:
-           msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
-                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                                  TargetTable="%s.%s" % (TargetDb, TargetTable),
-                                  BeginExecDate=ExecDate,
-                                  EndExecDate=ExecDate,
-                                  Status="Error",
-                                  Log="上传本地数据文件至HDFS出现异常！！！",
-                                  Developer="developer")
-           set_exit(LevelStatu="red", MSG=msg)
+       os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
+
 #创建创意
 #def
 def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEmptyFile="",ExecDate=""):
@@ -104,7 +105,7 @@ def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
     return resp_data
 
 #写入异常文件
-def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile="",AsyncStatusExceptionFile="",ExecDate=""):
+def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile="",AsyncStatusExceptionFile="",ExecDate="",AirflowInstance=""):
     if ExceptionType !="create":
        get_data = ExecData
        media_type = get_data[1]
@@ -115,7 +116,7 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
        task_name = get_data[5]
        if len(AsyncNotemptyFile) >0:
           os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
-       os.system("""echo "%s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999", AsyncStatusExceptionFile + ".%s" % (hostname)))
+       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999",AirflowInstance, AsyncStatusExceptionFile + ".%s" % (hostname)))
     else:
         account_id = ExecData[0]
         interface_flag = ExecData[1]
@@ -127,7 +128,7 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
         #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (media_type, token, service_code, account_id, 0, 999999, interface_flag, AsyncNotemptyFile))
         os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code,group_by,
                                                    fields,token, AsyncStatusExceptionFile+".%s"%(hostname)))
-def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
+def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
     get_data = ExecData
     media_type = get_data[1]
     service_code = get_data[2]
@@ -141,26 +142,27 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",LogSession=""):
     code = 0
     while set_run:
        code,resp_datas = get_oe_async_tasks_data(Token=token, AccountId=account_id, TaskId=task_id)
-       if code == 40105:
+       if int(code) == 40105:
            token = get_oe_account_token(ServiceCode=service_code)
            if n >2:
              set_run = False
-             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s" % (hostname)))
+             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s_%s" % (AirflowInstance,hostname)))
            else:
              time.sleep(2)
        else:
-           os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s" % (hostname)))
-           if code == 0:
+           os.system("""echo '%s %s'>>%s""" % (account_id,code, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s_%s" % (AirflowInstance,hostname)))
+           if int(code) == 0:
              for data in resp_datas:
-                 shell_cmd = """
-                 cat >> %s << endwritefilewwwww
+                 try:
+                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
+                   shell_cmd = """
+                   cat >> %s << endwritefilewwwww
 %s
 endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode("utf8","ignore").replace("""`""","%%@@%%").replace("'","%%&&%%"))
-                 try:
+                   #os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
                    os.system(shell_cmd)
-                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "test_%s" % (hostname)))
                  except Exception as e:
-                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s" % (hostname)))
+                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s_%s" % (AirflowInstance,hostname)))
            set_run = False
        n = n + 1
     return code
