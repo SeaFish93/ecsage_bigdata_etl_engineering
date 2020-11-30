@@ -31,32 +31,32 @@ def get_sync_pages_number():
   celery_task_status_file = """/home/ecsage_data/oceanengine/async/2/sync_status.log"""
   page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
   async_account_file = "/home/ecsage_data/oceanengine/async/2"
-  os.system("""rm -f %s"""%(celery_task_status_file))
-  os.system("""rm -f %s*""" % (page_task_file))
-  sql = """
-       select a.account_id, a.media_type, a.service_code 
-       from metadb.oe_account_interface a
-       where a.exec_date = '2020-11-29'
-    """
-  ok,db_data = etl_md.get_all_rows(sql)
-  for data in db_data:
-    ParamJson = {"end_date": "2020-11-29", "page_size": "200", "start_date": "2020-11-29",
-                 "advertiser_id": data[0], "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
-                 "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
-                 "page": 1,
-                 "service_code": data[2]
-                 }
-    ParamJson = str(ParamJson)
-    UrlPath = "/open_api/2/report/creative/get/"
-    celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=ParamJson,UrlPath=UrlPath)
-    os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id,data[0],data[1],data[2], celery_task_status_file))
-  #获取状态
-  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
-  print("正在等待celery队列执行完成！！！")##########set_run = True
-  #time.sleep(180)##########page_numbers = 0
-  wait_for_celery_status(StatusList=celery_task_id)##########while set_run:
-  print("celery队列执行完成！！！")##########  celery_task_status,page_numbers = get_celery_job_status(CeleryTaskId=celery_task_id)
-  print("end %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
+  ########## os.system("""rm -f %s"""%(celery_task_status_file))
+  ########## os.system("""rm -f %s*""" % (page_task_file))
+  ########## sql = """
+  ##########      select a.account_id, a.media_type, a.service_code
+  ##########      from metadb.oe_account_interface a
+  ##########      where a.exec_date = '2020-11-29'
+  ##########   """
+  ########## ok,db_data = etl_md.get_all_rows(sql)
+  ########## for data in db_data:
+  ##########   ParamJson = {"end_date": "2020-11-29", "page_size": "200", "start_date": "2020-11-29",
+  ##########                "advertiser_id": data[0], "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
+  ##########                "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+  ##########                "page": 1,
+  ##########                "service_code": data[2]
+  ##########                }
+  ##########   ParamJson = str(ParamJson)
+  ##########   UrlPath = "/open_api/2/report/creative/get/"
+  ##########   celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=ParamJson,UrlPath=UrlPath)
+  ##########   os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id,data[0],data[1],data[2], celery_task_status_file))
+  ########## #获取状态
+  ########## celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+  ########## print("正在等待celery队列执行完成！！！")##########set_run = True
+  ########## #time.sleep(180)##########page_numbers = 0
+  ########## wait_for_celery_status(StatusList=celery_task_id)##########while set_run:
+  ########## print("celery队列执行完成！！！")##########  celery_task_status,page_numbers = get_celery_job_status(CeleryTaskId=celery_task_id)
+  ########## print("end %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
   # 保存MySQL
   columns = """page_num,account_id,service_code,remark"""
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface  " )
