@@ -60,10 +60,15 @@ def get_sync_data_return(ParamJson="",UrlPath=""):
     param_json = json.dumps(ParamJson)
     param_json = ast.literal_eval(json.loads(param_json))
     service_code = param_json["service_code"]
+    advertiser_id = param_json["advertiser_id"]
     token = get_oe_account_token(ServiceCode=service_code)
     del param_json["service_code"]
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
-    return data_list["data"]["page_info"]["total_page"]
+    if "page_info" in data_list["data"]:
+       return data_list["data"]["page_info"]["total_page"]
+    else:
+       print("没有页数：%s,%s"%(service_code,advertiser_id))
+       return 0
 
 def get_sync_data(ParamJson="",UrlPath=""):
     """
