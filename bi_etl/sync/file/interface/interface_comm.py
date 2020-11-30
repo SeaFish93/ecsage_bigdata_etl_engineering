@@ -85,9 +85,9 @@ def get_sync_data(ParamJson="",UrlPath=""):
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
     #print(data_list)
     shell_cmd = """
-      cat >> %s << endwritefilewwwww
+cat >> %s << endwritefilewwwww
 %s
-endwritefilewwwww""" % ("/home/ecsage_data/oceanengine/async/2/testtest.log" + ".%s" % (hostname),str(data_list).replace("""'""",""" " """))
+endwritefilewwwww""" % ("/home/ecsage_data/oceanengine/async/2/testtest.log" + ".%s" % (hostname),str(data_list).replace("""'""",""" ## """))
     os.system(shell_cmd)
 
 #多线程上传hdfs
