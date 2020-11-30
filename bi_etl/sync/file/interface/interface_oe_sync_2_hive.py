@@ -26,6 +26,16 @@ import ast
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
+def get_celery_job_status(CeleryTaskId=""):
+    print(CeleryTaskId,"$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+    set_task = AsyncResult(id=CeleryTaskId)
+    status = set_task.status
+    print(status, "##############################")
+    if status == "SUCCESS":
+       return True
+    else:
+       return False
+
 def get_sync_pages_number():
     ParamJson = {"end_date": "2020-11-29", "page_size": "1000", "start_date": "2020-11-29",
                  "advertiser_id": 1654599060231176, "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
@@ -54,16 +64,6 @@ def get_sync_pages_number():
     ######    param_json = ast.literal_eval(json.loads(param_json))
     ######    param_json["page"] = pages
     ######    celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
-
-def get_celery_job_status(CeleryTaskId=""):
-    print(CeleryTaskId,"$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-    set_task = AsyncResult(id=CeleryTaskId)
-    status = set_task.status
-    print(status, "##############################")
-    if status == "SUCCESS":
-       return True
-    else:
-       return False
 
 if __name__ == '__main__':
     get_sync_pages_number()
