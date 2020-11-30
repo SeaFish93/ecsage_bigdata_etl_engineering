@@ -27,7 +27,9 @@ conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 def get_sync_pages_number():
-  print("begin %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  print("begin %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
+  celery_task_status_file = """/home/ecsage_data/oceanengine/async/2/sync_status.log"""
+  os.system("""rm -f %s"""%(celery_task_status_file))
   sql = """
        select a.account_id, a.media_type, a.service_code 
        from metadb.oe_account_interface a
@@ -44,27 +46,31 @@ def get_sync_pages_number():
     ParamJson = str(ParamJson)
     UrlPath = "/open_api/2/report/creative/get/"
     celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=ParamJson,UrlPath=UrlPath)
-    set_run = True
-    page_numbers = 0
-    while set_run:
-      celery_task_status,page_numbers = get_celery_job_status(CeleryTaskId=celery_task_id)
-      if celery_task_status is True:
-          set_run = False
-      else:
-          print("等待！！！")
-    page_number = int(page_numbers)
-    for page in range(page_number):
-        pages = page + 1
-        param_json = json.dumps(ParamJson)
-        param_json = ast.literal_eval(json.loads(param_json))
-        param_json["page"] = pages
-        celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
-        os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status.log"))
-    # 获取状态
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status.log")
-    print("正在等待celery队列执行完成！！！")
-    wait_for_celery_status(StatusList=celery_task_id)
-    print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id,data[0],data[1],data[2], celery_task_status_file))
+  #获取状态
+  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+  print("正在等待celery队列执行完成！！！")##########set_run = True
+  #time.sleep(180)##########page_numbers = 0
+  wait_for_celery_status(StatusList=celery_task_id)##########while set_run:
+  print("celery队列执行完成！！！")##########  celery_task_status,page_numbers = get_celery_job_status(CeleryTaskId=celery_task_id)
+  print("end %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
+    ##########  if celery_task_status is True:
+    ##########      set_run = False
+    ##########  else:
+    ##########      print("等待！！！")
+    ##########page_number = int(page_numbers)
+    ##########for page in range(page_number):
+    ##########    pages = page + 1
+    ##########    param_json = json.dumps(ParamJson)
+    ##########    param_json = ast.literal_eval(json.loads(param_json))
+    ##########    param_json["page"] = pages
+    ##########    celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
+    ##########    os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status.log"))
+    ########### 获取状态
+    ##########celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status.log")
+    ##########print("正在等待celery队列执行完成！！！")
+    ##########wait_for_celery_status(StatusList=celery_task_id)
+    ##########print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
