@@ -44,7 +44,6 @@ def get_sync_pages_number():
           set_run = False
       else:
           print("等待！！！")
-    #page_numbers = AsyncResult(id=celery_task_id)
     page_number = int(page_numbers)
     print(page_number,"##############################")
     for page in range(page_number):
@@ -55,11 +54,11 @@ def get_sync_pages_number():
         param_json["page"] = pages
         celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
         os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status.log"))
-        # 获取状态
-        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status.log")
-        print("正在等待celery队列执行完成！！！")
-        wait_for_celery_status(StatusList=celery_task_id)
-        print("celery队列执行完成！！！")
+    # 获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status.log")
+    print("正在等待celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("celery队列执行完成！！！")
 
 def get_celery_job_status(CeleryTaskId=""):
     print(CeleryTaskId,"$$$$$$$$$$$$$$$$$$$$$$$$$$$")
