@@ -67,7 +67,7 @@ def get_sync_data_return(ParamJson="",UrlPath=""):
     if "page_info" in data_list["data"]:
        return data_list["data"]["page_info"]["total_page"]
     else:
-       print("没有页数：%s,%s"%(service_code,advertiser_id))
+       print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list["data"]))
        return 0
 
 def get_sync_data(ParamJson="",UrlPath=""):
