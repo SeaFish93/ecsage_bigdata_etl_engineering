@@ -64,7 +64,7 @@ def get_sync_data_return(ParamJson="",UrlPath=""):
     token = get_oe_account_token(ServiceCode=service_code)
     page = 0
     remark = ""
-    page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
+    page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log.%s"%(hostname)
     del param_json["service_code"]
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
     if "page_info" in data_list["data"]:
