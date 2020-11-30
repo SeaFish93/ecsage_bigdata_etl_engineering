@@ -63,7 +63,7 @@ def get_sync_pages_number():
   load_data_mysql(AsyncAccountFile=async_account_file, DataFile=page_task_file,TableName="oe_sync_page_interface", Columns=columns)
   sql = """
     select a.account_id, '' as media_type, a.service_code,a.page_num
-    from metadb.oe_sync_page_interface where page_num > 0
+    from metadb.oe_sync_page_interface a where page_num > 0
   """
   ok,datas = etl_md.get_all_rows(sql)
   for dt in datas:
