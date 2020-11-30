@@ -55,6 +55,8 @@ def main(TaskInfo, Level,**kwargs):
     key_columns = TaskInfo[29]
     commit_num = TaskInfo[31]
     exclude_account_id = TaskInfo[34]
+    array_flag = TaskInfo[35]
+    specified_pars_str =TaskInfo[36]
     #regexp_extract_column = TaskInfo[30]
     #if regexp_extract_column is None or len(regexp_extract_column) == 0:
     #    regexp_extract_column = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list')"""
@@ -78,7 +80,8 @@ def main(TaskInfo, Level,**kwargs):
                      )
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
-                          TargetDB=target_db, TargetTable=target_table,IsReport=is_report,SelectExcludeColumns=select_exclude_columns,KeyColumns=key_columns,ExecDate=exec_date)
+                          TargetDB=target_db, TargetTable=target_table,IsReport=is_report,SelectExcludeColumns=select_exclude_columns,KeyColumns=key_columns,ExecDate=exec_date
+                          ,Array_Flag=array_flag,Specified_Pars_Str=specified_pars_str)
     elif Level == "snap":
       exec_snap_hive_table(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
                              TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=exec_date)
@@ -405,7 +408,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate=""):
+                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",Array_Flag="",Specified_Pars_Str=""):
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
@@ -432,7 +435,13 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
-   regexp_extract = """get_json_object(get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data'),'$.list') as data_colums"""
+   array_flag= Array_Flag
+   if array_flag in ["list", "custom_audience_list"]:
+       regexp_extract = """get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data.%s') as data_colums""" % (array_flag)
+   else:
+       regexp_extract = """concat(concat('[',get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data')),']') as data_colums"""
+   ####regexp_extract = """get_json_object(get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data'),'$.list') as data_colums"""
+
    return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
    returns_account_id = """trim(get_json_object(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}## )',1),'##',''),' ',''),'$.accountId')) as returns_account_id"""
    filter_line = """length(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1)) > 0"""
@@ -444,7 +453,40 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ######   regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
    ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
    ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
-   sql = """
+   specified_pars_str= Specified_Pars_Str
+   if specified_pars_str is not None or len(specified_pars_str) > 0:
+       pars_str_list = []
+       for pars_field in iter(specified_pars_str.split(",")):
+           as_str = pars_field.split(".")[-1]
+           pars_str_list.append("get_json_object(data_num_colums,'$.%s') as `%s`" % (pars_field, as_str))
+       pars_str = ','.join(pars_str_list)
+       sql="""
+        add file hdfs:///tmp/airflow/get_arrary.py;
+        drop table if exists %s.%s_tmp;
+        create table %s.%s_tmp stored as parquet as 
+        select %s,%s
+        from (select returns_colums,%s,returns_account_id,request_type
+              from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
+                          ,split(data_colums,'@@####@@')[1] as data_colums
+                          ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
+                          ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
+                   from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
+                        from(select %s,%s,%s
+                                    ,request_type
+                             from %s.%s a
+                             where a.etl_date = '%s'
+                               and %s
+                            ) a
+                        where data_colums is not null
+                        ) b
+                   ) c
+                   lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
+              ) a
+              ;
+        """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,pars_str,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
+
+   else:
+        sql = """
         add file hdfs:///tmp/airflow/get_arrary.py;
         drop table if exists %s.%s_tmp;
         create table %s.%s_tmp stored as parquet as 
@@ -472,6 +514,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               as %s
                ;
         """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line,json_tuple_columns,select_json_tuple_column)
+
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
