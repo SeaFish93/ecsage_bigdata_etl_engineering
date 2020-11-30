@@ -169,4 +169,4 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
 #定义oe同步数据
 @app.task()
 def get_oe_sync_tasks_data(ParamJson="",UrlPath=""):
-    get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
+    return get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
