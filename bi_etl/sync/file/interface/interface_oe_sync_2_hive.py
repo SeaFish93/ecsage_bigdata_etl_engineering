@@ -27,7 +27,7 @@ conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 def get_sync_pages_number():
-    ParamJson = {"end_date": "2020-11-29", "page_size": "500", "start_date": "2020-11-29",
+    ParamJson = {"end_date": "2020-11-29", "page_size": "200", "start_date": "2020-11-29",
                  "advertiser_id": 1654599060231176, "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
                  "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                  "page": 1,
