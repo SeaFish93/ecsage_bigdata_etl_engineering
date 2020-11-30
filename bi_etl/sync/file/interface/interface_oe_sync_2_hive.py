@@ -45,7 +45,6 @@ def get_sync_pages_number():
       else:
           print("等待！！！")
     page_number = int(page_numbers)
-    print(page_number,"##############################")
     for page in range(page_number):
         pages = page + 1
         param_json = json.dumps(ParamJson)
