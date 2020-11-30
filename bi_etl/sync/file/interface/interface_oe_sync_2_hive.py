@@ -27,7 +27,7 @@ conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 def get_sync_pages_number():
-    ParamJson = {"end_date": "2020-11-29", "page_size": "100", "start_date": "2020-11-29",
+    ParamJson = {"end_date": "2020-11-29", "page_size": "500", "start_date": "2020-11-29",
                  "advertiser_id": 1654599060231176, "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
                  "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                  "page": 1,
@@ -61,11 +61,9 @@ def get_sync_pages_number():
     print("celery队列执行完成！！！")
 
 def get_celery_job_status(CeleryTaskId=""):
-    print(CeleryTaskId,"$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     set_task = AsyncResult(id=str(CeleryTaskId))
     status = set_task.status
     value = set_task.get()
-    print(status, "##############################")
     if status == "SUCCESS":
        return True,value
     else:
