@@ -27,14 +27,14 @@ def build_url(path, query=""):
 #头条同步API
 def set_sync_data(ParamJson="",UrlPath="",Token=""):
     """
-    {"end_date": "",
-     "page_size": "",
-     "start_date": "",
+    {"end_date": "2020-11-29",
+     "page_size": "1",
+     "start_date": "2020-11-29",
      "advertiser_id": "",
      "group_by": "",
      "time_granularity": "",
-     "page": ""
-     "service_code":""
+     "page": "1"
+     "service_code":"tt-hnhd-03"
      }
     """
     query_string = urlencode({k: v if isinstance(v, string_types) else json.dumps(v) for k, v in ParamJson.items()})
@@ -62,13 +62,16 @@ def get_sync_data_return(ParamJson="",UrlPath=""):
     service_code = param_json["service_code"]
     advertiser_id = param_json["advertiser_id"]
     token = get_oe_account_token(ServiceCode=service_code)
+    page = 0
+    page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
     del param_json["service_code"]
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
     if "page_info" in data_list["data"]:
-       return data_list["data"]["page_info"]["total_page"]
+       page = data_list["data"]["page_info"]["total_page"]
     else:
        print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list["data"]))
-       return 0
+    os.system("""echo "%s %s %s">>%s""" % (page,advertiser_id, service_code, page_task_file))
+    return page
 
 def get_sync_data(ParamJson="",UrlPath=""):
     """

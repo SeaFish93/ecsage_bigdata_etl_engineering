@@ -29,7 +29,9 @@ etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 def get_sync_pages_number():
   print("begin %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
   celery_task_status_file = """/home/ecsage_data/oceanengine/async/2/sync_status.log"""
+  page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
   os.system("""rm -f %s"""%(celery_task_status_file))
+  os.system("""rm -f %s""" % (page_task_file))
   sql = """
        select a.account_id, a.media_type, a.service_code 
        from metadb.oe_account_interface a
