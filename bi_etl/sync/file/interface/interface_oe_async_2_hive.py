@@ -13,13 +13,18 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status as get_oe_async_tasks_status_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data as get_oe_async_tasks_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create as get_oe_async_tasks_create_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all as get_oe_async_tasks_create_all_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all_exception as get_oe_async_tasks_create_all_exception_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
+from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import os
 import time
 
+conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 #入口方法
@@ -43,6 +48,7 @@ def main(TaskInfo,**kwargs):
        get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 1:
        get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
+       #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
 
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
@@ -63,36 +69,198 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
       from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
            from metadb.media_advertiser
           ) tmp,(select @row_num:=0) r
-          ) tmp1 where rn >=1 and rn < 10000
-    """ % (interface_flag, group_by, fields, media_type)
+          ) tmp1 where rn >=1 and rn < 2000
+    """ % (interface_flag, group_by, fields)
     account_sql_2 = """
           select * from(
           select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
           from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
                from metadb.media_advertiser
               ) tmp,(select @row_num:=0) r
-              ) tmp1 where rn >=10000 and rn < 20000
-        """ % (interface_flag, group_by, fields, media_type)
+              ) tmp1 where rn >=2000 and rn < 4000
+        """ % (interface_flag, group_by, fields)
     account_sql_3 = """
               select * from(
               select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
               from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
                    from metadb.media_advertiser
                   ) tmp,(select @row_num:=0) r
-                  ) tmp1 where rn >=20000 and rn < 30000
-            """ % (interface_flag, group_by, fields, media_type)
+                  ) tmp1 where rn >=4000 and rn < 6000
+            """ % (interface_flag, group_by, fields)
     account_sql_4 = """
                   select * from(
                   select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
                   from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
                        from metadb.media_advertiser
                       ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=30000
-                """ % (interface_flag, group_by, fields, media_type)
+                      ) tmp1 where rn >=6000 and rn < 8000
+                """ % (interface_flag, group_by, fields)
+    account_sql_5 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=8000 and rn < 10000
+                """ % (interface_flag, group_by, fields)
+    account_sql_6 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=10000 and rn < 12000
+                """ % (interface_flag, group_by, fields)
+    account_sql_7 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=12000 and rn < 14000
+                """ % (interface_flag, group_by, fields)
+    account_sql_8 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=14000 and rn < 16000
+                """ % (interface_flag, group_by, fields)
+    account_sql_9 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=16000 and rn < 18000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_10 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=18000 and rn < 20000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_11 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=20000 and rn < 22000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_12 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=22000 and rn < 24000
+                """ % (interface_flag, group_by, fields)
+
+    account_sql_13 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=24000 and rn < 26000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_14 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=26000 and rn < 28000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_15 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=28000 and rn < 30000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_16 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=30000 and rn < 32000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_17 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=32000 and rn < 34000
+                """ % (interface_flag, group_by, fields)
+    
+    account_sql_18 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=34000 and rn < 36000
+                """ % (interface_flag, group_by, fields)
+    account_sql_19 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=36000 and rn < 38000
+                """ % (interface_flag, group_by, fields)
+    account_sql_20 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=38000 and rn < 40000
+                """ % (interface_flag, group_by, fields)
+    account_sql_21 = """
+                  select * from(
+                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
+                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+                       from metadb.media_advertiser
+                      ) tmp,(select @row_num:=0) r
+                      ) tmp1 where rn >=40000
+                """ % (interface_flag, group_by, fields)
     sql_list.append(account_sql_1)
     sql_list.append(account_sql_2)
     sql_list.append(account_sql_3)
     sql_list.append(account_sql_4)
+    sql_list.append(account_sql_5)
+    sql_list.append(account_sql_6)
+    sql_list.append(account_sql_7)
+    sql_list.append(account_sql_8)
+    sql_list.append(account_sql_9)
+    sql_list.append(account_sql_10)
+    sql_list.append(account_sql_11)
+    sql_list.append(account_sql_12)
+    sql_list.append(account_sql_13)
+    sql_list.append(account_sql_14)
+    sql_list.append(account_sql_15)
+    sql_list.append(account_sql_16)
+    sql_list.append(account_sql_17)
+    sql_list.append(account_sql_18)
+    sql_list.append(account_sql_19)
+    sql_list.append(account_sql_20)
+    sql_list.append(account_sql_21)
     th = []
     i = 0
     for sql in sql_list:
@@ -114,10 +282,10 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     # 保存MySQL
-    columns = """media_type,token_data,service_code,account_id,task_id,task_name,interface_flag"""
-    etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' " % (media_type, interface_flag))
-    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
-                    TableName="oe_async_create_task", Columns=columns)
+    #columns = """media_type,token_data,service_code,account_id,task_id,task_name,interface_flag"""
+    #etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' " % (media_type, interface_flag))
+    #load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
+    #                TableName="oe_async_create_task", Columns=columns)
     print("等待重试异常任务！！！")
     rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
                                    DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
@@ -179,7 +347,7 @@ def run_get_oe_async_tasks_create(Sql="",AsyncTaskFile="",AsyncTaskExceptionFile
     ok, all_rows = etl_md.get_all_rows(Sql)
     n = 1
     for data in all_rows:
-        status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s%s" % (Flag,n),
+        status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s%s" % (Flag,n),
                                                            AsyncTaskFile=AsyncTaskFile,
                                                            AsyncTaskExceptionFile=AsyncTaskExceptionFile,
                                                            ExecData=data, ExecDate=ExecDate)
@@ -388,6 +556,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     target_db = TaskInfo[9]
     target_table = TaskInfo[10]
     interface_flag = TaskInfo[20]
+    airflow_instance = "%s.%s"%(AirflowDagId,AirflowTaskId)
     async_account_file = "/home/ecsage_data/oceanengine/async/%s"%(media_type)
     async_data_exception_file = """%s/%s_%s_exception.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
     async_data_file = """%s/%s_%s_data.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
@@ -405,17 +574,18 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     """ % (interface_flag,media_type)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     for get_data in datas:
-        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,LogSession="OpenFile")
+        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,AirflowInstance=airflow_instance)
         os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
 
     #获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
-    print("正在等待celery队列执行完成！！！")
+    print("正在等待celery队列执行完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     wait_for_celery_status(StatusList=celery_task_id)
-    print("celery队列执行完成！！！")
-    print("等待重试异常任务！！！")
-    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,LogSession="log.logger",InterfaceFlag="data")
-    print("等待重试异常任务完成！！！")
+    print("celery队列执行完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    print("等待重试异常任务，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,
+                                   InterfaceFlag=airflow_instance)
+    print("等待重试异常任务完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     time.sleep(30)
     #上传至hdfs
     get_local_file_2_hive(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
@@ -427,7 +597,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=TargetHandleBeeline)
     target_file = os.listdir(AsyncAccountDir)
     data_file = DataFile.split("/")[-1]
-    hdfs_dir = "/tmp/datafolder_new"
+    hdfs_dir = conf.get("Airflow_New", "hdfs_home") #"/tmp/datafolder_new"
     data_file_list = []
     load_sqls = ""
     load_sql_0 = ""
@@ -435,7 +605,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     n = 0
     for files in target_file:
         if data_file in files:
-            data_file_list.append(files)
+            data_file_list.append("""%s/%s"""%(AsyncAccountDir,files))
             if n == 0:
                load_sql_0 = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s;\n"""%(hdfs_dir,files,etl_mid_tmp_table)
             else:
@@ -444,25 +614,22 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
             n = n + 1
     load_sqls = load_sql_0 + load_sqls
     if len(load_sqls) == 0:
-        print("API采集没执行！！！")
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDb, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="API采集没执行！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
     print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
     print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
     os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
-    th = []
-    i = 0
-    for data_files in data_file_list:
-        etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-                               my_run=local_hdfs_thread,
-                               TargetDb=TargetDb,TargetTable=TargetTable,ExecDate=ExecDate,
-                               DataFile="""%s/%s"""%(AsyncAccountDir,data_files),HDFSDir=hdfs_dir
-                           )
-        etl_thread.start()
-        th.append(etl_thread)
-        i = i+1
-    for etl_th in th:
-        etl_th.join()
+    if data_file_list is not None and len(data_file_list) > 0:
+      get_local_hdfs_thread(TargetDb=TargetDb, TargetTable=TargetTable, ExecDate=ExecDate, DataFileList=data_file_list, HDFSDir=hdfs_dir)
     #获取列名
-    get_source_columns = os.popen("""grep -v 'empty result' %s/%s |head -1""" % (AsyncAccountDir,data_file_list[0]))
+    get_source_columns = os.popen("""grep -v 'empty result' %s |head -1""" % (data_file_list[0]))
     source_columns = get_source_columns.read().split()[0]
     source_columns_list = source_columns.split(",")
     if len(source_columns_list) <= 1:
@@ -617,54 +784,59 @@ def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",TaskInfo="",ExecDate=""):
                          SourceDB=source_db,SourceTable=source_table,TargetDB=target_db, TargetTable=target_table, IsReport=1,
                          KeyColumns="", ExecDate=ExecDate)
 
-def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",LogSession="",InterfaceFlag="",ExecDate=""):
-    exception_file = ExceptionFile.split("/")[-1]
+def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag=""):
     async_data_file = """%s/%s"""%(AsyncAccountDir,DataFile.split("/")[-1])
-    celery_task_data_file = """%s/%s.last_runned"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
-    async_data_exception_file = """%s/%s.last_runned""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
-    run_true = True
-    n = 0
-    sleep_init = 6
-    while run_true:
-     exception_file_list = []
-     target_file = os.listdir(AsyncAccountDir)
-     sleep_true = True
-     for files in target_file:
-        if exception_file in files:
-            exception_file_list.append(files)
-            exception_dir_file = """%s/%s"""%(AsyncAccountDir,files)
-            with open(exception_dir_file) as lines:
-                array = lines.readlines()
-                i = 1
-                for data in array:
-                    get_data = data.strip('\n').split(" ")
-                    #判断此任务是否有创建，若是没有，则调用创建，只限两次，第三次还没创建，自动放弃
-                    if InterfaceFlag == "data":
-                       status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file+".%s"%n,ExecData=get_data,LogSession=LogSession)
-                    elif InterfaceFlag == "create":
-                        if sleep_true:
-                          print("sleep %s分钟！！！"%(sleep_init))
-                          sleep_true = False
-                          time.sleep(sleep_init*60)
-                          sleep_init = sleep_init + 3
-                        status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i),AsyncTaskFile=async_data_file,
-                                                                           AsyncTaskExceptionFile=async_data_exception_file,
-                                                                           ExecData=get_data, ExecDate=ExecDate)
-                    os.system("""echo "%s %s">>%s""" % (status_id, get_data[0],celery_task_data_file+".%s"%n))
-                    i = i + 1
-            os.system("""mv %s %s"""%(exception_dir_file,AsyncAccountDir+"/exception_%s.log"%(n)))
-     if len(exception_file_list) > 0:
-        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file+".%s"%n)
-        wait_for_celery_status(StatusList=celery_task_id)
-        #os.system("""mv -f %s"""%(celery_task_data_file +".%s"%n))
-     if len(exception_file_list) == 0 or n == 3:
-         if len(exception_file_list) >0:
-             print("还有特别子账户出现异常！！！")
-         run_true = False
-     n = n + 1
+    celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
+    async_data_exception_file = """%s/%s""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
+    # 先保留第一次
+    delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+    etl_md.execute_sql(delete_sql)
+    columns = """account_id,media_type,service_code,token_data,task_id,task_name,interface_flag"""
+    table_name = "oe_async_exception_create_tasks_interface"
+    save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
+    n = 3
+    for i in range(n):
+        sql = """
+              select distinct %s
+              from metadb.oe_async_exception_create_tasks_interface a
+              where interface_flag = '%s'
+            """ % (columns,InterfaceFlag)
+        ok, datas = etl_md.get_all_rows(sql)
+        if datas is not None and len(datas) > 0:
+            print("开始第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+            for data in datas:
+                status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,
+                                                                 ExecData=data)
+                os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file + ".%s" % (i)))
+            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s" % i)
+            wait_for_celery_status(StatusList=celery_task_id)
+            delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+            etl_md.execute_sql(delete_sql)
+            save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
+            print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+            # 判断结果是否还有异常
+            ex_sql = """
+                         select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+                         from metadb.oe_async_exception_create_tasks_interface a
+                         where interface_flag = '%s'
+                         limit 1
+                  """ % (InterfaceFlag)
+            ok, ex_datas = etl_md.get_all_rows(ex_sql)
+            if ex_datas is not None and len(ex_datas) > 0:
+                print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+                time.sleep(60)
+    ex_sql = """
+             select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+             from metadb.oe_async_exception_create_tasks_interface a
+             where interface_flag = '%s'
+        """ % (InterfaceFlag)
+    ok, ex_datas = etl_md.get_all_rows(ex_sql)
+    if ex_datas is not None and len(ex_datas) > 0:
+        print("还有特别异常任务存在！！！")
+        print(ex_datas[0])
 
 #
-def save_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",InterfaceFlag=""):
+def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",TableName="",Columns=""):
     exception_file = ExceptionFile.split("/")[-1]
     exception_file_list = []
     target_file = os.listdir(AsyncAccountDir)
@@ -673,8 +845,7 @@ def save_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",InterfaceFla
          exception_file_list.append((AsyncAccountDir, files))
     if exception_file_list is not None and len(exception_file_list) > 0 :
        for file in exception_file_list:
-           columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data"""
-           load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],TableName="oe_async_exception_create_tasks_interface", Columns=columns)
+           load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],TableName=TableName, Columns=Columns)
            os.system("""rm -f %s/%s"""%(file[0],file[1]))
 
 def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",LogSession="",InterfaceFlag="",ExecDate=""):
@@ -684,7 +855,9 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
     #先保留第一次
     delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
     etl_md.execute_sql(delete_sql)
-    save_exception_create_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag)
+    columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data"""
+    table_name = "oe_async_exception_create_tasks_interface"
+    save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
     n = 3
     for i in range(n):
@@ -705,7 +878,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
            wait_for_celery_status(StatusList=celery_task_id)
            delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
            etl_md.execute_sql(delete_sql)
-           save_exception_create_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag)
+           save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
            print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            #判断结果是否还有异常
            ex_sql = """

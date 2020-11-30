@@ -7,11 +7,12 @@ CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
 CELERY_TASK_RESULT_EXPIRES = 60*60*24
 #task child killed after 40 times processing
-CELERY_MAX_TASKS_PER_CHILD = 40
+CELERYD_MAX_TASKS_PER_CHILD = 40
 #celery worker amount
-CELERY_CONCURRENCY = 20
+#CELERY_CONCURRENCY = 20
+CELERYD_CONCURRENCY = 20
 #the amount that a celery worker get task from broker each time
-CELERY_PREFETCH_MULTIPLIER = 4
+CELERYD_PREFETCH_MULTIPLIER = 4
 CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'pickle'
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
