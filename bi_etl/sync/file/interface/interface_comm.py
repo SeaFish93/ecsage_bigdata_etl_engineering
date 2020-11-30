@@ -45,7 +45,7 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     rsp = requests.get(url, headers=headers)
     return rsp.json()
 
-def get_sync_data(ParamJson="",UrlPath=""):
+def get_sync_data_return(ParamJson="",UrlPath=""):
     """
     {"end_date": "",
      "page_size": "",
@@ -64,6 +64,31 @@ def get_sync_data(ParamJson="",UrlPath=""):
     del param_json["service_code"]
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
     return data_list["data"]["page_info"]["total_page"]
+
+def get_sync_data(ParamJson="",UrlPath=""):
+    """
+    {"end_date": "",
+     "page_size": "",
+     "start_date": "",
+     "advertiser_id": "",
+     "group_by": "",
+     "time_granularity": "",
+     "page": ""
+     "service_code":""
+     }
+    """
+    param_json = json.dumps(ParamJson)
+    param_json = ast.literal_eval(json.loads(param_json))
+    service_code = param_json["service_code"]
+    token = get_oe_account_token(ServiceCode=service_code)
+    del param_json["service_code"]
+    data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
+    print(data_list)
+    shell_cmd = """
+      cat >> %s << endwritefilewwwww
+%s
+endwritefilewwwww""" % ("/home/ecsage_data/oceanengine/async/2/testtest.log" + ".%s" % (hostname),str(data_list).replace("""'""",""" " """))
+    os.system(shell_cmd)
 
 #多线程上传hdfs
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):

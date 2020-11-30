@@ -11,7 +11,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_set_oe_async_tasks_create
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data_return
 
 import time
 import socket
@@ -168,5 +168,9 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
 
 #定义oe同步数据
 @app.task()
+def get_oe_sync_tasks_data_return(ParamJson="",UrlPath=""):
+    return get_sync_data_return(ParamJson=ParamJson,UrlPath=UrlPath)
+
+@app.task()
 def get_oe_sync_tasks_data(ParamJson="",UrlPath=""):
-    return get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
+    get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
