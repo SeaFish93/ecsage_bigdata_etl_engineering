@@ -87,7 +87,7 @@ def get_sync_data(ParamJson="",UrlPath=""):
     shell_cmd = """
 cat >> %s << endwritefilewwwww
 %s
-endwritefilewwwww""" % ("/home/ecsage_data/oceanengine/async/2/testtest.log" + ".%s" % (hostname),str(data_list).replace("""'""",""" ## """))
+endwritefilewwwww""" % ("/home/ecsage_data/oceanengine/async/2/testtest.log" + ".%s" % (hostname),"str(data_list).replace")
     os.system(shell_cmd)
 
 #多线程上传hdfs
