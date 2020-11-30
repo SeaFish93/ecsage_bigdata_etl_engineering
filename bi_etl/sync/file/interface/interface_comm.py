@@ -43,7 +43,7 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
         "Access-Token": Token,
     }
     rsp = requests.get(url, headers=headers)
-    return rsp.iter_lines()
+    return rsp.json()
 
 def get_sync_data(ParamJson="",UrlPath=""):
     """
@@ -63,8 +63,9 @@ def get_sync_data(ParamJson="",UrlPath=""):
     token = get_oe_account_token(ServiceCode=service_code)
     del param_json["service_code"]
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
+    print(data_list,"##########################")
     for data in data_list:
-        datas = eval(data.decode())
+        datas = data
         print(datas["data"],"===============================")
 
 #多线程上传hdfs
