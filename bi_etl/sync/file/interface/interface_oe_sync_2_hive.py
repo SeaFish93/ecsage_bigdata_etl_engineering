@@ -36,34 +36,35 @@ def get_sync_pages_number():
     ParamJson = str(ParamJson)
     UrlPath = "/open_api/2/report/creative/get/"
     celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=ParamJson,UrlPath=UrlPath)
-    celery_task_status = get_celery_job_status(CeleryTaskId=celery_task_id)
-    print(celery_task_id,"====================")
     set_run = True
-    ######while set_run:
-    ######  celery_task_status = get_celery_job_status(CeleryTaskId=celery_task_id)
-    ######  if celery_task_status is True:
-    ######      set_run = False
-    ######  else:
-    ######      print("等待！！！")
-    ######page_numbers = AsyncResult(id=celery_task_id)
-    ######page_number = int(page_numbers.get())
-    ######print(page_number,"##############################")
-    ######for page in range(page_number):
-    ######    pages = page + 1
-    ######    param_json = json.dumps(ParamJson)
-    ######    param_json = ast.literal_eval(json.loads(param_json))
-    ######    param_json["page"] = pages
-    ######    celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
+    page_numbers = 0
+    while set_run:
+      celery_task_status,page_numbers = get_celery_job_status(CeleryTaskId=celery_task_id)
+      if celery_task_status is True:
+          set_run = False
+      else:
+          print("等待！！！")
+    #page_numbers = AsyncResult(id=celery_task_id)
+    page_number = int(page_numbers.get())
+    print(page_number,"##############################")
+    for page in range(page_number):
+        pages = page + 1
+        print(pages)
+        param_json = json.dumps(ParamJson)
+        param_json = ast.literal_eval(json.loads(param_json))
+        param_json["page"] = pages
+        celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
 
 def get_celery_job_status(CeleryTaskId=""):
     print(CeleryTaskId,"$$$$$$$$$$$$$$$$$$$$$$$$$$$")
     set_task = AsyncResult(id=str(CeleryTaskId))
     status = set_task.status
+    value = set_task.get()
     print(status, "##############################")
     if status == "SUCCESS":
-       return True
+       return True,value
     else:
-       return False
+       return False,value
 
 if __name__ == '__main__':
     get_sync_pages_number()
