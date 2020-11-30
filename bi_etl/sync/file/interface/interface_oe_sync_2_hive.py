@@ -56,7 +56,7 @@ def get_sync_pages_number():
         celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
         os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status.log"))
         # 获取状态
-        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status.log")
         print("正在等待celery队列执行完成！！！")
         wait_for_celery_status(StatusList=celery_task_id)
         print("celery队列执行完成！！！")
@@ -103,7 +103,7 @@ def wait_for_celery_status(StatusList=""):
               time.sleep(min)
           else:
               msg = "等待celery队列完成超时！！！\n%s" % (status_false)
-              msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+              msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
                                      SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
                                      TargetTable="%s.%s" % ("", ""),
                                      BeginExecDate="",
