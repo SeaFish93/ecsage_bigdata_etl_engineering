@@ -30,6 +30,7 @@ def get_sync_pages_number():
   print("begin %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
   celery_task_status_file = """/home/ecsage_data/oceanengine/async/2/sync_status.log"""
   page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
+  async_account_file = "/home/ecsage_data/oceanengine/async/2"
   os.system("""rm -f %s"""%(celery_task_status_file))
   os.system("""rm -f %s*""" % (page_task_file))
   sql = """
@@ -56,23 +57,51 @@ def get_sync_pages_number():
   wait_for_celery_status(StatusList=celery_task_id)##########while set_run:
   print("celery队列执行完成！！！")##########  celery_task_status,page_numbers = get_celery_job_status(CeleryTaskId=celery_task_id)
   print("end %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
-    ##########  if celery_task_status is True:
-    ##########      set_run = False
-    ##########  else:
-    ##########      print("等待！！！")
-    ##########page_number = int(page_numbers)
-    ##########for page in range(page_number):
-    ##########    pages = page + 1
-    ##########    param_json = json.dumps(ParamJson)
-    ##########    param_json = ast.literal_eval(json.loads(param_json))
-    ##########    param_json["page"] = pages
-    ##########    celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
-    ##########    os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status.log"))
-    ########### 获取状态
-    ##########celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status.log")
-    ##########print("正在等待celery队列执行完成！！！")
-    ##########wait_for_celery_status(StatusList=celery_task_id)
-    ##########print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  # 保存MySQL
+  columns = """page_num,account_id,service_code,remark"""
+  etl_md.execute_sql("delete from metadb.oe_sync_page_interface  " )
+  load_data_mysql(AsyncAccountFile=async_account_file, DataFile=page_task_file,TableName="oe_sync_page_interface", Columns=columns)
+  sql = """
+    select a.account_id, '' as media_type, a.service_code,a.page_num
+    from metadb.oe_sync_page_interface where page_num > 0
+  """
+  ok,datas = etl_md.get_all_rows(sql)
+  for dt in datas:
+     page_number = int(dt[3])
+     for page in range(page_number):
+      pages = page + 1
+      param_json = json.dumps(ParamJson)
+      param_json = ast.literal_eval(json.loads(param_json))
+      param_json["page"] = pages
+      celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
+      os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status1.log"))
+  # 获取状态
+  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status1.log")
+  print("正在等待celery队列执行完成！！！")
+  wait_for_celery_status(StatusList=celery_task_id)
+  print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+
+def load_data_mysql(AsyncAccountFile="",DataFile="",TableName="",Columns=""):
+    target_file = os.listdir(AsyncAccountFile)
+    for files in target_file:
+        if DataFile.split("/")[-1] in files:
+            print(files, "###############################################")
+            # 记录子账户
+            insert_sql = """
+                  load data local infile '%s' into table metadb.%s fields terminated by ' ' lines terminated by '\\n' (%s)
+               """ % (AsyncAccountFile + "/" + files,TableName,Columns)
+            ok = etl_md.local_file_to_mysql(sql=insert_sql)
+            if ok is False:
+                msg = "写入MySQL出现异常！！！\n%s" % (DataFile)
+                msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
+                                       SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                       TargetTable="%s.%s" % ("", ""),
+                                       BeginExecDate="",
+                                       EndExecDate="",
+                                       Status="Error",
+                                       Log=msg,
+                                       Developer="developer")
+                set_exit(LevelStatu="red", MSG=msg)
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
