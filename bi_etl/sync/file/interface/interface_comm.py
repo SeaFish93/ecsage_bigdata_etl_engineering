@@ -64,7 +64,8 @@ def get_sync_data(ParamJson="",UrlPath=""):
     del param_json["service_code"]
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
     for data in data_list:
-        print(data.decode(),type(data.decode()),"===============================")
+        datas = eval(data.decode())
+        print(datas["data"],"===============================")
 
 #多线程上传hdfs
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):
