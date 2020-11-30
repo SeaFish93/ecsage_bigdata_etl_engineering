@@ -45,7 +45,7 @@ def get_sync_pages_number():
       else:
           print("等待！！！")
     #page_numbers = AsyncResult(id=celery_task_id)
-    page_number = int(page_numbers.get())
+    page_number = int(page_numbers)
     print(page_number,"##############################")
     for page in range(page_number):
         pages = page + 1
