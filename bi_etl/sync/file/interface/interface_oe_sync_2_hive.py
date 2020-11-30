@@ -57,6 +57,7 @@ def get_sync_pages_number():
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(CeleryTaskId)
     status = set_task.status
+    print(status, "##############################")
     if status == "SUCCESS":
        return True
     else:
