@@ -83,7 +83,8 @@ def get_sync_pages_number():
       param_json["page"] = pages
       param_json["advertiser_id"] = dt[0]
       param_json["service_code"] = dt[2]
-      celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
+      param_json = str(param_json)
+      celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=param_json, UrlPath=UrlPath)
       os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status1.log"))
   # 获取状态
   celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status1.log")
