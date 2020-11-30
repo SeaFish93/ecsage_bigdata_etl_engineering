@@ -31,6 +31,14 @@ def get_sync_pages_number():
   celery_task_status_file = """/home/ecsage_data/oceanengine/async/2/sync_status.log"""
   page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
   async_account_file = "/home/ecsage_data/oceanengine/async/2"
+  ParamJson = {"end_date": "2020-11-29", "page_size": "200", "start_date": "2020-11-29",
+               "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
+               "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+               "page": 1,
+               "service_code": "data[2]"
+               }
+  ParamJson = str(ParamJson)
+  UrlPath = "/open_api/2/report/creative/get/"
   ########## os.system("""rm -f %s"""%(celery_task_status_file))
   ########## os.system("""rm -f %s*""" % (page_task_file))
   ########## sql = """
@@ -73,6 +81,8 @@ def get_sync_pages_number():
       param_json = json.dumps(ParamJson)
       param_json = ast.literal_eval(json.loads(param_json))
       param_json["page"] = pages
+      param_json["advertiser_id"] = dt[0]
+      param_json["service_code"] = dt[2]
       celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=ParamJson, UrlPath=UrlPath)
       os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status1.log"))
   # 获取状态
