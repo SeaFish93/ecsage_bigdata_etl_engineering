@@ -58,3 +58,6 @@ def get_celery_job_status(CeleryTaskId=""):
        return True
     else:
        return False
+
+if __name__ == '__main__':
+    get_sync_pages_number()
