@@ -48,7 +48,6 @@ def get_sync_pages_number():
     print(page_number,"##############################")
     for page in range(page_number):
         pages = page + 1
-        print(pages)
         param_json = json.dumps(ParamJson)
         param_json = ast.literal_eval(json.loads(param_json))
         param_json["page"] = pages
