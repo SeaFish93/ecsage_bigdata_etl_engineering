@@ -11,6 +11,7 @@ import datetime
 import socket
 import time
 import json
+import ast
 from six import string_types
 from six.moves.urllib.parse import urlencode, urlunparse
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
@@ -57,6 +58,7 @@ def get_sync_data(ParamJson="",UrlPath=""):
      }
     """
     param_json = json.dumps(ParamJson)
+    param_json = ast.literal_eval(json.loads(param_json))
     service_code = param_json["service_code"]
     token = get_oe_account_token(ServiceCode=service_code)
     del param_json["service_code"]
