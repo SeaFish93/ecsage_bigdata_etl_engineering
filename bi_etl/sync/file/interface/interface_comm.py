@@ -10,11 +10,59 @@ import os
 import datetime
 import socket
 import time
+import json
+from six import string_types
+from six.moves.urllib.parse import urlencode, urlunparse
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 hostname = socket.gethostname()
+
+def build_url(path, query=""):
+    scheme, netloc = "https", "ad.oceanengine.com"
+    return urlunparse((scheme, netloc, path, "", query, ""))
+
+#头条同步API
+def set_sync_data(ParamJson="",UrlPath="",Token=""):
+    """
+    {"end_date": "",
+     "page_size": "",
+     "start_date": "",
+     "advertiser_id": "",
+     "group_by": "",
+     "time_granularity": "",
+     "page": ""
+     "service_code":""
+     }
+    """
+    query_string = urlencode({k: v if isinstance(v, string_types) else json.dumps(v) for k, v in ParamJson.items()})
+    url = build_url(UrlPath, query_string)
+    headers = {
+        "Access-Token": Token,
+    }
+    rsp = requests.get(url, headers=headers)
+    return rsp.iter_lines()
+
+def get_sync_data(ParamJson="",UrlPath=""):
+    """
+    {"end_date": "",
+     "page_size": "",
+     "start_date": "",
+     "advertiser_id": "",
+     "group_by": "",
+     "time_granularity": "",
+     "page": ""
+     "service_code":""
+     }
+    """
+    param_json = json.loads(ParamJson)
+    service_code = param_json["service_code"]
+    token = get_oe_account_token(ServiceCode=service_code)
+    del param_json["service_code"]
+    data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
+    for data in data_list:
+        print(data,"===============================")
 
 #多线程上传hdfs
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):
