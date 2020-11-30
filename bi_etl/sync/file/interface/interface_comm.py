@@ -56,7 +56,7 @@ def get_sync_data(ParamJson="",UrlPath=""):
      "service_code":""
      }
     """
-    param_json = json.loads(ParamJson)
+    param_json = json.dumps(ParamJson)
     service_code = param_json["service_code"]
     token = get_oe_account_token(ServiceCode=service_code)
     del param_json["service_code"]
