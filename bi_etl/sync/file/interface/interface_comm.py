@@ -63,14 +63,17 @@ def get_sync_data_return(ParamJson="",UrlPath=""):
     advertiser_id = param_json["advertiser_id"]
     token = get_oe_account_token(ServiceCode=service_code)
     page = 0
+    remark = ""
     page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
     del param_json["service_code"]
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
     if "page_info" in data_list["data"]:
        page = data_list["data"]["page_info"]["total_page"]
+       remark = "正常"
     else:
        print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list["data"]))
-    os.system("""echo "%s %s %s">>%s""" % (page,advertiser_id, service_code, page_task_file))
+       remark = "异常"
+    os.system("""echo "%s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark, page_task_file))
     return page
 
 def get_sync_data(ParamJson="",UrlPath=""):
