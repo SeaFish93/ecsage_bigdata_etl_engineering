@@ -36,6 +36,7 @@ def get_sync_pages_number():
     ParamJson = str(ParamJson)
     UrlPath = "/open_api/2/report/creative/get/"
     celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=ParamJson,UrlPath=UrlPath)
+    print(celery_task_id,"====================")
     set_run = True
     while set_run:
       celery_task_status = get_celery_job_status(CeleryTaskId=celery_task_id)
