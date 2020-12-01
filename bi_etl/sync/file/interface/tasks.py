@@ -197,7 +197,9 @@ def get_oe_sync_tasks_data_return(ParamJson="",UrlPath=""):
 
 @app.task(rate_limit='1000/m',worker_concurrency=200)
 def get_oe_sync_tasks_data(ParamJson="",UrlPath=""):
+   data = "####"
    try:
-     get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
+     data = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
    except Exception as e:
      print("异常！！！！！！")
+   return data

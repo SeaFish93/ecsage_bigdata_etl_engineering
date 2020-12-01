@@ -95,11 +95,7 @@ def get_sync_data(ParamJson="",UrlPath=""):
     token = get_oe_account_token(ServiceCode=service_code)
     del param_json["service_code"]
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
-    shell_cmd = """
-cat >> %s << endwritefilewwwww
-%s
-endwritefilewwwww""" % ("/home/ecsage_data/oceanengine/async/2/testtest.log" + ".%s" % (hostname),data_list)
-    os.system(shell_cmd)
+    return data_list
 
 #多线程上传hdfs
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):
