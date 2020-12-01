@@ -28,7 +28,8 @@ etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
 def get_sync_pages_number():
   print("begin %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
-  celery_task_status_file = """/home/ecsage_data/oceanengine/async/2/sync_status.log"""
+  celery_sync_task_status = """/home/ecsage_data/oceanengine/async/2/celery_sync_task_status.log"""
+  celery_sync_task_data_status = "/home/ecsage_data/oceanengine/async/2/celery_sync_task_data_status.log"
   page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
   async_account_file = "/home/ecsage_data/oceanengine/async/2"
   param_json = {"end_date": "2020-11-29", "page_size": "200", "start_date": "2020-11-29",
@@ -38,8 +39,9 @@ def get_sync_pages_number():
                "service_code": "data[2]"
                }
   url_path = "/open_api/2/report/creative/get/"
-  os.system("""rm -f %s"""%(celery_task_status_file))
+  os.system("""rm -f %s"""%(celery_sync_task_status))
   os.system("""rm -f %s*""" % (page_task_file))
+  os.system("""rm -f %s*""" % (celery_sync_task_data_status))
   sql = """
        select a.account_id, a.media_type, a.service_code
        from metadb.oe_account_interface a
@@ -50,37 +52,37 @@ def get_sync_pages_number():
       param_json["advertiser_id"] = data[0]
       param_json["service_code"] = data[2]
       celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json),UrlPath=url_path)
-      os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id,data[0],data[1],data[2], celery_task_status_file))
+      os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id,data[0],data[1],data[2], celery_sync_task_status))
   #获取状态
-  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_status)
   print("正在等待celery队列执行完成！！！")
   wait_for_celery_status(StatusList=celery_task_id)
   print("celery队列执行完成！！！")
   print("end %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
   # 保存MySQL
-  ########columns = """page_num,account_id,service_code,remark"""
-  ########etl_md.execute_sql("delete from metadb.oe_sync_page_interface  " )
-  ########load_data_mysql(AsyncAccountFile=async_account_file, DataFile=page_task_file,TableName="oe_sync_page_interface", Columns=columns)
-  ########sql = """
-  ########  select a.account_id, '' as media_type, a.service_code,a.page_num
-  ########  from metadb.oe_sync_page_interface a where page_num > 0
-  ########"""
-  ########ok,datas = etl_md.get_all_rows(sql)
-  ########for dt in datas:
-  ########   page_number = int(dt[3])
-  ########   for page in range(page_number):
-  ########    pages = page + 1
-  ########    param_json["page"] = pages
-  ########    param_json["advertiser_id"] = dt[0]
-  ########    param_json["service_code"] = dt[2]
-  ########    param_json = str(param_json)
-  ########    celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath)
-  ########    os.system("""echo "%s">>%s""" % (celery_task_id, "/home/ecsage_data/oceanengine/async/2/sync_status1.log"))
-  ######### 获取状态
-  ########celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile="/home/ecsage_data/oceanengine/async/2/sync_status1.log")
-  ########print("正在等待celery队列执行完成！！！")
-  ########wait_for_celery_status(StatusList=celery_task_id)
-  ########print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  columns = """page_num,account_id,service_code,remark"""
+  etl_md.execute_sql("delete from metadb.oe_sync_page_interface  " )
+  load_data_mysql(AsyncAccountFile=async_account_file, DataFile=page_task_file,TableName="oe_sync_page_interface", Columns=columns)
+  sql = """
+    select a.account_id, '' as media_type, a.service_code,a.page_num
+    from metadb.oe_sync_page_interface a where page_num > 0
+  """
+  ok,datas = etl_md.get_all_rows(sql)
+  for dt in datas:
+     page_number = int(dt[3])
+     for page in range(page_number):
+      pages = page + 1
+      param_json["page"] = pages
+      param_json["advertiser_id"] = dt[0]
+      param_json["service_code"] = dt[2]
+      param_json = str(param_json)
+      celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path)
+      os.system("""echo "%s">>%s""" % (celery_task_id, celery_sync_task_data_status))
+  # 获取状态
+  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
+  print("正在等待celery队列执行完成！！！")
+  wait_for_celery_status(StatusList=celery_task_id)
+  print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
 def load_data_mysql(AsyncAccountFile="",DataFile="",TableName="",Columns=""):
     target_file = os.listdir(AsyncAccountFile)
