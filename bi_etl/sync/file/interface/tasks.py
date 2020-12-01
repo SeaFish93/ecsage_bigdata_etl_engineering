@@ -172,6 +172,9 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
 def get_oe_sync_tasks_data_return(ParamJson="",UrlPath=""):
     return get_sync_data_return(ParamJson=ParamJson,UrlPath=UrlPath)
 
-@app.task(rate_limit='10/s')
+@app.task(rate_limit='20/s',worker_concurrency=200)
 def get_oe_sync_tasks_data(ParamJson="",UrlPath=""):
-    get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
+   try:
+     get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
+   except Exception as e:
+     pass
