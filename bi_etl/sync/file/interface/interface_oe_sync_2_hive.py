@@ -68,6 +68,8 @@ def get_sync_pages_number():
     from metadb.oe_sync_page_interface a where page_num > 0
   """
   ok,datas = etl_md.get_all_rows(sql)
+  print(type(param_json),"====================================")
+  exit(0)
   for dt in datas:
      page_number = int(dt[3])
      for page in range(page_number):
