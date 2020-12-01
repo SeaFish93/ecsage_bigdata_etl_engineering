@@ -235,8 +235,9 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
            else:
              time.sleep(2)
        else:
-           os.system("""echo '%s %s'>>%s""" % (account_id,code, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s_%s" % (AirflowInstance,hostname)))
+           os.system("""echo '%s %s %s'>>%s""" % (account_id,code,len(resp_datas), "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s_%s" % (AirflowInstance,hostname)))
            if int(code) == 0:
+             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_if_%s_%s" % (AirflowInstance, hostname)))
              for data in resp_datas:
                  try:
                    os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
