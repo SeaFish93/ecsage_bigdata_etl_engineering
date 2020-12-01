@@ -68,7 +68,6 @@ def get_sync_pages_number():
     from metadb.oe_sync_page_interface a where page_num > 0
   """
   ok,datas = etl_md.get_all_rows(sql)
-  print(type(param_json),"====================================")
   exit(0)
   for dt in datas:
      page_number = int(dt[3])
@@ -77,7 +76,6 @@ def get_sync_pages_number():
       param_json["page"] = pages
       param_json["advertiser_id"] = dt[0]
       param_json["service_code"] = dt[2]
-      param_json = str(param_json)
       celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path)
       os.system("""echo "%s">>%s""" % (celery_task_id, celery_sync_task_data_status))
   # 获取状态
