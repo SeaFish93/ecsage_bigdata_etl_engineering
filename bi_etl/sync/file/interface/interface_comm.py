@@ -371,6 +371,10 @@ def set_oe_async_tasks_data_return(DataFile="",ExecData="",AirflowInstance=""):
              os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s_%s" % (AirflowInstance,hostname)))
            else:
              time.sleep(2)
+       elif int(code) == 40002:
+           os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "permission_exception_%s_%s" % (AirflowInstance, hostname)))
+           code = 0
+           resp_datas = "No permission to operate advertiser %s"%(account_id)
        else:
            set_run = False
        n = n + 1
