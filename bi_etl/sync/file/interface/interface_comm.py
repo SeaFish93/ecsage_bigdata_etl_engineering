@@ -95,7 +95,6 @@ def get_sync_data(ParamJson="",UrlPath=""):
     token = get_oe_account_token(ServiceCode=service_code)
     del param_json["service_code"]
     data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
-    print(data_list)
     shell_cmd = """
 cat >> %s << endwritefilewwwww
 %s
