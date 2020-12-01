@@ -605,7 +605,11 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
 def get_celery_job_data(CeleryTaskId="",OpenFileSession=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
     value = set_task.get()
-    OpenFileSession.write(value.decode())
+    print(type(value),"##################################################")
+    if 'str' in str(type(value)):
+      OpenFileSession.write(value)
+    else:
+      OpenFileSession.write(value.decode())
     OpenFileSession.flush()
 
 #本地数据落地至hive
