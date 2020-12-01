@@ -169,7 +169,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
        n = n + 1
 
 #定义oe任务数据
-@app.task(time_limit=600)
+@app.task(rate_limit='1000/m',time_limit=600)
 def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",ExecDate="",AirflowInstance=""):
     account_id = ExecData[0]
     set_true = True
@@ -178,7 +178,7 @@ def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",Exec
     print("执行数据子账户：%s"%(account_id))
     while set_true:
        code,data = set_oe_async_tasks_data_return(DataFile=DataFile,ExecData=ExecData,AirflowInstance=AirflowInstance)
-       if code != 0:
+       if code != 0 or str(data) == "" or str(data) == "####":
          if n > 3:
             print("异常数据子账户：%s" % (account_id))
             get_oe_save_exception_file(ExceptionType="data",ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile,ExecDate=ExecDate,AirflowInstance=AirflowInstance)
