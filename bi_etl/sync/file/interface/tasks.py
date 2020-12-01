@@ -12,6 +12,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_set_oe_async_tasks_create
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data_return
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data_return
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 
 import time
@@ -166,6 +167,28 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
        else:
          set_true = False
        n = n + 1
+
+#定义oe任务数据
+@app.task(time_limit=600)
+def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",ExecDate="",AirflowInstance=""):
+    account_id = ExecData[0]
+    set_true = True
+    n = 1
+    data = "####"
+    print("执行数据子账户：%s"%(account_id))
+    while set_true:
+       code,data = set_oe_async_tasks_data_return(DataFile=DataFile,ExecData=ExecData,AirflowInstance=AirflowInstance)
+       if code != 0:
+         if n > 3:
+            print("异常数据子账户：%s" % (account_id))
+            get_oe_save_exception_file(ExceptionType="data",ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile,ExecDate=ExecDate,AirflowInstance=AirflowInstance)
+            set_true = False
+         else:
+            time.sleep(2)
+       else:
+         set_true = False
+       n = n + 1
+    return data
 
 #定义oe同步数据
 @app.task(rate_limit='20/s')

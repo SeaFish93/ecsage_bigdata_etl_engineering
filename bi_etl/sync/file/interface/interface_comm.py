@@ -347,3 +347,55 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
     """
     os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (AccountId,InterfaceFlag,MediaType,ServiceCode, "##","##",token, task_id, task_name, async_task_file))
     #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, "/home/ecsage_data/oceanengine/async/ttttttt.%s"%(hostname)))
+
+
+def set_oe_async_tasks_data_return(DataFile="",ExecData="",AirflowInstance=""):
+    get_data = ExecData
+    media_type = get_data[1]
+    service_code = get_data[2]
+    account_id = get_data[0]
+    task_id = get_data[4]
+    token = get_data[3]
+    task_name = get_data[5]
+    resp_datas = ""
+    n = 1
+    set_run = True
+    code = 0
+    resp_datas = "####"
+    while set_run:
+       code,resp_datas = get_oe_async_tasks_data_return(Token=token, AccountId=account_id, TaskId=task_id)
+       if int(code) == 40105:
+           token = get_oe_account_token(ServiceCode=service_code)
+           if n >2:
+             set_run = False
+             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s_%s" % (AirflowInstance,hostname)))
+           else:
+             time.sleep(2)
+       else:
+           set_run = False
+       n = n + 1
+    return code,resp_datas
+
+def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
+    resp_datas = ""
+    open_api_domain = "https://ad.toutiao.com"
+    path = "/open_api/2/async_task/download/"
+    url = open_api_domain + path
+    params = {
+        "advertiser_id": AccountId,
+        "task_id": TaskId
+    }
+    headers = {
+        'Content-Type': "application/json",
+        'Access-Token': Token,
+        'Connection': "close"
+    }
+    return_resp_data = ""
+    try:
+      resp = requests.get(url, json=params, headers=headers)
+      resp_data = resp.content
+      return_resp_data = resp.iter_lines()
+      code = eval(resp_data.decode())["code"]
+    except Exception as e:
+      code = 0
+    return code,resp_data
