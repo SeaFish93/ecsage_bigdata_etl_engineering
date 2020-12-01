@@ -391,6 +391,7 @@ def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
         'Connection': "close"
     }
     return_resp_data = ""
+    resp_data = ""
     try:
       resp = requests.get(url, json=params, headers=headers)
       resp_data = resp.content
