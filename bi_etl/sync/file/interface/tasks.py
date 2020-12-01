@@ -168,7 +168,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
        n = n + 1
 
 #定义oe同步数据
-@app.task(rate_limit='10/s')
+@app.task(rate_limit='20/s')
 def get_oe_sync_tasks_data_return(ParamJson="",UrlPath=""):
     return get_sync_data_return(ParamJson=ParamJson,UrlPath=UrlPath)
 
