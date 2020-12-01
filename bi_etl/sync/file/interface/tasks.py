@@ -11,6 +11,8 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_set_oe_async_tasks_create
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data_return
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 
 import time
 import socket
@@ -164,3 +166,15 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
        else:
          set_true = False
        n = n + 1
+
+#定义oe同步数据
+@app.task(rate_limit='20/s')
+def get_oe_sync_tasks_data_return(ParamJson="",UrlPath=""):
+    return get_sync_data_return(ParamJson=ParamJson,UrlPath=UrlPath)
+
+@app.task(rate_limit='1000/m',worker_concurrency=200)
+def get_oe_sync_tasks_data(ParamJson="",UrlPath=""):
+   try:
+     get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
+   except Exception as e:
+     print("异常！！！！！！")
