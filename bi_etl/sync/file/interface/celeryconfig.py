@@ -7,7 +7,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
 CELERY_TASK_RESULT_EXPIRES = 60*60*24
 #task child killed after 40 times processing
-CELERYD_MAX_TASKS_PER_CHILD = 600
+CELERYD_MAX_TASKS_PER_CHILD = 100
 #celery worker amount
 #CELERY_CONCURRENCY = 20
 CELERYD_CONCURRENCY = 300
