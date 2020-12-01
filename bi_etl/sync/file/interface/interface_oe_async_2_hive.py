@@ -599,6 +599,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
                 for data in array:
                     get_data1 = data.strip('\n').split(" ")
                     get_celery_job_data(CeleryTaskId=get_data1[0],OpenFileSession=open_file_session)
+    open_file_session.close()
     #上传至hdfs
     get_local_file_2_hive(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
 
