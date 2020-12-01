@@ -195,7 +195,7 @@ def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",Exec
 def get_oe_sync_tasks_data_return(ParamJson="",UrlPath=""):
     return get_sync_data_return(ParamJson=ParamJson,UrlPath=UrlPath)
 
-@app.task(rate_limit='1000/m',worker_concurrency=200)
+@app.task(rate_limit='2000/m',worker_concurrency=200)
 def get_oe_sync_tasks_data(ParamJson="",UrlPath=""):
    data = "####"
    try:
