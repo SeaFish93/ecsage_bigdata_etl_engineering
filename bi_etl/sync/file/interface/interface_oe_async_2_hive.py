@@ -605,7 +605,7 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
 def get_celery_job_data(CeleryTaskId="",OpenFileSession=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
     value = set_task.get()
-    print(type(value),"##################################################")
+    print(CeleryTaskId,type(value),"##################################################")
     if 'str' in str(type(value)):
       OpenFileSession.write(value)
     else:
