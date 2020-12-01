@@ -31,6 +31,7 @@ def get_sync_pages_number():
   celery_sync_task_status = """/home/ecsage_data/oceanengine/async/2/celery_sync_task_status.log"""
   celery_sync_task_data_status = "/home/ecsage_data/oceanengine/async/2/celery_sync_task_data_status.log"
   page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
+  data_task_file = """/home/ecsage_data/oceanengine/async/2/testtest.log"""
   async_account_file = "/home/ecsage_data/oceanengine/async/2"
   param_json = {"end_date": "2020-11-29", "page_size": "200", "start_date": "2020-11-29",
                "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
@@ -42,6 +43,7 @@ def get_sync_pages_number():
   os.system("""rm -f %s"""%(celery_sync_task_status))
   os.system("""rm -f %s*""" % (page_task_file))
   os.system("""rm -f %s*""" % (celery_sync_task_data_status))
+  os.system("""rm -f %s*""" % (data_task_file))
   sql = """
        select a.account_id, a.media_type, a.service_code
        from metadb.oe_account_interface a
