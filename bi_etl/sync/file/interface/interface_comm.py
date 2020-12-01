@@ -41,6 +41,7 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     url = build_url(UrlPath, query_string)
     headers = {
         "Access-Token": Token,
+        'Connection': "close"
     }
     rsp = requests.get(url, headers=headers,timeout=120)
     return rsp.json()
