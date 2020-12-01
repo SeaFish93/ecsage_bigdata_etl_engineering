@@ -593,7 +593,6 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     for files in target_file:
         if status_data_file in files:
             get_file = "%s/%s"%(async_account_file,files)
-            print(get_file,"================================")
             with open(get_file) as lines:
                 array = lines.readlines()
                 for data in array:
