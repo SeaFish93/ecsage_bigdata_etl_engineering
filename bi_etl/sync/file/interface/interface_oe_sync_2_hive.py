@@ -62,7 +62,7 @@ def get_sync_pages_number():
   print("celery队列执行完成！！！")
   print("end %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
   # 保存MySQL
-  columns = """page_num,account_id,service_code,remark"""
+  columns = """page_num,account_id,service_code,remark,data"""
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface  " )
   load_data_mysql(AsyncAccountFile=async_account_file, DataFile=page_task_file,TableName="oe_sync_page_interface", Columns=columns)
   ####################sql = """
