@@ -152,7 +152,7 @@ def get_celery_job_data(CeleryTaskId="",OpenFileSession=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
     value = set_task.get()
     print(CeleryTaskId,type(value),"##################################################")
-    OpenFileSession.write(value)
+    OpenFileSession.write(str(value))
     OpenFileSession.flush()
 
 def rerun_data():
