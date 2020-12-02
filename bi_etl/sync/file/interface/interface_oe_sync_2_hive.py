@@ -101,6 +101,8 @@ def get_sync_pages_number():
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
         time.sleep(60)
+    else:
+        break
 
   ####################sql = """
   ####################  select a.account_id, '' as media_type, a.service_code,a.page_num
