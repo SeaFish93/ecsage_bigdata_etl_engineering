@@ -32,6 +32,8 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
     for data in db_data:
         param_json["advertiser_id"] = data[0]
         param_json["service_code"] = data[2]
+        #"filtering": {"ad_ids": ""}
+        param_json["filtering"]["campaign_ids"] = [data[3]]
         celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
                                                                     PageTaskFile=PageTaskFile)
         os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id, data[0], data[1], data[2], CelerySyncTaskFile))
@@ -56,6 +58,7 @@ def get_sync_pages_number():
                "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_PROVINCE_NAME'],
                "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                "page": 1,
+               "filtering": {"campaign_ids": ""},
                "service_code": "data[2]"
                }
   url_path = "/open_api/2/report/creative/get/"
@@ -64,45 +67,47 @@ def get_sync_pages_number():
   os.system("""rm -f %s*""" % (celery_sync_task_data_status))
   os.system("""rm -f %s*""" % (data_task_file))
   sql = """
-       select a.account_id, a.media_type, a.service_code
+       select a.account_id, a.media_type, a.service_code,b.campaign_id
        from metadb.oe_account_interface a
+       inner join metadb.campaign_test b
+       on a.account_id = b.advertiser_id
        where a.exec_date = '2020-12-01'
-       group by a.account_id, a.media_type, a.service_code
+       group by a.account_id, a.media_type, a.service_code,b.campaign_id
     """
   ok,db_data = etl_md.get_all_rows(sql)
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
   set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
   #重试异常
-  n = 3
-  for i in range(n):
-    os.system("""rm -f %s""" % (celery_sync_task_status))
-    os.system("""rm -f %s*""" % (page_task_file))
-    os.system("""rm -f %s*""" % (celery_sync_task_data_status))
-    os.system("""rm -f %s*""" % (data_task_file))
-    sql = """
-       select tmp1.account_id, '222' media_type, tmp1.service_code
-       from(select account_id,service_code,count(distinct remark) as rn
-            from metadb.oe_sync_page_interface
-            group by account_id,service_code
-            having count(distinct remark) = 1
-           ) tmp
-       inner join metadb.oe_sync_page_interface tmp1
-       on tmp.account_id = tmp1.account_id
-       and tmp.service_code = tmp1.service_code
-       where tmp1.remark = '异常'
-       group by tmp1.account_id, tmp1.service_code
-    """
-    ok, db_data = etl_md.get_all_rows(sql)
-    print(db_data,"#################################################")
-    if db_data is not None and len(db_data) > 0:
-       set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
-                             PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
-    ok, db_data = etl_md.get_all_rows(sql)
-    if db_data is not None and len(db_data) > 0:
-        time.sleep(60)
-    else:
-        break
+  #n = 3
+  #for i in range(n):
+  #  os.system("""rm -f %s""" % (celery_sync_task_status))
+  #  os.system("""rm -f %s*""" % (page_task_file))
+  #  os.system("""rm -f %s*""" % (celery_sync_task_data_status))
+  #  os.system("""rm -f %s*""" % (data_task_file))
+  #  sql = """
+  #     select tmp1.account_id, '222' media_type, tmp1.service_code
+  #     from(select account_id,service_code,count(distinct remark) as rn
+  #          from metadb.oe_sync_page_interface
+  #          group by account_id,service_code
+  #          having count(distinct remark) = 1
+  #         ) tmp
+  #     inner join metadb.oe_sync_page_interface tmp1
+  #     on tmp.account_id = tmp1.account_id
+  #     and tmp.service_code = tmp1.service_code
+  #     where tmp1.remark = '异常'
+  #     group by tmp1.account_id, tmp1.service_code
+  #  """
+  #  ok, db_data = etl_md.get_all_rows(sql)
+  #  print(db_data,"#################################################")
+  #  if db_data is not None and len(db_data) > 0:
+  #     set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
+  #                           PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
+  #  ok, db_data = etl_md.get_all_rows(sql)
+  #  if db_data is not None and len(db_data) > 0:
+  #      time.sleep(60)
+  #  else:
+  #      break
 
   ####################sql = """
   ####################  select a.account_id, '' as media_type, a.service_code,a.page_num
