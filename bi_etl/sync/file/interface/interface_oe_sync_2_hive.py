@@ -53,7 +53,7 @@ def get_sync_pages_number():
   data_task_file = """/home/ecsage_data/oceanengine/async/2/testtest.log"""
   async_account_file = "/home/ecsage_data/oceanengine/async/2"
   param_json = {"end_date": "2020-12-01", "page_size": "1000", "start_date": "2020-12-01",
-               "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID','STAT_GROUP_BY_CITY_NAME'],
+               "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_PROVINCE_NAME'],
                "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                "page": 1,
                "service_code": "data[2]"
