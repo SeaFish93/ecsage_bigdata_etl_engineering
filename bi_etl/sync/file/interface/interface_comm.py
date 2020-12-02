@@ -72,11 +72,15 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
       if "page_info" in data_list["data"]:
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
-         data = str(data_list["data"]).replace(" ","")
+         data = str(data_list).replace(" ","")
       else:
-         print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list["data"]))
-         remark = "异常"
-         data = str(data_list["data"]).replace(" ","")
+         if data_list["code"] == "40002":
+             remark = "正常"
+             data = str(data_list).replace(" ","")
+         else:
+             print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list))
+             remark = "异常"
+             data = str(data_list).replace(" ","")
     except:
       print("请求失败：%s,%s,%s" % (service_code, advertiser_id, ""))
       remark = "失败"
