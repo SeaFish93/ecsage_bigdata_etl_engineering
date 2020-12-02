@@ -55,7 +55,7 @@ def get_sync_pages_number():
   data_task_file = """/home/ecsage_data/oceanengine/async/2/testtest.log"""
   async_account_file = "/home/ecsage_data/oceanengine/async/2"
   param_json = {"end_date": "2020-12-01", "page_size": "1000", "start_date": "2020-12-01",
-               "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_PROVINCE_NAME'],
+               "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_CITY_NAME'],
                "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                "page": 1,
                "filtering": {"campaign_ids": ""},
@@ -110,7 +110,7 @@ def get_sync_pages_number():
   #      break
 
   sql = """
-    select a.account_id, '' as media_type, a.service_code,a.page_num
+    select a.account_id, '' as media_type, a.service_code,a.page_num,a.equest_filter
     from metadb.oe_sync_page_interface a where page_num > 0
   """
   ok,datas = etl_md.get_all_rows(sql)
@@ -121,6 +121,7 @@ def get_sync_pages_number():
       param_json["page"] = pages
       param_json["advertiser_id"] = dt[0]
       param_json["service_code"] = dt[2]
+      param_json["filtering"]["campaign_ids"] = eval(dt[2])
       celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path)
       os.system("""echo "%s">>%s""" % (celery_task_id, celery_sync_task_data_status))
   # 获取状态
