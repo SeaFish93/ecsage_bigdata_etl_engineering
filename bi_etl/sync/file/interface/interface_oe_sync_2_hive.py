@@ -75,9 +75,9 @@ def get_sync_pages_number():
        group by a.account_id, a.media_type, a.service_code,b.campaign_id
     """
   ok,db_data = etl_md.get_all_rows(sql)
-  etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
-  set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
-                        PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
+  #etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
+  #set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
+  #                      PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
   #重试异常
   #n = 3
   #for i in range(n):
@@ -122,7 +122,7 @@ def get_sync_pages_number():
       param_json["page"] = pages
       param_json["advertiser_id"] = dt[0]
       param_json["service_code"] = dt[2]
-      param_json["filtering"]["campaign_ids"] = eval(dt[2])
+      param_json["filtering"]["campaign_ids"] = eval(dt[4])
       celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path)
       os.system("""echo "%s">>%s""" % (celery_task_id, celery_sync_task_data_status))
   # 获取状态
