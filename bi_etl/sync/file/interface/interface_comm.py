@@ -90,7 +90,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     os.system("""echo "%s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"], page_task_file))
     return page,remark
 
-def get_sync_data(ParamJson="",UrlPath=""):
+def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
     """
     {"end_date": "",
      "page_size": "",
@@ -104,11 +104,32 @@ def get_sync_data(ParamJson="",UrlPath=""):
     """
     param_json = json.dumps(ParamJson)
     param_json = ast.literal_eval(json.loads(param_json))
+    advertiser_id = param_json["advertiser_id"]
     service_code = param_json["service_code"]
     token = get_oe_account_token(ServiceCode=service_code)
+    page = 0
     del param_json["service_code"]
-    data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
-    return data_list
+    try:
+      data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
+      if "page_info" in data_list["data"]:
+         page = data_list["data"]["page_info"]["total_page"]
+         remark = "正常"
+         data = data_list
+      else:
+         #没权限及token失败
+         if int(data_list["code"])in [40002,40105,40104]:
+             remark = "正常"
+             data = data_list
+         else:
+             print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list))
+             remark = "异常"
+             data = data_list
+    except:
+      print("请求失败：%s,%s,%s" % (service_code, advertiser_id, ""))
+      remark = "失败"
+      data = ""
+    os.system("""echo "%s %s %s %s %s">>%s""" % (page, advertiser_id, service_code, remark, param_json["filtering"]["campaign_ids"], TaskExceptionFile))
+    return data,remark
 
 #多线程上传hdfs
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):

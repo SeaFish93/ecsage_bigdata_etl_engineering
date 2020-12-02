@@ -209,10 +209,19 @@ def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     return page
 
 @app.task(rate_limit='2000/m',worker_concurrency=200)
-def get_oe_sync_tasks_data(ParamJson="",UrlPath=""):
-   data = "####"
-   try:
-     data = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
-   except Exception as e:
-     print("异常！！！！！！")
+def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
+   set_true = True
+   n = 0
+   page = 0
+   data = ""
+   while set_true:
+       data,remark = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
+       if remark == "正常":
+           set_true = False
+       else:
+           if n > 2:
+               set_true = False
+           else:
+               time.sleep(2)
+       n = n + 1
    return data

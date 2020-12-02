@@ -54,6 +54,7 @@ def get_sync_pages_number():
   page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
   data_task_file = """/home/ecsage_data/oceanengine/async/2/testtest.log"""
   async_account_file = "/home/ecsage_data/oceanengine/async/2"
+  task_exception_file = "/home/ecsage_data/oceanengine/async/2/task_exception_file.log"
   param_json = {"end_date": "2020-12-01", "page_size": "1000", "start_date": "2020-12-01",
                "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_CITY_NAME'],
                "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
@@ -66,6 +67,7 @@ def get_sync_pages_number():
   os.system("""rm -f %s*""" % (page_task_file))
   os.system("""rm -f %s*""" % (celery_sync_task_data_status))
   os.system("""rm -f %s*""" % (data_task_file))
+  os.system("""rm -f %s*"""%(task_exception_file))
   sql = """
        select a.account_id, a.media_type, a.service_code,b.campaign_id
        from metadb.oe_account_interface a
@@ -123,13 +125,14 @@ def get_sync_pages_number():
       param_json["advertiser_id"] = dt[0]
       param_json["service_code"] = dt[2]
       param_json["filtering"]["campaign_ids"] = eval(dt[4])
-      celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path)
+      celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
       os.system("""echo "%s">>%s""" % (celery_task_id, celery_sync_task_data_status))
   # 获取状态
   celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
   print("正在等待celery队列执行完成！！！")
   wait_for_celery_status(StatusList=celery_task_id)
   print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+
 def rerun_data():
     sql = """
            select tmp1.account_id, '222' media_type, tmp1.service_code
