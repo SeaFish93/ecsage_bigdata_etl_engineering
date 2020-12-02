@@ -75,7 +75,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
          data = str(data_list).replace(" ","")
       else:
          #没权限及token失败
-         if int(data_list["code"]) == 40002 or int(data_list["code"]) == 40105:
+         if int(data_list["code"])in [40002,40105,40104]:
              remark = "正常"
              data = str(data_list).replace(" ","")
          else:
