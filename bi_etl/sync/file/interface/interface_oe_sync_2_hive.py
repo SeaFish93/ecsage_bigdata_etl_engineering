@@ -53,6 +53,7 @@ def get_sync_pages_number():
   celery_sync_task_data_status = "/home/ecsage_data/oceanengine/async/2/celery_sync_task_data_status.log"
   page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
   data_task_file = """/home/ecsage_data/oceanengine/async/2/testtest.log"""
+  sync_data_file = """/home/ecsage_data/oceanengine/async/2/sync_data_file.log"""
   async_account_file = "/home/ecsage_data/oceanengine/async/2"
   task_exception_file = "/home/ecsage_data/oceanengine/async/2/task_exception_file.log"
   param_json = {"end_date": "2020-12-01", "page_size": "1000", "start_date": "2020-12-01",
@@ -64,6 +65,7 @@ def get_sync_pages_number():
                }
   url_path = "/open_api/2/report/creative/get/"
   os.system("""rm -f %s"""%(celery_sync_task_status))
+  os.system("""rm -f %s""" % (sync_data_file))
   os.system("""rm -f %s*""" % (page_task_file))
   os.system("""rm -f %s*""" % (celery_sync_task_data_status))
   os.system("""rm -f %s*""" % (data_task_file))
@@ -132,6 +134,29 @@ def get_sync_pages_number():
   print("正在等待celery队列执行完成！！！")
   wait_for_celery_status(StatusList=celery_task_id)
   print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  time.sleep(30)
+  open_file_session = open(sync_data_file, mode="w")
+  target_file = os.listdir(async_account_file)
+  status_data_file = celery_sync_task_data_status.split("/")[-1]
+  for files in target_file:
+      if status_data_file in files:
+          get_file = "%s/%s" % (async_account_file, files)
+          with open(get_file) as lines:
+              array = lines.readlines()
+              for data in array:
+                  get_data1 = data.strip('\n').split(" ")
+                  get_celery_job_data(CeleryTaskId=get_data1[0], OpenFileSession=open_file_session)
+  open_file_session.close()
+
+def get_celery_job_data(CeleryTaskId="",OpenFileSession=""):
+    set_task = AsyncResult(id=str(CeleryTaskId))
+    value = set_task.get()
+    print(CeleryTaskId,type(value),"##################################################")
+    if 'str' in str(type(value)):
+      OpenFileSession.write(value)
+    else:
+      OpenFileSession.write(value.decode())
+    OpenFileSession.flush()
 
 def rerun_data():
     sql = """
