@@ -44,7 +44,7 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
     print("celery队列执行完成！！！")
     print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())), "===================")
     # 保存MySQL
-    columns = """page_num,account_id,service_code,remark,data"""
+    columns = """page_num,account_id,service_code,remark,data,request_filter"""
     load_data_mysql(AsyncAccountFile=SyncDir, DataFile=PageTaskFile, TableName="oe_sync_page_interface",Columns=columns)
 
 def get_sync_pages_number():
@@ -109,25 +109,25 @@ def get_sync_pages_number():
   #  else:
   #      break
 
-  ####################sql = """
-  ####################  select a.account_id, '' as media_type, a.service_code,a.page_num
-  ####################  from metadb.oe_sync_page_interface a where page_num > 0
-  ####################"""
-  ####################ok,datas = etl_md.get_all_rows(sql)
-  ####################for dt in datas:
-  ####################   page_number = int(dt[3])
-  ####################   for page in range(page_number):
-  ####################    pages = page + 1
-  ####################    param_json["page"] = pages
-  ####################    param_json["advertiser_id"] = dt[0]
-  ####################    param_json["service_code"] = dt[2]
-  ####################    celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path)
-  ####################    os.system("""echo "%s">>%s""" % (celery_task_id, celery_sync_task_data_status))
-  ##################### 获取状态
-  ####################celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
-  ####################print("正在等待celery队列执行完成！！！")
-  ####################wait_for_celery_status(StatusList=celery_task_id)
-  ####################print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  sql = """
+    select a.account_id, '' as media_type, a.service_code,a.page_num
+    from metadb.oe_sync_page_interface a where page_num > 0
+  """
+  ok,datas = etl_md.get_all_rows(sql)
+  for dt in datas:
+     page_number = int(dt[3])
+     for page in range(page_number):
+      pages = page + 1
+      param_json["page"] = pages
+      param_json["advertiser_id"] = dt[0]
+      param_json["service_code"] = dt[2]
+      celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path)
+      os.system("""echo "%s">>%s""" % (celery_task_id, celery_sync_task_data_status))
+  # 获取状态
+  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
+  print("正在等待celery队列执行完成！！！")
+  wait_for_celery_status(StatusList=celery_task_id)
+  print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 def rerun_data():
     sql = """
            select tmp1.account_id, '222' media_type, tmp1.service_code

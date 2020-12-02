@@ -63,6 +63,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     service_code = param_json["service_code"]
     advertiser_id = param_json["advertiser_id"]
     token = get_oe_account_token(ServiceCode=service_code)
+    #param_json["filtering"]["campaign_ids"] = [data[3]]
     page = 0
     remark = ""
     page_task_file = "%s.%s"%(PageTaskFile,hostname)
@@ -86,7 +87,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
       print("请求失败：%s,%s,%s" % (service_code, advertiser_id, ""))
       remark = "失败"
       data = ""
-    os.system("""echo "%s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data, page_task_file))
+    os.system("""echo "%s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"], page_task_file))
     return page,remark
 
 def get_sync_data(ParamJson="",UrlPath=""):
