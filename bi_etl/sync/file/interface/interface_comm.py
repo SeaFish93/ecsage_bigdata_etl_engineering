@@ -46,7 +46,7 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     rsp = requests.get(url, headers=headers,timeout=120)
     return rsp.json()
 
-def get_sync_data_return(ParamJson="",UrlPath=""):
+def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     """
     {"end_date": "",
      "page_size": "",
@@ -65,17 +65,24 @@ def get_sync_data_return(ParamJson="",UrlPath=""):
     token = get_oe_account_token(ServiceCode=service_code)
     page = 0
     remark = ""
-    page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log.%s"%(hostname)
+    page_task_file = "%s.%s"%(PageTaskFile,hostname)
     del param_json["service_code"]
-    data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
-    if "page_info" in data_list["data"]:
-       page = data_list["data"]["page_info"]["total_page"]
-       remark = "正常"
-    else:
-       print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list["data"]))
-       remark = "异常"
-    os.system("""echo "%s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark, page_task_file))
-    return page
+    try:
+      data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
+      if "page_info" in data_list["data"]:
+         page = data_list["data"]["page_info"]["total_page"]
+         remark = "正常"
+         data = str(data_list["data"]).replace(" ","")
+      else:
+         print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list["data"]))
+         remark = "异常"
+         data = str(data_list["data"]).replace(" ","")
+    except:
+      print("请求失败：%s,%s,%s" % (service_code, advertiser_id, ""))
+      remark = "失败"
+      data = ""
+    os.system("""echo "%s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data, page_task_file))
+    return page,remark
 
 def get_sync_data(ParamJson="",UrlPath=""):
     """

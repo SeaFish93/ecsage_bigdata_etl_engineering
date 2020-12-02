@@ -192,12 +192,20 @@ def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",Exec
 
 #定义oe同步数据
 @app.task(rate_limit='1000/m')
-def get_oe_sync_tasks_data_return(ParamJson="",UrlPath=""):
-    try:
-      return get_sync_data_return(ParamJson=ParamJson,UrlPath=UrlPath)
-    except Exception as e:
-        print("异常！！！！！！")
-        return 0
+def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
+    set_true = True
+    n = 0
+    page = 0
+    while set_true:
+      page,remark = get_sync_data_return(ParamJson=ParamJson, UrlPath=UrlPath,PageTaskFile=PageTaskFile)
+      if remark == "正常":
+          set_true = False
+      else:
+        if n > 2:
+          set_true = False
+        else:
+          time.sleep(10)
+    return page
 
 @app.task(rate_limit='2000/m',worker_concurrency=200)
 def get_oe_sync_tasks_data(ParamJson="",UrlPath=""):
