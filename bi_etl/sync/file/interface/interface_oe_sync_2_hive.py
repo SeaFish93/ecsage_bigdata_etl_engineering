@@ -47,7 +47,8 @@ def get_sync_pages_number():
   sql = """
        select a.account_id, a.media_type, a.service_code
        from metadb.oe_account_interface a
-       where a.exec_date = '2020-11-29'
+       where a.exec_date = '2020-12-01'
+       group by a.account_id, a.media_type, a.service_code
     """
   ok,db_data = etl_md.get_all_rows(sql)
   for data in db_data:
