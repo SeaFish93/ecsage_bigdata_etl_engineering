@@ -205,6 +205,7 @@ def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
           set_true = False
         else:
           time.sleep(2)
+      n = n + 1
     return page
 
 @app.task(rate_limit='2000/m',worker_concurrency=200)
