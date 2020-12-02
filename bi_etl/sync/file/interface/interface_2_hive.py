@@ -602,6 +602,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
               key_columns_join = "on a.`%s` = b.`%s`"%(key,key)
            else:
                key_columns_join = "and a.`%s` = b.`%s`" % (key, key)
+           num += 1
            key_columns_joins = key_columns_joins + " " + key_columns_join
        #获取ods表字段
        ok,ods_table_columns = HiveSession.get_column_info(SourceDB,SourceTable)
