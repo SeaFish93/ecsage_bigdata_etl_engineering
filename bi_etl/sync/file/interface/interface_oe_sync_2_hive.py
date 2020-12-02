@@ -26,6 +26,25 @@ import ast
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
+def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile=""):
+    param_json = ParamJson
+    db_data = DataList
+    for data in db_data:
+        param_json["advertiser_id"] = data[0]
+        param_json["service_code"] = data[2]
+        celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
+                                                                    PageTaskFile=PageTaskFile)
+        os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id, data[0], data[1], data[2], CelerySyncTaskFile))
+    # 获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CelerySyncTaskFile)
+    print("正在等待celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("celery队列执行完成！！！")
+    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())), "===================")
+    # 保存MySQL
+    columns = """page_num,account_id,service_code,remark,data"""
+    load_data_mysql(AsyncAccountFile=SyncDir, DataFile=PageTaskFile, TableName="oe_sync_page_interface",Columns=columns)
+
 def get_sync_pages_number():
   print("begin %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
   celery_sync_task_status = """/home/ecsage_data/oceanengine/async/2/celery_sync_task_status.log"""
@@ -51,21 +70,38 @@ def get_sync_pages_number():
        group by a.account_id, a.media_type, a.service_code
     """
   ok,db_data = etl_md.get_all_rows(sql)
-  for data in db_data:
-      param_json["advertiser_id"] = data[0]
-      param_json["service_code"] = data[2]
-      celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json),UrlPath=url_path,PageTaskFile=page_task_file)
-      os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id,data[0],data[1],data[2], celery_sync_task_status))
-  #获取状态
-  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_status)
-  print("正在等待celery队列执行完成！！！")
-  wait_for_celery_status(StatusList=celery_task_id)
-  print("celery队列执行完成！！！")
-  print("end %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
-  # 保存MySQL
-  columns = """page_num,account_id,service_code,remark,data"""
-  etl_md.execute_sql("delete from metadb.oe_sync_page_interface  " )
-  load_data_mysql(AsyncAccountFile=async_account_file, DataFile=page_task_file,TableName="oe_sync_page_interface", Columns=columns)
+  etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
+  set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
+                        PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
+  #重试异常
+  n = 3
+  for i in range(n):
+    os.system("""rm -f %s""" % (celery_sync_task_status))
+    os.system("""rm -f %s*""" % (page_task_file))
+    os.system("""rm -f %s*""" % (celery_sync_task_data_status))
+    os.system("""rm -f %s*""" % (data_task_file))
+    sql = """
+       select tmp1.account_id, '222' media_type, tmp1.service_code
+       from(select account_id,service_code,count(distinct remark) as rn
+            from metadb.oe_sync_page_interface
+            group by account_id,service_code
+            having count(distinct remark) = 1
+           ) tmp
+       inner join metadb.oe_sync_page_interface tmp1
+       on tmp.account_id = tmp1.account_id
+       and tmp.service_code = tmp1.service_code
+       where tmp1.remark = '异常'
+       group by tmp1.account_id, tmp1.service_code
+    """
+    ok, db_data = etl_md.get_all_rows(sql)
+    print(db_data,"#################################################")
+    if db_data is not None and len(db_data) > 0:
+       set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
+                             PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
+    ok, db_data = etl_md.get_all_rows(sql)
+    if db_data is not None and len(db_data) > 0:
+        time.sleep(60)
+
   ####################sql = """
   ####################  select a.account_id, '' as media_type, a.service_code,a.page_num
   ####################  from metadb.oe_sync_page_interface a where page_num > 0
@@ -85,6 +121,22 @@ def get_sync_pages_number():
   ####################print("正在等待celery队列执行完成！！！")
   ####################wait_for_celery_status(StatusList=celery_task_id)
   ####################print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+def rerun_data():
+    sql = """
+           select tmp1.account_id, '222' media_type, tmp1.service_code
+           from(select account_id,service_code,count(distinct remark) as rn
+                from metadb.oe_sync_page_interface
+                group by account_id,service_code
+                having count(distinct remark) = 1
+               ) tmp
+           inner join metadb.oe_sync_page_interface tmp1
+           on tmp.account_id = tmp1.account_id
+           and tmp.service_code = tmp1.service_code
+           where tmp1.remark = '异常'
+           group by tmp1.account_id, tmp1.service_code
+        """
+    ok, db_data = etl_md.get_all_rows(sql)
+    return db_data
 
 def load_data_mysql(AsyncAccountFile="",DataFile="",TableName="",Columns=""):
     target_file = os.listdir(AsyncAccountFile)
@@ -161,6 +213,74 @@ def wait_for_celery_status(StatusList=""):
           run_wait = False
       status_false.clear()
       sleep_num = sleep_num + 1
+
+def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",LogSession="",InterfaceFlag="",ExecDate=""):
+    async_data_file = """%s/%s"""%(AsyncAccountDir,DataFile.split("/")[-1])
+    celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
+    async_data_exception_file = """%s/%s""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
+    #先保留第一次
+    delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+    etl_md.execute_sql(delete_sql)
+    columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data"""
+    table_name = "oe_async_exception_create_tasks_interface"
+    save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
+    #
+    n = 3
+    for i in range(n):
+        sql = """
+          select distinct a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+          from metadb.oe_async_exception_create_tasks_interface a
+          where interface_flag = '%s'
+        """% (InterfaceFlag)
+        ok,datas = etl_md.get_all_rows(sql)
+        if datas is not None and len(datas) > 0:
+           print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           for data in datas:
+               ###status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i), AsyncTaskFile=async_data_file,
+               ###                                               AsyncTaskExceptionFile=async_data_exception_file,
+               ###                                               ExecData=data, ExecDate=ExecDate)
+               os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
+           celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
+           wait_for_celery_status(StatusList=celery_task_id)
+           delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+           etl_md.execute_sql(delete_sql)
+           save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
+           print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           #判断结果是否还有异常
+           ex_sql = """
+                     select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+                     from metadb.oe_async_exception_create_tasks_interface a
+                     where interface_flag = '%s'
+                     limit 1
+              """% (InterfaceFlag)
+           ok, ex_datas = etl_md.get_all_rows(ex_sql)
+           if ex_datas is not None and len(ex_datas) > 0:
+               print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+               if i == 0:
+                 time.sleep(360)
+               else:
+                 time.sleep(180)
+    ex_sql = """
+         select a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
+         from metadb.oe_async_exception_create_tasks_interface a
+         where interface_flag = '%s'
+    """% (InterfaceFlag)
+    ok, ex_datas = etl_md.get_all_rows(ex_sql)
+    if ex_datas is not None and len(ex_datas) > 0:
+        print("还有特别异常任务存在！！！")
+        print(ex_datas[0])
+
+def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",TableName="",Columns=""):
+    exception_file = ExceptionFile.split("/")[-1]
+    exception_file_list = []
+    target_file = os.listdir(AsyncAccountDir)
+    for files in target_file:
+      if exception_file in files:
+         exception_file_list.append((AsyncAccountDir, files))
+    if exception_file_list is not None and len(exception_file_list) > 0 :
+       for file in exception_file_list:
+           load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],TableName=TableName, Columns=Columns)
+           os.system("""rm -f %s/%s"""%(file[0],file[1]))
 
 if __name__ == '__main__':
     get_sync_pages_number()
