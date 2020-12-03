@@ -12,6 +12,7 @@ import socket
 import time
 import json
 import ast
+from celery.result import AsyncResult
 from six import string_types
 from six.moves.urllib.parse import urlencode, urlunparse
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
@@ -435,8 +436,10 @@ def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
       code = 0
     return code,resp_data
 
-def get_write_local_file(AccountId="",DataJson="",DataLocalFile=""):
-    datas = DataJson["data"]["list"]
+def get_write_local_file(CeleryTaskId="",AccountId="",DataLocalFile=""):
+    set_task = AsyncResult(id=str(CeleryTaskId))
+    value = set_task.get()
+    datas = value["data"]["list"]
     for data in datas:
        data["returns_account_id"]=AccountId
        shell_cmd = """

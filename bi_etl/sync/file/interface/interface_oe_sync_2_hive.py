@@ -185,9 +185,7 @@ def run_thread(StatusFile="",DataLocalFile="",AccountId="",WriteLocalFilesStauts
             get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=AccountId,DataLocalFile=DataLocalFile,WriteLocalFilesStauts=WriteLocalFilesStauts)
 
 def get_celery_job_data(CeleryTaskId="",AccountId="",DataLocalFile="",WriteLocalFilesStauts=""):
-    set_task = AsyncResult(id=str(CeleryTaskId))
-    value = set_task.get()
-    task_write_id = get_write_local_files_celery.delay(AccountId=AccountId,DataJson=value,DataLocalFile=DataLocalFile)
+    task_write_id = get_write_local_files_celery.delay(CeleryTaskId=CeleryTaskId,AccountId=AccountId,DataLocalFile=DataLocalFile)
     os.system("""echo '%s'>>%s """%(task_write_id,WriteLocalFilesStauts))
 
 def rerun_data():

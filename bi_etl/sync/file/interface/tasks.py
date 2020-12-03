@@ -236,5 +236,5 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
    return data
 
 @app.task()
-def get_write_local_files(AccountId="",DataJson="",DataLocalFile=""):
-    get_write_local_file(AccountId=AccountId,DataJson=DataJson, DataLocalFile=DataLocalFile)
+def get_write_local_files(CeleryTaskId="",AccountId="",DataLocalFile=""):
+    get_write_local_file(CeleryTaskId=CeleryTaskId,AccountId=AccountId,DataLocalFile=DataLocalFile)
