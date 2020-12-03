@@ -437,5 +437,9 @@ def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
       code = 0
     return code,resp_data
 
-def get_write_local_file(DataJson="",DataLocalFile=""):
-    print(DataJson,"==================================")
+def get_write_local_file(AccountId="",DataJson="",DataLocalFile=""):
+    #print(DataJson,"==================================")
+    datas = DataJson["data"]["list"]
+    for data in datas:
+       data["returns_account_id"]=AccountId
+       print(data,"######################################")
