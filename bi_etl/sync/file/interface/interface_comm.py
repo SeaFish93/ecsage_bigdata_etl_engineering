@@ -85,8 +85,8 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
              data = str(data_list).replace(" ","")
     except:
       print("请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
-      remark = "失败"
-      data = ""
+      remark = "异常"
+      data = "请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"])
     os.system("""echo "%s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"], page_task_file))
     return page,remark,data_list
 
@@ -127,9 +127,7 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
     except:
       print("请求数据失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
       remark = "数据失败"
-      data = ""
-    if remark in ["数据失败","数据异常"]:
-        os.system("""echo "%s %s %s %s %s">>%s""" % (page, advertiser_id, service_code, remark, param_json["filtering"]["campaign_ids"], TaskExceptionFile))
+      data = "数据失败"
     return data,remark
 
 #多线程上传hdfs
