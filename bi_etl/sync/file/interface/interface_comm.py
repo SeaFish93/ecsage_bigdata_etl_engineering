@@ -72,6 +72,9 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     data_list = ""
     try:
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
+      log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.1.%s" % (hostname))
+      log.logger.info(data_list)
+      log.rotateHandler.close()
       if "page_info" in data_list["data"]:
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
