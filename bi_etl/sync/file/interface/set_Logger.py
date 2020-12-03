@@ -46,8 +46,8 @@ class Logger(object):
     # Use an absolute path to prevent file rotation trouble.
     logfile = os.path.abspath(filename)
     # Rotate log after reaching 512K, keep 5 old copies.
-    rotateHandler = ConcurrentRotatingFileHandler(logfile, "a", 800*1024*1024)
-    self.logger.addHandler(rotateHandler)
+    self.rotateHandler = ConcurrentRotatingFileHandler(logfile, "a", 800*1024*1024)
+    self.logger.addHandler(self.rotateHandler)
     self.logger.setLevel(INFO)
 #if __name__ == '__main__':
 #  log = Logger('all.log')

@@ -19,6 +19,7 @@ from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_inf
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
 hostname = socket.gethostname()
 
 def build_url(path, query=""):
@@ -129,6 +130,8 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
       print("请求数据失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
       remark = "数据失败"
       data = "数据失败"
+    log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s"%(hostname))
+    log.logger.info(data)
     return data,remark
 
 #多线程上传hdfs
@@ -437,13 +440,14 @@ def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
     return code,resp_data
 
 def get_write_local_file(CeleryTaskId="",AccountId="",DataLocalFile=""):
-    set_task = AsyncResult(id=str(CeleryTaskId))
-    value = set_task.get()
-    datas = value["data"]["list"]
-    for data in datas:
-       data["returns_account_id"]=AccountId
-       shell_cmd = """
-       cat >> %s << endwritefilewwwww
-%s
-endwritefilewwwww""" % (DataLocalFile + ".%s" % (hostname), str(data).replace("""`""","%%@@%%"))
-       os.system(shell_cmd)
+    pass
+    #set_task = AsyncResult(id=str(CeleryTaskId))
+    #value = set_task.get()
+    #datas = value["data"]["list"]
+    #for data in datas:
+    #   data["returns_account_id"]=AccountId
+    #   shell_cmd = """
+    #   cat >> %s << endwritefilewwwww
+#%s
+#endwritefilewwwww""" % (DataLocalFile + ".%s" % (hostname), str(data).replace("""`""","%%@@%%"))
+#       os.system(shell_cmd)
