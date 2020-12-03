@@ -197,8 +197,9 @@ def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     set_true = True
     n = 0
     page = 0
+    data_list = ""
     while set_true:
-      page,remark = get_sync_data_return(ParamJson=ParamJson, UrlPath=UrlPath,PageTaskFile=PageTaskFile)
+      page,remark,data_list = get_sync_data_return(ParamJson=ParamJson, UrlPath=UrlPath,PageTaskFile=PageTaskFile)
       if remark == "正常":
           set_true = False
       else:
@@ -207,7 +208,7 @@ def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
         else:
           time.sleep(2)
       n = n + 1
-    return page
+    return data_list
 
 @app.task(rate_limit='2000/m',worker_concurrency=200)
 def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):

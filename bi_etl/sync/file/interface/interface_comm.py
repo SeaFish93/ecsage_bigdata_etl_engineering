@@ -67,6 +67,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     remark = ""
     page_task_file = "%s.%s"%(PageTaskFile,hostname)
     del param_json["service_code"]
+    data_list = ""
     try:
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
       if "page_info" in data_list["data"]:
@@ -87,7 +88,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
       remark = "失败"
       data = ""
     os.system("""echo "%s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"], page_task_file))
-    return page,remark
+    return page,remark,data_list
 
 def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
     """
