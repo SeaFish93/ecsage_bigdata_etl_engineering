@@ -33,8 +33,7 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
     for data in db_data:
         param_json["advertiser_id"] = data[0]
         param_json["service_code"] = data[2]
-        #"filtering": {"ad_ids": ""}
-        param_json["filtering"]["ad_ids"] = [int(data[3])]
+        param_json["filtering"]["campaign_ids"] = [int(data[3])]
         celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
                                                                     PageTaskFile=PageTaskFile)
         os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id, data[0], data[1], data[2], CelerySyncTaskFile))
@@ -61,7 +60,7 @@ def get_sync_pages_number():
                "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_CITY_NAME'],
                "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                "page": 1,
-               "filtering": {"ad_ids": ""},
+               "filtering": {"campaign_ids": ""},
                "service_code": "data[2]"
                }
   url_path = "/open_api/2/report/creative/get/"
@@ -127,7 +126,7 @@ def get_sync_pages_number():
       account_id = dt[0]
       param_json["advertiser_id"] = account_id
       param_json["service_code"] = dt[2]
-      param_json["filtering"]["ad_ids"] = eval(dt[4])
+      param_json["filtering"]["campaign_ids"] = eval(dt[4])
       celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
       os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
   # 获取状态
