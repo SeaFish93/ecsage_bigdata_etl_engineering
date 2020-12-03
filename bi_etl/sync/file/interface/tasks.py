@@ -216,7 +216,7 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
    page = 0
    data = ""
    while set_true:
-       data,remark = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath)
+       data,remark = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath,TaskExceptionFile=TaskExceptionFile)
        if remark == "正常":
            set_true = False
        else:
