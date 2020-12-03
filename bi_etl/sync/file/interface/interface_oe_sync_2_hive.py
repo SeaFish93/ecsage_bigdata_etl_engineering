@@ -78,8 +78,8 @@ def get_sync_pages_number():
        inner join metadb.campaign_test b
        on a.account_id = b.advertiser_id
        where a.exec_date = '2020-12-02'
+         and a.account_id = '1682305992183822'
        group by a.account_id, a.media_type, a.service_code,b.campaign_id
-       limit 1
     """
   ok,db_data = etl_md.get_all_rows(sql)
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
@@ -117,7 +117,7 @@ def get_sync_pages_number():
 
   sql = """
     select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
-    from metadb.oe_sync_page_interface a -- where page_num > 1 -- and page_num <= 50
+    from metadb.oe_sync_page_interface a where page_num > 1 -- and page_num <= 50
     group by a.account_id,  a.service_code,a.page_num,a.request_filter
   """
   ok,datas = etl_md.get_all_rows(sql)
