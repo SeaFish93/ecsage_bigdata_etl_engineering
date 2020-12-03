@@ -443,3 +443,8 @@ def get_write_local_file(AccountId="",DataJson="",DataLocalFile=""):
     for data in datas:
        data["returns_account_id"]=AccountId
        print(data,"######################################")
+       shell_cmd = """
+       cat >> %s << endwritefilewwwww
+%s
+endwritefilewwwww""" % (DataLocalFile + ".%s" % (hostname), data)
+       os.system(shell_cmd)
