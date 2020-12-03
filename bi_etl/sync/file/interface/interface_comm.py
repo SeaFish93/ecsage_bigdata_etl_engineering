@@ -80,11 +80,11 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
              remark = "正常"
              data = str(data_list).replace(" ","")
          else:
-             print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list))
+             print("没有页数：%s,%s,%s,%s"%(service_code,advertiser_id,data_list,param_json["filtering"]["campaign_ids"]))
              remark = "异常"
              data = str(data_list).replace(" ","")
     except:
-      print("请求失败：%s,%s,%s" % (service_code, advertiser_id, ""))
+      print("请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
       remark = "失败"
       data = ""
     os.system("""echo "%s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"], page_task_file))
