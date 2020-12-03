@@ -136,6 +136,7 @@ def get_sync_pages_number():
   wait_for_celery_status(StatusList=celery_task_id)
   print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   time.sleep(30)
+  print("正在写入本地文件！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   target_file = os.listdir(async_account_file)
   status_data_file = celery_sync_task_data_status.split("/")[-1]
   for files in target_file:
@@ -146,6 +147,7 @@ def get_sync_pages_number():
               for data in array:
                   get_data1 = data.strip('\n').split(" ")
                   get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=account_id,DataLocalFile=sync_data_file)
+  print("完成写入本地文件！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   print("执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
 def get_celery_job_data(CeleryTaskId="",AccountId="",DataLocalFile=""):
