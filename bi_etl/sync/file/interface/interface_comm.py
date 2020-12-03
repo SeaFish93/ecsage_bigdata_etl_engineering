@@ -72,6 +72,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     data_list = ""
     try:
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
+      data_list["returns_account_id"] = advertiser_id
       log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.1.%s" % (hostname))
       log.logger.info(data_list)
       log.logger.removeHandler(log.rotateHandler)
@@ -116,6 +117,7 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
     del param_json["service_code"]
     try:
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
+      data_list["returns_account_id"] = advertiser_id
       log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s" % (hostname))
       log.logger.info(data_list)
       log.logger.removeHandler(log.rotateHandler)
