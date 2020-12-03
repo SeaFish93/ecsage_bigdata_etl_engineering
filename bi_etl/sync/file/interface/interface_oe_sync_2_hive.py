@@ -65,79 +65,79 @@ def get_sync_pages_number():
                "service_code": "data[2]"
                }
   url_path = "/open_api/2/report/creative/get/"
-  os.system("""rm -f %s"""%(celery_sync_task_status))
-  os.system("""rm -f %s""" % (sync_data_file))
-  os.system("""rm -f %s*""" % (page_task_file))
-  os.system("""rm -f %s*""" % (celery_sync_task_data_status))
-  os.system("""rm -f %s*""" % (data_task_file))
-  os.system("""rm -f %s*"""%(task_exception_file))
-  os.system("""rm -f %s*""" % (write_local_files_stauts))
-  sql = """
-       select a.account_id, a.media_type, a.service_code,b.campaign_id
-       from metadb.oe_account_interface a
-       inner join metadb.campaign_test b
-       on a.account_id = b.advertiser_id
-       where a.exec_date = '2020-12-02'
-       group by a.account_id, a.media_type, a.service_code,b.campaign_id
-    """
-  ok,db_data = etl_md.get_all_rows(sql)
-  etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
-  set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
-                        PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
-  #重试异常
-  ########n = 3
-  ########for i in range(n):
-  ########  os.system("""rm -f %s""" % (celery_sync_task_status))
-  ########  os.system("""rm -f %s*""" % (page_task_file))
-  ########  os.system("""rm -f %s*""" % (celery_sync_task_data_status))
-  ########  os.system("""rm -f %s*""" % (data_task_file))
-  ########  sql = """
-  ########     select tmp1.account_id, '222' media_type, tmp1.service_code
-  ########     from(select account_id,service_code,count(distinct remark) as rn
-  ########          from metadb.oe_sync_page_interface
-  ########          group by account_id,service_code
-  ########          having count(distinct remark) = 1
-  ########         ) tmp
-  ########     inner join metadb.oe_sync_page_interface tmp1
-  ########     on tmp.account_id = tmp1.account_id
-  ########     and tmp.service_code = tmp1.service_code
-  ########     where tmp1.remark = '异常'
-  ########     group by tmp1.account_id, tmp1.service_code
-  ########  """
-  ########  ok, db_data = etl_md.get_all_rows(sql)
-  ########  if db_data is not None and len(db_data) > 0:
-  ########     set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
-  ########                           PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
-  ########  ok, db_data = etl_md.get_all_rows(sql)
-  ########  if db_data is not None and len(db_data) > 0:
-  ########      time.sleep(60)
-  ########  else:
-  ########      break
-
-  sql = """
-    select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
-    from metadb.oe_sync_page_interface a where page_num > 1 -- and page_num <= 50
-    group by a.account_id,  a.service_code,a.page_num,a.request_filter
-  """
-  ok,datas = etl_md.get_all_rows(sql)
-  for dt in datas:
-     page_number = int(dt[3])
-     for page in range(page_number):
-      if page > 0:
-        pages = page + 1
-        param_json["page"] = pages
-        account_id = dt[0]
-        param_json["advertiser_id"] = account_id
-        param_json["service_code"] = dt[2]
-        param_json["filtering"]["campaign_ids"] = eval(dt[4])
-        celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
-        os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
-  # 获取状态
-  print("正在等待celery队列执行完成！！！")
-  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
-  wait_for_celery_status(StatusList=celery_task_id)
-  print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-  time.sleep(30)
+  ########### os.system("""rm -f %s"""%(celery_sync_task_status))
+  ########### os.system("""rm -f %s""" % (sync_data_file))
+  ########### os.system("""rm -f %s*""" % (page_task_file))
+  ########### os.system("""rm -f %s*""" % (celery_sync_task_data_status))
+  ########### os.system("""rm -f %s*""" % (data_task_file))
+  ########### os.system("""rm -f %s*"""%(task_exception_file))
+  ########### os.system("""rm -f %s*""" % (write_local_files_stauts))
+  ########### sql = """
+  ###########      select a.account_id, a.media_type, a.service_code,b.campaign_id
+  ###########      from metadb.oe_account_interface a
+  ###########      inner join metadb.campaign_test b
+  ###########      on a.account_id = b.advertiser_id
+  ###########      where a.exec_date = '2020-12-02'
+  ###########      group by a.account_id, a.media_type, a.service_code,b.campaign_id
+  ###########   """
+  ########### ok,db_data = etl_md.get_all_rows(sql)
+  ########### etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
+  ########### set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
+  ###########                       PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
+  ########### #重试异常
+  ########### ########n = 3
+  ########### ########for i in range(n):
+  ########### ########  os.system("""rm -f %s""" % (celery_sync_task_status))
+  ########### ########  os.system("""rm -f %s*""" % (page_task_file))
+  ########### ########  os.system("""rm -f %s*""" % (celery_sync_task_data_status))
+  ########### ########  os.system("""rm -f %s*""" % (data_task_file))
+  ########### ########  sql = """
+  ########### ########     select tmp1.account_id, '222' media_type, tmp1.service_code
+  ########### ########     from(select account_id,service_code,count(distinct remark) as rn
+  ########### ########          from metadb.oe_sync_page_interface
+  ########### ########          group by account_id,service_code
+  ########### ########          having count(distinct remark) = 1
+  ########### ########         ) tmp
+  ########### ########     inner join metadb.oe_sync_page_interface tmp1
+  ########### ########     on tmp.account_id = tmp1.account_id
+  ########### ########     and tmp.service_code = tmp1.service_code
+  ########### ########     where tmp1.remark = '异常'
+  ########### ########     group by tmp1.account_id, tmp1.service_code
+  ########### ########  """
+  ########### ########  ok, db_data = etl_md.get_all_rows(sql)
+  ########### ########  if db_data is not None and len(db_data) > 0:
+  ########### ########     set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
+  ########### ########                           PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
+  ########### ########  ok, db_data = etl_md.get_all_rows(sql)
+  ########### ########  if db_data is not None and len(db_data) > 0:
+  ########### ########      time.sleep(60)
+  ########### ########  else:
+  ########### ########      break
+  ###########
+  ########### sql = """
+  ###########   select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
+  ###########   from metadb.oe_sync_page_interface a where page_num > 1 -- and page_num <= 50
+  ###########   group by a.account_id,  a.service_code,a.page_num,a.request_filter
+  ########### """
+  ########### ok,datas = etl_md.get_all_rows(sql)
+  ########### for dt in datas:
+  ###########    page_number = int(dt[3])
+  ###########    for page in range(page_number):
+  ###########     if page > 0:
+  ###########       pages = page + 1
+  ###########       param_json["page"] = pages
+  ###########       account_id = dt[0]
+  ###########       param_json["advertiser_id"] = account_id
+  ###########       param_json["service_code"] = dt[2]
+  ###########       param_json["filtering"]["campaign_ids"] = eval(dt[4])
+  ###########       celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
+  ###########       os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
+  ########### # 获取状态
+  ########### print("正在等待celery队列执行完成！！！")
+  ########### celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
+  ########### wait_for_celery_status(StatusList=celery_task_id)
+  ########### print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  ########### time.sleep(30)
   print("正在写入本地文件！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   target_file = ["celery_sync_task_data_status.log","celery_sync_task_status.log"] #os.listdir(async_account_file)
   status_data_file = celery_sync_task_data_status.split("/")[-1]
@@ -150,7 +150,7 @@ def get_sync_pages_number():
       etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
                                  my_run=run_thread,
                                  StatusFile=get_file, DataLocalFile=sync_data_file,
-                                 AccountId = account_id,WriteLocalFilesStauts=write_local_files_stauts
+                                 WriteLocalFilesStauts=write_local_files_stauts
                                  )
       etl_thread.start()
       th.append(etl_thread)
@@ -172,17 +172,17 @@ def get_sync_pages_number():
   print("完成写入本地文件！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   print("执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
-def run_thread(StatusFile="",DataLocalFile="",AccountId="",WriteLocalFilesStauts="",arg=None):
+def run_thread(StatusFile="",DataLocalFile="",WriteLocalFilesStauts="",arg=None):
    if arg is not None and len(arg)>0:
     StatusFile = arg["StatusFile"]
     DataLocalFile = arg["DataLocalFile"]
-    AccountId = arg["AccountId"]
+    #AccountId = arg["AccountId"]
     WriteLocalFilesStauts = arg["WriteLocalFilesStauts"]
     with open(StatusFile) as lines:
         array = lines.readlines()
         for data in array:
             get_data1 = data.strip('\n').split(" ")
-            get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=AccountId,DataLocalFile=DataLocalFile,WriteLocalFilesStauts=WriteLocalFilesStauts)
+            get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=get_data1[1],DataLocalFile=DataLocalFile,WriteLocalFilesStauts=WriteLocalFilesStauts)
 
 def get_celery_job_data(CeleryTaskId="",AccountId="",DataLocalFile="",WriteLocalFilesStauts=""):
     task_write_id = get_write_local_files_celery.delay(CeleryTaskId=CeleryTaskId,AccountId=AccountId,DataLocalFile=DataLocalFile)
