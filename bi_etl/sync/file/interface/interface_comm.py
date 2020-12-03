@@ -132,6 +132,7 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
       data = "数据失败"
     log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s"%(hostname))
     log.logger.info(data)
+    log.rotateHandler.close()
     return data,remark
 
 #多线程上传hdfs
