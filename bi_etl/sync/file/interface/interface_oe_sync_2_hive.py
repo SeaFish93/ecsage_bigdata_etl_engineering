@@ -34,15 +34,15 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
         param_json["advertiser_id"] = data[0]
         param_json["service_code"] = data[2]
         #"filtering": {"ad_ids": ""}
-        param_json["filtering"]["campaign_ids"] = [data[3]]
+        param_json["filtering"]["ad_ids"] = [int(data[3])]
         celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
                                                                     PageTaskFile=PageTaskFile)
         os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id, data[0], data[1], data[2], CelerySyncTaskFile))
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CelerySyncTaskFile)
-    print("正在等待celery队列执行完成！！！")
+    print("正在等待获取页数celery队列执行完成！！！")
     wait_for_celery_status(StatusList=celery_task_id)
-    print("celery队列执行完成！！！")
+    print("获取页数celery队列执行完成！！！")
     print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())), "===================")
     # 保存MySQL
     columns = """page_num,account_id,service_code,remark,data,request_filter"""
@@ -61,7 +61,7 @@ def get_sync_pages_number():
                "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_CITY_NAME'],
                "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                "page": 1,
-               "filtering": {"campaign_ids": ""},
+               "filtering": {"ad_ids": ""},
                "service_code": "data[2]"
                }
   url_path = "/open_api/2/report/creative/get/"
