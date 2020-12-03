@@ -78,7 +78,7 @@ def get_sync_pages_number():
        inner join metadb.campaign_test b
        on a.account_id = b.advertiser_id
        where a.exec_date = '2020-12-02'
-          and a.account_id in( '1682305992183822','1682327752698884')
+         -- and a.account_id in( '1682305992183822','1682327752698884')
        group by a.account_id, a.media_type, a.service_code,b.campaign_id
     """
   ok,db_data = etl_md.get_all_rows(sql)
