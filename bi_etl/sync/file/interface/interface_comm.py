@@ -444,5 +444,5 @@ def get_write_local_file(AccountId="",DataJson="",DataLocalFile=""):
        shell_cmd = """
        cat >> %s << endwritefilewwwww
 %s
-endwritefilewwwww""" % (DataLocalFile + ".%s" % (hostname), data)
+endwritefilewwwww""" % (DataLocalFile + ".%s" % (hostname), data.replace("""`""","%%@@%%"))
        os.system(shell_cmd)
