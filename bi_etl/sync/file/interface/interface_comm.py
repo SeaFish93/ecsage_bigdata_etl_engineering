@@ -438,11 +438,9 @@ def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
     return code,resp_data
 
 def get_write_local_file(AccountId="",DataJson="",DataLocalFile=""):
-    #print(DataJson,"==================================")
     datas = DataJson["data"]["list"]
     for data in datas:
        data["returns_account_id"]=AccountId
-       print(data,"######################################")
        shell_cmd = """
        cat >> %s << endwritefilewwwww
 %s
