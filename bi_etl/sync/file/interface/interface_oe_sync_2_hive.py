@@ -121,14 +121,15 @@ def get_sync_pages_number():
   for dt in datas:
      page_number = int(dt[3])
      for page in range(page_number):
-      pages = page + 1
-      param_json["page"] = pages
-      account_id = dt[0]
-      param_json["advertiser_id"] = account_id
-      param_json["service_code"] = dt[2]
-      param_json["filtering"]["campaign_ids"] = eval(dt[4])
-      celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
-      os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
+      if page > 0:
+        pages = page + 1
+        param_json["page"] = pages
+        account_id = dt[0]
+        param_json["advertiser_id"] = account_id
+        param_json["service_code"] = dt[2]
+        param_json["filtering"]["campaign_ids"] = eval(dt[4])
+        celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
+        os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
   # 获取状态
   print("正在等待celery队列执行完成！！！")
   celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
@@ -145,7 +146,7 @@ def get_sync_pages_number():
               array = lines.readlines()
               for data in array:
                   get_data1 = data.strip('\n').split(" ")
-                  get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=account_id,DataLocalFile=sync_data_file)
+                  #get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=account_id,DataLocalFile=sync_data_file)
   print("完成写入本地文件！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   print("执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
