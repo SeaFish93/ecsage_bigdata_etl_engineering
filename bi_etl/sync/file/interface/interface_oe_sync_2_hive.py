@@ -127,7 +127,7 @@ def get_sync_pages_number():
       account_id = dt[0]
       param_json["advertiser_id"] = account_id
       param_json["service_code"] = dt[2]
-      param_json["filtering"]["campaign_ids"] = eval(dt[4])
+      param_json["filtering"]["ad_ids"] = eval(dt[4])
       celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
       os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
   # 获取状态

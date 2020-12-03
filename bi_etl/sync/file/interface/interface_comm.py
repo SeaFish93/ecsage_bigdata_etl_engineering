@@ -63,7 +63,6 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     service_code = param_json["service_code"]
     advertiser_id = param_json["advertiser_id"]
     token = get_oe_account_token(ServiceCode=service_code)
-    #param_json["filtering"]["campaign_ids"] = [data[3]]
     page = 0
     remark = ""
     page_task_file = "%s.%s"%(PageTaskFile,hostname)
