@@ -114,7 +114,7 @@ def get_sync_pages_number():
 
   sql = """
     select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
-    from metadb.oe_sync_page_interface a where page_num > 0
+    from metadb.oe_sync_page_interface a where page_num > 0 and page_num <= 50
     group by a.account_id,  a.service_code,a.page_num,a.request_filter
   """
   ok,datas = etl_md.get_all_rows(sql)
@@ -130,8 +130,8 @@ def get_sync_pages_number():
       celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
       os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
   # 获取状态
-  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
   print("正在等待celery队列执行完成！！！")
+  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
   wait_for_celery_status(StatusList=celery_task_id)
   print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   time.sleep(30)
