@@ -49,7 +49,7 @@ class Logger(object):
     self.rotateHandler = ConcurrentRotatingFileHandler(logfile, "a", 800*1024*1024)
     self.logger.addHandler(self.rotateHandler)
     self.logger.setLevel(INFO)
-    self.logger.removeHandler(self.rotateHandler)
+    #self.logger.removeHandler(self.rotateHandler)
 #if __name__ == '__main__':
 #  log = Logger('all.log')
 #  log.logger.info("Start print log")
