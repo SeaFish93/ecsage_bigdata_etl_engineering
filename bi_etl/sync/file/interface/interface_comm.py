@@ -436,3 +436,6 @@ def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
     except Exception as e:
       code = 0
     return code,resp_data
+
+def get_write_local_file(DataJson="",DataLocalFile=""):
+    print(DataJson,"==================================")

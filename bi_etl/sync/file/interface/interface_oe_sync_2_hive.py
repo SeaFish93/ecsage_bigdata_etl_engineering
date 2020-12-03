@@ -12,6 +12,7 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_sync_tasks_data_return as get_oe_sync_tasks_data_return_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_sync_tasks_data as get_oe_sync_tasks_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_write_local_files as get_write_local_files_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
@@ -67,7 +68,7 @@ def get_sync_pages_number():
   #os.system("""rm -f %s"""%(celery_sync_task_status))
   os.system("""rm -f %s""" % (sync_data_file))
   os.system("""rm -f %s*""" % (page_task_file))
-  #os.system("""rm -f %s*""" % (celery_sync_task_data_status))
+  os.system("""rm -f %s*""" % (celery_sync_task_data_status))
   os.system("""rm -f %s*""" % (data_task_file))
   os.system("""rm -f %s*"""%(task_exception_file))
   sql = """
@@ -119,24 +120,23 @@ def get_sync_pages_number():
     group by a.account_id,  a.service_code,a.page_num,a.request_filter
     limit 1
   """
-  #######ok,datas = etl_md.get_all_rows(sql)
-  #######for dt in datas:
-  #######   page_number = int(dt[3])
-  #######   for page in range(page_number):
-  #######    pages = page + 1
-  #######    param_json["page"] = pages
-  #######    param_json["advertiser_id"] = dt[0]
-  #######    param_json["service_code"] = dt[2]
-  #######    param_json["filtering"]["campaign_ids"] = eval(dt[4])
-  #######    celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
-  #######    os.system("""echo "%s">>%s""" % (celery_task_id, celery_sync_task_data_status))
-  ######## 获取状态
-  #######celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
-  #######print("正在等待celery队列执行完成！！！")
-  #######wait_for_celery_status(StatusList=celery_task_id)
-  #######print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-  #######time.sleep(30)
-  open_file_session = open(sync_data_file, mode="w")
+  ok,datas = etl_md.get_all_rows(sql)
+  for dt in datas:
+     page_number = int(dt[3])
+     for page in range(page_number):
+      pages = page + 1
+      param_json["page"] = pages
+      param_json["advertiser_id"] = dt[0]
+      param_json["service_code"] = dt[2]
+      param_json["filtering"]["campaign_ids"] = eval(dt[4])
+      celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
+      os.system("""echo "%s">>%s""" % (celery_task_id, celery_sync_task_data_status))
+  # 获取状态
+  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
+  print("正在等待celery队列执行完成！！！")
+  wait_for_celery_status(StatusList=celery_task_id)
+  print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  time.sleep(30)
   target_file = os.listdir(async_account_file)
   status_data_file = celery_sync_task_data_status.split("/")[-1]
   for files in target_file:
@@ -146,15 +146,16 @@ def get_sync_pages_number():
               array = lines.readlines()
               for data in array:
                   get_data1 = data.strip('\n').split(" ")
-                  get_celery_job_data(CeleryTaskId=get_data1[0], OpenFileSession=open_file_session)
-  open_file_session.close()
+                  get_celery_job_data(CeleryTaskId=get_data1[0], DataLocalFile=sync_data_file)
+  #open_file_session.close()
 
-def get_celery_job_data(CeleryTaskId="",OpenFileSession=""):
+def get_celery_job_data(CeleryTaskId="",DataLocalFile=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
     value = set_task.get()
     print(CeleryTaskId,type(value),"##################################################")
-    OpenFileSession.write(str(value))
-    OpenFileSession.flush()
+    get_write_local_files_celery.delay(DataJson=value,DataLocalFile=DataLocalFile)
+    #OpenFileSession.write(str(value))
+    #OpenFileSession.flush()
 
 def rerun_data():
     sql = """

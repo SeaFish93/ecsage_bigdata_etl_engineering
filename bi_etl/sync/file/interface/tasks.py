@@ -13,6 +13,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_set_oe_async_tasks_create
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data_return
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data_return
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_write_local_file
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 
 import time
@@ -225,3 +226,7 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
                time.sleep(2)
        n = n + 1
    return data
+
+@app.task()
+def get_write_local_files(DataJson="",DataLocalFile=""):
+    get_write_local_file(DataJson=DataJson, DataLocalFile=DataLocalFile)
