@@ -117,6 +117,7 @@ def get_sync_pages_number():
     select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
     from metadb.oe_sync_page_interface a where page_num > 0
     group by a.account_id,  a.service_code,a.page_num,a.request_filter
+    limit 1
   """
   #######ok,datas = etl_md.get_all_rows(sql)
   #######for dt in datas:
