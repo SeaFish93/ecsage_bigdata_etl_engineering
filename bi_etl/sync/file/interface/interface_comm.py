@@ -121,14 +121,14 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
              remark = "正常"
              data = data_list
          else:
-             print("没有页数：%s,%s,%s"%(service_code,advertiser_id,data_list))
-             remark = "异常"
+             print("获取数据异常：%s,%s,%s,%s"%(service_code,advertiser_id,data_list,param_json["filtering"]["campaign_ids"]))
+             remark = "数据异常"
              data = data_list
     except:
-      print("请求失败：%s,%s,%s" % (service_code, advertiser_id, ""))
-      remark = "失败"
+      print("请求数据失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
+      remark = "数据失败"
       data = ""
-    if remark in ["失败","异常"]:
+    if remark in ["数据失败","数据异常"]:
         os.system("""echo "%s %s %s %s %s">>%s""" % (page, advertiser_id, service_code, remark, param_json["filtering"]["campaign_ids"], TaskExceptionFile))
     return data,remark
 
