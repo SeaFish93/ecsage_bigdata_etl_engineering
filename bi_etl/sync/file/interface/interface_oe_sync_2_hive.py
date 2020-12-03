@@ -146,14 +146,14 @@ def get_sync_pages_number():
               array = lines.readlines()
               for data in array:
                   get_data1 = data.strip('\n').split(" ")
-                  get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=account_id,DataLocalFile=sync_data_file)
+                  #get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=account_id,DataLocalFile=sync_data_file)
   print("完成写入本地文件！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   print("执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
 def get_celery_job_data(CeleryTaskId="",AccountId="",DataLocalFile=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
     value = set_task.get()
-    get_write_local_files_celery.delay(AccountId=AccountId,DataJson=value,DataLocalFile=DataLocalFile)
+    #get_write_local_files_celery.delay(AccountId=AccountId,DataJson=value,DataLocalFile=DataLocalFile)
 
 def rerun_data():
     sql = """
