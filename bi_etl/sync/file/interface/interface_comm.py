@@ -74,7 +74,6 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
       log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.1.%s" % (hostname))
       log.logger.info(data_list)
-      log.rotateHandler.close()
       if "page_info" in data_list["data"]:
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
@@ -135,7 +134,6 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
       data = "数据失败"
     log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s"%(hostname))
     log.logger.info(data)
-    log.rotateHandler.close()
     return data,remark
 
 #多线程上传hdfs
