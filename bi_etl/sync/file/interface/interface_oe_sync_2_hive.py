@@ -140,28 +140,28 @@ def get_sync_pages_number():
   print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   time.sleep(30)
   print("正在写入本地文件！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-  target_file = ["celery_sync_task_data_status.log","celery_sync_task_status.log"] #os.listdir(async_account_file)
-  status_data_file = celery_sync_task_data_status.split("/")[-1]
-  th = []
-  i = 0
-  for files in target_file:
-      get_file = "%s/%s" % (async_account_file, files)
-
-
-      etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-                                 my_run=run_thread,
-                                 StatusFile=get_file, DataLocalFile=sync_data_file,
-                                 WriteLocalFilesStauts=write_local_files_stauts
-                                 )
-      etl_thread.start()
-      th.append(etl_thread)
-      i = i + 1
-  for etl_th in th:
-     etl_th.join()
-
-  print("等待写入本地文件！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-  celery_write_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=write_local_files_stauts)
-  wait_for_celery_status(StatusList=celery_write_task_id)
+  ####### target_file = ["celery_sync_task_data_status.log","celery_sync_task_status.log"] #os.listdir(async_account_file)
+  ####### status_data_file = celery_sync_task_data_status.split("/")[-1]
+  ####### th = []
+  ####### i = 0
+  ####### for files in target_file:
+  #######     get_file = "%s/%s" % (async_account_file, files)
+  #######
+  #######
+  #######     etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
+  #######                                my_run=run_thread,
+  #######                                StatusFile=get_file, DataLocalFile=sync_data_file,
+  #######                                WriteLocalFilesStauts=write_local_files_stauts
+  #######                                )
+  #######     etl_thread.start()
+  #######     th.append(etl_thread)
+  #######     i = i + 1
+  ####### for etl_th in th:
+  #######    etl_th.join()
+  #######
+  ####### print("等待写入本地文件！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  ####### celery_write_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=write_local_files_stauts)
+  ####### wait_for_celery_status(StatusList=celery_write_task_id)
 
       #if status_data_file in files:
           #get_file = "%s/%s" % (async_account_file, files)
