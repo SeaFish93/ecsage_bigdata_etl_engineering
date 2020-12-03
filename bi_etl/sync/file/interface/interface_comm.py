@@ -129,7 +129,7 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
       remark = "失败"
       data = ""
     if remark in ["失败","异常"]:
-        os.system("""echo "%s %s %s %s %s">>%s""" % (page, advertiser_id, service_code, remark, param_json["filtering"]["campaign_ids"], TaskExceptionFile))
+        os.system("""echo "%s %s %s %s %s">>%s""" % (page, advertiser_id, service_code, remark, param_json["filtering"]["ad_ids"], TaskExceptionFile))
     return data,remark
 
 #多线程上传hdfs
