@@ -453,8 +453,11 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ######   regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
    ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
    ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
-   get_field_sql_pre="""add file hdfs:///tmp/airflow/get_arrary.py;"""
+   #get_field_sql_pre=""""""
    get_field_sql = """
+    add file hdfs:///tmp/airflow/get_arrary.py;
+    drop table if exists %s.%s_tmp_colums;
+    create table %s.%s_tmp_colums stored as parquet as
         select 
            data_num_colums
          from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
@@ -472,16 +475,17 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                    ) b
               ) c lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums 
          limit 1
-          """%(return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
-   HiveSession.execute_sql(get_field_sql_pre)
-   ok, data = HiveSession.get_all_rows(get_field_sql)
-   print("获取etl_mid的样本数据" + data)
+          """%("etl_mid",TargetTable,"etl_mid",TargetTable,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
+   #HiveSession.execute_sql(get_field_sql_pre)
+   ok = BeelineSession.execute_sql(get_field_sql)
+   ok, data = HiveSession.get_all_rows("select * from %s.%s_tmp_colums limit 1" % ("etl_mid",TargetTable))
+   print("获取etl_mid的样本数据" + data[0])
 
    spec_pars = """dimensions,metrics"""
    spec_pars_list = list(spec_pars.split(","))
    all_pars_list = []
 
-   dic_str = json.loads(data)
+   dic_str = json.loads(data[0])
    for keys in dic_str:
        if keys in spec_pars_list and isinstance(dic_str[keys], dict):
            for key in dic_str[keys]:
