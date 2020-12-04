@@ -191,7 +191,7 @@ def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",Exec
        else:
          set_true = False
        n = n + 1
-    #return data
+    return data
 
 #定义oe同步数据
 @app.task(rate_limit='1000/m')
