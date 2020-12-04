@@ -474,7 +474,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
           lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
           limit 1;
           """
-   ok, data = HiveSession.get_all_rows(get_field_sql)
+   ok, data = BeelineSession.get_all_rows(get_field_sql)
    print("获取etl_mid的样本数据" + data)
 
    spec_pars = """dimensions,metrics"""
