@@ -453,8 +453,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ######   regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
    ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
    ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
+   get_field_sql_pre="""add file hdfs:///tmp/airflow/get_arrary.py;"""
    get_field_sql = """
-        add file hdfs:///tmp/airflow/get_arrary.py;
         select 
            data_num_colums
          from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
@@ -474,7 +474,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
           lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
           limit 1;
           """
-   ok, data = BeelineSession.get_all_rows(get_field_sql)
+   HiveSession.execute_sql(get_field_sql_pre)
+   ok, data = HiveSession.get_all_rows(get_field_sql)
    print("获取etl_mid的样本数据" + data)
 
    spec_pars = """dimensions,metrics"""
