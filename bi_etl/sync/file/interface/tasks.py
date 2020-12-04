@@ -201,7 +201,7 @@ def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     page = 0
     data_list = ""
     while set_true:
-      page,remark,data_list = get_sync_data_return(ParamJson=ParamJson, UrlPath=UrlPath,PageTaskFile=PageTaskFile)
+      remark = get_sync_data_return(ParamJson=ParamJson, UrlPath=UrlPath,PageTaskFile=PageTaskFile)
       if remark == "正常":
           set_true = False
       else:
@@ -219,7 +219,7 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
    page = 0
    data = ""
    while set_true:
-       data,remark = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath,TaskExceptionFile=TaskExceptionFile)
+       remark = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath,TaskExceptionFile=TaskExceptionFile)
        if remark == "正常":
            set_true = False
        else:

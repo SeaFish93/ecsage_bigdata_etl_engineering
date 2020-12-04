@@ -95,7 +95,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
       remark = "异常"
       data = "请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"])
     os.system("""echo "%s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"], page_task_file))
-    #return page,remark,data_list
+    return remark
 
 def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
     """
@@ -139,7 +139,7 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
       print("请求数据失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
       remark = "数据失败"
       data = "数据失败"
-    #return data,remark
+    return remark
 
 #多线程上传hdfs
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):
