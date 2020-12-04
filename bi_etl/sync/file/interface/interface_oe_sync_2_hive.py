@@ -232,11 +232,10 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",TableName="",Columns=""):
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
     status = set_task.status
-    value = set_task.get()
     if status == "SUCCESS":
-       return True,value
+       return True
     else:
-       return False,value
+       return False
 
 def get_celery_status_list(CeleryTaskStatusFile=""):
     celery_task_id = []
