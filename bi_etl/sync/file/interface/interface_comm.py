@@ -118,10 +118,17 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
     del param_json["service_code"]
     try:
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
-      data_list["returns_account_id"] = advertiser_id
-      log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s" % (hostname))
-      log.logger.info(data_list)
-      log.logger.removeHandler(log.rotateHandler)
+      for get_data in data_list["data"]["list"]:
+          get_data["returns_account_id"] = advertiser_id
+          shell = """
+cat >> %s << endwritefilewwwww
+%s
+endwritefilewwwww"""%("""/home/ecsage_data/oceanengine/async/2/data"""+".%s"%(hostname),str(get_data).replace("""`""","%%@@%%"))
+          os.system(shell)
+      #data_list["returns_account_id"] = advertiser_id
+      #log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s" % (hostname))
+      #log.logger.info(data_list)
+      #log.logger.removeHandler(log.rotateHandler)
       if "page_info" in data_list["data"]:
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
