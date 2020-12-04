@@ -256,7 +256,7 @@ def wait_for_celery_status(StatusList=""):
     while run_wait:
       for status in StatusList:
         #判断是否成功
-        if get_celery_job_status(CeleryTaskId=status)[0] is False:
+        if get_celery_job_status(CeleryTaskId=status) is False:
            status_false.append(status)
         else:
            pass
