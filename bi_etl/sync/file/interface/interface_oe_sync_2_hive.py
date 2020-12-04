@@ -244,7 +244,7 @@ def get_celery_status_list(CeleryTaskStatusFile=""):
         array = lines.readlines()
         for data in array:
             get_data1 = data.strip('\n').split(" ")
-            if get_celery_job_status(CeleryTaskId=get_data1[0])[0] is False:
+            if get_celery_job_status(CeleryTaskId=get_data1[0]) is False:
                 status_wait.append(get_data1[0])
                 celery_task_id.append(get_data1[0])
     return celery_task_id,status_wait
