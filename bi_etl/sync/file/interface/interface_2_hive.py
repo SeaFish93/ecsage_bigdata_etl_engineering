@@ -454,6 +454,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
    ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
    #get_field_sql_pre=""""""
+   HiveSession.
    get_field_sql = """
     add file hdfs:///tmp/airflow/get_arrary.py;
     drop table if exists %s.%s_tmp_colums;
@@ -479,7 +480,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    #HiveSession.execute_sql(get_field_sql_pre)
    ok = BeelineSession.execute_sql(get_field_sql)
    ok, data = HiveSession.get_all_rows("select * from %s.%s_tmp_colums limit 1" % ("etl_mid",TargetTable))
-   print("获取etl_mid的样本数据" + data[0])
+   print("获取etl_mid的样本数据" + data[0][0])
 
    spec_pars = """dimensions,metrics"""
    spec_pars_list = list(spec_pars.split(","))
