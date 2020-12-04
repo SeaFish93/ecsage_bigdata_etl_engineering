@@ -2,7 +2,7 @@
 # @Time    : 2019/11/12 18:04
 # @Author  : wangsong
 # @FileName: interface_2_hive.py
-# @Software: PyCharm
+# @Software: PyChar
 # function info：用于同步接口数据到hive ods\snap\backtrace表
 
 
