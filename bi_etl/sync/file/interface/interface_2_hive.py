@@ -470,9 +470,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                        ) a
                    where data_colums is not null and data_colums <> '[]'
                    ) b
-              ) c
-          lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
-          limit 1;
+              ) c lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums 
+         limit 1
           """%(return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
    HiveSession.execute_sql(get_field_sql_pre)
    ok, data = HiveSession.get_all_rows(get_field_sql)
