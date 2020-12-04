@@ -128,7 +128,7 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
 #endwritefilewwwww"""%("""/home/ecsage_data/oceanengine/async/2/data"""+".%s"%(hostname),str(get_data).replace("""`""","%%@@%%"))
 #          os.system(shell)
       data_list["returns_account_id"] = advertiser_id
-      test_log = LogManager("""sync_data_file.1.%s""" % (hostname)).get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',log_filename="""sync_data_file.1.%s.log""" % (hostname))
+      test_log = LogManager("""sync_data_file.%s""" % (hostname)).get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',log_filename="""sync_data_file.%s.log""" % (hostname))
       test_log.info(data_list)
       ######log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s" % (hostname))
       ######log.logger.info(data_list)
