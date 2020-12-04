@@ -61,7 +61,7 @@ def get_sync_pages_number():
                "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_CITY_NAME'],
                "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                "page": 1,
-               "filtering": {"campaign_ids": ""},
+               "filtering": {"campaign_ids": "","status":"CREATIVE_STATUS_ALL"},
                "service_code": "data[2]"
                }
   url_path = "/open_api/2/report/creative/get/"
