@@ -486,7 +486,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    spec_pars_list = list(spec_pars.split(","))
    all_pars_list = []
 
-   dic_str = json.loads(data[0])
+   dic_str = json.loads(data[0][0])
    for keys in dic_str:
        if keys in spec_pars_list and isinstance(dic_str[keys], dict):
            for key in dic_str[keys]:
