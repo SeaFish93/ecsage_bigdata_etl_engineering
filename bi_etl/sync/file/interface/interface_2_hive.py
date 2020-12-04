@@ -453,7 +453,44 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ######   regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
    ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
    ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
-   specified_pars_str= Specified_Pars_Str
+   get_field_sql = """
+        add file hdfs:///tmp/airflow/get_arrary.py;
+        select 
+           data_num_colums
+         from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
+                     ,split(data_colums,'@@####@@')[1] as data_colums
+                     ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
+                     ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
+              from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
+                   from(select %s,%s,%s
+                               ,request_type
+                        from %s.%s a
+                        where a.etl_date = '%s'
+                          and %s
+                       ) a
+                   where data_colums is not null and data_colums <> '[]'
+                   ) b
+              ) c
+          lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
+          limit 1;
+          """
+   ok, data = HiveSession.get_all_rows(get_field_sql)
+   print("获取etl_mid的样本数据" + data)
+
+   spec_pars = """dimensions,metrics"""
+   spec_pars_list = list(spec_pars.split(","))
+   all_pars_list = []
+
+   dic_str = json.loads(data)
+   for keys in dic_str:
+       if keys in spec_pars_list and isinstance(dic_str[keys], dict):
+           for key in dic_str[keys]:
+               all_pars_list.append(keys + "." + key)
+       else:
+           all_pars_list.append(keys)
+
+   specified_pars_str= ','.join(all_pars_list)
+   print("Json待解析字段：" + specified_pars_str)
    if specified_pars_str is not None and len(specified_pars_str) > 0:
        pars_str_list = []
        for pars_field in iter(specified_pars_str.split(",")):
