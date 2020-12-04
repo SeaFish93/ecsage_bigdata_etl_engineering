@@ -19,7 +19,7 @@ from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_inf
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import Logger
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 hostname = socket.gethostname()
 
 def build_url(path, query=""):
@@ -73,10 +73,12 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     try:
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
       data_list["returns_account_id"] = advertiser_id
-      log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.1.%s" % (hostname))
-      log.logger.info(data_list)
-      log.logger.propagate = False
-      log.logger.removeHandler(log.rotateHandler)
+      test_log = LogManager("""sync_data_file.1.%s"""%(hostname)).get_logger_and_add_handlers(2, log_path='/home/ecsage_data/oceanengine/async/2', log_filename="""sync_data_file.1.%s.log"""%(hostname))
+      test_log.info(data_list)
+      ######log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.1.%s" % (hostname))
+      ######log.logger.info(data_list)
+      ######log.logger.propagate = False
+      ######log.logger.removeHandler(log.rotateHandler)
       if "page_info" in data_list["data"]:
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
@@ -126,9 +128,11 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
 #endwritefilewwwww"""%("""/home/ecsage_data/oceanengine/async/2/data"""+".%s"%(hostname),str(get_data).replace("""`""","%%@@%%"))
 #          os.system(shell)
       data_list["returns_account_id"] = advertiser_id
-      log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s" % (hostname))
-      log.logger.info(data_list)
-      log.logger.removeHandler(log.rotateHandler)
+      test_log = LogManager("""sync_data_file.1.%s""" % (hostname)).get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',log_filename="""sync_data_file.1.%s.log""" % (hostname))
+      test_log.info(data_list)
+      ######log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s" % (hostname))
+      ######log.logger.info(data_list)
+      ######log.logger.removeHandler(log.rotateHandler)
       if "page_info" in data_list["data"]:
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
