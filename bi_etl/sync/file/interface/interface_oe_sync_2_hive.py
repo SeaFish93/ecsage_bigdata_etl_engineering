@@ -77,7 +77,7 @@ def get_sync_pages_number():
        from metadb.oe_account_interface a
        inner join metadb.campaign_test b
        on a.account_id = b.advertiser_id
-       where a.exec_date = '2020-12-02'
+       where a.exec_date = '2020-12-03'
          -- and a.account_id in( '1682305992183822','1682327752698884')
        group by a.account_id, a.media_type, a.service_code,b.campaign_id
     """
