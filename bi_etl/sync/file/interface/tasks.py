@@ -191,7 +191,7 @@ def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",Exec
        else:
          set_true = False
        n = n + 1
-    return data
+    #return data
 
 #定义oe同步数据
 @app.task(rate_limit='1000/m')
@@ -210,7 +210,7 @@ def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
         else:
           time.sleep(2)
       n = n + 1
-    return data_list
+    #return data_list
 
 @app.task(rate_limit='2000/m',worker_concurrency=200)
 def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
@@ -233,7 +233,7 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
            else:
                time.sleep(5)
        n = n + 1
-   return data
+   #return data
 
 @app.task()
 def get_write_local_files(CeleryTaskId="",AccountId="",DataLocalFile=""):

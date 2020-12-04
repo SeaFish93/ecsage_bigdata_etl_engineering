@@ -75,6 +75,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
       data_list["returns_account_id"] = advertiser_id
       log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.1.%s" % (hostname))
       log.logger.info(data_list)
+      log.logger.propagate = False
       log.logger.removeHandler(log.rotateHandler)
       if "page_info" in data_list["data"]:
          page = data_list["data"]["page_info"]["total_page"]
@@ -94,7 +95,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
       remark = "异常"
       data = "请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"])
     os.system("""echo "%s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"], page_task_file))
-    return page,remark,data_list
+    #return page,remark,data_list
 
 def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
     """
@@ -138,7 +139,7 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
       print("请求数据失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
       remark = "数据失败"
       data = "数据失败"
-    return data,remark
+    #return data,remark
 
 #多线程上传hdfs
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):
