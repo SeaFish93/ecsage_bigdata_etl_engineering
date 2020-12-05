@@ -67,13 +67,17 @@ from logging.handlers import RotatingFileHandler
 if os.name == 'posix':
   from cloghandler import ConcurrentRotatingFileHandler
 
+"""
+
+    '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
+    "%Y-%m-%d %H:%M:%S"
+"""
 format_dict = {
   1: logging.Formatter(
     '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
     "%Y-%m-%d %H:%M:%S"),
   2: logging.Formatter(
-    '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
-    "%Y-%m-%d %H:%M:%S"),
+    '%(message)s'),
   3: logging.Formatter(
     '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
     "%Y-%m-%d %H:%M:%S"),
