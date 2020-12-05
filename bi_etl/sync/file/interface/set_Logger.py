@@ -130,7 +130,7 @@ class LogManager(object):
     self._log_path = log_path
     self._log_filename = log_filename
     self._log_file_size = log_file_size
-    self._formatter = format_dict[log_level_int]
+    self._formatter = '' #format_dict[log_level_int]
     self.__set_logger_level()
     self.__add_handlers()
     return self.logger
