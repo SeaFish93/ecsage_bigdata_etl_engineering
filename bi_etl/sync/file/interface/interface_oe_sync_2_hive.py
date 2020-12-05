@@ -57,7 +57,7 @@ def get_sync_pages_number():
   async_account_file = "/home/ecsage_data/oceanengine/async/2"
   task_exception_file = "/home/ecsage_data/oceanengine/async/2/task_exception_file.log"
   write_local_files_stauts = "/home/ecsage_data/oceanengine/async/2/write_local_files_stauts.log"
-  param_json = {"end_date": "2020-12-03", "page_size": "1000", "start_date": "2020-12-03",
+  param_json = {"end_date": "2020-12-04", "page_size": "1000", "start_date": "2020-12-04",
                "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_CITY_NAME'],
                "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
                "page": 1,
@@ -77,7 +77,7 @@ def get_sync_pages_number():
        from metadb.oe_account_interface a
        inner join metadb.campaign_test b
        on a.account_id = b.advertiser_id
-       where a.exec_date = '2020-12-03'
+       where a.exec_date = '2020-12-04'
        --  and a.account_id in( '1681961129889805')
        group by a.account_id, a.media_type, a.service_code,b.campaign_id
     """
