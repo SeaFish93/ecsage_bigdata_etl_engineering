@@ -56,9 +56,7 @@ import os
 
 
 # coding=utf8
-"""
 
-"""
 import os
 import unittest
 import logging
@@ -67,26 +65,12 @@ from logging.handlers import RotatingFileHandler
 if os.name == 'posix':
   from cloghandler import ConcurrentRotatingFileHandler
 
-"""
-
-    '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
-    "%Y-%m-%d %H:%M:%S"
-"""
 format_dict = {
-  1: logging.Formatter(
-    '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
-    "%Y-%m-%d %H:%M:%S"),
-  2: logging.Formatter(
-    '%(message)s'),
-  3: logging.Formatter(
-    '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
-    "%Y-%m-%d %H:%M:%S"),
-  4: logging.Formatter(
-    '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
-    "%Y-%m-%d %H:%M:%S"),
-  5: logging.Formatter(
-    '日志时间【%(asctime)s】 - 日志名称【%(name)s】 - 文件【%(filename)s】 - 第【%(lineno)d】行 - 日志等级【%(levelname)s】 - 日志信息【%(message)s】',
-    "%Y-%m-%d %H:%M:%S"),
+  1: logging.Formatter('%(message)s'),
+  2: logging.Formatter('%(message)s'),
+  3: logging.Formatter('%(message)s'),
+  4: logging.Formatter('%(message)s'),
+  5: logging.Formatter('%(message)s'),
 }
 
 
@@ -134,7 +118,7 @@ class LogManager(object):
     self._log_path = log_path
     self._log_filename = log_filename
     self._log_file_size = log_file_size
-    self._formatter = '' #format_dict[log_level_int]
+    self._formatter = format_dict[log_level_int]
     self.__set_logger_level()
     self.__add_handlers()
     return self.logger
