@@ -74,7 +74,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
       data_list["returns_account_id"] = advertiser_id
       test_log = LogManager("""sync_data_file.1.%s"""%(hostname)).get_logger_and_add_handlers(2, log_path='/home/ecsage_data/oceanengine/async/2', log_filename="""sync_data_file.1.%s.log"""%(hostname))
-      test_log.info(data_list)
+      test_log.info(json.dumps(data_list))
       ######log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.1.%s" % (hostname))
       ######log.logger.info(data_list)
       ######log.logger.propagate = False
@@ -129,7 +129,7 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
 #          os.system(shell)
       data_list["returns_account_id"] = advertiser_id
       test_log = LogManager("""sync_data_file.%s""" % (hostname)).get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',log_filename="""sync_data_file.%s.log""" % (hostname))
-      test_log.info(data_list)
+      test_log.info(json.dumps(data_list))
       ######log = Logger(filename="/home/ecsage_data/oceanengine/async/2/sync_data_file.log.%s" % (hostname))
       ######log.logger.info(data_list)
       ######log.logger.removeHandler(log.rotateHandler)
