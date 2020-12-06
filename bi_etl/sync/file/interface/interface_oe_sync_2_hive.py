@@ -68,13 +68,13 @@ def get_sync_pages_number():
                "service_code": "data[2]"
                }
   url_path = "/open_api/2/report/creative/get/"
-  os.system("""rm -f %s"""%(celery_sync_task_status))
-  os.system("""rm -f %s""" % (sync_data_file))
-  os.system("""rm -f %s*""" % (page_task_file))
-  os.system("""rm -f %s*""" % (celery_sync_task_data_status))
-  os.system("""rm -f %s*""" % (data_task_file))
-  os.system("""rm -f %s*"""%(task_exception_file))
-  os.system("""rm -f %s*""" % (write_local_files_stauts))
+  os.system("""rm -f %s"""%(celery_sync_task_status.split(".")[0]))
+  os.system("""rm -f %s""" % (sync_data_file.split(".")[0]))
+  os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
+  os.system("""rm -f %s*""" % (celery_sync_task_data_status.split(".")[0]))
+  os.system("""rm -f %s*""" % (data_task_file.split(".")[0]))
+  os.system("""rm -f %s*"""%(task_exception_file.split(".")[0]))
+  os.system("""rm -f %s*""" % (write_local_files_stauts.split(".")[0]))
   sql = """
        select a.account_id, a.media_type, a.service_code,b.campaign_id
        from metadb.oe_account_interface a
