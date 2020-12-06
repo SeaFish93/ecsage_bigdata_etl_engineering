@@ -92,9 +92,11 @@ def get_sync_pages_number():
   #重试异常
   n = 3
   for i in range(n):
-    os.system("""rm -f %s*""" % (celery_sync_task_status))
-    os.system("""rm -f %s*""" % (page_task_file))
-    os.system("""rm -f %s*""" % (celery_sync_task_data_status))
+    os.system("""rm -f %s*""" % (celery_sync_task_status.split(".")[0]))
+    os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
+    os.system("""rm -f %s*""" % (celery_sync_task_data_status.split(".")[0]))
+    os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
+    os.system("""rm -f %s*""" % (write_local_files_stauts.split(".")[0]))
     sql = """
       select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']',''))
    from(select account_id,service_code,request_filter,count(distinct remark) as rn
