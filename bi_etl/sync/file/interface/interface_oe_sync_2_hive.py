@@ -68,6 +68,8 @@ def get_sync_pages_number():
                "service_code": "data[2]"
                }
   url_path = "/open_api/2/report/creative/get/"
+  print(sync_data_file.split(".")[0],"=======================")
+  exit(0)
   os.system("""rm -f %s"""%(celery_sync_task_status.split(".")[0]))
   os.system("""rm -f %s""" % (sync_data_file.split(".")[0]))
   os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
