@@ -29,7 +29,7 @@ hostname = socket.gethostname()
 def get_test(string=""):
     now = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime())
     print(now,"=================================")
-    test_log = LogManager("""get_test""" % (hostname)).get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',
+    test_log = LogManager("""get_test""").get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',
                                                                                               log_filename="""get_test.log""")
     test_log.info(now)
 
