@@ -90,34 +90,38 @@ def get_sync_pages_number():
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status,DataFileDir=async_account_file,
                         DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
   #重试异常
-  ########n = 3
-  ########for i in range(n):
-  ########  os.system("""rm -f %s""" % (celery_sync_task_status))
-  ########  os.system("""rm -f %s*""" % (page_task_file))
-  ########  os.system("""rm -f %s*""" % (celery_sync_task_data_status))
-  ########  os.system("""rm -f %s*""" % (data_task_file))
-  ########  sql = """
-  ########     select tmp1.account_id, '222' media_type, tmp1.service_code
-  ########     from(select account_id,service_code,count(distinct remark) as rn
-  ########          from metadb.oe_sync_page_interface
-  ########          group by account_id,service_code
-  ########          having count(distinct remark) = 1
-  ########         ) tmp
-  ########     inner join metadb.oe_sync_page_interface tmp1
-  ########     on tmp.account_id = tmp1.account_id
-  ########     and tmp.service_code = tmp1.service_code
-  ########     where tmp1.remark = '异常'
-  ########     group by tmp1.account_id, tmp1.service_code
-  ########  """
-  ########  ok, db_data = etl_md.get_all_rows(sql)
-  ########  if db_data is not None and len(db_data) > 0:
-  ########     set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
-  ########                           PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
-  ########  ok, db_data = etl_md.get_all_rows(sql)
-  ########  if db_data is not None and len(db_data) > 0:
-  ########      time.sleep(60)
-  ########  else:
-  ########      break
+  n = 3
+  for i in range(n):
+    os.system("""rm -f %s*""" % (celery_sync_task_status))
+    os.system("""rm -f %s*""" % (page_task_file))
+    os.system("""rm -f %s*""" % (celery_sync_task_data_status))
+    sql = """
+      select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']',''))
+   from(select account_id,service_code,request_filter,count(distinct remark) as rn
+        from metadb.oe_sync_page_interface
+        group by account_id,service_code,request_filter
+        having count(distinct remark) = 1
+       ) tmp
+   inner join metadb.oe_sync_page_interface tmp1
+   on tmp.account_id = tmp1.account_id
+   and tmp.service_code = tmp1.service_code
+   and tmp.request_filter = tmp1.request_filter
+   where tmp1.remark = '异常'
+   group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter
+  """
+    ok, db_data = etl_md.get_all_rows(sql)
+    if db_data is not None and len(db_data) > 0:
+       set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
+                              PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status,
+                              DataFileDir=async_account_file,
+                              DataFile=sync_data_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) +
+                                       sync_data_file.split("/")[-1].split(".")[1])
+
+       ok, db_data = etl_md.get_all_rows(sql)
+       if db_data is not None and len(db_data) > 0:
+         time.sleep(60)
+       else:
+          break
 
   sql = """
     select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
