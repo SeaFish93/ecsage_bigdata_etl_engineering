@@ -177,6 +177,7 @@ class LogManager(object):
     stream_handler.setLevel(self._logger_level)
     stream_handler.setFormatter(self._formatter)
     self.logger.addHandler(stream_handler)
+    self.logger.fatal = False
 
   def __add_file_handler(self):
     """
