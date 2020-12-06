@@ -86,11 +86,9 @@ def get_sync_pages_number():
     """
   ok,db_data = etl_md.get_all_rows(sql)
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
-  print(sync_data_file.split("/")[-1].split(".")[0]+"_1_%s"%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
-  exit(0)
   set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status,DataFileDir=async_account_file,
-                        DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_1_%s"%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
+                        DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
   #重试异常
   ########n = 3
   ########for i in range(n):
@@ -140,7 +138,7 @@ def get_sync_pages_number():
         celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
                                                              TaskExceptionFile=task_exception_file,
                                                              DataFileDir=async_account_file,
-                                                             DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_2_%s"%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
+                                                             DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_2_%s."%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
         os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
   # 获取状态
   print("正在等待celery队列执行完成！！！")
