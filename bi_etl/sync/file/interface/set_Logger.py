@@ -201,3 +201,4 @@ class LogManager(object):
     rotate_file_handler.setLevel(self._logger_level)
     rotate_file_handler.setFormatter(self._formatter)
     self.logger.addHandler(rotate_file_handler)
+    self.logger.propagate = True
