@@ -27,7 +27,7 @@ import ast
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
-def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile=""):
+def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile="",DataFileDir="",DataFile=""):
     param_json = ParamJson
     db_data = DataList
     for data in db_data:
@@ -35,7 +35,9 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
         param_json["service_code"] = data[2]
         param_json["filtering"]["campaign_ids"] = [int(data[3])]
         celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
-                                                                    PageTaskFile=PageTaskFile)
+                                                                    PageTaskFile=PageTaskFile,
+                                                                    DataFileDir=DataFileDir,DataFile=DataFile
+                                                                    )
         os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id, data[0], data[1], data[2], CelerySyncTaskFile))
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CelerySyncTaskFile)
@@ -85,7 +87,8 @@ def get_sync_pages_number():
   ok,db_data = etl_md.get_all_rows(sql)
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
   set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
-                        PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status)
+                        PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status,DataFileDir=async_account_file,
+                        DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_1_%s"%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
   #重试异常
   ########n = 3
   ########for i in range(n):
@@ -132,7 +135,10 @@ def get_sync_pages_number():
         param_json["advertiser_id"] = account_id
         param_json["service_code"] = dt[2]
         param_json["filtering"]["campaign_ids"] = eval(dt[4])
-        celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,TaskExceptionFile=task_exception_file)
+        celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
+                                                             TaskExceptionFile=task_exception_file,
+                                                             DataFileDir=async_account_file,
+                                                             DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_2_%s"%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
         os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
   # 获取状态
   print("正在等待celery队列执行完成！！！")

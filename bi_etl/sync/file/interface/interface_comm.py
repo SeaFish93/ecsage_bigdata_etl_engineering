@@ -48,7 +48,7 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     rsp = requests.get(url, headers=headers,timeout=2400)
     return rsp.json()
 
-def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
+def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",DataFile=""):
     """
     {"end_date": "",
      "page_size": "",
@@ -81,8 +81,8 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
       ######log.logger.removeHandler(log.rotateHandler)
       if "page_info" in data_list["data"]:
          data_list["returns_account_id"] = advertiser_id
-         test_log = LogManager("""sync_data_file.1.%s""" % (hostname)).get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',
-                                                                                                  log_filename="""sync_data_file.1.%s.log""" % (hostname))
+         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0],hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,
+                                                                                                  log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
          test_log.info(json.dumps(data_list))
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
@@ -103,7 +103,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     os.system("""echo "%s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"], page_task_file))
     return remark
 
-def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
+def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
     """
     {"end_date": "",
      "page_size": "",
@@ -136,8 +136,10 @@ def get_sync_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
       ######log.logger.removeHandler(log.rotateHandler)
       if "page_info" in data_list["data"]:
          data_list["returns_account_id"] = advertiser_id
-         test_log = LogManager("""sync_data_file.%s""" % (hostname)).get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',
-                                                                                                  log_filename="""sync_data_file.%s.log""" % (hostname))
+         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
+
+         #test_log = LogManager("""sync_data_file.%s""" % (hostname)).get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',
+         #                                                                                         log_filename="""sync_data_file.%s.log""" % (hostname))
          test_log.info(json.dumps(data_list))
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"

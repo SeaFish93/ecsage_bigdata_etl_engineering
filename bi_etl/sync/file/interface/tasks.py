@@ -199,13 +199,13 @@ def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",Exec
 
 #定义oe同步数据
 @app.task(rate_limit='1000/m')
-def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
+def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",DataFile=""):
     set_true = True
     n = 0
     page = 0
     data_list = ""
     while set_true:
-      remark = get_sync_data_return(ParamJson=ParamJson, UrlPath=UrlPath,PageTaskFile=PageTaskFile)
+      remark = get_sync_data_return(ParamJson=ParamJson, UrlPath=UrlPath,PageTaskFile=PageTaskFile,DataFileDir=DataFileDir,DataFile=DataFile)
       if remark == "正常":
           set_true = False
       else:
@@ -217,13 +217,13 @@ def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile=""):
     #return data_list
 
 @app.task(rate_limit='2000/m',worker_concurrency=200)
-def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
+def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile="",DataFileDir="",DataFile=""):
    set_true = True
    n = 0
    page = 0
    data = ""
    while set_true:
-       remark = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath,TaskExceptionFile=TaskExceptionFile)
+       remark = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath,DataFileDir=DataFileDir,DataFile=DataFile)
        if remark == "正常":
            set_true = False
        else:
