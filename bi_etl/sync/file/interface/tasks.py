@@ -224,6 +224,7 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile=""):
            set_true = False
        else:
            if n > 5:
+               os.system("""echo "异常：%s">>%s """%(advertiser_id,TaskExceptionFile+"1"))
                param_json = json.dumps(ParamJson)
                param_json = ast.literal_eval(json.loads(param_json))
                advertiser_id = param_json["advertiser_id"]
