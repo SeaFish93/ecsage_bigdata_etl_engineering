@@ -31,7 +31,7 @@ def get_test(string=""):
     print(now,"=================================")
     test_log = LogManager("""get_test""").get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',
                                                                                               log_filename="""get_test.log""")
-    test_log.info(now)
+    test_log.info(str(now)+"王松达到顶峰")
 
 #定义oe任务创建
 @app.task(rate_limit='750/m')
