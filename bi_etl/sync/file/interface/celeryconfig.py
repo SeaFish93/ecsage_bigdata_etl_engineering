@@ -16,4 +16,4 @@ CELERYD_PREFETCH_MULTIPLIER = 4
 CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'pickle'
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
-worker_hijack_root_logger = False
+CELERYD_HIJACK_ROOT_LOGGER = False
