@@ -27,10 +27,10 @@ hostname = socket.gethostname()
 #定义oe任务创建
 @app.task(rate_limit='5/m')
 def get_test(string=""):
-    now = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime())
+    now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
     print(now,"=================================")
-    test_log = LogManager("""get_test""").get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',
-                                                                                              log_filename="""get_test.log_%s"""%(now))
+    test_log = LogManager("""get_test_%s"""%(now)).get_logger_and_add_handlers(2,log_path='/home/ecsage_data/oceanengine/async/2',
+                                                                      log_filename="""get_test_%s.log"""%(now))
     test_log.info(str(now)+"############")
 
 #定义oe任务创建
