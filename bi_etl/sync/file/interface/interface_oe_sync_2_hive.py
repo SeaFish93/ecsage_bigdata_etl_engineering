@@ -49,6 +49,7 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
 
 def get_sync_pages_number():
   print("begin %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
+  local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
   celery_sync_task_status = """/home/ecsage_data/oceanengine/async/2/celery_sync_task_status.log"""
   celery_sync_task_data_status = "/home/ecsage_data/oceanengine/async/2/celery_sync_task_data_status.log"
   page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
