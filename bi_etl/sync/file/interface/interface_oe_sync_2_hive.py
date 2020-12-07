@@ -42,8 +42,6 @@ def main(TaskInfo,Level="",**kwargs):
 
 def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile="",DataFileDir="",DataFile="",IsFilter=""):
     param_json = ParamJson
-    print(param_json,"#########################")
-    exit(0)
     db_data = DataList
     for data in db_data:
         param_json["advertiser_id"] = data[0]
