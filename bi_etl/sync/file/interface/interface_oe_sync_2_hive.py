@@ -40,7 +40,7 @@ def main(TaskInfo,Level="",**kwargs):
     exec_date = airflow.execution_date_utc8_str[0:10]
     get_sync_interface_2_local(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
 
-def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile="",DataFileDir="",DataFile=""):
+def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile="",DataFileDir="",DataFile="",IsFilter=""):
     param_json = ParamJson
     print(param_json,"#########################")
     exit(0)
