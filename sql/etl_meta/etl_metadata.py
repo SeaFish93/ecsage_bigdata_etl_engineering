@@ -106,6 +106,41 @@ class EtlMetaDataSQL():
     where status = 1
       and dag_id = '%s'
   """ % ("##{dag_id}##")
+#获取创建接口tasks
+  get_interface_oe_sync_tasks_sql = """
+    select `task_id` 
+  ,`tasks_model_id`
+  ,`dag_id`
+  ,`interface_module`
+  ,`interface_url`
+  ,`data_json`
+  ,`start_date_name`
+  ,`end_date_name`
+  ,`filter_modify_time_name`
+  ,`sync_level`
+  ,`source_handle`
+  ,`source_db`
+  ,`source_table`
+  ,`target_handle`
+  ,`target_db`
+  ,`target_table`
+  ,`status`
+  ,`select_exclude_columns`
+  ,`is_report`
+  ,`key_columns`
+  ,`exclude_account_id`
+  ,filter_db_name
+  ,filter_table_name
+  ,filter_column_name
+  ,`create_user`
+  ,`update_user`
+  ,`create_time`
+  ,`update_time`
+   from interface_sync_tasks_info
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
+
 
   #获取创建接口tasks
   get_interface_sync_account_tasks_sql = """

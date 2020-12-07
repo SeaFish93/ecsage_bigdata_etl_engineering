@@ -330,6 +330,15 @@ inner join metadb.dags_info b
 on a.dag_id = b.dag_id
 where b.status = 1
   and a.status = 1
+    union all
+select a.dag_id
+       ,a.task_id
+       ,b.schedule_interval
+from metadb.interface_sync_tasks_info a
+inner join metadb.dags_info b
+on a.dag_id = b.dag_id
+where b.status = 1
+  and a.status = 1
 ;
 
 create table metadb.etl_tasks_info
@@ -820,4 +829,41 @@ CREATE TABLE `oe_async_create_task_interface` (
    group_by  varchar(1000) comment'接口groupby',
    fields   longtext comment'接口指定指标字段'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='巨量异步创建任务'
+
+
+
+
+
+
+CREATE TABLE `interface_sync_tasks_info` (
+  `task_id` varchar(100) NOT NULL COMMENT 'task唯一标识，格式：【业务名】_【源库名】_【源表名】,字母则为小写',
+  `tasks_model_id` varchar(100) NOT NULL COMMENT 'task唯一标识，格式：【业务名】_【源库名】_【源表名】,字母则为小写',
+  `dag_id` varchar(500) DEFAULT NULL,
+  `interface_module` varchar(200) NOT NULL COMMENT '接口模块',
+  `interface_url` varchar(200) NOT NULL COMMENT '接口url',
+  `data_json` varchar(2000) DEFAULT NULL COMMENT '接口访问参数',
+  `start_date_name` varchar(50) DEFAULT NULL COMMENT '开始日期字段名称',
+  `end_date_name` varchar(50) DEFAULT NULL COMMENT '结束日期字段名称',
+  `filter_modify_time_name` varchar(50) DEFAULT NULL COMMENT '过滤更新日期字段名称',
+  `sync_level` varchar(20) NOT NULL COMMENT '同步层级：file：文件落地至hive，ods：落地至ods库，snap：落地至snap库',
+  `source_handle` varchar(200) DEFAULT NULL COMMENT '连接来源平台handle',
+  `source_db` varchar(200) DEFAULT NULL COMMENT '来源库',
+  `source_table` varchar(200) DEFAULT NULL COMMENT '来源表',
+  `target_handle` varchar(200) DEFAULT NULL COMMENT '连接目标平台handle',
+  `target_db` varchar(200) DEFAULT NULL COMMENT '目标库',
+  `target_table` varchar(200) DEFAULT NULL COMMENT '目标表',
+  `status` int(2) NOT NULL DEFAULT '0' COMMENT '是否有效，1：有效，0：无效',
+  `select_exclude_columns` varchar(2000) DEFAULT NULL COMMENT '查询排除字段',
+  `is_report` int(11) DEFAULT NULL COMMENT '是否报表，1:是，0:否',
+  `key_columns` varchar(2000) DEFAULT NULL COMMENT '目标表主键，多个字段以英文逗号分隔。当is_report字段为1时，此字段必须填',
+  `exclude_account_id` varchar(500) DEFAULT NULL COMMENT '过滤掉指定子账户',
+  filter_db_name   varchar(200) DEFAULT NULL COMMENT '过滤指定库',
+  filter_table_name   varchar(200) DEFAULT NULL COMMENT '过滤指定表',
+  filter_column_name   varchar(200) DEFAULT NULL COMMENT '过滤指定字段',
+  `create_user` varchar(32) DEFAULT NULL COMMENT '创建者，邮箱@前缀',
+  `update_user` varchar(32) DEFAULT NULL COMMENT '最后更新者，邮箱@前缀',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
+  PRIMARY KEY (`task_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='同步接口作业配置表'
 
