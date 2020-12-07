@@ -110,7 +110,6 @@ def get_sync_interface_2_local(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate
             where a.exec_date = '%s'
               and b.flag = '%s.%s'
             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
-            limit 1
        """%(ExecDate,AirflowDag,AirflowTask)
       is_filter = True
   else:
