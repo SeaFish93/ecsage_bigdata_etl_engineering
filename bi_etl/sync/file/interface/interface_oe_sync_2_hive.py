@@ -96,7 +96,7 @@ def get_sync_interface_2_local(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate
       select concat_ws(' ',%s) from %s.%s where etl_date='%s' %s group by %s
       """%(filter_column_name,filter_db_name,filter_table_name,ExecDate,filter_config,filter_column_name)
       print(filter_sql,"#########################################")
-      os.system("""spark-sql -e -S"%s"> %s"""%(filter_sql,tmp_data_task_file))
+      os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
   exit(0)
   sql = """
        select a.account_id, a.media_type, a.service_code,b.campaign_id
