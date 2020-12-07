@@ -81,11 +81,11 @@ def get_sync_pages_number():
        inner join metadb.campaign_test b
        on a.account_id = b.advertiser_id
        where a.exec_date = '2020-12-06'
-         and a.account_id in( '1681782749640718')
+       --  and a.account_id in( '1681782749640718')
        group by a.account_id, a.media_type, a.service_code,b.campaign_id
     """
   ok,db_data = etl_md.get_all_rows(sql)
-  #etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
+  etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
   set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status,DataFileDir=async_account_file,
                         DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
