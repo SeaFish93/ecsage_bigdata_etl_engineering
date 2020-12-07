@@ -69,7 +69,7 @@ def get_sync_pages_number():
                }
   url_path = "/open_api/2/report/creative/get/"
   os.system("""rm -f %s*"""%(celery_sync_task_status.split(".")[0]))
-  os.system("""rm -f %s*""" % (sync_data_file.split(".")[0]))
+  #os.system("""rm -f %s*""" % (sync_data_file.split(".")[0]))
   os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
   os.system("""rm -f %s*""" % (celery_sync_task_data_status.split(".")[0]))
   os.system("""rm -f %s*""" % (data_task_file.split(".")[0]))
@@ -81,7 +81,7 @@ def get_sync_pages_number():
        inner join metadb.campaign_test b
        on a.account_id = b.advertiser_id
        where a.exec_date = '2020-12-06'
-       --  and a.account_id in( '1681961129889805')
+         and a.account_id in( '1630343345419276')
        group by a.account_id, a.media_type, a.service_code,b.campaign_id
     """
   ok,db_data = etl_md.get_all_rows(sql)
@@ -152,7 +152,7 @@ def get_sync_pages_number():
   wait_for_celery_status(StatusList=celery_task_id)
   print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   time.sleep(30)
-  print("正在写入本地文件！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  #重试异常
   ####### target_file = ["celery_sync_task_data_status.log","celery_sync_task_status.log"] #os.listdir(async_account_file)
   ####### status_data_file = celery_sync_task_data_status.split("/")[-1]
   ####### th = []
