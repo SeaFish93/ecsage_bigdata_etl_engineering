@@ -132,6 +132,7 @@ class EtlMetaDataSQL():
   ,filter_db_name
   ,filter_table_name
   ,filter_column_name
+  ,filter_config
   ,`create_user`
   ,`update_user`
   ,`create_time`

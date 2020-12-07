@@ -27,6 +27,19 @@ import ast
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
+
+#入口方法
+def main(TaskInfo,**kwargs):
+    global airflow
+    global developer
+    global regexp_extract_column
+    airflow = Airflow(kwargs)
+    media_type = TaskInfo[1]
+    task_type = TaskInfo[4]
+    print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    exec_date = airflow.execution_date_utc8_str[0:10]
+    get_sync_interface_2_local(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+
 def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile="",DataFileDir="",DataFile=""):
     param_json = ParamJson
     db_data = DataList
@@ -49,32 +62,42 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
     columns = """page_num,account_id,service_code,remark,data,request_filter"""
     load_data_mysql(AsyncAccountFile=SyncDir, DataFile=PageTaskFile, TableName="oe_sync_page_interface",Columns=columns)
 
-def get_sync_pages_number():
-  print("begin %s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())),"===================")
+def get_sync_interface_2_local(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-  celery_sync_task_status = """/home/ecsage_data/oceanengine/async/2/celery_sync_task_status.log"""
-  celery_sync_task_data_status = "/home/ecsage_data/oceanengine/async/2/celery_sync_task_data_status.log"
-  page_task_file = "/home/ecsage_data/oceanengine/async/2/page_task_file.log"
-  data_task_file = """/home/ecsage_data/oceanengine/async/2/testtest.log"""
-  sync_data_file = """/home/ecsage_data/oceanengine/async/2/sync_data_file.log"""
-  async_account_file = "/home/ecsage_data/oceanengine/async/2"
-  task_exception_file = "/home/ecsage_data/oceanengine/async/2/task_exception_file.log"
-  write_local_files_stauts = "/home/ecsage_data/oceanengine/async/2/write_local_files_stauts.log"
-  param_json = {"end_date": "2020-12-06", "page_size": "1000", "start_date": "2020-12-06",
-               "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_CITY_NAME'],
-               "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
-               "page": 1,
-               "filtering": {"campaign_ids": "","status":"CREATIVE_STATUS_ALL"},
-               "service_code": "data[2]"
-               }
-  url_path = "/open_api/2/report/creative/get/"
-  os.system("""rm -f %s*"""%(celery_sync_task_status.split(".")[0]))
-  os.system("""rm -f %s*""" % (sync_data_file.split(".")[0]))
-  os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
-  os.system("""rm -f %s*""" % (celery_sync_task_data_status.split(".")[0]))
+  local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
+  celery_get_page_status = """%s/celery_get_page_status.log"""%(local_dir)
+  celery_get_data_status = "%s/celery_get_data_status.log"%(local_dir)
+  page_task_file = "%s/page_task_file.log"%(local_dir)
+  data_task_file = """%s/data_task_file.log"""%(local_dir)
+  tmp_data_task_file = """%s/tmp_data_task_file.log""" % (local_dir)
+  task_exception_file = "%s/task_exception_file.log"%(local_dir)
+  param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
+  ######param_json = {"end_date": "2020-12-06", "page_size": "1000", "start_date": "2020-12-06",
+  ######             "advertiser_id": "", "group_by": ['STAT_GROUP_BY_FIELD_ID', 'STAT_GROUP_BY_CITY_NAME'],
+  ######             "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+  ######             "page": 1,
+  ######             "filtering": {"campaign_ids": "","status":"CREATIVE_STATUS_ALL"},
+  ######             "service_code": "data[2]"
+  ######             }
+  url_path = TaskInfo[4]
+  filter_db_name = TaskInfo[21]
+  filter_table_name = TaskInfo[22]
+  filter_column_name = TaskInfo[23]
+  filter_config = TaskInfo[24]
+  os.system("""mkdir -p %s"""%(local_dir))
+  os.system("""rm -f %s*"""%(celery_get_page_status.split(".")[0]))
   os.system("""rm -f %s*""" % (data_task_file.split(".")[0]))
+  os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
+  os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
   os.system("""rm -f %s*"""%(task_exception_file.split(".")[0]))
-  os.system("""rm -f %s*""" % (write_local_files_stauts.split(".")[0]))
+  #判断是否从列表过滤
+  if filter_db_name is not None and len(filter_db_name) > 0:
+      filter_sql = """
+      select concat_ws(' ',%s) from %s.%s where etl_date='%s' %s group by %s
+      """%(filter_column_name,filter_db_name,filter_table_name,ExecDate,filter_config,filter_column_name)
+      print(filter_sql,"#########################################")
+      os.system("""spark-sql -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
+  exit(0)
   sql = """
        select a.account_id, a.media_type, a.service_code,b.campaign_id
        from metadb.oe_account_interface a
@@ -86,17 +109,16 @@ def get_sync_pages_number():
     """
   ok,db_data = etl_md.get_all_rows(sql)
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
-  set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
-                        PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status,DataFileDir=async_account_file,
-                        DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
+  set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=local_dir,
+                        PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,DataFileDir=local_dir,
+                        DataFile=data_task_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
   #重试异常
   n = 3
   for i in range(n):
-    os.system("""rm -f %s*""" % (celery_sync_task_status.split(".")[0]))
+    os.system("""rm -f %s*""" % (celery_get_page_status.split(".")[0]))
     os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
-    os.system("""rm -f %s*""" % (celery_sync_task_data_status.split(".")[0]))
+    os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
     os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
-    os.system("""rm -f %s*""" % (write_local_files_stauts.split(".")[0]))
     sql = """
       select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']',''))
    from(select account_id,service_code,request_filter,count(distinct remark) as rn
@@ -120,11 +142,11 @@ def get_sync_pages_number():
   """
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
-       set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=async_account_file,
-                              PageTaskFile=page_task_file, CelerySyncTaskFile=celery_sync_task_status,
-                              DataFileDir=async_account_file,
-                              DataFile=sync_data_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) +
-                                       sync_data_file.split("/")[-1].split(".")[1])
+       set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=local_dir,
+                              PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,
+                              DataFileDir=local_dir,
+                              DataFile=data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) +
+                                       data_task_file.split("/")[-1].split(".")[1])
 
        ok, db_data = etl_md.get_all_rows(sql)
        if db_data is not None and len(db_data) > 0:
@@ -151,12 +173,12 @@ def get_sync_pages_number():
            param_json["filtering"]["campaign_ids"] = eval(dt[4])
            celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
                                                                 TaskExceptionFile=task_exception_file,
-                                                                DataFileDir=async_account_file,
-                                                                DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_2_%s."%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
-           os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
+                                                                DataFileDir=local_dir,
+                                                                DataFile=data_task_file.split("/")[-1].split(".")[0]+"_2_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
+           os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_get_data_status))
      # 获取状态
      print("正在等待celery队列执行完成！！！")
-     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
+     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
      wait_for_celery_status(StatusList=celery_task_id)
      print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
      time.sleep(30)
@@ -371,6 +393,3 @@ def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",TableName="",Column
        for file in exception_file_list:
            load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],TableName=TableName, Columns=Columns)
            os.system("""rm -f %s/%s"""%(file[0],file[1]))
-
-if __name__ == '__main__':
-    get_sync_pages_number()
