@@ -115,6 +115,7 @@ def get_sync_pages_number():
    from metadb.oe_sync_page_interface a 
    where page_num = 0
      and remark = '正常'
+     and data is null
   """
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
