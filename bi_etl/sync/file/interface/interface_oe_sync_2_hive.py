@@ -93,22 +93,32 @@ def get_sync_interface_2_local(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate
   #判断是否从列表过滤
   if filter_db_name is not None and len(filter_db_name) > 0:
       filter_sql = """
-      select concat_ws(' ',%s) from %s.%s where etl_date='%s' %s group by %s
-      """%(filter_column_name,filter_db_name,filter_table_name,ExecDate,filter_config,filter_column_name)
+      select concat_ws(' ',%s,'%s.%s') from %s.%s where etl_date='%s' %s group by %s
+      """%(filter_column_name,AirflowDag,AirflowTask,filter_db_name,filter_table_name,ExecDate,filter_config,filter_column_name)
       print(filter_sql,"#########################################")
       os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
-  exit(0)
-  sql = """
-       select a.account_id, a.media_type, a.service_code,b.campaign_id
-       from metadb.oe_account_interface a
-       inner join metadb.campaign_test b
-       on a.account_id = b.advertiser_id
-       where a.exec_date = '2020-12-06'
-       --  and a.account_id in( '1681782749640718')
-       group by a.account_id, a.media_type, a.service_code,b.campaign_id
-    """
+      etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s.%s' "%(AirflowDag,AirflowTask))
+      columns = """advertiser_id,filter_id,flag"""
+      load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, TableName="oe_sync_filter_info",Columns=columns)
+      sql = """
+            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag
+            from metadb.oe_account_interface a
+            inner join metadb.oe_sync_filter_info b
+            on a.account_id = b.advertiser_id
+            where a.exec_date = '%s'
+              and b.flag = '%s.%s'
+            group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
+       """%(ExecDate,AirflowDag,AirflowTask)
+  else:
+      sql = """
+            select a.account_id, a.media_type, a.service_code,'' as id,'%s.%s'
+            from metadb.oe_account_interface a
+            where a.exec_date = '%s'
+            group by a.account_id, a.media_type, a.service_code
+       """%(AirflowDag,AirflowTask,ExecDate)
   ok,db_data = etl_md.get_all_rows(sql)
-  etl_md.execute_sql("delete from metadb.oe_sync_page_interface  ")
+  exit(0)
+  etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s.%s' "%(AirflowDag,AirflowTask))
   set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=local_dir,
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,DataFileDir=local_dir,
                         DataFile=data_task_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
