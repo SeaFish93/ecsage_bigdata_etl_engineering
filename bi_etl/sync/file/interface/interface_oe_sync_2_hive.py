@@ -42,6 +42,8 @@ def main(TaskInfo,Level="",**kwargs):
 
 def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile="",DataFileDir="",DataFile=""):
     param_json = ParamJson
+    print(param_json,"#########################")
+    exit(0)
     db_data = DataList
     for data in db_data:
         param_json["advertiser_id"] = data[0]
@@ -90,12 +92,12 @@ def get_sync_interface_2_local(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate
   os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
   os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
   os.system("""rm -f %s*"""%(task_exception_file.split(".")[0]))
+  is_filter = False
   #判断是否从列表过滤
   if filter_db_name is not None and len(filter_db_name) > 0:
       filter_sql = """
       select concat_ws(' ',%s,'%s.%s') from %s.%s where etl_date='%s' %s group by %s
       """%(filter_column_name,AirflowDag,AirflowTask,filter_db_name,filter_table_name,ExecDate,filter_config,filter_column_name)
-      print(filter_sql,"#########################################")
       os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s.%s' "%(AirflowDag,AirflowTask))
       columns = """advertiser_id,filter_id,flag"""
@@ -109,6 +111,7 @@ def get_sync_interface_2_local(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate
               and b.flag = '%s.%s'
             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
        """%(ExecDate,AirflowDag,AirflowTask)
+      is_filter = True
   else:
       sql = """
             select a.account_id, a.media_type, a.service_code,'' as id,'%s.%s'
@@ -117,9 +120,8 @@ def get_sync_interface_2_local(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate
             group by a.account_id, a.media_type, a.service_code
        """%(AirflowDag,AirflowTask,ExecDate)
   ok,db_data = etl_md.get_all_rows(sql)
-  exit(0)
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s.%s' "%(AirflowDag,AirflowTask))
-  set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=local_dir,
+  set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=local_dir,IsFilter=is_filter,
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,DataFileDir=local_dir,
                         DataFile=data_task_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
   #重试异常
