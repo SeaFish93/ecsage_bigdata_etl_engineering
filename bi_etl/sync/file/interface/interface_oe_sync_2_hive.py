@@ -47,9 +47,11 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
         param_json["advertiser_id"] = data[0]
         param_json["service_code"] = data[2]
         param_json["filtering"]["campaign_ids"] = [int(data[3])]
+        task_flag = data[4]
         celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
                                                                     PageTaskFile=PageTaskFile,
-                                                                    DataFileDir=DataFileDir,DataFile=DataFile
+                                                                    DataFileDir=DataFileDir,DataFile=DataFile,
+                                                                    TaskFlag=task_flag
                                                                     )
         os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id, data[0], data[1], data[2], CelerySyncTaskFile))
     # 获取状态
@@ -57,9 +59,9 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
     print("正在等待获取页数celery队列执行完成！！！")
     wait_for_celery_status(StatusList=celery_task_id)
     print("获取页数celery队列执行完成！！！")
-    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())), "===================")
+    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     # 保存MySQL
-    columns = """page_num,account_id,service_code,remark,data,request_filter"""
+    columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
     load_data_mysql(AsyncAccountFile=SyncDir, DataFile=PageTaskFile, TableName="oe_sync_page_interface",Columns=columns)
 
 def get_sync_interface_2_local(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
@@ -124,52 +126,53 @@ def get_sync_interface_2_local(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,DataFileDir=local_dir,
                         DataFile=data_task_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
   #重试异常
-  n = 3
-  for i in range(n):
-    os.system("""rm -f %s*""" % (celery_get_page_status.split(".")[0]))
-    os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
-    os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
-    os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
-    sql = """
-      select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']',''))
-   from(select account_id,service_code,request_filter,count(distinct remark) as rn
-        from metadb.oe_sync_page_interface
-        group by account_id,service_code,request_filter
-        having count(distinct remark) = 1
-       ) tmp
-   inner join metadb.oe_sync_page_interface tmp1
-   on tmp.account_id = tmp1.account_id
-   and tmp.service_code = tmp1.service_code
-   and tmp.request_filter = tmp1.request_filter
-   where tmp1.remark = '异常'
-   group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter
-      union all
-   select account_id, '222' media_type, service_code,trim(replace(replace(request_filter,'[',''),']',''))
-   from metadb.oe_sync_page_interface a 
-   where page_num = 0
-     and remark = '正常'
-     and (data is null or length(data) = 0)
-  group by account_id, service_code,request_filter,request_filter
-  """
-    ok, db_data = etl_md.get_all_rows(sql)
-    if db_data is not None and len(db_data) > 0:
-       set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=local_dir,
-                              PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,
-                              DataFileDir=local_dir,
-                              DataFile=data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) +
-                                       data_task_file.split("/")[-1].split(".")[1])
-
-       ok, db_data = etl_md.get_all_rows(sql)
-       if db_data is not None and len(db_data) > 0:
-         time.sleep(60)
-       else:
-          break
+  ##########n = 3
+  ##########for i in range(n):
+  ##########  sql = """
+  ##########    select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']',''))
+  ########## from(select account_id,service_code,request_filter,count(distinct remark) as rn
+  ##########      from metadb.oe_sync_page_interface
+  ##########      group by account_id,service_code,request_filter
+  ##########      having count(distinct remark) = 1
+  ##########     ) tmp
+  ########## inner join metadb.oe_sync_page_interface tmp1
+  ########## on tmp.account_id = tmp1.account_id
+  ########## and tmp.service_code = tmp1.service_code
+  ########## and tmp.request_filter = tmp1.request_filter
+  ########## where tmp1.remark = '异常'
+  ########## group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter
+  ##########    union all
+  ########## select account_id, '222' media_type, service_code,trim(replace(replace(request_filter,'[',''),']',''))
+  ########## from metadb.oe_sync_page_interface a
+  ########## where page_num = 0
+  ##########   and remark = '正常'
+  ##########   and (data is null or length(data) = 0)
+  ##########group by account_id, service_code,request_filter,request_filter
+  ##########"""
+  ##########  ok, db_data = etl_md.get_all_rows(sql)
+  ##########  if db_data is not None and len(db_data) > 0:
+  ##########     os.system("""rm -f %s*""" % (celery_get_page_status.split(".")[0]))
+  ##########     os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
+  ##########     os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
+  ##########     os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
+  ##########     set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=local_dir,
+  ##########                            PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,
+  ##########                            DataFileDir=local_dir,
+  ##########                            DataFile=data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) +
+  ##########                                     data_task_file.split("/")[-1].split(".")[1])
+  ##########
+  ##########     ok, db_data = etl_md.get_all_rows(sql)
+  ##########     if db_data is not None and len(db_data) > 0:
+  ##########       time.sleep(60)
+  ##########     else:
+  ##########        break
 
   sql = """
     select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
-    from metadb.oe_sync_page_interface a where page_num > 1 -- and page_num <= 50
+    from metadb.oe_sync_page_interface a where page_num > 1
+    and flag = '%s.%s'
     group by a.account_id,  a.service_code,a.page_num,a.request_filter
-  """
+  """%(AirflowDag,AirflowTask)
   ok, datas = etl_md.get_all_rows(sql)
   if datas is not None and len(datas) > 0:
      for dt in datas:

@@ -199,13 +199,13 @@ def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",Exec
 
 #定义oe同步数据
 @app.task(rate_limit='1000/m')
-def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",DataFile=""):
+def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",DataFile="",TaskFlag=""):
     set_true = True
     n = 0
     page = 0
     data_list = ""
     while set_true:
-      remark = get_sync_data_return(ParamJson=ParamJson, UrlPath=UrlPath,PageTaskFile=PageTaskFile,DataFileDir=DataFileDir,DataFile=DataFile)
+      remark = get_sync_data_return(ParamJson=ParamJson, UrlPath=UrlPath,PageTaskFile=PageTaskFile,DataFileDir=DataFileDir,DataFile=DataFile,TaskFlag=TaskFlag)
       if remark == "正常":
           set_true = False
       else:
