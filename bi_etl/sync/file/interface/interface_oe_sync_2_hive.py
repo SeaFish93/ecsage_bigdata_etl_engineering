@@ -81,7 +81,7 @@ def get_sync_pages_number():
        inner join metadb.campaign_test b
        on a.account_id = b.advertiser_id
        where a.exec_date = '2020-12-06'
-         and a.account_id in( '1630343345419276')
+       --  and a.account_id in( '1630343345419276')
        group by a.account_id, a.media_type, a.service_code,b.campaign_id
     """
   ok,db_data = etl_md.get_all_rows(sql)
@@ -110,6 +110,11 @@ def get_sync_pages_number():
    and tmp.request_filter = tmp1.request_filter
    where tmp1.remark = '异常'
    group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter
+      union all
+   select account_id, '222' media_type, service_code,trim(replace(replace(request_filter,'[',''),']',''))
+   from metadb.oe_sync_page_interface a 
+   where page_num = 0
+     and remark = '正常'
   """
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
@@ -130,61 +135,62 @@ def get_sync_pages_number():
     from metadb.oe_sync_page_interface a where page_num > 1 -- and page_num <= 50
     group by a.account_id,  a.service_code,a.page_num,a.request_filter
   """
-  ok,datas = etl_md.get_all_rows(sql)
-  for dt in datas:
-     page_number = int(dt[3])
-     for page in range(page_number):
-      if page > 0:
-        pages = page + 1
-        param_json["page"] = pages
-        account_id = dt[0]
-        param_json["advertiser_id"] = account_id
-        param_json["service_code"] = dt[2]
-        param_json["filtering"]["campaign_ids"] = eval(dt[4])
-        celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
-                                                             TaskExceptionFile=task_exception_file,
-                                                             DataFileDir=async_account_file,
-                                                             DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_2_%s."%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
-        os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
-  # 获取状态
-  print("正在等待celery队列执行完成！！！")
-  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
-  wait_for_celery_status(StatusList=celery_task_id)
-  print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-  time.sleep(30)
-  #重试异常
-  ####### target_file = ["celery_sync_task_data_status.log","celery_sync_task_status.log"] #os.listdir(async_account_file)
-  ####### status_data_file = celery_sync_task_data_status.split("/")[-1]
-  ####### th = []
-  ####### i = 0
-  ####### for files in target_file:
-  #######     get_file = "%s/%s" % (async_account_file, files)
-  #######
-  #######
-  #######     etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-  #######                                my_run=run_thread,
-  #######                                StatusFile=get_file, DataLocalFile=sync_data_file,
-  #######                                WriteLocalFilesStauts=write_local_files_stauts
-  #######                                )
-  #######     etl_thread.start()
-  #######     th.append(etl_thread)
-  #######     i = i + 1
-  ####### for etl_th in th:
-  #######    etl_th.join()
-  #######
-  ####### print("等待写入本地文件！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-  ####### celery_write_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=write_local_files_stauts)
-  ####### wait_for_celery_status(StatusList=celery_write_task_id)
+  ok, datas = etl_md.get_all_rows(sql)
+  if datas is not None and len(datas) > 0:
+     for dt in datas:
+        page_number = int(dt[3])
+        for page in range(page_number):
+         if page > 0:
+           pages = page + 1
+           param_json["page"] = pages
+           account_id = dt[0]
+           param_json["advertiser_id"] = account_id
+           param_json["service_code"] = dt[2]
+           param_json["filtering"]["campaign_ids"] = eval(dt[4])
+           celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
+                                                                TaskExceptionFile=task_exception_file,
+                                                                DataFileDir=async_account_file,
+                                                                DataFile=sync_data_file.split("/")[-1].split(".")[0]+"_2_%s."%(local_time)+sync_data_file.split("/")[-1].split(".")[1])
+           os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_sync_task_data_status))
+     # 获取状态
+     print("正在等待celery队列执行完成！！！")
+     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_sync_task_data_status)
+     wait_for_celery_status(StatusList=celery_task_id)
+     print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+     time.sleep(30)
+     #重试异常
+     ####### target_file = ["celery_sync_task_data_status.log","celery_sync_task_status.log"] #os.listdir(async_account_file)
+     ####### status_data_file = celery_sync_task_data_status.split("/")[-1]
+     ####### th = []
+     ####### i = 0
+     ####### for files in target_file:
+     #######     get_file = "%s/%s" % (async_account_file, files)
+     #######
+     #######
+     #######     etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
+     #######                                my_run=run_thread,
+     #######                                StatusFile=get_file, DataLocalFile=sync_data_file,
+     #######                                WriteLocalFilesStauts=write_local_files_stauts
+     #######                                )
+     #######     etl_thread.start()
+     #######     th.append(etl_thread)
+     #######     i = i + 1
+     ####### for etl_th in th:
+     #######    etl_th.join()
+     #######
+     ####### print("等待写入本地文件！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+     ####### celery_write_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=write_local_files_stauts)
+     ####### wait_for_celery_status(StatusList=celery_write_task_id)
 
-      #if status_data_file in files:
-          #get_file = "%s/%s" % (async_account_file, files)
-          #with open(get_file) as lines:
-              #array = lines.readlines()
-              #for data in array:
-                  #get_data1 = data.strip('\n').split(" ")
-                  #get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=account_id,DataLocalFile=sync_data_file)
-  print("完成写入本地文件！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-  print("执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+         #if status_data_file in files:
+             #get_file = "%s/%s" % (async_account_file, files)
+             #with open(get_file) as lines:
+                 #array = lines.readlines()
+                 #for data in array:
+                     #get_data1 = data.strip('\n').split(" ")
+                     #get_celery_job_data(CeleryTaskId=get_data1[0],AccountId=account_id,DataLocalFile=sync_data_file)
+     print("完成写入本地文件！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+     print("执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
 def run_thread(StatusFile="",DataLocalFile="",WriteLocalFilesStauts="",arg=None):
    if arg is not None and len(arg)>0:
