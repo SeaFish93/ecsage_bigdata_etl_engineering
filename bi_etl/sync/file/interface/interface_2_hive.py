@@ -2,7 +2,7 @@
 # @Time    : 2019/11/12 18:04
 # @Author  : wangsong
 # @FileName: interface_2_hive.py
-# @Software: PyCharm
+# @Software: PyChar
 # function info：用于同步接口数据到hive ods\snap\backtrace表
 
 
@@ -15,6 +15,8 @@ from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_da
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
+from ecsage_bigdata_etl_engineering.common.base.def_table_struct import analysis_etlmid_cloumns
 
 import datetime
 import math
@@ -81,7 +83,7 @@ def main(TaskInfo, Level,**kwargs):
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
                           TargetDB=target_db, TargetTable=target_table,IsReport=is_report,SelectExcludeColumns=select_exclude_columns,KeyColumns=key_columns,ExecDate=exec_date
-                          ,Array_Flag=array_flag,Specified_Pars_Str=specified_pars_str)
+                          ,ArrayFlag=array_flag)
     elif Level == "snap":
       exec_snap_hive_table(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
                              TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=exec_date)
@@ -408,7 +410,10 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",Array_Flag="",Specified_Pars_Str=""):
+                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag=""):
+   def_ods_structure(HiveSession=HiveSession,BeelineSession=BeelineSession
+                     ,SourceTable=SourceTable,TargetDB=TargetDB,TargetTable=TargetTable
+                     ,IsTargetPartition="Y",ExecDate=ExecDate,ArrayFlag=ArrayFlag)
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
@@ -435,7 +440,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
-   array_flag= Array_Flag
+   array_flag= ArrayFlag
    if array_flag in ["list", "custom_audience_list"]:
        regexp_extract = """get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data.%s') as data_colums""" % (array_flag)
    else:
@@ -453,10 +458,21 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ######   regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
    ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
    ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
-   specified_pars_str= Specified_Pars_Str
+   #get_field_sql_pre=""""""
+   specified_pars_str=analysis_etlmid_cloumns(HiveSession=HiveSession,BeelineSession=BeelineSession
+                                        ,SourceTable=SourceTable,ExecDate=ExecDate,ArrayFlag=ArrayFlag)
+   specified_pars_list=list(x.split(".")[-1]for x in specified_pars_str.split(","))
+   null_field_lset=list(set(json_tuple_column.split(",")).difference(set(specified_pars_list)))
+   null_field_list = []
+   for null_field in null_field_lset:
+       null_field_list.append(",null as `%s`" % (null_field))
+   null_field_str = ''.join(null_field_list)
+
+
+   print("Json待解析字段：" + specified_pars_str)
    if specified_pars_str is not None and len(specified_pars_str) > 0:
        pars_str_list = []
-       for pars_field in iter(specified_pars_str.split(",")):
+       for pars_field in specified_pars_str.split(","):
            as_str = pars_field.split(".")[-1]
            pars_str_list.append("get_json_object(data_num_colums,'$.%s') as `%s`" % (pars_field, as_str))
        pars_str = ','.join(pars_str_list)
@@ -465,7 +481,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         drop table if exists %s.%s_tmp;
         create table %s.%s_tmp stored as parquet as 
         select %s,%s
-        from (select returns_colums,%s,returns_account_id,request_type
+        from (select returns_colums,%s %s,returns_account_id,request_type
               from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
                           ,split(data_colums,'@@####@@')[1] as data_colums
                           ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
@@ -483,7 +499,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                    lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
               ) a
               ;
-        """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,pars_str,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
+        """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,pars_str,null_field_str,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
 
    else:
         sql = """
@@ -602,6 +618,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
               key_columns_join = "on a.`%s` = b.`%s`"%(key,key)
            else:
                key_columns_join = "and a.`%s` = b.`%s`" % (key, key)
+           num += 1
            key_columns_joins = key_columns_joins + " " + key_columns_join
            num = num + 1
        #获取ods表字段
