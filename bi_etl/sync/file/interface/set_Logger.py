@@ -1,4 +1,9 @@
-# coding=utf8
+# -*- coding: utf-8 -*-
+# @Time    : 2019/11/12 18:04
+# @Author  : wangsong
+# @FileName: set.py
+# @Software: PyCharm
+# function info：定义oe异步接口
 
 import os
 import unittest
@@ -24,10 +29,6 @@ class LogLevelException(Exception):
 
 
 class LogManager(object):
-  """
-  一个日志类，用于创建和捕获日志，支持将日志打印到控制台打印和写入日志文件。
-  """
-
   def __init__(self, logger_name=None):
     """
     :param logger_name: 日志名称，当为None时候打印所有日志
