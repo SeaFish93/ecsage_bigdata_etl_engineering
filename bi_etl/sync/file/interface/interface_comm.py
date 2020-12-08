@@ -86,14 +86,14 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",
              remark = "正常"
              data = str(data_list).replace(" ","")
          else:
-             print("没有页数：%s,%s,%s,%s"%(service_code,advertiser_id,data_list,param_json["filtering"]["campaign_ids"]))
+             print("没有页数：%s,%s,%s,%s"%(service_code,advertiser_id,data_list,param_json["filtering"]["ad_ids"]))
              remark = "异常"
              data = str(data_list).replace(" ","")
     except:
-      print("请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
+      print("请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["ad_ids"]))
       remark = "异常"
-      data = "请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"])
-    os.system("""echo "%s %s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"],TaskFlag, page_task_file))
+      data = "请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["ad_ids"])
+    os.system("""echo "%s %s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["ad_ids"],TaskFlag, page_task_file))
     return remark
 
 def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
@@ -143,11 +143,11 @@ def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
              remark = "正常"
              data = data_list
          else:
-             print("获取数据异常：%s,%s,%s,%s"%(service_code,advertiser_id,data_list,param_json["filtering"]["campaign_ids"]))
+             print("获取数据异常：%s,%s,%s,%s"%(service_code,advertiser_id,data_list,param_json["filtering"]["ad_ids"]))
              remark = "数据异常"
              data = data_list
     except:
-      print("请求数据失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
+      print("请求数据失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["ad_ids"]))
       remark = "数据失败"
       data = "数据失败"
     return remark

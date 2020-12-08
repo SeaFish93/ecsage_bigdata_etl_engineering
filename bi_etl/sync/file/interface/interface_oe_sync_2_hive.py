@@ -46,7 +46,7 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
     for data in db_data:
         param_json["advertiser_id"] = data[0]
         param_json["service_code"] = data[2]
-        param_json["filtering"]["campaign_ids"] = [int(data[3])]
+        param_json["filtering"]["ad_ids"] = [int(data[3])]
         task_flag = data[4]
         celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
                                                                     PageTaskFile=PageTaskFile,
@@ -135,7 +135,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
    where tmp1.remark = '异常'
      and tmp1.flag = '%s.%s'
    group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter,tmp1.flag
-  """%(AirflowDag,AirflowTask,AirflowDag,AirflowTask,AirflowDag,AirflowTask)
+  """%(AirflowDag,AirflowTask,AirflowDag,AirflowTask)
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
        os.system("""rm -f %s*""" % (celery_get_page_status.split(".")[0]))
@@ -171,7 +171,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
            account_id = dt[0]
            param_json["advertiser_id"] = account_id
            param_json["service_code"] = dt[2]
-           param_json["filtering"]["campaign_ids"] = eval(dt[4])
+           param_json["filtering"]["ad_ids"] = eval(dt[4])
            celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
                                                                 TaskExceptionFile=task_exception_file,
                                                                 DataFileDir=local_dir,
