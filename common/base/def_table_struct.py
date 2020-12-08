@@ -66,8 +66,10 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
     target_table_columns = target_table_columns_list[2]
     # 找出ODS在etl_mid表不一致的字段
     diff_source_target_columns = set(target_table_columns).difference(set(etlmid_table_columns))
+    exclude_fields={'returns_account_id', 'returns_colums','request_type','extract_system_time', 'etl_date'}
+    diff_source_target_columns = list(diff_source_target_columns - exclude_fields)
 
-    return diff_source_target_columns,target_table_columns,etlmid_table_columns
+    return list(diff_source_target_columns),target_table_columns,etlmid_table_columns
 
 #解析etl_mid文档
 def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag=""):
