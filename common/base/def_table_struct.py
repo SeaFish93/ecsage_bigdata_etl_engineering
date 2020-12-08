@@ -65,29 +65,33 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
 
 #解析etl_mid文档
 def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",Array_Flag=""):
-    filter_line = """ where etl_date = '%s' and length(request_type) > 3000 limit 1 """%(ExecDate)
+    filter_line = """ where etl_date = '%s' and length(request_type) > 1000 limit 1 """%(ExecDate)
     spec_pars = """dimensions,metrics"""
     spec_pars_list = list(spec_pars.split(","))
     all_pars_list = []
-    get_field_sql = """select request_type from %s.%s %s""" % ("etl_mid",SourceTable,filter_line)
+    get_field_sql = """select request_data from %s.%s %s""" % ("etl_mid",SourceTable,filter_line)
     ok, data = HiveSession.get_all_rows(get_field_sql)
-
-    split_flag = """## {"""
-    return_Str= data[0]
-    print("获取etl_mid的样本数据" + data[0])
-    data_str = return_Str[return_Str.find(split_flag) + 3:]
-    print(data_str)
-    data_str2 = json.loads(data_str)
-    data_str2 = data_str2['data']
-    if Array_Flag is not None and len(Array_Flag) > 0:
-        data_str3 = data_str2[Array_Flag][0]
-    else:
-        data_str3 = data_str2
-    for keys in data_str3:
-        if keys in spec_pars_list and isinstance(data_str3[keys], dict):
-            for key in data_str3[keys]:
-                all_pars_list.append(keys + "." + key)
+    if len(data)>0:
+        split_flag = """## {"""
+        return_Str= data[0]
+        print("获取etl_mid的样本数据" + data[0])
+        data_str = return_Str[return_Str.find(split_flag) + 3:]
+        print(data_str)
+        data_str2 = json.loads(data_str)
+        data_str2 = data_str2['data']
+        if Array_Flag is not None and len(Array_Flag) > 0:
+            data_str3 = data_str2[Array_Flag][0]
         else:
-            all_pars_list.append(keys)
+            data_str3 = data_str2
+        for keys in data_str3:
+            if keys in spec_pars_list and isinstance(data_str3[keys], dict):
+                for key in data_str3[keys]:
+                    all_pars_list.append(keys + "." + key)
+            else:
+                all_pars_list.append(keys)
+    else:
+        msg = "【etl_mid库】中，%s的%s接入数据可能存在异常" % (ExecDate,TargetTable)
+        print(msg)
+        set_exit(LevelStatu="red", MSG=msg)
 
     return ','.join(all_pars_list)
