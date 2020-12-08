@@ -215,7 +215,7 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
         create table if not exists %s.%s
         (
          request_data string
-        )partitioned by(etl_date string,request_type string,delete_type string)
+        )partitioned by(etl_date string)
         row format delimited fields terminated by '\\001' 
         ;
     """ % (TargetDB,TargetTable,TargetDB,TargetTable)
