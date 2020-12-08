@@ -48,7 +48,6 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
         param_json["service_code"] = data[2]
         param_json["filtering"]["campaign_ids"] = [int(data[3])]
         task_flag = data[4]
-        print(param_json,"**********************************************************")
         celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
                                                                     PageTaskFile=PageTaskFile,
                                                                     DataFileDir=DataFileDir,DataFile=DataFile,
@@ -72,9 +71,10 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
   celery_get_data_status = "%s/celery_get_data_status.log"%(local_dir)
   page_task_file = "%s/page_task_file.log"%(local_dir)
   data_task_file = """%s/data_task_file.log"""%(local_dir)
-  tmp_data_task_file = """%s/tmp_data_task_file.log""" % (local_dir)
+  tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
   task_exception_file = "%s/task_exception_file.log"%(local_dir)
   param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
+  #设置查询日期
   param_json["start_date"] = ExecDate
   param_json["end_date"] = ExecDate
   url_path = TaskInfo[4]
@@ -121,7 +121,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,DataFileDir=local_dir,
                         DataFile=data_task_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
   #重试异常
-  n = 1
+  n = 3
   for i in range(n):
     sql = """
       select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
@@ -183,7 +183,6 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
            param_json["advertiser_id"] = account_id
            param_json["service_code"] = dt[2]
            param_json["filtering"]["campaign_ids"] = eval(dt[4])
-           print(param_json,"############################################")
            celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
                                                                 TaskExceptionFile=task_exception_file,
                                                                 DataFileDir=local_dir,
@@ -198,7 +197,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
      target_file = os.listdir(local_dir)
      data_task_file_list = []
      for files in target_file:
-         if data_task_file.split("/")[-1] in files:
+         if str(data_task_file.split("/")[-1]).split(".")[0] in files:
              data_task_file_list.append("%s/%s"%(local_dir, files))
      #数据落地至etl_mid
      load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
