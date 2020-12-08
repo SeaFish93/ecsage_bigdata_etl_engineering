@@ -83,11 +83,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
   filter_column_name = TaskInfo[23]
   filter_config = TaskInfo[24]
   os.system("""mkdir -p %s"""%(local_dir))
-  os.system("""rm -f %s*"""%(celery_get_page_status.split(".")[0]))
-  os.system("""rm -f %s*""" % (data_task_file.split(".")[0]))
-  os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
-  os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
-  os.system("""rm -f %s*"""%(task_exception_file.split(".")[0]))
+  os.system("""rm -f %s/*"""%(local_dir))
   is_filter = False
   #判断是否从列表过滤
   if filter_db_name is not None and len(filter_db_name) > 0:
@@ -252,6 +248,7 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
     load_table_sqls = load_table_sql_0 + load_table_sqls
     # 上传hdfs
     get_local_hdfs_thread(TargetDb=TargetDB, TargetTable=TargetTable, ExecDate=ExecDate, DataFileList=LocalFileList,HDFSDir=hdfs_dir)
+    print("结束上传HDFS，启动load")
     # 落地至hive
     ok_data = BeelineSession.execute_sql(load_table_sqls)
     if ok_data is False:
