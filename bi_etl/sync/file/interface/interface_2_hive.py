@@ -481,7 +481,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         add file hdfs:///tmp/airflow/get_arrary.py;
         drop table if exists %s.%s_tmp;
         create table %s.%s_tmp stored as parquet as 
-        select %s,%s
+        select %s
         from (select returns_colums,%s %s,returns_account_id,request_type
               from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
                           ,split(data_colums,'@@####@@')[1] as data_colums
@@ -500,7 +500,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                    lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
               ) a
               ;
-        """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,pars_str,null_field_str,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
+        """%("etl_mid",TargetTable,"etl_mid",TargetTable,columns,pars_str,null_field_str,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
 
    else:
         sql = """
@@ -552,7 +552,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         ) tmp where rn_row_number = 1
                ;
         drop table if exists %s.%s_tmp;
-        """%(TargetDB,TargetTable,ExecDate,select_json_tuple_column,select_system_table_column,select_json_tuple_column,select_system_table_column,row_number_columns,"etl_mid",TargetTable,"etl_mid",TargetTable)
+        """%(TargetDB,TargetTable,ExecDate,columns,select_json_tuple_column,select_system_table_column,row_number_columns,"etl_mid",TargetTable,"etl_mid",TargetTable)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
