@@ -462,7 +462,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    specified_pars_str=analysis_etlmid_cloumns(HiveSession=HiveSession,BeelineSession=BeelineSession
                                         ,SourceTable=SourceTable,ExecDate=ExecDate,Array_Flag=Array_Flag)
    specified_pars_list=list(x.split(".")[-1]for x in specified_pars_str.split(","))
-   null_field_lset=list(set(json_tuple_columns.split(",")).difference(set(specified_pars_list)))
+   null_field_lset=list(set(json_tuple_column.split(",")).difference(set(specified_pars_list)))
    null_field_list = []
    for null_field in null_field_lset:
        null_field_list.append(",null as `%s`" % (null_field))
