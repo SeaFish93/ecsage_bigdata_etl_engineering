@@ -79,7 +79,10 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",
          test_log.info(json.dumps(data_list))
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
-         data = ""
+         if page == 0:
+            data = str(data_list).replace(" ","")
+         else:
+            data = ""
       else:
          #没权限及token失败
          if int(data_list["code"]) in [40002,40105,40104]:
