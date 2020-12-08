@@ -233,7 +233,7 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile="",DataFile
                param_json = ast.literal_eval(json.loads(param_json))
                advertiser_id = param_json["advertiser_id"]
                service_code = param_json["service_code"]
-               os.system("""echo "%s %s %s %s %s">>%s""" % (page, advertiser_id, service_code, remark, param_json["filtering"]["campaign_ids"], TaskExceptionFile))
+               os.system("""echo "%s %s %s %s %s">>%s""" % (page, advertiser_id, service_code, remark, param_json["filtering"]["ad_ids"], TaskExceptionFile))
                set_true = False
            else:
                time.sleep(5)
