@@ -18,7 +18,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
     etlmid_table_columns_str = analysis_etlmid_cloumns(HiveSession=HiveSession, SourceTable=SourceTable,
                                                        TargetTable=TargetTable
                                                        , ExecDate=ExecDate, Array_Flag=Array_Flag)
-    for etlmid_table_column in iter(etlmid_table_columns_str.split(',')):
+    for etlmid_table_column in etlmid_table_columns_str.split(','):
         etlmid_table_columns.append(etlmid_table_column.split(".")[-1])
 
     sql = """ show tables in %s like '%s' """ % (TargetDB, TargetTable)
@@ -41,14 +41,14 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
       else:
         if IsTargetPartition == "Y":
             # 默认配置表结构
-            str = ','.join( x.split(".")[-1] for x in Specified_Pars_Str.split(","))
+            str = ','.join(etlmid_table_columns)
             default_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time"
             # 直接依赖配置的字段信息，类型以String为主
-            str_list = []
+            field_list = []
             strs = str + ',' + default_table_columns
-            for str in strs.split(","):
-                str_list.append(str + " String\n")
-            create_table_colums = ','.join(str_list)
+            for field_str in strs.split(","):
+                field_list.append(field_str + " String\n")
+            create_table_colums = ','.join(field_list)
 
             create_table_sql = """
                create table if not exists  %s.%s(
@@ -74,9 +74,9 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
     if len(data)>0:
         split_flag = """## {"""
         return_Str= data[0][0]
-        print("获取etl_mid的样本数据" + data[0][0])
+        #print("获取etl_mid的样本数据" + data[0][0])
         data_str = return_Str[return_Str.find(split_flag) + 3:]
-        print(data_str)
+        #print(data_str)
         data_str2 = json.loads(data_str)
         data_str2 = data_str2['data']
         if Array_Flag is not None and len(Array_Flag) > 0:
