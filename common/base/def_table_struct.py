@@ -62,6 +62,14 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
       msg = "获取比较源表%s.%s与目标表字段%s.%s是否一致，发生异常！！！"%(TargetDB,TargetTable)
       print(msg)
       set_exit(LevelStatu="red", MSG=msg)
+    target_table_columns_list = get_create_hive_table_columns(HiveSession=HiveSession, DB=TargetDB, Table=TargetTable)
+    target_table_columns = target_table_columns_list[2]
+    # 找出ODS在etl_mid表不一致的字段
+    diff_source_target_columns = set(target_table_columns).difference(set(etlmid_table_columns))
+    exclude_fields={'returns_account_id', 'returns_colums','request_type','extract_system_time', 'etl_date'}
+    diff_source_target_columns = list(diff_source_target_columns - exclude_fields)
+    #1.ODS-ETL_MID,2,ODS,3.ETL_MID
+    return list(diff_source_target_columns),target_table_columns,etlmid_table_columns
 
 #解析etl_mid文档
 def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag=""):
