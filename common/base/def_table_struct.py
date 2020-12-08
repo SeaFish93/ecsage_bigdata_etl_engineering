@@ -65,7 +65,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
 
 #解析etl_mid文档
 def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",Array_Flag=""):
-    filter_line = """ where etl_date = '%s' and length(request_type) > 1000 limit 1 """%(ExecDate)
+    filter_line = """ where etl_date = '%s' and length(request_data) > 1000 limit 1 """%(ExecDate)
     spec_pars = """dimensions,metrics"""
     spec_pars_list = list(spec_pars.split(","))
     all_pars_list = []
