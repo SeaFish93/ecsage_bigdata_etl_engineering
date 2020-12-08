@@ -15,6 +15,8 @@ from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_da
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
+from ecsage_bigdata_etl_engineering.common.base.def_table_struct import analysis_etlmid_cloumns
 
 import datetime
 import math
@@ -409,6 +411,9 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",Array_Flag="",Specified_Pars_Str=""):
+   def_ods_structure(HiveSession=HiveSession,BeelineSession=BeelineSession
+                     ,SourceTable=SourceTable,TargetDB=TargetDB,TargetTable=TargetTable
+                     ,IsTargetPartition="Y",ExecDate=ExecDate,Array_Flag=Array_Flag,Specified_Pars_Str=Specified_Pars_Str)
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
@@ -454,47 +459,10 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
    ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
    #get_field_sql_pre=""""""
-
-   get_field_sql = """
-    add file hdfs:///tmp/airflow/get_arrary.py;
-    drop table if exists %s.%s_tmp_colums;
-    create table %s.%s_tmp_colums stored as parquet as
-        select 
-           data_num_colums
-         from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
-                     ,split(data_colums,'@@####@@')[1] as data_colums
-                     ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
-                     ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
-              from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                   from(select %s,%s,%s
-                               ,request_type
-                        from %s.%s a
-                        where a.etl_date = '%s'
-                          and %s
-                       ) a
-                   where data_colums is not null and data_colums <> '[]'
-                   ) b
-              ) c lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums 
-         limit 1
-          """%("etl_mid",TargetTable,"etl_mid",TargetTable,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
-   #HiveSession.execute_sql(get_field_sql_pre)
-   ok = BeelineSession.execute_sql(get_field_sql)
-   ok, data = HiveSession.get_all_rows("select * from %s.%s_tmp_colums limit 1" % ("etl_mid",TargetTable))
-   print("获取etl_mid的样本数据" + data[0][0])
-
-   spec_pars = """dimensions,metrics"""
-   spec_pars_list = list(spec_pars.split(","))
-   all_pars_list = []
-
-   dic_str = json.loads(data[0][0])
-   for keys in dic_str:
-       if keys in spec_pars_list and isinstance(dic_str[keys], dict):
-           for key in dic_str[keys]:
-               all_pars_list.append(keys + "." + key)
-       else:
-           all_pars_list.append(keys)
-
-   specified_pars_str= ','.join(all_pars_list)
+   etl_mid_pars=analysis_etlmid_cloumns(HiveSession=HiveSession,BeelineSession=BeelineSession
+                                        ,SourceTable=SourceTable,ExecDate=ExecDate,Array_Flag=Array_Flag)
+   #取到任务配置表中的字段，与etl_mid新增字段取并集，顺序没有关系
+   specified_pars_str=','.join(list(set(Specified_Pars_Str.split(",")).union(set(etl_mid_pars.split(",")))))
    print("Json待解析字段：" + specified_pars_str)
    if specified_pars_str is not None and len(specified_pars_str) > 0:
        pars_str_list = []
