@@ -83,7 +83,7 @@ def main(TaskInfo, Level,**kwargs):
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
                           TargetDB=target_db, TargetTable=target_table,IsReport=is_report,SelectExcludeColumns=select_exclude_columns,KeyColumns=key_columns,ExecDate=exec_date
-                          ,Array_Flag=array_flag,Specified_Pars_Str=specified_pars_str)
+                          ,ArrayFlag=array_flag)
     elif Level == "snap":
       exec_snap_hive_table(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
                              TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=exec_date)
@@ -410,10 +410,10 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",Array_Flag="",Specified_Pars_Str=""):
+                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag=""):
    def_ods_structure(HiveSession=HiveSession,BeelineSession=BeelineSession
                      ,SourceTable=SourceTable,TargetDB=TargetDB,TargetTable=TargetTable
-                     ,IsTargetPartition="Y",ExecDate=ExecDate,Array_Flag=Array_Flag,Specified_Pars_Str=Specified_Pars_Str)
+                     ,IsTargetPartition="Y",ExecDate=ExecDate,ArrayFlag=ArrayFlag)
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
@@ -440,7 +440,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
-   array_flag= Array_Flag
+   array_flag= ArrayFlag
    if array_flag in ["list", "custom_audience_list"]:
        regexp_extract = """get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data.%s') as data_colums""" % (array_flag)
    else:
@@ -460,7 +460,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
    #get_field_sql_pre=""""""
    specified_pars_str=analysis_etlmid_cloumns(HiveSession=HiveSession,BeelineSession=BeelineSession
-                                        ,SourceTable=SourceTable,ExecDate=ExecDate,Array_Flag=Array_Flag)
+                                        ,SourceTable=SourceTable,ExecDate=ExecDate,ArrayFlag=ArrayFlag)
    specified_pars_list=list(x.split(".")[-1]for x in specified_pars_str.split(","))
    null_field_lset=list(set(json_tuple_column.split(",")).difference(set(specified_pars_list)))
    null_field_list = []

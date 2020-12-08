@@ -13,11 +13,11 @@ import json
 #
 #
 
-def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",Array_Flag="",Specified_Pars_Str=""):
+def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag=""):
     etlmid_table_columns = []
     etlmid_table_columns_str = analysis_etlmid_cloumns(HiveSession=HiveSession, SourceTable=SourceTable,
                                                        TargetTable=TargetTable
-                                                       , ExecDate=ExecDate, Array_Flag=Array_Flag)
+                                                       , ExecDate=ExecDate, ArrayFlag=ArrayFlag)
     for etlmid_table_column in etlmid_table_columns_str.split(','):
         etlmid_table_columns.append(etlmid_table_column.split(".")[-1])
 
@@ -64,7 +64,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
       set_exit(LevelStatu="red", MSG=msg)
 
 #解析etl_mid文档
-def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",Array_Flag=""):
+def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag=""):
     filter_line = """ where etl_date = '%s' and length(request_data) > 1000 limit 1 """%(ExecDate)
     spec_pars = """dimensions,metrics"""
     spec_pars_list = list(spec_pars.split(","))
@@ -79,8 +79,8 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         #print(data_str)
         data_str2 = json.loads(data_str)
         data_str2 = data_str2['data']
-        if Array_Flag is not None and len(Array_Flag) > 0:
-            data_str3 = data_str2[Array_Flag][0]
+        if ArrayFlag is not None and len(ArrayFlag) > 0:
+            data_str3 = data_str2[ArrayFlag][0]
         else:
             data_str3 = data_str2
         for keys in data_str3:
