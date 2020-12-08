@@ -153,7 +153,7 @@ def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
       print("请求数据失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
       remark = "数据失败"
       data = "数据失败"
-    return remark
+    return remark,page
 
 #多线程上传hdfs
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):

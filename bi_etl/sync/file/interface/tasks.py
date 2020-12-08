@@ -223,8 +223,8 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile="",DataFile
    page = 0
    data = ""
    while set_true:
-       remark = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath,DataFileDir=DataFileDir,DataFile=DataFile)
-       if remark == "正常":
+       remark,page = get_sync_data(ParamJson=ParamJson,UrlPath=UrlPath,DataFileDir=DataFileDir,DataFile=DataFile)
+       if remark == "正常" and int(page) > 0:
            set_true = False
        else:
            if n > 5:
