@@ -73,8 +73,8 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
     ok, data = HiveSession.get_all_rows(get_field_sql)
     if len(data)>0:
         split_flag = """## {"""
-        return_Str= data[0]
-        print("获取etl_mid的样本数据" + data[0])
+        return_Str= data[0][0]
+        print("获取etl_mid的样本数据" + data[0][0])
         data_str = return_Str[return_Str.find(split_flag) + 3:]
         print(data_str)
         data_str2 = json.loads(data_str)
