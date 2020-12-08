@@ -118,7 +118,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,DataFileDir=local_dir,
                         DataFile=data_task_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
   #重试异常
-  n = 3
+  n = 1
   for i in range(n):
     sql = """
       select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
@@ -135,7 +135,15 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
    where tmp1.remark = '异常'
      and tmp1.flag = '%s.%s'
    group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter,tmp1.flag
-  """%(AirflowDag,AirflowTask,AirflowDag,AirflowTask)
+      union all
+   select account_id, '222' media_type, service_code,trim(replace(replace(request_filter,'[',''),']','')),flag
+   from metadb.oe_sync_page_interface a 
+   where page_num = 0
+     and remark = '正常'
+     and data like '%s'
+     and flag = '%s.%s'
+  group by account_id, service_code,request_filter,request_filter,flag
+  """%(AirflowDag,AirflowTask,AirflowDag,AirflowTask,"%OK%",AirflowDag,AirflowTask)
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
        os.system("""rm -f %s*""" % (celery_get_page_status.split(".")[0]))
@@ -187,7 +195,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
      data_task_file_list = []
      for files in target_file:
          if data_task_file.split("/")[-1] in files:
-             data_task_file_list.append((local_dir, files))
+             data_task_file_list.append("%s/%s"%(local_dir, files))
      #数据落地至etl_mid
      load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
                          TargetTable=TargetTable, ExecDate=ExecDate)
@@ -219,6 +227,7 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
     load_table_sql_0 = ""
     load_table_sql = ""
     for data in LocalFileList:
+        print(data,"####################################")
         local_file = """%s""" % (data)
         # 落地mid表
         if load_num == 0:
