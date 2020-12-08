@@ -48,6 +48,7 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
         param_json["service_code"] = data[2]
         param_json["filtering"]["campaign_ids"] = [int(data[3])]
         task_flag = data[4]
+        print(param_json,"**********************************************************")
         celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
                                                                     PageTaskFile=PageTaskFile,
                                                                     DataFileDir=DataFileDir,DataFile=DataFile,
@@ -74,6 +75,8 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
   tmp_data_task_file = """%s/tmp_data_task_file.log""" % (local_dir)
   task_exception_file = "%s/task_exception_file.log"%(local_dir)
   param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
+  param_json["start_date"] = ExecDate
+  param_json["end_date"] = ExecDate
   url_path = TaskInfo[4]
   filter_db_name = TaskInfo[21]
   filter_table_name = TaskInfo[22]
@@ -180,6 +183,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
            param_json["advertiser_id"] = account_id
            param_json["service_code"] = dt[2]
            param_json["filtering"]["campaign_ids"] = eval(dt[4])
+           print(param_json,"############################################")
            celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
                                                                 TaskExceptionFile=task_exception_file,
                                                                 DataFileDir=local_dir,
