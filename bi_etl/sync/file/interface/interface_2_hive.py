@@ -441,6 +441,9 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
+   ##2020=12-08 22:00 临时处理
+   columns=','.join("`%s`"%(x) for x in columns.split(","))
+
    array_flag= ArrayFlag
    if array_flag in ["list", "custom_audience_list"]:
        regexp_extract = """get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data.%s') as data_colums""" % (array_flag)
@@ -546,7 +549,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    sql = """
         insert overwrite table %s.%s
         partition(etl_date = '%s')
-        select %s,%s from(
+        select %s from(
         select %s,%s,row_number()over(partition by %s order by 1) as rn_row_number
         from %s.%s_tmp
         ) tmp where rn_row_number = 1
