@@ -51,7 +51,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
             create_table_colums = ','.join(str_list)
 
             create_table_sql = """
-               create table %s.%s(
+               create table if not exists  %s.%s(
                      %s
                ) partitioned by(etl_date string)
                row format delimited fields terminated by '\\001' 
@@ -65,11 +65,11 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
 
 #解析etl_mid文档
 def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",Array_Flag=""):
-    filter_line = """ where length(request_type) > 3000 limit 1 """
+    filter_line = """ where etl_date = '%s' and length(request_type) > 3000 limit 1 """%(ExecDate)
     spec_pars = """dimensions,metrics"""
     spec_pars_list = list(spec_pars.split(","))
     all_pars_list = []
-    get_field_sql = """select request_type from %s.%s """ % ("etl_mid",SourceTable, ExecDate, filter_line)
+    get_field_sql = """select request_type from %s.%s %s""" % ("etl_mid",SourceTable,filter_line)
     ok, data = HiveSession.get_all_rows(get_field_sql)
 
     split_flag = """## {"""
