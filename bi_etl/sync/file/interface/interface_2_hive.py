@@ -411,9 +411,10 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag=""):
-   def_ods_structure(HiveSession=HiveSession,BeelineSession=BeelineSession
-                     ,SourceTable=SourceTable,TargetDB=TargetDB,TargetTable=TargetTable
-                     ,IsTargetPartition="Y",ExecDate=ExecDate,ArrayFlag=ArrayFlag)
+   etl_ods_field_diff=def_ods_structure(HiveSession=HiveSession,BeelineSession=BeelineSession
+                                        ,SourceTable=SourceTable,TargetDB=TargetDB,TargetTable=TargetTable
+                                        ,IsTargetPartition="Y",ExecDate=ExecDate,ArrayFlag=ArrayFlag)
+   print("返回的表差异 %s || %s || %s"%(etl_ods_field_diff[0],etl_ods_field_diff[1],etl_ods_field_diff[2]))
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
@@ -465,7 +466,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    null_field_lset=list(set(json_tuple_column.split(",")).difference(set(specified_pars_list)))
    null_field_list = []
    for null_field in null_field_lset:
-       null_field_list.append(",null as `%s`" % (null_field))
+       null_field_list.append(",cast( null as String) as `%s`" % (null_field))
    null_field_str = ''.join(null_field_list)
 
 
