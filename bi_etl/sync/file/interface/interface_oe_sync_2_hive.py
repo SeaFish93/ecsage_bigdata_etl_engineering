@@ -121,7 +121,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
                         PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,DataFileDir=local_dir,
                         DataFile=data_task_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
   #重试异常
-  n = 3
+  n = 2
   for i in range(n):
     sql = """
       select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
