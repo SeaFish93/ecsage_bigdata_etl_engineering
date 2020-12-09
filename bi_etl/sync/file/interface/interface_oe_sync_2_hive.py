@@ -50,23 +50,23 @@ def advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate=""):
     celery_get_data_status = "%s/celery_get_data_status.log" % (local_dir)
     data_task_file = """%s/data_task_file.log""" % (local_dir)
     task_exception_file = "%s/task_exception_file.log" % (local_dir)
-    os.system("""mkdir -p %s""" % (local_dir))
-    os.system("""rm -f %s/*""" % (local_dir))
-    ok,datas = etl_md.get_all_rows("""select account_id,service_code from metadb.media_advertiser""")
-    data_file = data_task_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1]
-    for data in datas:
-       celery_task_id = get_advertisers_data_celery.delay(AccountIdList=[int(data[0])],ServiceCode=data[1],
-                                                          DataFileDir=local_dir,DataFile=data_file,
-                                                          TaskExceptionFile=task_exception_file,
-                                                          InterfaceFlag=interface_flag
-                                                          )
-       os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[1], celery_get_data_status))
-    # 获取状态
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
-    print("正在等待获取广告主celery队列执行完成！！！")
-    wait_for_celery_status(StatusList=celery_task_id)
-    print("获取广告主celery队列执行完成！！！")
-    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    data_file = data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
+    ##########os.system("""mkdir -p %s""" % (local_dir))
+    ##########os.system("""rm -f %s/*""" % (local_dir))
+    ##########ok,datas = etl_md.get_all_rows("""select account_id,service_code from metadb.media_advertiser""")
+    ##########for data in datas:
+    ##########   celery_task_id = get_advertisers_data_celery.delay(AccountIdList=[int(data[0])],ServiceCode=data[1],
+    ##########                                                      DataFileDir=local_dir,DataFile=data_file,
+    ##########                                                      TaskExceptionFile=task_exception_file,
+    ##########                                                      InterfaceFlag=interface_flag
+    ##########                                                      )
+    ##########   os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[1], celery_get_data_status))
+    ########### 获取状态
+    ##########celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
+    ##########print("正在等待获取广告主celery队列执行完成！！！")
+    ##########wait_for_celery_status(StatusList=celery_task_id)
+    ##########print("获取广告主celery队列执行完成！！！")
+    ##########print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     #重试异常
     print("正在等待获取广告主重试异常执行完成！！！")
     rerun_exception_tasks(AsyncAccountDir=local_dir, ExceptionFile=task_exception_file,
