@@ -69,7 +69,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
     exclude_fields={'returns_account_id', 'returns_colums','request_type','extract_system_time', 'etl_date'}
     diff_source_target_columns = list(diff_source_target_columns - exclude_fields)
     #1.ODS-ETL_MID,2,ODS,3.ETL_MID
-    return list(diff_source_target_columns),target_table_columns,etlmid_table_columns
+    return list(diff_source_target_columns),target_table_columns,etlmid_table_columns,etlmid_table_columns_str
 
 #解析etl_mid文档
 def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag=""):
