@@ -374,7 +374,7 @@ def wait_for_celery_status(StatusList=""):
 def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",ExecDate=""):
     celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
-    delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+    delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' or 1=1 """ % (InterfaceFlag)
     etl_md.execute_sql(delete_sql)
     columns = """account_id,service_code,interface_flag"""
     columns = """account_id,service_code"""
@@ -386,7 +386,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",Celery
         sql = """
           select distinct account_id,service_code,interface_flag
           from metadb.oe_sync_exception_tasks_interface a
-          where interface_flag = '%s'
+          where interface_flag = '%s' or 1=1
         """% (InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
@@ -399,7 +399,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",Celery
                os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
            wait_for_celery_status(StatusList=celery_task_id)
-           delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+           delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' or 1=1 """ % (InterfaceFlag)
            etl_md.execute_sql(delete_sql)
            save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
            print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
@@ -407,7 +407,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",Celery
            ex_sql = """
                      select account_id,service_code,interface_flag
                      from metadb.oe_sync_exception_tasks_interface a
-                     where interface_flag = '%s'
+                     where interface_flag = '%s' or 1=1
                      limit 1
               """% (InterfaceFlag)
            ok, ex_datas = etl_md.get_all_rows(ex_sql)
@@ -420,7 +420,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",Celery
     ex_sql = """
          select account_id,service_code,interface_flag
          from metadb.oe_sync_exception_tasks_interface a
-         where interface_flag = '%s'
+         where interface_flag = '%s' or 1=1
     """% (InterfaceFlag)
     ok, ex_datas = etl_md.get_all_rows(ex_sql)
     if ex_datas is not None and len(ex_datas) > 0:
