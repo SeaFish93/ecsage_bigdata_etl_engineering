@@ -441,8 +441,8 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
    json_tuple_column = json_tuple_columns.replace("'", "")
    select_json_tuple_column = json_tuple_columns.replace("'", "`")
-   ##2020=12-08 22:00 临时处理
-   columns=','.join("`%s`"%(x) for x in columns.split(","))
+   ##2020=12-08 22:00
+   columns=','.join("`%s`"%(x) for x in columns.split(",") if x != 'etl_date')
 
    array_flag= ArrayFlag
    if array_flag in ["list", "custom_audience_list"]:
@@ -463,15 +463,14 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
    ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
    #get_field_sql_pre=""""""
-   specified_pars_str=analysis_etlmid_cloumns(HiveSession=HiveSession,BeelineSession=BeelineSession
-                                        ,SourceTable=SourceTable,ExecDate=ExecDate,ArrayFlag=ArrayFlag)
-   specified_pars_list=list(x.split(".")[-1]for x in specified_pars_str.split(","))
-   null_field_lset=list(set(json_tuple_column.split(",")).difference(set(specified_pars_list)))
+   specified_pars_str = etl_ods_field_diff[3]
+   specified_pars_list = etl_ods_field_diff[2]
+   null_field_set=list(set(json_tuple_column.split(",")).difference(set(specified_pars_list)))
    null_field_list = []
-   for null_field in null_field_lset:
+   for null_field in null_field_set:
        null_field_list.append(",cast( null as String) as `%s`" % (null_field))
    null_field_str = ''.join(null_field_list)
-   null_field_str =null_field_str + ",'%s' as extract_system_time"%(system_time)
+   null_field_str =null_field_str + ",'%s' as `extract_system_time`"%(system_time)
 
    print("Json待解析字段：" + specified_pars_str)
    if specified_pars_str is not None and len(specified_pars_str) > 0:
@@ -550,12 +549,12 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
         insert overwrite table %s.%s
         partition(etl_date = '%s')
         select %s from(
-        select %s,%s,row_number()over(partition by %s order by 1) as rn_row_number
+        select %s,row_number()over(partition by %s order by 1) as rn_row_number
         from %s.%s_tmp
         ) tmp where rn_row_number = 1
                ;
         drop table if exists %s.%s_tmp;
-        """%(TargetDB,TargetTable,ExecDate,columns,select_json_tuple_column,select_system_table_column,row_number_columns,"etl_mid",TargetTable,"etl_mid",TargetTable)
+        """%(TargetDB,TargetTable,ExecDate,columns,columns,row_number_columns,"etl_mid",TargetTable,"etl_mid",TargetTable)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
