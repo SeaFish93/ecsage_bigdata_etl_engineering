@@ -241,10 +241,6 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile="",DataFile
        n = n + 1
    #return data
 
-@app.task()
-def get_write_local_files(CeleryTaskId="",AccountId="",DataLocalFile=""):
-    get_write_local_file(CeleryTaskId=CeleryTaskId,AccountId=AccountId,DataLocalFile=DataLocalFile)
-
 @app.task(rate_limit='1000/m')
 def get_advertisers_data(AccountIdList="",ServiceCode="",DataFileDir="",DataFile="",TaskExceptionFile="",InterfaceFlag=""):
    set_true = True
@@ -254,10 +250,10 @@ def get_advertisers_data(AccountIdList="",ServiceCode="",DataFileDir="",DataFile
        if int(code) == 0:
            set_true = False
        else:
-           if n > 5:
+           if n > 2:
                print("异常：%s %s %s"% (AccountIdList,ServiceCode,InterfaceFlag))
                os.system("""echo "异常：%s %s %s">>%s """ % (AccountIdList,ServiceCode,InterfaceFlag, TaskExceptionFile+".%s"%hostname))
                set_true = False
            else:
-               time.sleep(10)
+               time.sleep(2)
        n = n + 1
