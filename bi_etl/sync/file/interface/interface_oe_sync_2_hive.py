@@ -380,7 +380,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",Celery
     table_name = "oe_sync_exception_tasks_interface"
     save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
-    n = 3
+    n = 10
     for i in range(n):
         sql = """
           select distinct account_id,service_code,interface_flag
