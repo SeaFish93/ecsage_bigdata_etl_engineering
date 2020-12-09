@@ -495,6 +495,7 @@ def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=
            test_log.info(json.dumps(rsp_data))
         elif int(code) in [40002, 40105, 40104]:
             code = 0
+            os.system(""" echo "%s %s">>%s/%s.%s """%(AccountIdList,ServiceCode,DataFileDir,"account_status.log",hostname))
         else:
            code = 1
     except Exception as e:
@@ -519,6 +520,7 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
                 # 没权限及token失败
                 if int(data_list["code"]) in [40002, 40105, 40104]:
                     code = 0
+                    os.system(""" echo "%s">>%s/%s.%s """ % (str(ParamJson).replace(" "), DataFileDir, "account_status.log", hostname))
                 else:
                     code = 1
         except:
