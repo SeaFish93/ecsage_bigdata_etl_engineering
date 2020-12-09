@@ -377,6 +377,7 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",Celery
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
     etl_md.execute_sql(delete_sql)
     columns = """account_id,service_code,interface_flag"""
+    columns = """account_id,service_code"""
     table_name = "oe_sync_exception_tasks_interface"
     save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
