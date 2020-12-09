@@ -14,7 +14,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data_return
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data_return
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_advertiser_info
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_write_local_file
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_creative_detail_datas
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 import json
@@ -257,3 +257,25 @@ def get_advertisers_data(AccountIdList="",ServiceCode="",DataFileDir="",DataFile
            else:
                time.sleep(2)
        n = n + 1
+
+#创意详情
+@app.task(rate_limit='1000/m')
+def get_creative_detail_data(ParamJson="", UrlPath="", DataFileDir="", DataFile="",InterfaceFlag="",TaskExceptionFile=""):
+    set_true = True
+    n = 0
+    while set_true:
+        code = get_creative_detail_datas(ParamJson=ParamJson, UrlPath=UrlPath, DataFileDir=DataFileDir, DataFile=DataFile)
+        if int(code) == 0:
+            set_true = False
+        else:
+            if n > 2:
+                param_json = json.dumps(ParamJson)
+                param_json = ast.literal_eval(json.loads(param_json))
+                advertiser_id = param_json["advertiser_id"]
+                service_code = param_json["service_code"]
+                ad_id = param_json["ad_id"]
+                os.system("""echo "异常：%s %s %s %s">>%s """ % (advertiser_id, service_code, ad_id, InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
+                set_true = False
+            else:
+                time.sleep(2)
+        n = n + 1

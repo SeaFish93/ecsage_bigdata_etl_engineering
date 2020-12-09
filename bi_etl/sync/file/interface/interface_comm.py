@@ -498,3 +498,27 @@ def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=
     except Exception as e:
         code = 1
     return code
+
+#创意详情
+def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile=""):
+        param_json = json.dumps(ParamJson)
+        param_json = ast.literal_eval(json.loads(param_json))
+        service_code = param_json["service_code"]
+        token = get_oe_account_token(ServiceCode=service_code)
+        code = 1
+        del param_json["service_code"]
+        try:
+            data_list = set_sync_data(ParamJson=param_json, UrlPath=UrlPath, Token=token)
+            code = data_list["code"]
+            if int(code) == 0:
+                test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
+                test_log.info(json.dumps(data_list))
+            else:
+                # 没权限及token失败
+                if int(data_list["code"]) in [40002, 40105, 40104]:
+                    code = 0
+                else:
+                    code = 1
+        except:
+            code = 1
+        return code
