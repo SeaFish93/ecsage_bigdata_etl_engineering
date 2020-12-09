@@ -13,6 +13,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_set_oe_async_tasks_create
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data_return
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data_return
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_advertiser_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_write_local_file
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
@@ -243,3 +244,19 @@ def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile="",DataFile
 @app.task()
 def get_write_local_files(CeleryTaskId="",AccountId="",DataLocalFile=""):
     get_write_local_file(CeleryTaskId=CeleryTaskId,AccountId=AccountId,DataLocalFile=DataLocalFile)
+
+@app.task()
+def get_advertisers_data(AccountIdList="",ServiceCode="",DataFileDir="",DataFile="",TaskExceptionFile=""):
+   set_true = True
+   n = 0
+   while set_true:
+       code = get_advertiser_info(AccountIdList=AccountIdList,ServiceCode=ServiceCode,DataFileDir=DataFileDir,DataFile=DataFile)
+       if int(code) == 0:
+           set_true = False
+       else:
+           if n > 5:
+               os.system("""echo "异常：%s %s">>%s """ % (AccountIdList,ServiceCode, TaskExceptionFile))
+               set_true = False
+           else:
+               time.sleep(5)
+       n = n + 1

@@ -12,6 +12,7 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_sync_tasks_data_return as get_oe_sync_tasks_data_return_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_sync_tasks_data as get_oe_sync_tasks_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_advertisers_data as get_advertisers_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import os
@@ -36,9 +37,32 @@ def main(TaskInfo,Level="",**kwargs):
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
-       get_sync_interface_2_local(BeelineSession=beeline_session,TargetDB=target_db,TargetTable=target_table,
-                                  AirflowDag=airflow.dag, AirflowTask=airflow.task,
-                                  TaskInfo=TaskInfo, ExecDate=exec_date)
+       ####get_sync_interface_2_local(BeelineSession=beeline_session,TargetDB=target_db,TargetTable=target_table,
+       ####                           AirflowDag=airflow.dag, AirflowTask=airflow.task,
+       ####                           TaskInfo=TaskInfo, ExecDate=exec_date)
+       advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+
+#广告主
+def advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate=""):
+    local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+    local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s""" % (ExecDate, AirflowDag, AirflowTask)
+    celery_get_data_status = "%s/celery_get_data_status.log" % (local_dir)
+    data_task_file = """%s/data_task_file.log""" % (local_dir)
+    task_exception_file = "%s/task_exception_file.log" % (local_dir)
+    os.system("""mkdir -p %s""" % (local_dir))
+    os.system("""rm -f %s/*""" % (local_dir))
+    ok,datas = etl_md.get_all_rows("""select account_id,service_code from metadb.media_advertiser""")
+    for data in datas:
+       celery_task_id = get_advertisers_data_celery.delay(AccountIdList=[int(data[0])],ServiceCode=data[1],DataFileDir=local_dir,
+                                DataFile=data_task_file.split("/")[-1].split(".")[0]+"_1_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1],
+                                TaskExceptionFile=task_exception_file)
+       os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[1], celery_get_data_status))
+    # 获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
+    print("正在等待获取广告主celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("获取广告主celery队列执行完成！！！")
+    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
 def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile="",DataFileDir="",DataFile="",IsFilter=""):
     param_json = ParamJson

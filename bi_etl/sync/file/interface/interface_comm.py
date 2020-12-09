@@ -472,3 +472,29 @@ def get_write_local_file(CeleryTaskId="",AccountId="",DataLocalFile=""):
 #%s
 #endwritefilewwwww""" % (DataLocalFile + ".%s" % (hostname), str(data).replace("""`""","%%@@%%"))
 #       os.system(shell_cmd)
+
+#广告主
+def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=""):
+    token = get_oe_account_token(ServiceCode=ServiceCode)
+    open_api_url_prefix = "https://ad.oceanengine.com/open_api/"
+    uri = "2/advertiser/info/"
+    url = open_api_url_prefix + uri
+    params = {
+        "advertiser_ids": AccountIdList
+    }
+    headers = {"Access-Token": token,
+               'Connection': "close"
+               }
+    code = 1
+    try:
+        rsp = requests.get(url, json=params, headers=headers)
+        rsp_data = rsp.json()
+        code = rsp_data["code"]
+        if int(code) == 0 :
+           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
+           test_log.info(json.dumps(rsp_data))
+        else:
+           code = 1
+    except Exception as e:
+        code = 1
+    return code
