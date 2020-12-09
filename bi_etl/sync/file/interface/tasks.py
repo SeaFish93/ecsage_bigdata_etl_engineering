@@ -255,6 +255,7 @@ def get_advertisers_data(AccountIdList="",ServiceCode="",DataFileDir="",DataFile
            set_true = False
        else:
            if n > 5:
+               print("异常：%s %s"% (AccountIdList,ServiceCode))
                os.system("""echo "异常：%s %s">>%s """ % (AccountIdList,ServiceCode, TaskExceptionFile))
                set_true = False
            else:
