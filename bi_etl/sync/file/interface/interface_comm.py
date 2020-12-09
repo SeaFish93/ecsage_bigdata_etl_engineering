@@ -495,7 +495,7 @@ def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=
            test_log.info(json.dumps(rsp_data))
         elif int(code) in [40002, 40105, 40104]:
             code = 0
-            os.system(""" echo "%s %s">>%s/%s.%s """%(AccountIdList,ServiceCode,DataFileDir,"account_status.log",hostname))
+            os.system(""" echo "%s %s %s">>%s/%s.%s """%(str(rsp_data).replace(" ",""),AccountIdList,ServiceCode,DataFileDir,"account_status.log",hostname))
         else:
            code = 1
     except Exception as e:
