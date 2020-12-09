@@ -493,6 +493,8 @@ def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=
         if int(code) == 0 :
            test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
            test_log.info(json.dumps(rsp_data))
+        elif int(code) in [40002, 40105, 40104]:
+            code = 0
         else:
            code = 1
     except Exception as e:
