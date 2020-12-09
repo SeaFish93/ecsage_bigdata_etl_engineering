@@ -250,7 +250,7 @@ def get_advertisers_data(AccountIdList="",ServiceCode="",DataFileDir="",DataFile
        if int(code) == 0:
            set_true = False
        else:
-           if n > 2:
+           if n > 1:
                print("异常：%s %s %s"% (AccountIdList,ServiceCode,InterfaceFlag))
                os.system("""echo "%s %s %s">>%s """ % (str(AccountIdList).replace("[","").replace("]",""),ServiceCode,InterfaceFlag, TaskExceptionFile+".%s"%hostname))
                set_true = False
