@@ -252,7 +252,7 @@ def get_advertisers_data(AccountIdList="",ServiceCode="",DataFileDir="",DataFile
        else:
            if n > 2:
                print("异常：%s %s %s"% (AccountIdList,ServiceCode,InterfaceFlag))
-               os.system("""echo "异常：%s %s %s">>%s """ % (AccountIdList,ServiceCode,InterfaceFlag, TaskExceptionFile+".%s"%hostname))
+               os.system("""echo "%s %s %s">>%s """ % (AccountIdList,ServiceCode,InterfaceFlag, TaskExceptionFile+".%s"%hostname))
                set_true = False
            else:
                time.sleep(2)
