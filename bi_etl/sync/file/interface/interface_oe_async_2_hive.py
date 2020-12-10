@@ -11,7 +11,7 @@ from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_status as get_oe_async_tasks_status_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data as get_oe_async_tasks_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data_return as get_oe_async_tasks_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create as get_oe_async_tasks_create_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all as get_oe_async_tasks_create_all_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all_exception as get_oe_async_tasks_create_all_exception_celery
@@ -587,8 +587,30 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
                                    InterfaceFlag=airflow_instance)
     print("等待重试异常任务完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     time.sleep(30)
+    open_file_session = open(async_data_file, mode="w")
+    target_file = os.listdir(async_account_file)
+    status_data_file = celery_task_data_file.split("/")[-1]
+    for files in target_file:
+        if status_data_file in files:
+            get_file = "%s/%s"%(async_account_file,files)
+            with open(get_file) as lines:
+                array = lines.readlines()
+                for data in array:
+                    get_data1 = data.strip('\n').split(" ")
+                    get_celery_job_data(CeleryTaskId=get_data1[0],OpenFileSession=open_file_session)
+    open_file_session.close()
     #上传至hdfs
     get_local_file_2_hive(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
+
+def get_celery_job_data(CeleryTaskId="",OpenFileSession=""):
+    set_task = AsyncResult(id=str(CeleryTaskId))
+    value = set_task.get()
+    print(CeleryTaskId,type(value),"##################################################")
+    if 'str' in str(type(value)):
+      OpenFileSession.write(value)
+    else:
+      OpenFileSession.write(value.decode())
+    OpenFileSession.flush()
 
 #本地数据落地至hive
 def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline="",TargetDb="",TargetTable="",AsyncAccountDir="",DataFile="",ExecDate=""):
@@ -794,7 +816,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
     columns = """account_id,media_type,service_code,token_data,task_id,task_name,interface_flag"""
     table_name = "oe_async_exception_create_tasks_interface"
     save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
-    n = 3
+    n = 10
     for i in range(n):
         sql = """
               select distinct %s
