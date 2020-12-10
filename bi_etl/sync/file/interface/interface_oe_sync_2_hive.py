@@ -43,7 +43,6 @@ def main(TaskInfo,Level="",**kwargs):
                                   TaskInfo=TaskInfo, ExecDate=exec_date)
        #advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
-       print("======================================")
        get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
 
 #广告创意
@@ -80,6 +79,7 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
       filter_sql = """
       select concat_ws(' ',%s,'%s') from %s.%s where etl_date='%s' %s group by %s
       """%(filter_column_name,interface_flag,filter_db_name,filter_table_name,ExecDate,filter_config,filter_column_name)
+      print("获取筛选sql："+filter_sql)
       os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(interface_flag))
       columns = """advertiser_id,filter_id,flag"""
