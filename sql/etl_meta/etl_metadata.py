@@ -101,7 +101,7 @@ class EtlMetaDataSQL():
             ,update_user
             ,exclude_account_id
             ,array_flag
-            ,specified_pars_str
+            ,custom_set_parameter
     from metadb.interface_tasks_info_bak
     where status = 1
       and dag_id = '%s'
