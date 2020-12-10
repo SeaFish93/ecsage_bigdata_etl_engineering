@@ -102,7 +102,6 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
             group by a.account_id, a.media_type, a.service_code
        """%(interface_flag,ExecDate)
   ok,db_data = etl_md.get_all_rows(sql)
-  etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' "%(interface_flag))
   if db_data is not None and len(db_data) > 0:
     for data in db_data:
       account_id = int(data[0])
