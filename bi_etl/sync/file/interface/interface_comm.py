@@ -523,7 +523,5 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
                 else:
                     code = 1
         except Exception as e:
-            print(code, "#######################@@@@@@@@@@@@@@@@@@@@@@@@")
             code = 1
-        print(code, "&&&&&&&&&&&&&&&&&&&&&&&&#######################@@@@@@@@@@@@@@@@@@@@@@@@")
         return code
