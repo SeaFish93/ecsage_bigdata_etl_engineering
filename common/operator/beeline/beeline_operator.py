@@ -25,6 +25,10 @@ class BeelineNoSqlDB(BaseDB):
         sql_file = "/tmp/tmp_%s_%s.sql" % (task_name, str(t))
         f = open(sql_file, mode="w")
         #f.write("set hive.server2.logging.operation.level=NONE;\n")
+        if custom_set_parameter is not None and len(custom_set_parameter) > 0:
+            custom_set_parameter
+        else:
+            custom_set_parameter=""
         sql_set = """
           set mapred.task.timeout=1800000;
           set mapreduce.map.memory.mb=2048;
