@@ -268,6 +268,7 @@ def get_creative_detail_data(ParamJson="", UrlPath="", DataFileDir="", DataFile=
         if int(code) == 0:
             set_true = False
         else:
+            print(code,"============================================")
             if n > 2:
                 param_json = json.dumps(ParamJson)
                 param_json = ast.literal_eval(json.loads(param_json))

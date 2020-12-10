@@ -514,8 +514,9 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
             data_list = set_sync_data(ParamJson=param_json, UrlPath=UrlPath, Token=token)
             code = data_list["code"]
             if int(code) == 0:
-                test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
-                test_log.info(json.dumps(data_list))
+                pass
+                #test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
+                #test_log.info(json.dumps(data_list))
             else:
                 # 没权限及token失败
                 if int(data_list["code"]) in [40002, 40105, 40104]:

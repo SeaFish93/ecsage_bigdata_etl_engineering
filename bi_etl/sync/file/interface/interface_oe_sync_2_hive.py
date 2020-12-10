@@ -91,6 +91,8 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
             on a.account_id = b.advertiser_id
             where a.exec_date = '%s'
               and b.flag = '%s'
+              and a.account_id = '1679044314152973'
+              and b.filter_id = '1685568526811261'
             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
        """%(ExecDate,interface_flag)
       is_filter = True
