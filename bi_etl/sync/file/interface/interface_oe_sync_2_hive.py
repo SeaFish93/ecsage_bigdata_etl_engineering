@@ -107,7 +107,7 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
       account_id = int(data[0])
       ad_id = int(data[3])
       service_code = str(data[2])
-      param_json["advertiser_id"] = data[0]
+      param_json["advertiser_id"] = account_id
       param_json["ad_id"] = ad_id
       param_json["service_code"] = service_code
       celery_task_id = get_creative_detail_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
@@ -120,6 +120,13 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    # 重试异常
+    print("正在等待获取广告创意重试异常执行完成！！！")
+    rerun_exception_tasks(UrlPath=url_path,AsyncAccountDir=local_dir, ExceptionFile=task_exception_file,
+                          DataFile=data_file, CeleryTaskDataFile=celery_get_data_status,
+                          InterfaceFlag=interface_flag, ExecDate=ExecDate,Columns="""account_id,service_code,interface_flag,filter_id""",
+                          IsfilterID="Y",ParamJson=param_json)
+    print("获取广告创意重试异常执行完成！！！")
     #获取数据文件
     target_file = os.listdir(local_dir)
     data_task_file_list = []
@@ -129,6 +136,7 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
     #数据落地至etl_mid
     load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=target_db,
                         TargetTable=target_table, ExecDate=ExecDate)
+
 
 #广告主
 def advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate=""):
@@ -159,7 +167,9 @@ def advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate=""):
     print("正在等待获取广告主重试异常执行完成！！！")
     rerun_exception_tasks(AsyncAccountDir=local_dir, ExceptionFile=task_exception_file,
                           DataFile=data_file, CeleryTaskDataFile=celery_get_data_status,
-                          InterfaceFlag=interface_flag, ExecDate=ExecDate)
+                          InterfaceFlag=interface_flag, ExecDate=ExecDate, Columns="""account_id,service_code,interface_flag""",
+                          IsfilterID="N"
+                          )
     print("获取广告主重试异常执行完成！！！")
 
 def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile="",DataFileDir="",DataFile="",IsFilter=""):
@@ -384,15 +394,15 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
 
-def load_data_mysql(AsyncAccountFile="",DataFile="",TableName="",Columns=""):
+def load_data_mysql(AsyncAccountFile="",DataFile="",DbName="",TableName="",Columns=""):
     target_file = os.listdir(AsyncAccountFile)
     for files in target_file:
         if DataFile.split("/")[-1] in files:
             print(files, "###############################################")
             # 记录子账户
             insert_sql = """
-                  load data local infile '%s' into table metadb.%s fields terminated by ' ' lines terminated by '\\n' (%s)
-               """ % (AsyncAccountFile + "/" + files,TableName,Columns)
+                  load data local infile '%s' into table %s.%s fields terminated by ' ' lines terminated by '\\n' (%s)
+               """ % (AsyncAccountFile + "/" + files,DbName,TableName,Columns)
             ok = etl_md.local_file_to_mysql(sql=insert_sql)
             if ok is False:
                 msg = "写入MySQL出现异常！！！\n%s" % (DataFile)
@@ -459,44 +469,60 @@ def wait_for_celery_status(StatusList=""):
       status_false.clear()
       sleep_num = sleep_num + 1
 
-def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",ExecDate=""):
+def rerun_exception_tasks(UrlPath="",AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",ExecDate="",IsfilterID="",Columns="",ParamJson=""):
     celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
     etl_md.execute_sql(delete_sql)
-    columns = """account_id,service_code,interface_flag"""
+    columns = Columns
+    db_name = "metadb"
     table_name = "oe_sync_exception_tasks_interface"
-    save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
+    save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,DbName=db_name,TableName=table_name,Columns=columns)
     #
     n = 10
     for i in range(n):
         sql = """
-          select distinct account_id,service_code,interface_flag
-          from metadb.oe_sync_exception_tasks_interface a
+          select distinct %s
+          from %s.%s a
           where interface_flag = '%s' 
-        """% (InterfaceFlag)
+        """% (columns,db_name,table_name,InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
            print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
-               status_id = get_advertisers_data_celery.delay(AccountIdList=[int(data[0])], ServiceCode=data[1],
+               if IsfilterID == "Y":
+                   account_id = int(data[0])
+                   ad_id = int(data[3])
+                   service_code = str(data[1])
+                   ParamJson["advertiser_id"] = account_id
+                   ParamJson["ad_id"] = ad_id
+                   ParamJson["service_code"] = service_code
+                   status_id = get_creative_detail_data_celery.delay(ParamJson=str(ParamJson), UrlPath=UrlPath,
+                                                                     TaskExceptionFile=ExceptionFile,
+                                                                     DataFileDir=AsyncAccountDir,
+                                                                     DataFile=DataFile,
+                                                                     InterfaceFlag=InterfaceFlag
+                                                                    )
+                   os.system("""echo "%s %s %s %s ">>%s""" % (status_id, account_id, ad_id, service_code, celery_task_data_file+".%s"%(i)))
+               else:
+                  status_id = get_advertisers_data_celery.delay(AccountIdList=[int(data[0])], ServiceCode=data[1],
                                                              DataFileDir=AsyncAccountDir,DataFile=DataFile,
                                                              TaskExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag
                                                              )
-               os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
+                  os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
            wait_for_celery_status(StatusList=celery_task_id)
-           delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+           delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
            etl_md.execute_sql(delete_sql)
-           save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
+           save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, DbName = db_name,TableName=table_name,Columns=columns)
            print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            #判断结果是否还有异常
            ex_sql = """
-                     select account_id,service_code,interface_flag
-                     from metadb.oe_sync_exception_tasks_interface a
+                     select %s
+                     from %s.%s a
                      where interface_flag = '%s'
                      limit 1
-              """% (InterfaceFlag)
+              """% (columns,db_name,table_name,InterfaceFlag)
            ok, ex_datas = etl_md.get_all_rows(ex_sql)
            if ex_datas is not None and len(ex_datas) > 0:
                print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
@@ -505,16 +531,16 @@ def rerun_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",Celery
                else:
                  time.sleep(180)
     ex_sql = """
-         select account_id,service_code,interface_flag
-         from metadb.oe_sync_exception_tasks_interface a
+         select %s
+         from %s.%s a
          where interface_flag = '%s'
-    """% (InterfaceFlag)
+    """% (columns,db_name,table_name,InterfaceFlag)
     ok, ex_datas = etl_md.get_all_rows(ex_sql)
     if ex_datas is not None and len(ex_datas) > 0:
         print("还有特别异常任务存在！！！")
         print(ex_datas[0])
 
-def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",TableName="",Columns=""):
+def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",DbName="",TableName="",Columns=""):
     exception_file = ExceptionFile.split("/")[-1]
     exception_file_list = []
     target_file = os.listdir(AsyncAccountDir)
@@ -524,5 +550,5 @@ def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",TableName="",Column
     if exception_file_list is not None and len(exception_file_list) > 0 :
        for file in exception_file_list:
            print(file,"##################################")
-           load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],TableName=TableName, Columns=Columns)
+           load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],DbName=DbName,TableName=TableName, Columns=Columns)
            os.system("""rm -f %s/%s"""%(file[0],file[1]))

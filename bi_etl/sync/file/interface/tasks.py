@@ -274,7 +274,7 @@ def get_creative_detail_data(ParamJson="", UrlPath="", DataFileDir="", DataFile=
                 advertiser_id = param_json["advertiser_id"]
                 service_code = param_json["service_code"]
                 ad_id = param_json["ad_id"]
-                os.system("""echo "%s %s %s %s">>%s """ % (advertiser_id, service_code, ad_id, InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
+                os.system("""echo "%s %s %s %s">>%s """ % (advertiser_id, service_code, InterfaceFlag, ad_id, TaskExceptionFile + ".%s" % hostname))
                 set_true = False
             else:
                 time.sleep(2)
