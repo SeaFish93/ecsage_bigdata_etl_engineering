@@ -83,7 +83,7 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
       os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(interface_flag))
       columns = """advertiser_id,filter_id,flag"""
-      load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, TableName="oe_sync_filter_info",Columns=columns)
+      load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
       sql = """
             select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag
             from metadb.oe_account_interface a
@@ -194,7 +194,7 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
     print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     # 保存MySQL
     columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
-    load_data_mysql(AsyncAccountFile=SyncDir, DataFile=PageTaskFile, TableName="oe_sync_page_interface",Columns=columns)
+    load_data_mysql(AsyncAccountFile=SyncDir, DataFile=PageTaskFile, DbName="metadb", TableName="oe_sync_page_interface",Columns=columns)
 
 def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
@@ -225,7 +225,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
       os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s.%s' "%(AirflowDag,AirflowTask))
       columns = """advertiser_id,filter_id,flag"""
-      load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, TableName="oe_sync_filter_info",Columns=columns)
+      load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
       sql = """
             select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag
             from metadb.oe_account_interface a
