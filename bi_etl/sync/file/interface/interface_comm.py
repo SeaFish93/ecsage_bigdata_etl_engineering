@@ -513,6 +513,7 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
         try:
             data_list = set_sync_data(ParamJson=param_json, UrlPath=UrlPath, Token=token)
             code = data_list["code"]
+            print(code,"#######################@@@@@@@@@@@@@@@@@@@@@@@@")
             if int(code) == 0:
                 pass
                 #test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
