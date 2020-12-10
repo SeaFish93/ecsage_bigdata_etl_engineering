@@ -58,7 +58,8 @@ def main(TaskInfo, Level,**kwargs):
     commit_num = TaskInfo[31]
     exclude_account_id = TaskInfo[34]
     array_flag = TaskInfo[35]
-    specified_pars_str =TaskInfo[36]
+    custom_set_parameter =TaskInfo[36]
+
     #regexp_extract_column = TaskInfo[30]
     #if regexp_extract_column is None or len(regexp_extract_column) == 0:
     #    regexp_extract_column = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list')"""
@@ -79,14 +80,18 @@ def main(TaskInfo, Level,**kwargs):
                       ,InterfaceModule = interface_module,CommitNum=commit_num
                       ,DB=target_db, Table=target_table,ExecDate=exec_date,IsReport=is_report
                       ,Exclude_Account_id=exclude_account_id
+                      ,CustomSetParameter=custom_set_parameter
                      )
     elif Level == "ods":
       exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
                           TargetDB=target_db, TargetTable=target_table,IsReport=is_report,SelectExcludeColumns=select_exclude_columns,KeyColumns=key_columns,ExecDate=exec_date
-                          ,ArrayFlag=array_flag)
+                          ,ArrayFlag=array_flag
+                          ,CustomSetParameter=custom_set_parameter)
     elif Level == "snap":
       exec_snap_hive_table(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
-                             TargetDB=target_db, TargetTable=target_table, IsReport=is_report, KeyColumns=key_columns, ExecDate=exec_date)
+                             TargetDB=target_db, TargetTable=target_table, IsReport=is_report
+                           , KeyColumns=key_columns, ExecDate=exec_date
+                           ,CustomSetParameter=custom_set_parameter)
 
 #含有level、time_line、date、group接口
 def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={},DataJsonRequest=""
@@ -94,6 +99,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                                    ,InterfaceModule = "",CommitNum=""
                                    ,DB="", Table="",ExecDate="",IsReport=""
                                    ,Exclude_Account_id=""
+                                   ,CustomSetParameter=""
                                    ):
     data_json = DataJson
     etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
@@ -268,9 +274,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     ####   md5_file_false.clear()
     ####   sleep_num = sleep_num + 1
     #落地临时表
-    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DeleteType=delete_type,DB=DB,Table=Table,ExecDate=ExecDate)
+    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DeleteType=delete_type,DB=DB,Table=Table,ExecDate=ExecDate,CustomSetParameter=CustomSetParameter)
 
-def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DeleteType="",DB="",Table="",ExecDate=""):
+def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DeleteType="",DB="",Table="",ExecDate="",CustomSetParameter=""):
     mid_table = """%s.%s""" % (DB, Table)
     # 创建data临时表
     mid_sql = """
@@ -317,7 +323,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
     #上传hdfs
     get_local_hdfs_thread(TargetDb=DB, TargetTable=Table, ExecDate=ExecDate, DataFileList=LocalFileName,HDFSDir=hdfs_dir)
     #落地至hive
-    ok_data = BeelineSession.execute_sql(load_table_sqls)
+    ok_data = BeelineSession.execute_sql(load_table_sqls,CustomSetParameter)
     if ok_data is False:
        # 删除临时表
        HiveSession.execute_sql("""drop table if exists %s""" % (mid_table))
@@ -410,7 +416,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
 
 #落地至ods
 def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag=""):
+                        TargetDB="", TargetTable="",IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag="",CustomSetParameter=""):
    etl_ods_field_diff=def_ods_structure(HiveSession=HiveSession,BeelineSession=BeelineSession
                                         ,SourceTable=SourceTable,TargetDB=TargetDB,TargetTable=TargetTable
                                         ,IsTargetPartition="Y",ExecDate=ExecDate,ArrayFlag=ArrayFlag)
@@ -534,7 +540,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                ;
         """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line,json_tuple_columns,select_json_tuple_column)
 
-   ok = BeelineSession.execute_sql(sql)
+   ok = BeelineSession.execute_sql(sql,CustomSetParameter)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
@@ -555,7 +561,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                ;
         drop table if exists %s.%s_tmp;
         """%(TargetDB,TargetTable,ExecDate,columns,columns,row_number_columns,"etl_mid",TargetTable,"etl_mid",TargetTable)
-   ok = BeelineSession.execute_sql(sql)
+   ok = BeelineSession.execute_sql(sql,CustomSetParameter)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
@@ -606,7 +612,7 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
 
 #落地至snap
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate=""):
+                        TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate="",CustomSetParameter=""):
    #设置snap查询字段
    snap_columns = ""
    if IsReport == 0:
@@ -691,7 +697,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
         select %s
         from %s.%s a where etl_date = '%s' 
        """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,ExecDate,snap_columns,SourceDB,SourceTable,ExecDate)
-   ok = BeelineSession.execute_sql(sql)
+   ok = BeelineSession.execute_sql(sql,CustomSetParameter)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                               SourceTable="%s.%s" % (SourceDB, SourceTable),
