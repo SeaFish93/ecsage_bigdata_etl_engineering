@@ -37,10 +37,10 @@ def main(TaskInfo,Level="",**kwargs):
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
-       ####get_sync_interface_2_local(BeelineSession=beeline_session,TargetDB=target_db,TargetTable=target_table,
-       ####                           AirflowDag=airflow.dag, AirflowTask=airflow.task,
-       ####                           TaskInfo=TaskInfo, ExecDate=exec_date)
-       advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+       get_sync_interface_2_local(BeelineSession=beeline_session,TargetDB=target_db,TargetTable=target_table,
+                                  AirflowDag=airflow.dag, AirflowTask=airflow.task,
+                                  TaskInfo=TaskInfo, ExecDate=exec_date)
+       #advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
 
 #广告主
 def advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate=""):
