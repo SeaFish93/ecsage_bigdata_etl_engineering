@@ -37,7 +37,7 @@ def main(TaskInfo,Level="",**kwargs):
     target_table = TaskInfo[15]
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
-    if Level == "file":
+    if Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativereport_creativereport_city_test":
        get_sync_interface_2_local(BeelineSession=beeline_session,TargetDB=target_db,TargetTable=target_table,
                                   AirflowDag=airflow.dag, AirflowTask=airflow.task,
                                   TaskInfo=TaskInfo, ExecDate=exec_date)
