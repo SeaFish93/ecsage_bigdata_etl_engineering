@@ -43,6 +43,7 @@ def main(TaskInfo,Level="",**kwargs):
                                   TaskInfo=TaskInfo, ExecDate=exec_date)
        #advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
+       print("======================================")
        get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
 
 #广告创意
