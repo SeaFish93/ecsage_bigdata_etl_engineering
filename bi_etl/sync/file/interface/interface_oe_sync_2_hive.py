@@ -13,6 +13,7 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_sync_tasks_data_return as get_oe_sync_tasks_data_return_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_sync_tasks_data as get_oe_sync_tasks_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_advertisers_data as get_advertisers_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_creative_detail_data as get_creative_detail_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import os
@@ -41,6 +42,93 @@ def main(TaskInfo,Level="",**kwargs):
                                   AirflowDag=airflow.dag, AirflowTask=airflow.task,
                                   TaskInfo=TaskInfo, ExecDate=exec_date)
        #advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+    elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
+       get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+
+#广告创意
+def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
+  start_date_name = TaskInfo[7]
+  end_date_name = TaskInfo[8]
+  filter_db_name = TaskInfo[21]
+  filter_table_name = TaskInfo[22]
+  filter_column_name = TaskInfo[23]
+  filter_config = TaskInfo[24]
+  target_db = TaskInfo[14]
+  target_table = TaskInfo[15]
+  interface_flag = "%s.%s"%(AirflowDag,AirflowTask)
+  local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+  local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
+  celery_get_page_status = """%s/celery_get_page_status.log"""%(local_dir)
+  celery_get_data_status = "%s/celery_get_data_status.log"%(local_dir)
+  page_task_file = "%s/page_task_file.log"%(local_dir)
+  data_task_file = """%s/data_task_file.log"""%(local_dir)
+  tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
+  task_exception_file = "%s/task_exception_file.log"%(local_dir)
+  data_file = data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
+  param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
+  #设置查询日期
+  if start_date_name is not None and len(start_date_name) > 0 and start_date_name != "":
+     param_json["%s"%start_date_name] = ExecDate
+     param_json["%s"%end_date_name] = ExecDate
+  url_path = TaskInfo[4]
+  os.system("""mkdir -p %s"""%(local_dir))
+  os.system("""rm -f %s/*"""%(local_dir))
+  is_filter = False
+  #判断是否从列表过滤
+  if filter_db_name is not None and len(filter_db_name) > 0:
+      filter_sql = """
+      select concat_ws(' ',%s,'%s') from %s.%s where etl_date='%s' %s group by %s
+      """%(filter_column_name,interface_flag,filter_db_name,filter_table_name,ExecDate,filter_config,filter_column_name)
+      os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
+      etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(interface_flag))
+      columns = """advertiser_id,filter_id,flag"""
+      load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, TableName="oe_sync_filter_info",Columns=columns)
+      sql = """
+            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag
+            from metadb.oe_account_interface a
+            inner join metadb.oe_sync_filter_info b
+            on a.account_id = b.advertiser_id
+            where a.exec_date = '%s'
+              and b.flag = '%s'
+            group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
+       """%(ExecDate,interface_flag)
+      is_filter = True
+  else:
+      sql = """
+            select a.account_id, a.media_type, a.service_code,'' as id,'%s'
+            from metadb.oe_account_interface a
+            where a.exec_date = '%s'
+            group by a.account_id, a.media_type, a.service_code
+       """%(interface_flag,ExecDate)
+  ok,db_data = etl_md.get_all_rows(sql)
+  etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' "%(interface_flag))
+  if db_data is not None and len(db_data) > 0:
+    for data in db_data:
+      account_id = int(data[0])
+      ad_id = int(data[3])
+      service_code = str(data[2])
+      param_json["advertiser_id"] = data[0]
+      param_json["ad_id"] = ad_id
+      param_json["service_code"] = service_code
+      celery_task_id = get_creative_detail_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
+                                                             TaskExceptionFile=task_exception_file,DataFileDir=local_dir,
+                                                             DataFile=data_file,InterfaceFlag=interface_flag
+                                                             )
+      os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, account_id,ad_id,service_code, celery_get_data_status))
+    # 获取状态
+    print("正在等待celery队列执行完成！！！")
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    #获取数据文件
+    target_file = os.listdir(local_dir)
+    data_task_file_list = []
+    for files in target_file:
+        if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
+            data_task_file_list.append("%s/%s"%(local_dir, files))
+    #数据落地至etl_mid
+    load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=target_db,
+                        TargetTable=target_table, ExecDate=ExecDate)
 
 #广告主
 def advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate=""):
