@@ -20,7 +20,7 @@ class BeelineNoSqlDB(BaseDB):
         print(self.conn,"#########################################=======================")
         # self.conn = "/usr/bin/beeline -u 'jdbc:hive2://%s/' -n %s " % (self.metastore_uris, self.user)
 
-    def execute_sql(self, sql,custom_set_parameter="\n", task_name=""):
+    def execute_sql(self, sql,custom_set_parameter="", task_name=""):
         t = time.time()
         sql_file = "/tmp/tmp_%s_%s.sql" % (task_name, str(t))
         f = open(sql_file, mode="w")
