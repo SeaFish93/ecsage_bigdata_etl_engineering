@@ -524,6 +524,6 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
                     os.system(""" echo "%s">>%s/%s.%s """ % (str(ParamJson).replace(" "), DataFileDir, "account_status.log", hostname))
                 else:
                     code = 1
-        except:
+        except Exception as e:
             code = 1
         return code
