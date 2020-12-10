@@ -29,7 +29,7 @@ class BeelineNoSqlDB(BaseDB):
           set mapred.task.timeout=1800000;
           set mapreduce.map.memory.mb=2048;
           set hive.auto.convert.join=false;
-        """ + custom_set_parameter
+        """ + str(custom_set_parameter)
         f.write(sql_set)
         f.write(sql)
         f.flush()
