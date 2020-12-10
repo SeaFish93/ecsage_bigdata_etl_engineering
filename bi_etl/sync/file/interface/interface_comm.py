@@ -508,7 +508,6 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
         param_json = ast.literal_eval(json.loads(param_json))
         service_code = param_json["service_code"]
         token = get_oe_account_token(ServiceCode=service_code)
-        code = 1
         del param_json["service_code"]
         try:
             data_list = set_sync_data(ParamJson=param_json, UrlPath=UrlPath, Token=token)
