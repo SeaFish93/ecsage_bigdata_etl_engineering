@@ -20,17 +20,16 @@ class BeelineNoSqlDB(BaseDB):
         print(self.conn,"#########################################=======================")
         # self.conn = "/usr/bin/beeline -u 'jdbc:hive2://%s/' -n %s " % (self.metastore_uris, self.user)
 
-    def execute_sql(self, sql, task_name=""):
+    def execute_sql(self, sql,custom_set_parameter="\n", task_name=""):
         t = time.time()
         sql_file = "/tmp/tmp_%s_%s.sql" % (task_name, str(t))
         f = open(sql_file, mode="w")
         #f.write("set hive.server2.logging.operation.level=NONE;\n")
-        custom_sql_set = "set mapreduce.map.memory.mb=4096;"
         sql_set = """
           set mapred.task.timeout=1800000;
           set mapreduce.map.memory.mb=2048;
           set hive.auto.convert.join=false;
-        """ + "\n" + custom_sql_set
+        """ + custom_set_parameter
         f.write(sql_set)
         f.write(sql)
         f.flush()
