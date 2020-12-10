@@ -519,7 +519,7 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
                 # 没权限及token失败
                 if int(code) in [40002, 40105, 40104]:
                     code = 0
-                    os.system(""" echo "%s">>%s/%s.%s """ % (str(data_list).replace(" "), DataFileDir, "account_status.log", hostname))
+                    os.system(""" echo "%s">>%s/%s.%s """ % (str(data_list).replace(" ",""), DataFileDir, "account_status.log", hostname))
                 else:
                     code = 1
         except Exception as e:
