@@ -12,8 +12,9 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_sync_tasks_data_return as get_oe_sync_tasks_data_return_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_sync_tasks_data as get_oe_sync_tasks_data_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_advertisers_data as get_advertisers_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_creative_detail_data as get_creative_detail_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_advertisers_data as get_advertisers_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import os
@@ -43,7 +44,144 @@ def main(TaskInfo,Level="",**kwargs):
                                   TaskInfo=TaskInfo, ExecDate=exec_date)
        #advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
-       get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+       get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
+       #get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+
+def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
+    for data in DataRows:
+        celery_task_id = get_service_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
+                                                       Media=data[3], Page=str(Page), PageSize=str(PageSize),
+                                                       DataFile=DataFile, PageFileData=PageFileData,
+                                                       TaskFlag=TaskFlag
+                                                       )
+        os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, data[0], data[1], data[3], CeleryGetDataStatus))
+    # 获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryGetDataStatus)
+    print("正在等待获取页数celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("获取页数celery队列执行完成！！！")
+    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (TaskFlag))
+    # 保存MySQL
+    columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
+    load_data_mysql(AsyncAccountFile=LocalDir, DataFile=PageFileData, DbName="metadb",
+                    TableName="oe_sync_page_interface", Columns=columns)
+
+def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
+  task_flag = "%s.%s"%(AirflowDag,AirflowTask)
+  local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+  local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
+  celery_get_page_status = """%s/celery_get_page_status.log"""%(local_dir)
+  celery_get_data_status = "%s/celery_get_data_status.log"%(local_dir)
+  page_task_file = "%s/page_task_file.log"%(local_dir)
+  data_task_file = """%s/data_task_file.log"""%(local_dir)
+  tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
+  task_exception_file = "%s/task_exception_file.log"%(local_dir)
+  data_file = data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
+  #param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
+  #设置查询日期
+  #param_json["start_date"] = ExecDate
+  #param_json["end_date"] = ExecDate
+  #url_path = TaskInfo[4]
+  filter_db_name = TaskInfo[21]
+  filter_table_name = TaskInfo[22]
+  filter_column_name = TaskInfo[23]
+  filter_config = TaskInfo[24]
+  os.system("""mkdir -p %s"""%(local_dir))
+  os.system("""rm -f %s/*"""%(local_dir))
+  is_filter = False
+
+  mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
+  get_service_code_sql = """select account_id,service_code,media
+                            from media_service_provider
+                            where media in (2,201,203)
+                          """
+  ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
+  get_service_page(DataRows=all_rows, LocalDir=local_dir, DataFile=data_file,
+                   PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_data_status,
+                   Page="1",PageSize="1000")
+  #重试异常
+  ########n = 2
+  ########for i in range(n):
+  ########  sql = """
+  ########    select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
+  ######## from(select account_id,service_code,request_filter,count(distinct remark) as rn
+  ########      from metadb.oe_sync_page_interface
+  ########      where flag = '%s.%s'
+  ########      group by account_id,service_code,request_filter
+  ########      having count(distinct remark) = 1
+  ########     ) tmp
+  ######## inner join metadb.oe_sync_page_interface tmp1
+  ######## on tmp.account_id = tmp1.account_id
+  ######## and tmp.service_code = tmp1.service_code
+  ######## and tmp.request_filter = tmp1.request_filter
+  ######## where tmp1.remark = '异常'
+  ########   and tmp1.flag = '%s.%s'
+  ######## group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter,tmp1.flag
+  ########    union all
+  ######## select account_id, '222' media_type, service_code,trim(replace(replace(request_filter,'[',''),']','')),flag
+  ######## from metadb.oe_sync_page_interface a
+  ######## where page_num = 0
+  ########   and remark = '正常'
+  ########   and data like '%s'
+  ########   and flag = '%s.%s'
+  ########group by account_id, service_code,request_filter,request_filter,flag
+  ########"""%(AirflowDag,AirflowTask,AirflowDag,AirflowTask,"%OK%",AirflowDag,AirflowTask)
+  ########  ok, db_data = etl_md.get_all_rows(sql)
+  ########  if db_data is not None and len(db_data) > 0:
+  ########     os.system("""rm -f %s*""" % (celery_get_page_status.split(".")[0]))
+  ########     os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
+  ########     os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
+  ########     os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
+  ########     set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=local_dir,IsFilter=is_filter,
+  ########                            PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,
+  ########                            DataFileDir=local_dir,
+  ########                            DataFile=data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) +
+  ########                                     data_task_file.split("/")[-1].split(".")[1])
+  ########
+  ########     ok, db_data = etl_md.get_all_rows(sql)
+  ########     if db_data is not None and len(db_data) > 0:
+  ########       time.sleep(60)
+  ########     else:
+  ########        break
+  ########
+  ########sql = """
+  ########  select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
+  ########  from metadb.oe_sync_page_interface a where page_num > 1
+  ########  and flag = '%s.%s'
+  ########  group by a.account_id,  a.service_code,a.page_num,a.request_filter
+  ########"""%(AirflowDag,AirflowTask)
+  ########ok, datas = etl_md.get_all_rows(sql)
+  ########if datas is not None and len(datas) > 0:
+  ########   for dt in datas:
+  ########      page_number = int(dt[3])
+  ########      for page in range(page_number):
+  ########       if page > 0:
+  ########         pages = page + 1
+  ########         param_json["page"] = pages
+  ########         account_id = dt[0]
+  ########         param_json["advertiser_id"] = account_id
+  ########         param_json["service_code"] = dt[2]
+  ########         param_json["filtering"]["campaign_ids"] = eval(dt[4])
+  ########         celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
+  ########                                                              TaskExceptionFile=task_exception_file,
+  ########                                                              DataFileDir=local_dir,
+  ########                                                              DataFile=data_task_file.split("/")[-1].split(".")[0]+"_2_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
+  ########         os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_get_data_status))
+  ########   # 获取状态
+  ########   print("正在等待celery队列执行完成！！！")
+  ########   celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
+  ########   wait_for_celery_status(StatusList=celery_task_id)
+  ########   print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  ########   #获取数据文件
+  ########   target_file = os.listdir(local_dir)
+  ########   data_task_file_list = []
+  ########   for files in target_file:
+  ########       if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
+  ########           data_task_file_list.append("%s/%s"%(local_dir, files))
+  ########   #数据落地至etl_mid
+  ########   load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
+  ########                       TargetTable=TargetTable, ExecDate=ExecDate)
 
 #广告创意
 def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):

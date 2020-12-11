@@ -525,3 +525,44 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
         except Exception as e:
             code = 1
         return code
+
+#通过代理ID获取accountID
+def set_services(ServiceId="",Token="",Page="",PageSize=""):
+    open_api_url_prefix = "https://ad.oceanengine.com/open_api/"
+    uri = "2/agent/advertiser/select/"
+    url = open_api_url_prefix + uri
+    params = {
+        "advertiser_id":int(ServiceId),
+        "page":Page,
+        "page_size":PageSize
+    }
+    headers = {"Access-Token": Token}
+    rsp = requests.get(url, json=params, headers=headers)
+    rsp_data = rsp.json()
+    return rsp_data
+
+def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
+    total_page = 0
+    try:
+      token = get_oe_account_token(ServiceCode=ServiceCode)
+      get_data = set_services(ServiceId=ServiceId, Token=token, Page=Page, PageSize=PageSize)
+      code = get_data["code"]
+      if int(code) == 0:
+          remark = "正常"
+          total_page = int(get_data["data"]["page_info"]["total_page"])
+          data = ""
+          for advertiser_id in get_data["data"]["advertiser_ids"]:
+              os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId,ServiceCode,advertiser_id,Media,DataFile,hostname))
+      else:
+          # 没权限及token失败
+          if int(code) in [40002, 40105, 40104]:
+              remark = "正常"
+              data = str(get_data).replace(" ", "")
+          else:
+              remark = "异常"
+              data = str(get_data).replace(" ", "")
+    except Exception as e:
+      remark = "异常"
+      data = "请求失败：%s,%s,%s" % (ServiceCode, ServiceId, "%s+%s+%s+%s+%s"%(ServiceCode,ServiceId,Media,Page,PageSize))
+    os.system("""echo "%s %s %s %s %s %s %s">>%s""" % (total_page, ServiceId, ServiceCode, remark, data, ServiceId, TaskFlag, PageFileData))
+    return remark

@@ -15,6 +15,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_tasks_data_return
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_advertiser_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_creative_detail_datas
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_services
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 import json
@@ -275,6 +276,25 @@ def get_creative_detail_data(ParamJson="", UrlPath="", DataFileDir="", DataFile=
                 service_code = param_json["service_code"]
                 ad_id = param_json["ad_id"]
                 os.system("""echo "%s %s %s %s">>%s """ % (advertiser_id, service_code, InterfaceFlag, ad_id, TaskExceptionFile + ".%s" % hostname))
+                set_true = False
+            else:
+                time.sleep(2)
+        n = n + 1
+
+#获取代理下子账户
+@app.task(rate_limit='1000/m')
+def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
+    set_true = True
+    n = 0
+    while set_true:
+        remark = get_services(ServiceId=ServiceId, ServiceCode=ServiceCode, Media=Media,
+                              Page=Page, PageSize=PageSize,DataFile=DataFile,PageFileData=PageFileData,
+                              TaskFlag=TaskFlag
+                       )
+        if remark == "正常":
+            set_true = False
+        else:
+            if n > 2:
                 set_true = False
             else:
                 time.sleep(2)
