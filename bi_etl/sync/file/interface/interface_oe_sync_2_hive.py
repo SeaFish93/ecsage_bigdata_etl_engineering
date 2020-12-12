@@ -99,7 +99,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (task_flag))
   get_service_page(DataRows=all_rows, LocalDir=local_dir, DataFile=data_file,
-                   PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_data_status,
+                   PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_page_status,
                    Page="1",PageSize="1000")
   #重试异常
   n = 10
@@ -127,7 +127,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
        os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
        os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
        get_service_page(DataRows=db_data, LocalDir=local_dir, DataFile=data_file,
-                        PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_data_status+"rerun",
+                        PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_page_status+"rerun",
                         Page="1", PageSize="1000")
        ok, db_data = etl_md.get_all_rows(sql)
        if db_data is not None and len(db_data) > 0:
@@ -135,54 +135,30 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
        else:
           break
 
-  ########sql = """
-  ########  select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
-  ########  from metadb.oe_sync_page_interface a where page_num > 1
-  ########  and flag = '%s.%s'
-  ########  group by a.account_id,  a.service_code,a.page_num,a.request_filter
-  ########"""%(AirflowDag,AirflowTask)
-  ########ok, datas = etl_md.get_all_rows(sql)
-  ########"""
-  ########tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
-  ########"""
-  ########if datas is not None and len(datas) > 0:
-  ########   for dt in datas:
-  ########      page_number = int(dt[3])
-  ########      for page in range(page_number):
-  ########       if page > 0:
-  ########         pages = page + 1
-  ########         celery_task_id = get_service_page_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
-  ########                                                             Media=data[1], Page=str(pages), PageSize=str(1000),
-  ########                                                             DataFile=DataFile, PageFileData=PageFileData,
-  ########                                                             TaskFlag=TaskFlag
-  ########                                                             )
-  ########         os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, data[0], data[1], data[2], CeleryGetDataStatus))
-  ########         # 获取状态
-  ########       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryGetDataStatus)
-  ########       print("正在等待获取页数celery队列执行完成！！！")
-  ########       wait_for_celery_status(StatusList=celery_task_id)
-  ########       print("获取页数celery队列执行完成！！！")
-  ########       print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-  ########
-  ########         celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
-  ########                                                              TaskExceptionFile=task_exception_file,
-  ########                                                              DataFileDir=local_dir,
-  ########                                                              DataFile=data_task_file.split("/")[-1].split(".")[0]+"_2_%s."%(local_time)+data_task_file.split("/")[-1].split(".")[1])
-  ########         os.system("""echo "%s %s">>%s""" % (celery_task_id,account_id, celery_get_data_status))
-  ########   # 获取状态
-  ########   print("正在等待celery队列执行完成！！！")
-  ########   celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
-  ########   wait_for_celery_status(StatusList=celery_task_id)
-  ########   print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-  ########   #获取数据文件
-  ########   target_file = os.listdir(local_dir)
-  ########   data_task_file_list = []
-  ########   for files in target_file:
-  ########       if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
-  ########           data_task_file_list.append("%s/%s"%(local_dir, files))
-  ########   #数据落地至etl_mid
-  ########   load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
-  ########                       TargetTable=TargetTable, ExecDate=ExecDate)
+  sql = """
+    select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
+    from metadb.oe_sync_page_interface a where page_num > 1
+    and flag = '%s.%s'
+    group by a.account_id,  a.service_code,a.page_num,a.request_filter
+  """%(AirflowDag,AirflowTask)
+  ok, datas = etl_md.get_all_rows(sql)
+  if datas is not None and len(datas) > 0:
+     for dt in datas:
+        page_number = int(dt[3])
+        for page in range(page_number):
+         if page > 0:
+           pages = page + 1
+           celery_task_id = get_service_data_celery.delay(ServiceId=dt[0], ServiceCode=dt[2],
+                                                          Media=dt[1], Page=str(pages), PageSize=str(1000),
+                                                          DataFile=data_file, PageFileData=page_task_file,
+                                                          TaskFlag=task_flag,TaskExceptionFile=task_exception_file
+                                                        )
+           os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, dt[0], dt[1], dt[2], celery_get_data_status))
+     # 获取状态
+     print("正在等待celery队列执行完成！！！")
+     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
+     wait_for_celery_status(StatusList=celery_task_id)
+     print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 
 #广告创意
 def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):

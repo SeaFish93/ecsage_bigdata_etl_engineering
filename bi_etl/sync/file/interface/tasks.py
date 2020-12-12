@@ -302,7 +302,7 @@ def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize=
         n = n + 1
 
 #获取代理下子账户
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='10/s')
 def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag="",TaskExceptionFile=""):
     set_true = True
     n = 0
