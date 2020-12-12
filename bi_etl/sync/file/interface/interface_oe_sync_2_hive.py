@@ -101,7 +101,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
                    PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_data_status,
                    Page="1",PageSize="1000")
   #重试异常
-  n = 2
+  n = 10
   for i in range(n):
     sql = """
       select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
@@ -118,15 +118,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
    where tmp1.remark = '异常'
      and tmp1.flag = '%s.%s'
    group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter,tmp1.flag
-      union all
-   select account_id, '222' media_type, service_code,trim(replace(replace(request_filter,'[',''),']','')),flag
-   from metadb.oe_sync_page_interface a
-   where page_num = 0
-     and remark = '正常'
-     and data like '%s'
-     and flag = '%s.%s'
-  group by account_id, service_code,request_filter,request_filter,flag
-  """%(AirflowDag,AirflowTask,AirflowDag,AirflowTask,"%OK%",AirflowDag,AirflowTask)
+  """%(AirflowDag,AirflowTask,AirflowDag,AirflowTask)
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
        os.system("""rm -f %s*""" % (celery_get_page_status.split(".")[0]))
