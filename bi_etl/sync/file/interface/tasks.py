@@ -295,6 +295,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
             set_true = False
         else:
             if n > 2:
+                print("异常：%s,%s"%(ServiceId,ServiceCode))
                 set_true = False
             else:
                 time.sleep(2)
