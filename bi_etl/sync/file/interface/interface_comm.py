@@ -96,7 +96,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",
       print("请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
       remark = "异常"
       data = "请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"])
-    os.system("""echo "%s %s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"],TaskFlag, page_task_file))
+    os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"],TaskFlag, page_task_file,hostname))
     return remark
 
 def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
@@ -564,9 +564,6 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     except Exception as e:
       remark = "异常"
       data = "请求失败"
-    print("===========================")
-    print(total_page,ServiceId,ServiceCode)
-    print("###########################")
-    os.system("""echo "%s %s %s">>%s""" % (total_page,ServiceId,ServiceCode, PageFileData))
+    os.system("""echo "%s %s %s">>%s.%s""" % (total_page,ServiceId,ServiceCode, PageFileData,hostname))
    # os.system("""echo "%s %s %s %s %s %s %s">>%s""" % (total_page, ServiceId, ServiceCode, remark, "", ServiceId, TaskFlag, PageFileData))
     return remark
