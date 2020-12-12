@@ -282,7 +282,7 @@ def get_creative_detail_data(ParamJson="", UrlPath="", DataFileDir="", DataFile=
         n = n + 1
 
 #获取代理下子账户页数
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='10/s')
 def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
     set_true = True
     n = 0
