@@ -563,6 +563,6 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
               data = str(get_data).replace(" ", "")
     except Exception as e:
       remark = "异常"
-      data = "请求失败：%s,%s,%s" % (ServiceCode, ServiceId, "%s+%s+%s+%s+%s"%(ServiceCode,ServiceId,Media,Page,PageSize))
+      data = "请求失败"
     os.system("""echo "%s %s %s %s %s %s %s">>%s""" % (total_page, ServiceId, ServiceCode, remark, data, ServiceId, TaskFlag, PageFileData))
     return remark
