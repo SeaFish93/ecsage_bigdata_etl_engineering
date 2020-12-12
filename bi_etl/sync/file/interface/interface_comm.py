@@ -551,6 +551,7 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
           remark = "正常"
           total_page = int(get_data["data"]["page_info"]["total_page"])
           data = ""
+          print(get_data,"#####################################")
           for advertiser_id in get_data["data"]["advertiser_ids"]:
               os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId,ServiceCode,advertiser_id,Media,DataFile,hostname))
       else:
