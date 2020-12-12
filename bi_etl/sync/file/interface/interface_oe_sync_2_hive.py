@@ -77,7 +77,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   data_task_file = """%s/data_task_file.log"""%(local_dir)
   tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
   task_exception_file = "%s/task_exception_file.log"%(local_dir)
-  data_file = data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
+  data_file = local_dir + "/" + data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
   #param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
   #设置查询日期
   #param_json["start_date"] = ExecDate
