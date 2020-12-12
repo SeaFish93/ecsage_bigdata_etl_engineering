@@ -14,6 +14,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_sync_tasks_data as get_oe_sync_tasks_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_creative_detail_data as get_creative_detail_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_advertisers_data as get_advertisers_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_page_data as get_service_page_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
@@ -49,7 +50,7 @@ def main(TaskInfo,Level="",**kwargs):
 
 def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
     for data in DataRows:
-        celery_task_id = get_service_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
+        celery_task_id = get_service_page_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
                                                        Media=data[2], Page=str(Page), PageSize=str(PageSize),
                                                        DataFile=DataFile, PageFileData=PageFileData,
                                                        TaskFlag=TaskFlag
@@ -61,7 +62,6 @@ def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFla
     wait_for_celery_status(StatusList=celery_task_id)
     print("获取页数celery队列执行完成！！！")
     print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-    etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (TaskFlag))
     # 保存MySQL
     columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
     load_data_mysql(AsyncAccountFile=LocalDir, DataFile=PageFileData, DbName="metadb",
@@ -97,6 +97,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
                             where media in (2,201,203)
                           """
   ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
+  etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (task_flag))
   get_service_page(DataRows=all_rows, LocalDir=local_dir, DataFile=data_file,
                    PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_data_status,
                    Page="1",PageSize="1000")
@@ -141,17 +142,28 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   ########  group by a.account_id,  a.service_code,a.page_num,a.request_filter
   ########"""%(AirflowDag,AirflowTask)
   ########ok, datas = etl_md.get_all_rows(sql)
+  ########"""
+  ########tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
+  ########"""
   ########if datas is not None and len(datas) > 0:
   ########   for dt in datas:
   ########      page_number = int(dt[3])
   ########      for page in range(page_number):
   ########       if page > 0:
   ########         pages = page + 1
-  ########         param_json["page"] = pages
-  ########         account_id = dt[0]
-  ########         param_json["advertiser_id"] = account_id
-  ########         param_json["service_code"] = dt[2]
-  ########         param_json["filtering"]["campaign_ids"] = eval(dt[4])
+  ########         celery_task_id = get_service_page_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
+  ########                                                             Media=data[1], Page=str(pages), PageSize=str(1000),
+  ########                                                             DataFile=DataFile, PageFileData=PageFileData,
+  ########                                                             TaskFlag=TaskFlag
+  ########                                                             )
+  ########         os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, data[0], data[1], data[2], CeleryGetDataStatus))
+  ########         # 获取状态
+  ########       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryGetDataStatus)
+  ########       print("正在等待获取页数celery队列执行完成！！！")
+  ########       wait_for_celery_status(StatusList=celery_task_id)
+  ########       print("获取页数celery队列执行完成！！！")
+  ########       print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+  ########
   ########         celery_task_id = get_oe_sync_tasks_data_celery.delay(ParamJson=str(param_json), UrlPath=url_path,
   ########                                                              TaskExceptionFile=task_exception_file,
   ########                                                              DataFileDir=local_dir,

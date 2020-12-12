@@ -281,9 +281,9 @@ def get_creative_detail_data(ParamJson="", UrlPath="", DataFileDir="", DataFile=
                 time.sleep(2)
         n = n + 1
 
-#获取代理下子账户
+#获取代理下子账户页数
 @app.task(rate_limit='1000/m')
-def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
+def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
     set_true = True
     n = 0
     while set_true:
@@ -299,4 +299,25 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
                 set_true = False
             else:
                 time.sleep(2)
+        n = n + 1
+
+#获取代理下子账户
+@app.task(rate_limit='1000/m')
+def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag="",TaskExceptionFile=""):
+    set_true = True
+    n = 0
+    while set_true:
+        remark = get_services(ServiceId=ServiceId, ServiceCode=ServiceCode, Media=Media,
+                              Page=Page, PageSize=PageSize,DataFile=DataFile,PageFileData=PageFileData,
+                              TaskFlag=TaskFlag
+                       )
+        if remark == "正常":
+            set_true = False
+        else:
+            if n > 2:
+                print("异常：%s,%s"%(ServiceId,ServiceCode))
+                os.system("""echo "%s %s %s %s %s %s">>%s """ % (ServiceId, ServiceCode, Media, Page,PageSize,TaskFlag, TaskExceptionFile + ".%s" % hostname))
+                set_true = False
+            else:
+                time.sleep(5)
         n = n + 1
