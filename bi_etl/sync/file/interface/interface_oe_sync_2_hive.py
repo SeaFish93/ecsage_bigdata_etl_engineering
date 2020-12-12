@@ -50,11 +50,11 @@ def main(TaskInfo,Level="",**kwargs):
 def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
     for data in DataRows:
         celery_task_id = get_service_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
-                                                       Media=data[3], Page=str(Page), PageSize=str(PageSize),
+                                                       Media=data[2], Page=str(Page), PageSize=str(PageSize),
                                                        DataFile=DataFile, PageFileData=PageFileData,
                                                        TaskFlag=TaskFlag
                                                        )
-        os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, data[0], data[1], data[3], CeleryGetDataStatus))
+        os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, data[0], data[1], data[2], CeleryGetDataStatus))
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryGetDataStatus)
     print("正在等待获取页数celery队列执行完成！！！")
