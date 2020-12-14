@@ -491,6 +491,7 @@ def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=
         rsp_data = rsp.json()
         code = rsp_data["code"]
         if int(code) == 0 :
+           rsp_data["returns_account_id"] = str(AccountIdList).replace("[","").replace("]","")
            test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
            test_log.info(json.dumps(rsp_data))
         elif int(code) in [40002, 40105, 40104]:

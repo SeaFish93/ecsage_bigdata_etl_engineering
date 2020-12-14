@@ -17,6 +17,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_page_data as get_service_page_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
+from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure as get_ods_columns
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import os
 import time
@@ -37,6 +38,8 @@ def main(TaskInfo,Level="",**kwargs):
     exec_date = airflow.execution_date_utc8_str[0:10]
     target_db = TaskInfo[14]
     target_table = TaskInfo[15]
+    source_db = TaskInfo[11]
+    source_table = TaskInfo[12]
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativereport_creativereport_city_test":
@@ -50,6 +53,18 @@ def main(TaskInfo,Level="",**kwargs):
                              TargetDB=target_db, TargetTable=target_table, TaskInfo=TaskInfo,ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
         get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+    elif Level == "ods":
+        get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,
+                       SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
+                       ExecDate=exec_date,ArrayFlag="")
+    elif Level == "snap":
+        pass
+
+def get_data_2_ods(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",ArrayFlag=""):
+    etl_ods_field_diff = get_ods_columns(HiveSession=HiveSession, BeelineSession=BeelineSession
+                                         , SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
+                                         , IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag)
+    print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
 
 def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
     for data in DataRows:
