@@ -316,7 +316,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
         else:
             if n > 2:
                 print("异常：%s,%s"%(ServiceId,ServiceCode))
-                os.system("""echo "%s %s %s %s %s %s">>%s """ % (ServiceId, ServiceCode, Media, Page,PageSize,TaskFlag, TaskExceptionFile + ".%s" % hostname))
+                os.system("""echo "%s %s %s %s %s %s">>%s """ % (ServiceId, ServiceCode, TaskFlag,Media, Page,PageSize, TaskExceptionFile + ".%s" % hostname))
                 set_true = False
             else:
                 time.sleep(5)

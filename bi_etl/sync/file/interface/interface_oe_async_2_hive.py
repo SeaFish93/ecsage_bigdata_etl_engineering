@@ -607,9 +607,9 @@ def get_celery_job_data(CeleryTaskId="",OpenFileSession=""):
     value = set_task.get()
     print(CeleryTaskId,type(value),"##################################################")
     if 'str' in str(type(value)):
-      OpenFileSession.write(value)
+      OpenFileSession.write(value+"\n")
     else:
-      OpenFileSession.write(value.decode())
+      OpenFileSession.write(str(value.decode())+"\n")
     OpenFileSession.flush()
 
 #本地数据落地至hive

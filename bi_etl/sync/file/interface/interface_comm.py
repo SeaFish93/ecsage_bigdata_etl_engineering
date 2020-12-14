@@ -564,5 +564,6 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     except Exception as e:
       remark = "异常"
       data = "请求失败"
-    os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (total_page, ServiceId, ServiceCode, remark, data, ServiceId, TaskFlag, PageFileData,hostname))
+    if PageFileData is not None and len(PageFileData) > 0 and PageFileData != "":
+      os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (total_page, ServiceId, ServiceCode, remark, data, ServiceId, TaskFlag, PageFileData,hostname))
     return remark
