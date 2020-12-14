@@ -43,10 +43,11 @@ def main(TaskInfo,Level="",**kwargs):
        get_sync_interface_2_local(BeelineSession=beeline_session,TargetDB=target_db,TargetTable=target_table,
                                   AirflowDag=airflow.dag, AirflowTask=airflow.task,
                                   TaskInfo=TaskInfo, ExecDate=exec_date)
-       #advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+       advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+    elif Level == "file" and TaskInfo[0] == "metadb_oe_service_account":
+        get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
-       get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
-       #get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+        get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
 
 def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
     for data in DataRows:
@@ -161,6 +162,11 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
                            Columns="""account_id,service_code,interface_flag,media,page,page_size""",
                            IsfilterID="Y", ParamJson="")
      print("获取重试异常执行完成！！！")
+     #写入MySQL
+     etl_md.execute_sql("delete from metadb.oe_service_account ")
+     columns = """service_id,service_code,account_id,media_type"""
+     load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file, DbName="metadb",
+                     TableName="oe_service_account", Columns=columns)
 
 #广告创意
 def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
