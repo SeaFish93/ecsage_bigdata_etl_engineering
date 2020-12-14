@@ -7,11 +7,18 @@
 
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
 
 
 #落地至snap
 def exec_snap_hive_table(AirflowDagId="",AirflowTaskId="",HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate=""):
+   get_select_columns = get_table_columns_info(HiveSession=HiveSession, SourceDB=SourceDB, SourceTable=SourceTable,
+                                               TargetDB=TargetDB, TargetTable=TargetTable, IsTargetPartition="N")
+   source_table_columns = get_select_columns[2]
+   assign_table_columns = get_select_columns[1]
+   print(source_table_columns,"################################")
+   print(assign_table_columns,"==============================")
    #设置snap查询字段
    snap_columns = ""
    if IsReport == 0:
