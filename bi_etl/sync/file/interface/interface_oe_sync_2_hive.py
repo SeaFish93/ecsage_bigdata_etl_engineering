@@ -80,10 +80,6 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
   task_exception_file = "%s/task_exception_file.log"%(local_dir)
   data_file = local_dir + "/" + data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
-  filter_db_name = TaskInfo[21]
-  filter_table_name = TaskInfo[22]
-  filter_column_name = TaskInfo[23]
-  filter_config = TaskInfo[24]
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
   is_filter = False
