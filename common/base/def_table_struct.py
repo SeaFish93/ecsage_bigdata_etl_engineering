@@ -86,7 +86,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         #print("获取etl_mid的样本数据" + data[0][0])
         if Isreplace == "N":
             data_str = return_Str
-            data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))
+            data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))[0]
         else:
             data_str = return_Str[return_Str.find(split_flag) + 3:]
             data_str2 = json.loads(data_str)
@@ -96,7 +96,6 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
             data_str3 = data_str2[ArrayFlag][0]
         else:
             data_str3 = data_str2
-        print(data_str3,"################################3")
         for keys in data_str3:
             print(keys,"=============================")
             if keys in spec_pars_list and isinstance(data_str3[keys], dict):
