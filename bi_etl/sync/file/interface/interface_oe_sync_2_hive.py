@@ -43,9 +43,10 @@ def main(TaskInfo,Level="",**kwargs):
        get_sync_interface_2_local(BeelineSession=beeline_session,TargetDB=target_db,TargetTable=target_table,
                                   AirflowDag=airflow.dag, AirflowTask=airflow.task,
                                   TaskInfo=TaskInfo, ExecDate=exec_date)
-       advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "metadb_oe_service_account":
         get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
+    elif Level == "file" and TaskInfo[0] == "metadb_oe_account":
+        advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
         get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
 
@@ -156,7 +157,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
      wait_for_celery_status(StatusList=celery_task_id)
      print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
      print("正在等待获取重试异常执行完成！！！")
-     rerun_service_exception_tasks(UrlPath="", AsyncAccountDir=local_dir, ExceptionFile=task_exception_file,
+     rerun_service_exception_tasks(AsyncAccountDir=local_dir, ExceptionFile=task_exception_file,
                            DataFile=data_file, CeleryTaskDataFile=celery_get_data_status,
                            InterfaceFlag=task_flag, ExecDate=ExecDate,
                            Columns="""account_id,service_code,interface_flag,media,page,page_size""",
