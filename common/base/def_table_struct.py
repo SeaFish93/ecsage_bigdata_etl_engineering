@@ -97,6 +97,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         else:
             data_str3 = data_str2
         for keys in data_str3:
+            print(keys,"=============================")
             if keys in spec_pars_list and isinstance(data_str3[keys], dict):
                 for key in data_str3[keys]:
                     all_pars_list.append(keys + "." + key)
