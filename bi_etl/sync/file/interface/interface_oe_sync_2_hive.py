@@ -46,7 +46,8 @@ def main(TaskInfo,Level="",**kwargs):
     elif Level == "file" and TaskInfo[0] == "metadb_oe_service_account":
         get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getadvertiser_advertiser":
-        get_advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+        get_advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, BeelineSession=beeline_session,
+                             TargetDB=target_db, TargetTable=target_table, TaskInfo=TaskInfo,ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
         get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
 
@@ -261,7 +262,7 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
 
 
 #广告主
-def get_advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate=""):
+def get_advertisers_info(AirflowDag="", AirflowTask="",BeelineSession="",TargetDB="",TargetTable="",TaskInfo="", ExecDate=""):
     interface_flag = """%s.%s""" % (AirflowDag, AirflowTask)
     local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
     local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s""" % (ExecDate, AirflowDag, AirflowTask)
@@ -293,6 +294,8 @@ def get_advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate="")
                           IsfilterID="N"
                           )
     print("获取广告主重试异常执行完成！！！")
+    #上传本地文件至etl_mid
+    set_data_2_etl_mid(BeelineSession=BeelineSession, TargetDB=TargetDB, TargetTable=TargetTable, ExecDate=ExecDate, LocalDir=local_dir, DataFile=data_file)
 
 def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTaskFile="",CelerySyncTaskFile="",DataFileDir="",DataFile="",IsFilter=""):
     param_json = ParamJson
@@ -732,3 +735,13 @@ def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",DbName="",TableName
            print(file,"##################################")
            load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],DbName=DbName,TableName=TableName, Columns=Columns)
            os.system("""rm -f %s/%s"""%(file[0],file[1]))
+
+def set_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",ExecDate="",LocalDir="",DataFile=""):
+    target_file = os.listdir(LocalDir)
+    data_task_file_list = []
+    for files in target_file:
+        if str(DataFile.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
+            data_task_file_list.append("%s/%s" % (LocalDir, files))
+    # 数据落地至etl_mid
+    load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
+                        TargetTable=TargetTable, ExecDate=ExecDate)
