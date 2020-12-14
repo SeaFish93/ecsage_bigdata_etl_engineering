@@ -73,7 +73,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
     return list(diff_source_target_columns),target_table_columns,etlmid_table_columns,etlmid_table_columns_str
 
 #解析etl_mid文档
-def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag=""):
+def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag="",Isreplace="Y"):
     filter_line = """ where etl_date = '%s' and length(request_data) > 1000 limit 1 """%(ExecDate)
     spec_pars = """dimensions,metrics"""
     spec_pars_list = list(spec_pars.split(","))
@@ -84,7 +84,10 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         split_flag = """## {"""
         return_Str= data[0][0]
         #print("获取etl_mid的样本数据" + data[0][0])
-        data_str = return_Str[return_Str.find(split_flag) + 3:]
+        if Isreplace == "Y":
+          data_str = return_Str[return_Str.find(split_flag) + 3:]
+        else:
+          data_str = return_Str
         #print(data_str)
         data_str2 = json.loads(data_str)
         #data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))

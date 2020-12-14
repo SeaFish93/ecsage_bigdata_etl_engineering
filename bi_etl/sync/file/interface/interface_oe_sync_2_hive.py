@@ -63,7 +63,7 @@ def main(TaskInfo,Level="",**kwargs):
 def get_data_2_ods(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",ArrayFlag=""):
     etl_ods_field_diff = get_ods_columns(HiveSession=HiveSession, BeelineSession=BeelineSession
                                          , SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
-                                         , IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=None)
+                                         , IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=None,Isreplace="N")
     print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
 
 def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
