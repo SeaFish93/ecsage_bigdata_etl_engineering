@@ -8,6 +8,7 @@
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_create_hive_table_columns
 import json
+import ast
 #初期表结构字段需要配置表配置，
 # 如果desc没有表结构，通过配置字段建表，然后解析etl_mid文件字段，比较 ？desc 比较表结构不同就，alter :看是否可以调用已有的函数
 #
@@ -86,7 +87,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         data_str = return_Str[return_Str.find(split_flag) + 3:]
         #print(data_str)
         #data_str2 = json.loads(data_str)
-        data_str2 = json.loads(json.dumps(data_str))
+        data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))
         data_str2 = data_str2['data']
         if ArrayFlag is not None and len(ArrayFlag) > 0:
             data_str3 = data_str2[ArrayFlag][0]
