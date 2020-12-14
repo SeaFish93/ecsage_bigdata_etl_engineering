@@ -98,10 +98,9 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
     columns = ','.join("`%s`" % (x) for x in columns.split(",") if x != 'etl_date')
     array_flag = ArrayFlag
     if array_flag in ["list", "custom_audience_list"]:
-        regexp_extract = """get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data.%s') as data_colums""" % (
-            array_flag)
+        regexp_extract = """get_json_object(a.request_data,'$.data.%s') as data_colums""" % (array_flag)
     else:
-        regexp_extract = """concat(concat('[',get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data')),']') as data_colums"""
+        regexp_extract = """get_json_object(a.request_data,'$.data') as data_colums"""
     return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
     returns_account_id = """trim(get_json_object(a.request_data,'$.returns_account_id')) as returns_account_id"""
     filter_line = """length(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1)) > 0"""
@@ -135,7 +134,7 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                             from(select %s
                                         ,%s
                                         ,%s
-                                        ,request_type
+                                        ,'request_type' as request_type
                                  from %s.%s a
                                  where a.etl_date = '%s'
                                 ) a
