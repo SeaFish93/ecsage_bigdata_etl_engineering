@@ -146,37 +146,6 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                   ;
             """ % ("etl_mid", TargetTable, "etl_mid", TargetTable, columns, pars_str, null_field_str, return_regexp_extract,
                    regexp_extract, returns_account_id, SourceDB, SourceTable, ExecDate)
-    else:
-        sql = """
-            add file hdfs:///tmp/airflow/get_arrary.py;
-            drop table if exists %s.%s_tmp;
-            create table %s.%s_tmp stored as parquet as 
-            select %s,%s
-            from (select returns_colums,data_num_colums,returns_account_id,request_type
-                  from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
-                              ,split(data_colums,'@@####@@')[1] as data_colums
-                              ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
-                              ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
-                       from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                            from(select %s
-                                        ,%s
-                                        ,%s
-                                        ,request_type
-                                 from %s.%s a
-                                 where a.etl_date = '%s'
-                                   and %s
-                                ) a
-                            where data_colums is not null
-                            ) b
-                       ) c
-                       lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
-                  ) a
-                  lateral view json_tuple(data_num_colums,%s) b
-                  as %s
-                   ;
-            """ % ("etl_mid", TargetTable, "etl_mid", TargetTable, select_json_tuple_column, select_system_table_column,
-                   return_regexp_extract, regexp_extract, returns_account_id, SourceDB, SourceTable, ExecDate,
-                   filter_line, json_tuple_columns, select_json_tuple_column)
     print(sql,"====================================================")
 
 
