@@ -86,18 +86,19 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         #print("获取etl_mid的样本数据" + data[0][0])
         if Isreplace == "N":
             data_str = return_Str
-            data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))[0]
+            data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))
+            data_str2 = data_str2['data'][0]
         else:
             data_str = return_Str[return_Str.find(split_flag) + 3:]
             data_str2 = json.loads(data_str)
+            data_str2 = data_str2['data']
         #print(data_str)
-        data_str2 = data_str2['data']
+        #data_str2 = data_str2['data']
         if ArrayFlag is not None and len(ArrayFlag) > 0:
             data_str3 = data_str2[ArrayFlag][0]
         else:
             data_str3 = data_str2
         for keys in data_str3:
-            print(keys,"=============================")
             if keys in spec_pars_list and isinstance(data_str3[keys], dict):
                 for key in data_str3[keys]:
                     all_pars_list.append(keys + "." + key)
