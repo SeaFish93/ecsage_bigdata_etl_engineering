@@ -101,7 +101,7 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
         regexp_extract = """get_json_object(a.request_data,'$.data.%s') as data_colums""" % (array_flag)
     else:
         regexp_extract = """get_json_object(a.request_data,'$.data') as data_colums"""
-    return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
+    return_regexp_extract = """'returns_colums' as returns_colums"""
     returns_account_id = """trim(get_json_object(a.request_data,'$.returns_account_id')) as returns_account_id"""
     filter_line = """length(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1)) > 0"""
     specified_pars_str = etl_ods_field_diff[3]
