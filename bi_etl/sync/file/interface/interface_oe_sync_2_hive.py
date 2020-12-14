@@ -54,7 +54,7 @@ def main(TaskInfo,Level="",**kwargs):
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
         get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "ods":
-        get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,
+        get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
                        ExecDate=exec_date,ArrayFlag="",KeyColumns="id")
     elif Level == "snap":
