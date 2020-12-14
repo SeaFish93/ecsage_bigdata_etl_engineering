@@ -84,12 +84,12 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         split_flag = """## {"""
         return_Str= data[0][0]
         #print("获取etl_mid的样本数据" + data[0][0])
-        if Isreplace == "Y":
-          data_str = return_Str[return_Str.find(split_flag) + 3:]
-          data_str2 = json.loads(data_str)
+        if Isreplace == "N":
+            data_str = return_Str
+            data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))
         else:
-          data_str = return_Str
-          data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))
+            data_str = return_Str[return_Str.find(split_flag) + 3:]
+            data_str2 = json.loads(data_str)
         #print(data_str)
         data_str2 = data_str2['data']
         if ArrayFlag is not None and len(ArrayFlag) > 0:
