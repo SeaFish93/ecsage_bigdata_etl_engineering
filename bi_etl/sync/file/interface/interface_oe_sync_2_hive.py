@@ -59,10 +59,12 @@ def main(TaskInfo,Level="",**kwargs):
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
                        ExecDate=exec_date,ArrayFlag="",KeyColumns="id")
     elif Level == "snap":
-        get_ods_2_snap(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
+        get_ods_2_snap(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,
+                       SourceDB=source_db,SourceTable=source_table,TargetDB=target_db,
+                       TargetTable=target_table,TaskInfo=TaskInfo,ExecDate=exec_date)
 
 #落地数据至snap
-def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDate=""):
+def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",TaskInfo="",ExecDate=""):
     source_db = SourceDB
     source_table = SourceTable
     hive_handler = "hive"
