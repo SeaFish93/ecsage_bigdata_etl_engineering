@@ -14,11 +14,11 @@ import ast
 #
 #
 
-def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag=""):
+def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag="",Isreplace=""):
     etlmid_table_columns = []
     etlmid_table_columns_str = analysis_etlmid_cloumns(HiveSession=HiveSession, SourceTable=SourceTable,
                                                        TargetTable=TargetTable
-                                                       , ExecDate=ExecDate, ArrayFlag=ArrayFlag)
+                                                       , ExecDate=ExecDate, ArrayFlag=ArrayFlag,Isreplace=Isreplace)
     for etlmid_table_column in etlmid_table_columns_str.split(','):
         etlmid_table_columns.append(etlmid_table_column.split(".")[-1])
 
