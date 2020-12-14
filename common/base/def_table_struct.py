@@ -96,6 +96,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
             data_str3 = data_str2[ArrayFlag][0]
         else:
             data_str3 = data_str2
+        print(data_str3,"################################3")
         for keys in data_str3:
             print(keys,"=============================")
             if keys in spec_pars_list and isinstance(data_str3[keys], dict):
@@ -107,5 +108,4 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         msg = "【etl_mid库】中，%s的%s接入数据可能存在异常" % (ExecDate,TargetTable)
         print(msg)
         set_exit(LevelStatu="red", MSG=msg)
-    print(all_pars_list,"############################")
     return ','.join(all_pars_list)
