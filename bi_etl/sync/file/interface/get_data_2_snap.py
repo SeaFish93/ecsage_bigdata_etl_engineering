@@ -68,7 +68,7 @@ def exec_snap_hive_table(AirflowDagId="",AirflowTaskId="",HiveSession="",Beeline
               union all
            select %s from %s.%s a where etl_date = '%s'
        """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,SourceDB,SourceTable,
-            key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
+            key_columns_joins,ExecDate,is_null_col,source_table_columns,SourceDB, SourceTable,ExecDate
             )
    else:
        # 获取ods表字段
@@ -101,7 +101,7 @@ def exec_snap_hive_table(AirflowDagId="",AirflowTaskId="",HiveSession="",Beeline
            union all
         select %s
         from %s.%s a where etl_date = '%s' 
-       """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,ExecDate,snap_columns,SourceDB,SourceTable,ExecDate)
+       """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,ExecDate,source_table_columns,SourceDB,SourceTable,ExecDate)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=AirflowDagId, TaskId=AirflowTaskId,
