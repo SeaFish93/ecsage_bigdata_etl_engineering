@@ -146,7 +146,38 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                   ;
             """ % ("etl_mid", TargetTable, "etl_mid", TargetTable, columns, pars_str, null_field_str, return_regexp_extract,
                    regexp_extract, returns_account_id, SourceDB, SourceTable, ExecDate)
-    print(sql,"====================================================")
+    ok = BeelineSession.execute_sql(sql)
+    if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="ods入库-tmp失败！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    sql = """
+            insert overwrite table %s.%s
+            partition(etl_date = '%s')
+            select %s from(
+            select %s,row_number()over(partition by %s order by 1) as rn_row_number
+            from %s.%s_tmp
+            ) tmp where rn_row_number = 1
+                   ;
+            drop table if exists %s.%s_tmp;
+            """ % (TargetDB, TargetTable, ExecDate, columns, columns, row_number_columns, "etl_mid", TargetTable, "etl_mid",TargetTable)
+    ok = BeelineSession.execute_sql(sql)
+    if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="ods入库失败！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
 
 
 def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
