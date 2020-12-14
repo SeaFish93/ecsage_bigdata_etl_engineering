@@ -271,7 +271,7 @@ def get_advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate="")
     data_file = data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
-    ok,datas = etl_md.get_all_rows("""select account_id,service_code from metadb.media_advertiser""")
+    ok,datas = etl_md.get_all_rows("""select account_id,service_code from metadb.oe_service_account group by account_id,service_code""")
     for data in datas:
        celery_task_id = get_advertisers_data_celery.delay(AccountIdList=[int(data[0])],ServiceCode=data[1],
                                                           DataFileDir=local_dir,DataFile=data_file,
