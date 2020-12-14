@@ -14,11 +14,11 @@ import ast
 #
 #
 
-def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag="",Isreplace=""):
+def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag="",IsReplace=""):
     etlmid_table_columns = []
     etlmid_table_columns_str = analysis_etlmid_cloumns(HiveSession=HiveSession, SourceTable=SourceTable,
                                                        TargetTable=TargetTable
-                                                       , ExecDate=ExecDate, ArrayFlag=ArrayFlag,Isreplace=Isreplace)
+                                                       , ExecDate=ExecDate, ArrayFlag=ArrayFlag,IsReplace=IsReplace)
     for etlmid_table_column in etlmid_table_columns_str.split(','):
         etlmid_table_columns.append(etlmid_table_column.split(".")[-1])
 
@@ -73,7 +73,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
     return list(diff_source_target_columns),target_table_columns,etlmid_table_columns,etlmid_table_columns_str
 
 #解析etl_mid文档
-def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag="",Isreplace="Y"):
+def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag="",IsReplace="Y"):
     filter_line = """ where etl_date = '%s' and length(request_data) > 1000 limit 1 """%(ExecDate)
     spec_pars = """dimensions,metrics"""
     spec_pars_list = list(spec_pars.split(","))
@@ -84,7 +84,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         split_flag = """## {"""
         return_Str= data[0][0]
         #print("获取etl_mid的样本数据" + data[0][0])
-        if Isreplace == "N":
+        if IsReplace == "N":
             data_str = return_Str
             data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))
             data_str2 = data_str2['data'][0]
