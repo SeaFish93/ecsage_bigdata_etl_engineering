@@ -45,8 +45,8 @@ def main(TaskInfo,Level="",**kwargs):
                                   TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "metadb_oe_service_account":
         get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
-    elif Level == "file" and TaskInfo[0] == "metadb_oe_account":
-        advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+    elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getadvertiser_advertiser":
+        get_advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
         get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
 
@@ -158,10 +158,10 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
      print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
      print("正在等待获取重试异常执行完成！！！")
      rerun_service_exception_tasks(AsyncAccountDir=local_dir, ExceptionFile=task_exception_file,
-                           DataFile=data_file, CeleryTaskDataFile=celery_get_data_status,
-                           InterfaceFlag=task_flag, ExecDate=ExecDate,
-                           Columns="""account_id,service_code,interface_flag,media,page,page_size""",
-                           IsfilterID="Y", ParamJson="")
+                                   DataFile=data_file, CeleryTaskDataFile=celery_get_data_status,
+                                   InterfaceFlag=task_flag, ExecDate=ExecDate,
+                                   Columns="""account_id,service_code,interface_flag,media,page,page_size"""
+                                   )
      print("获取重试异常执行完成！！！")
      #写入MySQL
      etl_md.execute_sql("delete from metadb.oe_service_account ")
@@ -265,7 +265,7 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
 
 
 #广告主
-def advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate=""):
+def get_advertisers_info(AirflowDag="", AirflowTask="",TaskInfo="", ExecDate=""):
     interface_flag = """%s.%s""" % (AirflowDag, AirflowTask)
     local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
     local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s""" % (ExecDate, AirflowDag, AirflowTask)
