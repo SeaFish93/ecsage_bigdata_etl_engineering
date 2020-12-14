@@ -103,7 +103,7 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
     else:
         regexp_extract = """concat(concat('[',get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data')),']') as data_colums"""
     return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
-    returns_account_id = """trim(get_json_object(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}## )',1),'##',''),' ',''),'$.accountId')) as returns_account_id"""
+    returns_account_id = """trim(get_json_object(a.request_data,'$.returns_account_id')) as returns_account_id"""
     filter_line = """length(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1)) > 0"""
     specified_pars_str = etl_ods_field_diff[3]
     specified_pars_list = etl_ods_field_diff[2]
@@ -132,11 +132,12 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                               ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
                               ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
                        from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                            from(select %s,%s,%s
+                            from(select %s
+                                        ,%s
+                                        ,%s
                                         ,request_type
                                  from %s.%s a
                                  where a.etl_date = '%s'
-                                   and %s
                                 ) a
                             where data_colums is not null
                             ) b
@@ -144,10 +145,8 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                        lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
                   ) a
                   ;
-            """ % (
-        "etl_mid", TargetTable, "etl_mid", TargetTable, columns, pars_str, null_field_str, return_regexp_extract,
-        regexp_extract, returns_account_id, SourceDB, SourceTable, ExecDate, filter_line)
-
+            """ % ("etl_mid", TargetTable, "etl_mid", TargetTable, columns, pars_str, null_field_str, return_regexp_extract,
+                   regexp_extract, returns_account_id, SourceDB, SourceTable, ExecDate)
     else:
         sql = """
             add file hdfs:///tmp/airflow/get_arrary.py;
