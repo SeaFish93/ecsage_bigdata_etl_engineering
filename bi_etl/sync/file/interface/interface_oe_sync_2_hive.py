@@ -213,7 +213,7 @@ def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFla
     print("获取页数celery队列执行完成！！！")
     print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     # 保存MySQL
-    columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
+    columns = """page_num,account_id,service_code,remark,data,request_filter,flag,media_type"""
     load_data_mysql(AsyncAccountFile=LocalDir, DataFile=PageFileData, DbName="metadb",
                     TableName="oe_sync_page_interface", Columns=columns)
 
