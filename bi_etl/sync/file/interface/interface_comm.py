@@ -528,32 +528,47 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
         return code
 
 #通过代理ID获取accountID
-def set_services(ServiceId="",Token="",Page="",PageSize=""):
-    open_api_url_prefix = "https://ad.oceanengine.com/open_api/"
-    uri = "2/agent/advertiser/select/"
-    url = open_api_url_prefix + uri
-    params = {
-        "advertiser_id":int(ServiceId),
-        "page":Page,
-        "page_size":PageSize
-    }
-    headers = {"Access-Token": Token}
-    rsp = requests.get(url, json=params, headers=headers)
-    rsp_data = rsp.json()
+def set_services(Media="",ServiceId="",Token="",Page="",PageSize=""):
+    if int(Media) == 2:
+       open_api_url_prefix = "https://ad.oceanengine.com/open_api/"
+       uri = "2/agent/advertiser/select/"
+       url = open_api_url_prefix + uri
+       params = {
+           "advertiser_id":int(ServiceId),
+           "page":Page,
+           "page_size":PageSize
+       }
+       headers = {"Access-Token": Token}
+       rsp = requests.get(url, json=params, headers=headers)
+       rsp_data = rsp.json()
+    elif int(Media) == 203:
+        open_api_url_prefix = "https://ad.oceanengine.com/open_api/"
+        uri = "2/majordomo/advertiser/select/"
+        url = open_api_url_prefix + uri
+        params = {
+            "advertiser_id": int(ServiceId)
+        }
+        headers = {"Access-Token": Token}
+        rsp = requests.get(url, json=params, headers=headers)
+        rsp_data = rsp.json()
     return rsp_data
 
 def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
     total_page = 0
     try:
       token = get_oe_account_token(ServiceCode=ServiceCode)
-      get_data = set_services(ServiceId=ServiceId, Token=token, Page=Page, PageSize=PageSize)
+      get_data = set_services(Media=Media,ServiceId=ServiceId, Token=token, Page=Page, PageSize=PageSize)
       code = get_data["code"]
       if int(code) == 0:
           remark = "正常"
-          total_page = int(get_data["data"]["page_info"]["total_page"])
-          data = ""
-          for advertiser_id in get_data["data"]["advertiser_ids"]:
-              os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId,ServiceCode,advertiser_id,Media,DataFile,hostname))
+          if int(Media) == 2:
+             total_page = int(get_data["data"]["page_info"]["total_page"])
+             data = ""
+             for advertiser_id in get_data["data"]["advertiser_ids"]:
+                 os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId,ServiceCode,advertiser_id,Media,DataFile,hostname))
+          elif int(Media) == 203:
+             for list_data in get_data["data"]["list"]:
+                 os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId, ServiceCode, list_data["advertiser_id"], Media, DataFile, hostname))
       else:
           # 没权限及token失败
           if int(code) in [40002, 40105, 40104]:

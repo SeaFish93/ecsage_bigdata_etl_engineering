@@ -235,7 +235,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
   get_service_code_sql = """select account_id,service_code,media
                             from media_service_provider
-                            where media in (2,201,203)
+                            where media in (2,203)
                           """
   ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (task_flag))
