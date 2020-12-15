@@ -38,6 +38,11 @@ def main(TaskInfo,**kwargs):
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
     ok,host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
+    shell = """rm -f /tmp/%s"""%(async_task_exception_file)
+    shell_1 = """rm -f /tmp/%s""" % (async_task_file)
+    for host in host_data:
+        exec_remote_proc(HostName=host[0],UserName=host[1],PassWord=host[2], ShellCommd=shell)
+        exec_remote_proc(HostName=host[0], UserName=host[1], PassWord=host[2], ShellCommd=shell_1)
     n = 0
     host_num = 0
     host_i = 0
