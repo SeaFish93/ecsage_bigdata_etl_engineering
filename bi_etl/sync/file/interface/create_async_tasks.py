@@ -154,7 +154,7 @@ if __name__ == '__main__':
     exec_date = sys.argv[6]
     group_by = sys.argv[7]
     fields = sys.argv[8]
-    #os.system("""rm -f %s """ % (async_task_exception_file))
-    #os.system("""rm -f %s """ % (async_task_file))
+    os.system("""rm -f %s """ % (async_task_exception_file))
+    os.system("""rm -f %s """ % (async_task_file))
 
     oe_create_tasks(MysqlSession=etl_md, SqlList=sqls_list, AsyncTaskFile=async_task_file,AsyncTaskExceptionFile=async_task_exception_file, AsyncTask=async_task,ExecDate=exec_date,GroupBy=group_by,Fields=fields)
