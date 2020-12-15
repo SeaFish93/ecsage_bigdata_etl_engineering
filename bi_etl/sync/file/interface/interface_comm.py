@@ -555,6 +555,7 @@ def set_services(Media="",ServiceId="",Token="",Page="",PageSize=""):
 
 def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
     total_page = 0
+    data = ""
     try:
       token = get_oe_account_token(ServiceCode=ServiceCode)
       get_data = set_services(Media=Media,ServiceId=ServiceId, Token=token, Page=Page, PageSize=PageSize)
@@ -563,7 +564,6 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
           remark = "正常"
           if int(Media) == 2:
              total_page = int(get_data["data"]["page_info"]["total_page"])
-             data = ""
              for advertiser_id in get_data["data"]["advertiser_ids"]:
                  os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId,ServiceCode,advertiser_id,Media,DataFile,hostname))
           elif int(Media) == 203:
