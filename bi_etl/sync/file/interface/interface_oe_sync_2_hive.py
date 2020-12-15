@@ -259,7 +259,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
    and tmp.request_filter = tmp1.request_filter
    where tmp1.remark = '异常'
      and tmp1.flag = '%s.%s'
-   group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter,tmp1.flag
+   group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter,tmp1.flag,tmp1.media_type
   """%(AirflowDag,AirflowTask,AirflowDag,AirflowTask)
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
@@ -277,10 +277,10 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
           break
 
   sql = """
-    select a.account_id, media_type as media_type, a.service_code,a.page_num,a.request_filter
+    select a.account_id, a.media_type as media_type, a.service_code,a.page_num,a.request_filter
     from metadb.oe_sync_page_interface a where page_num > 1
     and flag = '%s.%s'
-    group by a.account_id,  a.service_code,a.page_num,a.request_filter
+    group by a.account_id,  a.service_code,a.page_num,a.request_filter,a.media_type
   """%(AirflowDag,AirflowTask)
   ok, datas = etl_md.get_all_rows(sql)
   if datas is not None and len(datas) > 0:
