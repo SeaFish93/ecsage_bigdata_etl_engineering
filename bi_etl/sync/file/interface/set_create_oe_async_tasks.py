@@ -142,7 +142,7 @@ def get_account_sql(MediaType=""):
        select concat_ws(' ',@row_num:=@row_num+1,account_id, media, service_code)
             from big_data_mdg.media_advertiser a,(select @row_num:=0) r
             where media = %s
-            --  and is_actived = '1'
+             and is_actived = '1'
        """ % (MediaType)
     os.system("rm -f %s"%(account_file))
     mysql_session.select_data_to_local_file(sql=account_2_mysql_sql,filename=account_file)
@@ -229,7 +229,7 @@ def get_token(MediaType="",AccountTokenFile="",AccountTokenExceptionFile=""):
          select  service_code,count(1)
          from big_data_mdg.media_advertiser a
          where media = %s
-          -- and is_actived = '1'
+          and is_actived = '1'
           -- and service_code = 'tt-101244061737'
          group by service_code
         """%(MediaType)
