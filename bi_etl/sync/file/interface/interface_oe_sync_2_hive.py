@@ -246,7 +246,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   n = 10
   for i in range(n):
     sql = """
-      select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
+      select tmp1.account_id, tmp1.media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
    from(select account_id,service_code,request_filter,count(distinct remark) as rn
         from metadb.oe_sync_page_interface
         where flag = '%s.%s'
@@ -277,7 +277,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
           break
 
   sql = """
-    select a.account_id, '' as media_type, a.service_code,a.page_num,a.request_filter
+    select a.account_id, media_type as media_type, a.service_code,a.page_num,a.request_filter
     from metadb.oe_sync_page_interface a where page_num > 1
     and flag = '%s.%s'
     group by a.account_id,  a.service_code,a.page_num,a.request_filter
