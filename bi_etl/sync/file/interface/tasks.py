@@ -57,7 +57,6 @@ def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskE
         get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
                                        AccountId=account_id, AsyncTaskName=AsyncTaskName, AsyncTaskFile=AsyncTaskFile,
                                        ExecDate=ExecDate,GroupBy=group_by, Fields=fields,Token=token)
-        a = 1 /0
         set_true = False
       except Exception as e:
         if n > 1:
