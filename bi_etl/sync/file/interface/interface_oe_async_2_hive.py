@@ -61,8 +61,8 @@ def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate="")
     celery_task_status_file = """%s/celery_task_status_file.log"""%(async_account_file)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s/*""" % (async_account_file))
-    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s and exec_date = '%s' """ % (media_type,ExecDate))
-    etl_md.execute_sql("""delete from metadb.oe_not_valid_account_interface where media_type=%s and exec_date = '%s' """ % (media_type,ExecDate))
+    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where  exec_date = '%s' """ % (ExecDate))
+    etl_md.execute_sql("""delete from metadb.oe_not_valid_account_interface where exec_date = '%s' """ % (ExecDate))
     #获取子账户
     source_data_sql = """
         select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
