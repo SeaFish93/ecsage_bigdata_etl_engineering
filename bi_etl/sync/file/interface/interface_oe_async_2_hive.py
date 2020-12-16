@@ -52,14 +52,13 @@ def main(TaskInfo,**kwargs):
 
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
-    media_type = int(MediaType)
     interface_flag = """%s.%s"""%(AirflowDagId,AirflowTaskId)
     group_by = TaskInfo[11]
     fields = TaskInfo[21]
-    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s/%s" % (AirflowDagId, AirflowTaskId)
-    async_create_task_file = """%s/async_create_%s.log""" % (async_account_file)
-    async_task_exception_file = """%s/async_exception_%s.log""" % (async_account_file)
-    celery_task_status_file = """%s/celery_task_status_%s.log""" % (async_account_file)
+    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s" % (AirflowDagId, AirflowTaskId)
+    async_create_task_file = """%s/async_create.log""" % (async_account_file)
+    async_task_exception_file = """%s/async_exception.log""" % (async_account_file)
+    celery_task_status_file = """%s/celery_task_status.log""" % (async_account_file)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s/*""" % (async_account_file))
     account_sql = """
