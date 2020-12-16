@@ -617,6 +617,7 @@ def rerun_exception_account_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="
                                                                        AsyncTaskExceptionFile=async_data_exception_file,
                                                                        ExecData=data, ExecDate=ExecDate)
                 os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file + ".%s" % (i)))
+                n = n + 1
             celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s" % i)
             wait_for_celery_status(StatusList=celery_task_id)
             delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
