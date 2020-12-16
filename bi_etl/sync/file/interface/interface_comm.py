@@ -363,6 +363,7 @@ def set_oe_async_tasks_create(AccountId="",AsyncTaskName="",Fields="",ExecDate="
         'Access-Token': Token,
         'Connection': "close"
     }
+    print(params,"====================================")
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
     return resp_data

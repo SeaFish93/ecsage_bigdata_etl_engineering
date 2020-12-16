@@ -65,13 +65,14 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     account_sql = """
       select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
       from metadb.media_advertiser
+      limit 1
     """ % (interface_flag, group_by, fields)
     ok, all_rows = etl_md.get_all_rows(account_sql)
     n = 1
     for data in all_rows:
         status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
-                                                               AsyncTaskFile="",
-                                                               AsyncTaskExceptionFile="",
+                                                               AsyncTaskFile=async_create_task_file,
+                                                               AsyncTaskExceptionFile=async_task_exception_file,
                                                                ExecData=data, ExecDate=ExecDate)
         os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
 
