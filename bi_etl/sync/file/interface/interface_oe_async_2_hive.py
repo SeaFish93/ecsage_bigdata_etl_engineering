@@ -115,10 +115,11 @@ def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate="")
                              CeleryTaskStatusFile=celery_task_status_file,ExecDate=ExecDate)
        print("重试异常任务执行完成！！！")
        time.sleep(60)
+       columns = "exec_date,account_id,media_type,service_code,token_data,task_id,task_name"
        #落地有数据
-       load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface")
+       load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface",Columns=columns)
        #落地没数据
-       load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface")
+       load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface",Columns=columns)
 
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
