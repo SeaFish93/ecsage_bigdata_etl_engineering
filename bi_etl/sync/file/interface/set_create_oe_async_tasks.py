@@ -37,8 +37,6 @@ def main(TaskInfo,**kwargs):
     get_token(MediaType=media_type, AccountTokenFile=account_token_file, AccountTokenExceptionFile=account_token_exception_file)
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
-    print(sql,max_min,"########################========================================")
-    exit(0)
     ok,host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
     shell = """rm -f /tmp/%s"""%(async_task_exception_file)
     shell_1 = """rm -f /tmp/%s""" % (async_task_file)
