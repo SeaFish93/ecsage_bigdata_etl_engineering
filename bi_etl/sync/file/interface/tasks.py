@@ -136,7 +136,7 @@ def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExcep
       n = n + 1
 
 #定义oe任务状态
-@app.task
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     set_true = True
