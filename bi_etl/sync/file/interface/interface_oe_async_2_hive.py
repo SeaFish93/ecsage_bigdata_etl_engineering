@@ -87,8 +87,8 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     #load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
     #                TableName="oe_async_create_task", Columns=columns)
     print("等待重试异常任务！！！")
-    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
-                                   DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,InterfaceFlag="create")
+    #rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
+    #                               DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,InterfaceFlag="create")
     print("等待重试异常任务完成！！！")
 
 def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):

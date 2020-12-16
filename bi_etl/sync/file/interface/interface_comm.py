@@ -256,7 +256,7 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
        if len(AsyncNotemptyFile) >0:
           os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999",AirflowInstance, AsyncStatusExceptionFile + ".%s" % (hostname)))
-    else:
+    elif ExceptionType =="create":
         account_id = ExecData[0]
         interface_flag = ExecData[1]
         media_type = ExecData[2]
@@ -266,6 +266,17 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
         fields = ExecData[5]
         os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code, "##","##",token, 0, 999999, AsyncNotemptyFile+".%s"%(hostname)))
         os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code,group_by,fields,token, AsyncStatusExceptionFile+".%s"%(hostname)))
+    else:
+        account_id = ExecData[0]
+        interface_flag = ExecData[1]
+        media_type = ExecData[2]
+        service_code = ExecData[3]
+        token = ExecData[6]
+        group_by = str(ExecData[4])
+        fields = ExecData[5]
+        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id, interface_flag, media_type, service_code, group_by, fields, token,AsyncStatusExceptionFile + ".%s" % (hostname)))
+
+        #columns = """account_id,media_type,service_code,token_data,task_id,task_name,interface_flag"""
 def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
     get_data = ExecData
     media_type = get_data[1]
