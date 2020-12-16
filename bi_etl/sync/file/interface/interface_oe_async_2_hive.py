@@ -65,7 +65,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     account_sql = """
       select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
       from metadb.media_advertiser
-      limit 1
+     -- limit 1
     """ % (interface_flag, group_by, fields)
     ok, all_rows = etl_md.get_all_rows(account_sql)
     n = 1
