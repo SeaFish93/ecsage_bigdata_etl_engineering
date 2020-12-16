@@ -50,7 +50,7 @@ def main(TaskInfo,**kwargs):
        #get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
        get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
     elif task_type == 0:
-        get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate="")
+        get_oe_async_tasks_status_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task,ExecDate=exec_date)
 
 def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate=""):
     media_type = 2
@@ -102,7 +102,7 @@ def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate="")
     if datas is not None and len(datas) > 0:
        for get_data in datas:
              status_id = get_oe_async_tasks_status_celery.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
-                                                  AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data,ExecDate=ExecDate)
+                                                                AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data,ExecDate=ExecDate)
              os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
        #获取状态
        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
