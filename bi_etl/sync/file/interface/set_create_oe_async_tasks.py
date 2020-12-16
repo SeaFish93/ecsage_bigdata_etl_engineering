@@ -43,6 +43,8 @@ def main(TaskInfo,**kwargs):
     for host in host_data:
         exec_remote_proc(HostName=host[0],UserName=host[1],PassWord=host[2], ShellCommd=shell)
         exec_remote_proc(HostName=host[0], UserName=host[1], PassWord=host[2], ShellCommd=shell_1)
+    for i in range(1000000):
+        pass
     n = 0
     host_num = 0
     host_i = 0
