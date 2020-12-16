@@ -47,8 +47,8 @@ def main(TaskInfo,**kwargs):
     elif task_type == 5:
        get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 1:
-       get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
-       #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
+       #get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
+       get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
 
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
@@ -62,220 +62,21 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     celery_task_status_file = """%s/celery_task_status_%s.log""" % (async_account_file, media_type)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s/*""" % (async_account_file))
-    sql_list = []
-    account_sql_1 = """
-      select * from(
-      select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-      from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-           from metadb.media_advertiser
-          ) tmp,(select @row_num:=0) r
-          ) tmp1 where rn >=1 and rn < 2000
+    account_sql = """
+      select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+      from metadb.media_advertiser
     """ % (interface_flag, group_by, fields)
-    account_sql_2 = """
-          select * from(
-          select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-          from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-               from metadb.media_advertiser
-              ) tmp,(select @row_num:=0) r
-              ) tmp1 where rn >=2000 and rn < 4000
-        """ % (interface_flag, group_by, fields)
-    account_sql_3 = """
-              select * from(
-              select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-              from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                   from metadb.media_advertiser
-                  ) tmp,(select @row_num:=0) r
-                  ) tmp1 where rn >=4000 and rn < 6000
-            """ % (interface_flag, group_by, fields)
-    account_sql_4 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=6000 and rn < 8000
-                """ % (interface_flag, group_by, fields)
-    account_sql_5 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=8000 and rn < 10000
-                """ % (interface_flag, group_by, fields)
-    account_sql_6 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=10000 and rn < 12000
-                """ % (interface_flag, group_by, fields)
-    account_sql_7 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=12000 and rn < 14000
-                """ % (interface_flag, group_by, fields)
-    account_sql_8 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=14000 and rn < 16000
-                """ % (interface_flag, group_by, fields)
-    account_sql_9 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=16000 and rn < 18000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_10 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=18000 and rn < 20000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_11 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=20000 and rn < 22000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_12 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=22000 and rn < 24000
-                """ % (interface_flag, group_by, fields)
+    ok, all_rows = etl_md.get_all_rows(account_sql)
+    exit(0)
+    n = 1
+    for data in all_rows:
+        status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
+                                                               AsyncTaskFile="",
+                                                               AsyncTaskExceptionFile="",
+                                                               ExecData=data, ExecDate=ExecDate)
+        os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], ""))
 
-    account_sql_13 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=24000 and rn < 26000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_14 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=26000 and rn < 28000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_15 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=28000 and rn < 30000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_16 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=30000 and rn < 32000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_17 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=32000 and rn < 34000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_18 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=34000 and rn < 36000
-                """ % (interface_flag, group_by, fields)
-    account_sql_19 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=36000 and rn < 38000
-                """ % (interface_flag, group_by, fields)
-    account_sql_20 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=38000 and rn < 40000
-                """ % (interface_flag, group_by, fields)
-    account_sql_21 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=40000
-                """ % (interface_flag, group_by, fields)
-    sql_list.append(account_sql_1)
-    sql_list.append(account_sql_2)
-    sql_list.append(account_sql_3)
-    sql_list.append(account_sql_4)
-    sql_list.append(account_sql_5)
-    sql_list.append(account_sql_6)
-    sql_list.append(account_sql_7)
-    sql_list.append(account_sql_8)
-    sql_list.append(account_sql_9)
-    sql_list.append(account_sql_10)
-    sql_list.append(account_sql_11)
-    sql_list.append(account_sql_12)
-    sql_list.append(account_sql_13)
-    sql_list.append(account_sql_14)
-    sql_list.append(account_sql_15)
-    sql_list.append(account_sql_16)
-    sql_list.append(account_sql_17)
-    sql_list.append(account_sql_18)
-    sql_list.append(account_sql_19)
-    sql_list.append(account_sql_20)
-    sql_list.append(account_sql_21)
-    th = []
-    i = 0
-    for sql in sql_list:
-        etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-                               my_run=run_get_oe_async_tasks_create,
-                               Sql=sql, AsyncTaskFile=async_create_task_file,
-                               AsyncTaskExceptionFile=async_task_exception_file,
-                               ExecDate=ExecDate, CeleryTaskStatusFile=celery_task_status_file, Flag="%s" % (i)
-                               )
-        etl_thread.start()
-        th.append(etl_thread)
-        time.sleep(10)
-        i = i + 1
-    for etl_th in th:
-        etl_th.join()
+
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
     print("正在等待celery队列执行完成！！！")
@@ -336,23 +137,6 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     etl_md.execute_sql("delete from metadb.oe_async_create_task_interface where interface_flag='%s' " % (interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,TableName="oe_async_create_task_interface", Columns=columns)
 
-def run_get_oe_async_tasks_create(Sql="",AsyncTaskFile="",AsyncTaskExceptionFile="",ExecDate="",CeleryTaskStatusFile="",Flag="",arg=None):
-  if arg is not None or len(arg) > 0:
-    Sql = arg["Sql"]
-    AsyncTaskFile = arg["AsyncTaskFile"]
-    AsyncTaskExceptionFile = arg["AsyncTaskExceptionFile"]
-    ExecDate = arg["ExecDate"]
-    CeleryTaskStatusFile = arg["CeleryTaskStatusFile"]
-    Flag = arg["Flag"]
-    ok, all_rows = etl_md.get_all_rows(Sql)
-    n = 1
-    for data in all_rows:
-        status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s%s" % (Flag,n),
-                                                           AsyncTaskFile=AsyncTaskFile,
-                                                           AsyncTaskExceptionFile=AsyncTaskExceptionFile,
-                                                           ExecData=data, ExecDate=ExecDate)
-        os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], CeleryTaskStatusFile))
-        n = n + 1
 #存储token
 def get_oe_async_tasks_token(MediaType=""):
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
