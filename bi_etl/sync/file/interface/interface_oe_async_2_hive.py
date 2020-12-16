@@ -80,6 +80,7 @@ def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate="")
          and a.service_code = b.service_code
          and a.account_id = b.account_id
          where a.interface_flag = 'day_oe_account_auto.set_create_oe_async_account'
+           and a.task_id <> '0'
                      union all
          select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
          from(select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
