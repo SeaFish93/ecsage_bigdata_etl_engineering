@@ -53,19 +53,18 @@ def main(TaskInfo,**kwargs):
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
     media_type = int(MediaType)
-    interface_flag = TaskInfo[20]
+    interface_flag = """%s.%s"""%(AirflowDagId,AirflowTaskId)
     group_by = TaskInfo[11]
     fields = TaskInfo[21]
-    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s/%s" % (AirflowDagId, AirflowTaskId, media_type)
-    async_create_task_file = """%s/async_create_%s.log""" % (async_account_file, media_type)
-    async_task_exception_file = """%s/async_exception_%s.log""" % (async_account_file, media_type)
-    celery_task_status_file = """%s/celery_task_status_%s.log""" % (async_account_file, media_type)
+    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s/%s" % (AirflowDagId, AirflowTaskId)
+    async_create_task_file = """%s/async_create_%s.log""" % (async_account_file)
+    async_task_exception_file = """%s/async_exception_%s.log""" % (async_account_file)
+    celery_task_status_file = """%s/celery_task_status_%s.log""" % (async_account_file)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s/*""" % (async_account_file))
     account_sql = """
       select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
       from metadb.media_advertiser
-     -- limit 1
     """ % (interface_flag, group_by, fields)
     ok, all_rows = etl_md.get_all_rows(account_sql)
     n = 1
@@ -81,17 +80,17 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     print("正在等待celery队列执行完成！！！")
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
-    # 保存MySQL
-    #columns = """media_type,token_data,service_code,account_id,task_id,task_name,interface_flag"""
-    #etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' " % (media_type, interface_flag))
-    #load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
-    #                TableName="oe_async_create_task", Columns=columns)
     print("等待重试异常任务！！！")
     rerun_exception_account_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
                                    DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
                                    Columns= "account_id,interface_flag,media_type,service_code,group_by,fields,token_data",
                                    InterfaceFlag=interface_flag,ExecDate=ExecDate)
     print("等待重试异常任务完成！！！")
+    # 保存MySQL
+    columns = """account_id,interface_flag,media_type,service_code,'','',token_data,task_id,task_name"""
+    etl_md.execute_sql("delete from metadb.oe_async_create_task where interface_flag='%s' " % (interface_flag))
+    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
+                    TableName="oe_async_create_task", Columns=columns)
 
 def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
     media_type = int(MediaType)
