@@ -73,6 +73,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
                                                                AsyncTaskExceptionFile=async_task_exception_file,
                                                                ExecData=data, ExecDate=ExecDate)
         os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
+        n = n + 1
 
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
