@@ -35,6 +35,7 @@ def main(TaskInfo,**kwargs):
     airflow = Airflow(kwargs)
     media_type = TaskInfo[1]
     task_type = TaskInfo[4]
+    task_id = TaskInfo[2]
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
     """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token"""
@@ -47,13 +48,16 @@ def main(TaskInfo,**kwargs):
     elif task_type == 5:
        get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 1:
-       #get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
-       get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
+       if task_id == "set_create_oe_async_account":
+         get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
+       else:
+         get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
     elif task_type == 0:
-        get_oe_async_tasks_status_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task,ExecDate=exec_date)
+        get_oe_async_tasks_status_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
 
-def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate=""):
+def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",TaskInfo="",ExecDate=""):
     media_type = 2
+    interface_flag = TaskInfo[20]
     async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s" % (AirflowDagId, AirflowTaskId)
     async_status_exception_file = """%s/async_status_exception.log""" % (async_account_file)
     async_notempty_file = """%s/async_notempty.log""" % (async_account_file)
@@ -73,13 +77,13 @@ def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate="")
                     from metadb.oe_async_create_task a
                     where task_id = '0'
                       and task_name = '999999'
-                      and interface_flag = 'day_oe_account_auto.set_create_oe_async_account'
+                      and interface_flag = '%s'
                     group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
          ) b
          on a.media_type = b.media_type
          and a.service_code = b.service_code
          and a.account_id = b.account_id
-         where a.interface_flag = 'day_oe_account_auto.set_create_oe_async_account'
+         where a.interface_flag = '%s'
            and a.task_id <> '0'
                      union all
          select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
@@ -87,18 +91,18 @@ def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate="")
               from metadb.oe_async_create_task a
               where task_id = '0'
                 and task_name = '999999'
-                and interface_flag = 'day_oe_account_auto.set_create_oe_async_account'
+                and interface_flag = '%s'
               group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
              ) a
          left join oe_async_create_task b
          on a.media_type = b.media_type
          and a.service_code = b.service_code
          and a.account_id = b.account_id
-         and b.interface_flag = 'day_oe_account_auto.set_create_oe_async_account'
+         and b.interface_flag = '%s'
          and b.task_id <> '0'
          where b.task_id is null
       ) a group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-    """
+    """%(interface_flag,interface_flag,interface_flag,interface_flag)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     if datas is not None and len(datas) > 0:
        for get_data in datas:
@@ -121,10 +125,36 @@ def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate="")
        load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface",Columns=columns)
        #落地没数据
        load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface",Columns=columns)
+       insert_sql = """
+             insert into metadb.`oe_account_interface`
+             select a.account_id, a.media_type, a.service_code,a.token_data,a.exec_date
+             from metadb.oe_valid_account_interface a
+             left join metadb.oe_not_valid_account_interface b
+             on a.media_type = b.media_type
+             and a.account_id = b.account_id
+             and a.service_code = b.service_code
+             and a.exec_date = b.exec_date
+             where b.service_code is null
+               and a.exec_date = '%s'
+             group by a.account_id, a.media_type, a.service_code,a.token_data,a.exec_date
+           """ % (ExecDate)
+       etl_md.execute_sql("delete from metadb.oe_account_interface where exec_date = '%s' " % (ExecDate))
+       ok = etl_md.execute_sql(insert_sql)
+       if ok is False:
+           msg = "写入目标MySQL筛选子账户表出现异常！！！"
+           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                  TargetTable="%s.%s" % ("", ""),
+                                  BeginExecDate=ExecDate,
+                                  EndExecDate=ExecDate,
+                                  Status="Error",
+                                  Log=msg,
+                                  Developer="developer")
+           set_exit(LevelStatu="red", MSG=msg)
 
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
-    interface_flag = """%s.%s"""%(AirflowDagId,AirflowTaskId)
+    interface_flag = TaskInfo[20]
     group_by = TaskInfo[11]
     fields = TaskInfo[21]
     async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s" % (AirflowDagId, AirflowTaskId)
