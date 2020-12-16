@@ -67,14 +67,13 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
       from metadb.media_advertiser
     """ % (interface_flag, group_by, fields)
     ok, all_rows = etl_md.get_all_rows(account_sql)
-    exit(0)
     n = 1
     for data in all_rows:
         status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
                                                                AsyncTaskFile="",
                                                                AsyncTaskExceptionFile="",
                                                                ExecData=data, ExecDate=ExecDate)
-        os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], ""))
+        os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
 
 
     # 获取状态
