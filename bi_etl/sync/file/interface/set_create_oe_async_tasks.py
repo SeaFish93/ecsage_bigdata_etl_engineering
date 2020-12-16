@@ -184,7 +184,7 @@ def get_account_sql(MediaType=""):
         fmax = int(all_rows[0][2])
         source_cnt = fcnt
         print("min=%s, max=%s, count=%s" % (str(fmin), str(fmax), str(fcnt)))
-        if fcnt < 100:
+        if fcnt < 1:
             # 100以下的数据量不用分批跑
             sql_list.clear()
             sql_list.append(source_data_sql)
