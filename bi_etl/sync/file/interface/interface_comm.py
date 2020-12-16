@@ -264,9 +264,8 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
         token = ExecData[6]
         group_by = str(ExecData[4])
         fields = ExecData[5]
-        #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (media_type, token, service_code, account_id, 0, 999999, interface_flag, AsyncNotemptyFile))
-        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code,group_by,
-                                                   fields,token, AsyncStatusExceptionFile+".%s"%(hostname)))
+        os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code, "##","##",token, 0, 999999, AsyncNotemptyFile+".%s"%(hostname)))
+        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code,group_by,fields,token, AsyncStatusExceptionFile+".%s"%(hostname)))
 def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
     get_data = ExecData
     media_type = get_data[1]
