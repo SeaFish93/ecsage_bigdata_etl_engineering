@@ -90,7 +90,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     rerun_exception_account_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
                                    DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
                                    Columns= "account_id,interface_flag,media_type,service_code,group_by,fields,token_data",
-                                   InterfaceFlag="create")
+                                   InterfaceFlag=interface_flag)
     print("等待重试异常任务完成！！！")
 
 def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
