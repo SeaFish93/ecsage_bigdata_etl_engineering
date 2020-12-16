@@ -49,6 +49,76 @@ def main(TaskInfo,**kwargs):
     elif task_type == 1:
        #get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
        get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
+    elif task_type == 0:
+        get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate="")
+
+def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",ExecDate=""):
+    media_type = 2
+    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s" % (AirflowDagId, AirflowTaskId)
+    async_status_exception_file = """%s/async_status_exception.log""" % (async_account_file)
+    async_notempty_file = """%s/async_notempty.log""" % (async_account_file)
+    async_empty_file = """%s/async_empty.log""" % (async_account_file)
+    celery_task_status_file = """%s/celery_task_status_file.log"""%(async_account_file)
+    os.system("""mkdir -p %s""" % (async_account_file))
+    os.system("""rm -f %s/*""" % (async_account_file))
+    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where media_type=%s and exec_date = '%s' """ % (media_type,ExecDate))
+    etl_md.execute_sql("""delete from metadb.oe_not_valid_account_interface where media_type=%s and exec_date = '%s' """ % (media_type,ExecDate))
+    #获取子账户
+    source_data_sql = """
+        select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+        from(
+         select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+         from oe_async_create_task a
+         left join (select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+                    from metadb.oe_async_create_task a
+                    where task_id = '0'
+                      and task_name = '999999'
+                      and interface_flag = 'day_oe_account_auto.set_create_oe_async_account'
+                    group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+         ) b
+         on a.media_type = b.media_type
+         and a.service_code = b.service_code
+         and a.account_id = b.account_id
+         where a.interface_flag = 'day_oe_account_auto.set_create_oe_async_account'
+                     union all
+         select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+         from(select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+              from metadb.oe_async_create_task a
+              where task_id = '0'
+                and task_name = '999999'
+                and interface_flag = 'day_oe_account_auto.set_create_oe_async_account'
+              group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+             ) a
+         left join oe_async_create_task b
+         on a.media_type = b.media_type
+         and a.service_code = b.service_code
+         and a.account_id = b.account_id
+         and b.interface_flag = 'day_oe_account_auto.set_create_oe_async_account'
+         and b.task_id <> '0'
+         where b.task_id is null
+      ) a group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+    """
+    ok, datas = etl_md.get_all_rows(source_data_sql)
+    if datas is not None and len(datas) > 0:
+       for get_data in datas:
+             status_id = get_oe_async_tasks_status_celery.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
+                                                  AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data,ExecDate=ExecDate)
+             os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
+       #获取状态
+       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+       print("正在等待celery队列执行完成！！！")
+       wait_for_celery_status(StatusList=celery_task_id)
+       print("celery队列执行完成！！！")
+       print("等待重试异常任务！！！")
+       rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file,
+                             AsyncNotemptyFile=async_notempty_file,AsyncemptyFile=async_empty_file,
+                             CeleryTaskStatusFile=celery_task_status_file,ExecDate=ExecDate)
+       print("重试异常任务执行完成！！！")
+       time.sleep(60)
+       #落地有数据
+       load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface")
+       #落地没数据
+       load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface")
 
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
