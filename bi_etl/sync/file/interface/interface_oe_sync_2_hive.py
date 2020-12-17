@@ -141,6 +141,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                                                  DataFileDir=local_dir,
                                                  DataFile=data_file,TaskExceptionFile=task_exception_file
                                                 )
+      os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], celery_get_data_status))
   # 获取状态
   print("正在等待celery队列执行完成！！！")
   celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)

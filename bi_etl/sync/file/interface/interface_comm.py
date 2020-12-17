@@ -21,7 +21,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
-etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+#etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 hostname = socket.gethostname()
 
 def build_url(path, query=""):
@@ -191,7 +191,7 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
             load data local infile '%s' into table metadb.monitor_collect_file_log fields terminated by ' ' lines terminated by '\\n' (target_file_dir,target_file,target_file_size)
         """ % (size_error_file)
         print(insert_sql)
-        etl_md.local_file_to_mysql(sql=insert_sql)
+       #etl_md.local_file_to_mysql(sql=insert_sql)
 
     if len(DataFileList) != file_num:
        msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
