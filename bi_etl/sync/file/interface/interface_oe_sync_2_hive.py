@@ -48,7 +48,6 @@ def main(TaskInfo,Level="",**kwargs):
        if TaskInfo[0] == "metadb_oe_service_account":
           get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
        else:
-          print("##########################")
           get_data_2_etl_mid(BeelineSession=beeline_session, TargetDB=target_db, TargetTable=target_table,
                              AirflowDag=airflow.dag, AirflowTask=airflow.task,
                              TaskInfo=TaskInfo, ExecDate=exec_date
@@ -126,6 +125,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             group by a.account_id, a.media_type, a.service_code
             limit 1
        """%(task_flag,media_type)
+  print(sql,"======================================")
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
