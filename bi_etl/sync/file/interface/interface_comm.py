@@ -20,6 +20,8 @@ from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 hostname = socket.gethostname()
 
 def build_url(path, query=""):
@@ -169,10 +171,28 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
         i = i + 1
     for etl_th in th:
         etl_th.join()
+
+    size_error_file = DataFileList[0].rsplit("/", 1)[0] + '/' + 'file_size_error.log'
+    os.system(""" > %s"""%(size_error_file))
     for data_files in DataFileList:
+        file_size = os.path.getsize(data_files)
+        if int(file_size) == 0:
+            print("【%s】文件大小异常，请注意" % (data_files))
+            data_files_list=data_files.rsplit("/",1)
+            os.system("""echo "%s %s %s" >> %s""" % (data_files_list[0],data_files_list[1],int(file_size),size_error_file))
+
         status = os.system("""hadoop fs -ls %s/%s"""%(HDFSDir,data_files.split("/")[-1]))
         if int(status) == 0:
             file_num = file_num + 1
+
+    error_file_size = os.path.getsize(size_error_file)
+    if int(error_file_size) > 0:
+        insert_sql = """
+            load data local infile '%s' into table metadb.monitor_collect_file_log fields terminated by ' ' lines terminated by '\\n' (target_file_dir,target_file,target_file_size)
+        """ % (size_error_file)
+        print(insert_sql)
+        etl_md.local_file_to_mysql(sql=insert_sql)
+
     if len(DataFileList) != file_num:
        msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
