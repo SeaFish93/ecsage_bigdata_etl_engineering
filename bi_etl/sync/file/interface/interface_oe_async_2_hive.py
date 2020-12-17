@@ -455,12 +455,14 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     os.system("""rm -f %s*""" % (celery_task_data_file))
     # 获取子账户
     source_data_sql = """
+        -- 正常创建异步任务
         select  a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name 
         from metadb.oe_async_create_task_interface a
         where interface_flag = '%s'
           and media_type = %s
           and task_id <> '0'
                     union all
+        -- 异常创建异步任务
         select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
         from (select  a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
               from metadb.oe_async_create_task_interface a
