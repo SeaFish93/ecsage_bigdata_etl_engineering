@@ -133,6 +133,8 @@ class EtlMetaDataSQL():
   ,filter_table_name
   ,filter_column_name
   ,filter_config
+  ,is_page
+  ,media_type
   ,`create_user`
   ,`update_user`
   ,`create_time`

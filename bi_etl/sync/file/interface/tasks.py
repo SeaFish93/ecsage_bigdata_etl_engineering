@@ -16,6 +16,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_advertiser_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_creative_detail_datas
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_services
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_not_page
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 import json
@@ -319,3 +320,21 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
             else:
                 time.sleep(5)
         n = n + 1
+
+#处理不分页
+@app.task(rate_limit='1000/m')
+def get_not_page(UrlPath="",ParamJson="",ServiceCode="",ReturnAccountId="",ReturnColumns="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile=""):
+    set_true = True
+    n = 0
+    while set_true:
+      code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ReturnColumns=ReturnColumns)
+      if int(code) == 0:
+          set_true = False
+      else:
+          if n > 2:
+            print("异常：%s,%s"%(ReturnAccountId,ServiceCode))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""),str(ReturnColumns).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+            set_true = False
+          else:
+            time.sleep(5)
+      n = n + 1
