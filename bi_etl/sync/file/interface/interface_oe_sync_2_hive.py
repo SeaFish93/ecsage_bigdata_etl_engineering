@@ -44,21 +44,22 @@ def main(TaskInfo,Level="",**kwargs):
     source_table = TaskInfo[12]
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
-    if Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativereport_creativereport_city_test":
-       get_sync_interface_2_local(BeelineSession=beeline_session,TargetDB=target_db,TargetTable=target_table,
-                                  AirflowDag=airflow.dag, AirflowTask=airflow.task,
-                                  TaskInfo=TaskInfo, ExecDate=exec_date)
-    elif Level == "file":
+    if Level == "file":
        if TaskInfo[0] == "metadb_oe_service_account":
           get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
        else:
-          get_advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, BeelineSession=beeline_session,
-                                TargetDB=target_db, TargetTable=target_table, TaskInfo=TaskInfo, ExecDate=exec_date)
-    elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getadvertiser_advertiser":
-        get_advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, BeelineSession=beeline_session,
-                             TargetDB=target_db, TargetTable=target_table, TaskInfo=TaskInfo,ExecDate=exec_date)
-    elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
-        get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+          print("##########################")
+          get_data_2_etl_mid(BeelineSession=beeline_session, TargetDB=target_db, TargetTable=target_table,
+                             AirflowDag=airflow.dag, AirflowTask=airflow.task,
+                             TaskInfo=TaskInfo, ExecDate=exec_date
+                            )
+          #get_advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, BeelineSession=beeline_session,
+          #                      TargetDB=target_db, TargetTable=target_table, TaskInfo=TaskInfo, ExecDate=exec_date)
+    ###elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getadvertiser_advertiser":
+    ###    get_advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, BeelineSession=beeline_session,
+    ###                         TargetDB=target_db, TargetTable=target_table, TaskInfo=TaskInfo,ExecDate=exec_date)
+    ###elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getcreativedetail_creativedetail_test":
+    ###    get_creative_detail_data(BeelineSession=beeline_session, AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "ods":
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
