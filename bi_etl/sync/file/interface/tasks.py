@@ -102,7 +102,7 @@ def get_oe_async_tasks_create_all_exception(AsyncTaskName="", AsyncTaskFile="", 
       n = n + 1
 
 #定义oe任务创建
-@app.task(rate_limit='10/s')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
