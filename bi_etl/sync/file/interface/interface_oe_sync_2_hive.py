@@ -93,6 +93,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   is_report = TaskInfo[18]
   is_page = TaskInfo[25]
   media_type = TaskInfo[26]
+  is_advertiser_list = TaskInfo[27]
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
   is_filter = False
@@ -131,7 +132,10 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
      pass
   else:
     for data in db_data:
-      param_json["advertiser_id"] = [int(data[0])]
+      if int(is_advertiser_list) == 1:
+        param_json["advertiser_id"] = [int(data[0])]
+      else:
+        param_json["advertiser_id"] = int(data[0])
       celery_task_id = get_not_page_celery.delay(UrlPath=url_path,ParamJson=param_json,
                                                  ServiceCode=data[2],ReturnAccountId=data[0],
                                                  ReturnColumns="",TaskFlag=task_flag,

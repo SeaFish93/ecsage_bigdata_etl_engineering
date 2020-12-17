@@ -135,6 +135,7 @@ class EtlMetaDataSQL():
   ,filter_config
   ,is_page
   ,media_type
+  ,is_advertiser_list
   ,`create_user`
   ,`update_user`
   ,`create_time`
