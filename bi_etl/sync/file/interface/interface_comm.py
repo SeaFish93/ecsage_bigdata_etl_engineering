@@ -605,3 +605,27 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     if PageFileData is not None and len(PageFileData) > 0 and PageFileData != "":
       os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (total_page, ServiceId, ServiceCode, remark, data, ServiceId, TaskFlag,Media, PageFileData,hostname))
     return remark
+
+#不翻页处理
+def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",ReturnColumns=""):
+    code = 1
+    data = ""
+    try:
+      token = get_oe_account_token(ServiceCode=ServiceCode)
+      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+      code = rsp_data["code"]
+      rsp_data["returns_account_id"] = str(ReturnAccountId)
+      rsp_data["returns_columns"] = str(ReturnColumns)
+      if int(code) == 0:
+          test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
+          test_log.info(json.dumps(rsp_data))
+      elif int(code) in [40002, 40105, 40104]:
+          code = 0
+      else:
+          code = 1
+      data = str(rsp_data).replace(" ","")
+    except Exception as e:
+        code = 1
+        data = "请求失败"
+    os.system(""" echo "%s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,DataFileDir, "account_status.log", hostname))
+    return code
