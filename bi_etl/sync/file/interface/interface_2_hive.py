@@ -274,9 +274,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     ####   md5_file_false.clear()
     ####   sleep_num = sleep_num + 1
     #落地临时表
-    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DeleteType=delete_type,DB=DB,Table=Table,ExecDate=ExecDate,CustomSetParameter=CustomSetParameter)
+    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DeleteType=delete_type,DB=DB,Table=Table,ExecDate=ExecDate,CustomSetParameter=CustomSetParameter,EtlMdSession=etl_md)
 
-def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DeleteType="",DB="",Table="",ExecDate="",CustomSetParameter=""):
+def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DeleteType="",DB="",Table="",ExecDate="",CustomSetParameter="",EtlMdSession=""):
     mid_table = """%s.%s""" % (DB, Table)
     # 创建data临时表
     mid_sql = """
@@ -321,7 +321,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
     #上传hdfs
-    get_local_hdfs_thread(TargetDb=DB, TargetTable=Table, ExecDate=ExecDate, DataFileList=LocalFileName,HDFSDir=hdfs_dir)
+    get_local_hdfs_thread(TargetDb=DB, TargetTable=Table, ExecDate=ExecDate, DataFileList=LocalFileName,HDFSDir=hdfs_dir,EtlMdSession=EtlMdSession)
     #落地至hive
     ok_data = BeelineSession.execute_sql(load_table_sqls,CustomSetParameter)
     if ok_data is False:
