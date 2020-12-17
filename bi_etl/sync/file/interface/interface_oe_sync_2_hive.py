@@ -321,7 +321,17 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
        on a.service_code = b.service_code
        where a.media in (201,203)
      """
-     mysql_session.mysql_data_to_local_file(sql=sql,filename=data_file)
+     ok = mysql_session.mysql_data_to_local_file(sql=sql,filename=data_file)
+     if ok is False:
+         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                TargetTable="%s.%s" % ("TargetDB", "TargetTable"),
+                                BeginExecDate=ExecDate,
+                                EndExecDate=ExecDate,
+                                Status="Error",
+                                Log="获取201、203数据，mysql入库失败！！！",
+                                Developer="developer")
+         set_exit(LevelStatu="red", MSG=msg)
      columns = """service_id,service_code,account_id,media_type"""
      load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file, DbName="metadb",TableName="oe_service_account", Columns=columns)
 
