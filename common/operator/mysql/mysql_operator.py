@@ -156,11 +156,11 @@ SELECT t.COLUMN_NAME              AS c_name,
             print("mysql select_data_to_local_file Error:" + sql)
             return False
 
-    def local_file_to_mysql(self, sql=None):
+    def mysql_data_to_local_file(self, sql=None,filename=None):
         mysql_conn = "mysql -h'%s' -P%d -u'%s' -p'%s' -Ne " % (self.host, self.port, self.user, self.password)
-        result = os.system(mysql_conn + '"%s"' % (sql))
+        result = os.system(mysql_conn + '"%s">%s' % (sql,filename))
         if result == 0:
             return True
         else:
-            print("mysql select_data_to_local_file Error:" + sql)
+            print("mysql local_file_to_mysql Error:" + sql)
             return False

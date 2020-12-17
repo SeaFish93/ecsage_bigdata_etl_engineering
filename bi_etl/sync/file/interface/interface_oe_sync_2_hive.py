@@ -309,9 +309,21 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
      print("获取重试异常执行完成！！！")
      #写入MySQL
      etl_md.execute_sql("delete from metadb.oe_service_account ")
+     #加载201、203数据
+     sql = """
+       select concat_ws(' ',b.service_id,a.service_code,a.account_id,a.media)
+       from big_data_mdg.media_advertiser a
+       left join (select account_id as service_id,service_code 
+                  from big_data_mdg.media_service_provider
+                  where media in (201,203)
+                  group by account_id,service_code
+              ) b
+       on a.service_code = b.service_code
+       where a.media in (201,203)
+     """
+     mysql_session.mysql_data_to_local_file(sql=sql,filename=data_file)
      columns = """service_id,service_code,account_id,media_type"""
-     load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file, DbName="metadb",
-                     TableName="oe_service_account", Columns=columns)
+     load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file, DbName="metadb",TableName="oe_service_account", Columns=columns)
 
 #广告创意
 def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
