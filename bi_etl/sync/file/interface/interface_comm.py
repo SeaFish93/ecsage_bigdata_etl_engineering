@@ -96,7 +96,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",
       print("请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"]))
       remark = "异常"
       data = "请求失败：%s,%s,%s" % (service_code, advertiser_id, param_json["filtering"]["campaign_ids"])
-    os.system("""echo "%s %s %s %s %s %s %s">>%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"],TaskFlag, page_task_file))
+    os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (page,advertiser_id, service_code,remark,data,param_json["filtering"]["campaign_ids"],TaskFlag, page_task_file,hostname))
     return remark
 
 def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
@@ -202,8 +202,6 @@ def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEm
     task_id = get_data[4]
     token = get_data[3]
     task_name = get_data[5]
-
-    os.system("""echo "%s %s %s">>/tmp/account_status.log """%(service_code,account_id,datetime.datetime.now()))
     resp_data = get_oe_tasks_status(AccountId=account_id, TaskId=task_id, Token=token)
     data = resp_data["code"]
     if data == 40105:
@@ -214,14 +212,12 @@ def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEm
     print("账户：%s，serviceCode：%s，文件大小：%s，任务状态：%s"%(account_id,service_code,file_size,task_status))
     if task_status == "ASYNC_TASK_STATUS_COMPLETED":
        if int(file_size) == 12:
-           os.system("""echo "%s %s %s %s %s %s %s">>%s """%(ExecDate,account_id, media_type,service_code, token, task_id,"有数",AsyncEmptyFile+".%s"%(hostname)))
+           os.system("""echo "%s %s %s %s %s %s %s">>%s """%(ExecDate,account_id, media_type,service_code, token, task_id,"无数",AsyncEmptyFile+".%s"%(hostname)))
        else:
            print("有数据：%s"%(account_id))
            os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"有数", AsyncNotemptyFile+".%s"%(hostname)))
-           os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"有数", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
     else:
        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"未执行完成", AsyncNotemptyFile+".%s"%(hostname)))
-       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"未执行完成", "/tmp/%s"%(AsyncNotemptyFile.split("/")[-1])))
 
 #获取oe异步任务执行状态
 def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
@@ -256,6 +252,16 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
        if len(AsyncNotemptyFile) >0:
           os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type, service_code, token, task_id, "999999", AsyncNotemptyFile + ".%s" % (hostname)))
        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id, media_type, service_code, token, task_id, "999999",AirflowInstance, AsyncStatusExceptionFile + ".%s" % (hostname)))
+    elif ExceptionType =="create":
+        account_id = ExecData[0]
+        interface_flag = ExecData[1]
+        media_type = ExecData[2]
+        service_code = ExecData[3]
+        token = ExecData[6]
+        group_by = str(ExecData[4])
+        fields = ExecData[5]
+        os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code, "##","##",token, 0, 999999, AsyncNotemptyFile+".%s"%(hostname)))
+        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code,group_by,fields,token, AsyncStatusExceptionFile+".%s"%(hostname)))
     else:
         account_id = ExecData[0]
         interface_flag = ExecData[1]
@@ -264,9 +270,8 @@ def get_oe_save_exception_file(ExceptionType="",ExecData="",AsyncNotemptyFile=""
         token = ExecData[6]
         group_by = str(ExecData[4])
         fields = ExecData[5]
-        #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (media_type, token, service_code, account_id, 0, 999999, interface_flag, AsyncNotemptyFile))
-        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id,interface_flag,media_type,service_code,group_by,
-                                                   fields,token, AsyncStatusExceptionFile+".%s"%(hostname)))
+        os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (account_id, interface_flag, media_type, service_code, group_by, fields, token,AsyncStatusExceptionFile + ".%s" % (hostname)))
+
 def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
     get_data = ExecData
     media_type = get_data[1]
@@ -363,6 +368,7 @@ def set_oe_async_tasks_create(AccountId="",AsyncTaskName="",Fields="",ExecDate="
         'Access-Token': Token,
         'Connection': "close"
     }
+    print(params,"====================================")
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
     return resp_data
@@ -395,10 +401,6 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
     task_id = resp_data["data"]["task_id"]
     task_name = resp_data["data"]["task_name"]
     async_task_file = """%s.%s"""%(AsyncTaskFile,hostname)
-    """
-     select a.account_id,'%s' as interface_flag,a.media_type,a.service_code,'%s' as group_by
-                   ,'%s' as fields,a.token_data
-    """
     os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (AccountId,InterfaceFlag,MediaType,ServiceCode, "##","##",token, task_id, task_name, async_task_file))
     #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, "/home/ecsage_data/oceanengine/async/ttttttt.%s"%(hostname)))
 
@@ -491,6 +493,7 @@ def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=
         rsp_data = rsp.json()
         code = rsp_data["code"]
         if int(code) == 0 :
+           rsp_data["returns_account_id"] = str(AccountIdList).replace("[","").replace("]","")
            test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
            test_log.info(json.dumps(rsp_data))
         elif int(code) in [40002, 40105, 40104]:
@@ -508,7 +511,6 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
         param_json = ast.literal_eval(json.loads(param_json))
         service_code = param_json["service_code"]
         token = get_oe_account_token(ServiceCode=service_code)
-        code = 1
         del param_json["service_code"]
         try:
             data_list = set_sync_data(ParamJson=param_json, UrlPath=UrlPath, Token=token)
@@ -518,11 +520,68 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
                 test_log.info(json.dumps(data_list))
             else:
                 # 没权限及token失败
-                if int(data_list["code"]) in [40002, 40105, 40104]:
+                if int(code) in [40002, 40105, 40104]:
                     code = 0
-                    os.system(""" echo "%s">>%s/%s.%s """ % (str(ParamJson).replace(" "), DataFileDir, "account_status.log", hostname))
+                    os.system(""" echo "%s">>%s/%s.%s """ % (str(data_list).replace(" ",""), DataFileDir, "account_status.log", hostname))
                 else:
                     code = 1
-        except:
+        except Exception as e:
             code = 1
         return code
+
+#通过代理ID获取accountID
+def set_services(Media="",ServiceId="",Token="",Page="",PageSize=""):
+    if int(Media) == 2:
+       open_api_url_prefix = "https://ad.oceanengine.com/open_api/"
+       uri = "2/agent/advertiser/select/"
+       url = open_api_url_prefix + uri
+       params = {
+           "advertiser_id":int(ServiceId),
+           "page":Page,
+           "page_size":PageSize
+       }
+       headers = {"Access-Token": Token}
+       rsp = requests.get(url, json=params, headers=headers)
+       rsp_data = rsp.json()
+    elif int(Media) == 203:
+        open_api_url_prefix = "https://ad.oceanengine.com/open_api/"
+        uri = "2/majordomo/advertiser/select/"
+        url = open_api_url_prefix + uri
+        params = {
+            "advertiser_id": int(ServiceId)
+        }
+        headers = {"Access-Token": Token}
+        rsp = requests.get(url, json=params, headers=headers)
+        rsp_data = rsp.json()
+    return rsp_data
+
+def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
+    total_page = 0
+    data = ""
+    try:
+      token = get_oe_account_token(ServiceCode=ServiceCode)
+      get_data = set_services(Media=Media,ServiceId=ServiceId, Token=token, Page=Page, PageSize=PageSize)
+      code = get_data["code"]
+      if int(code) == 0:
+          remark = "正常"
+          if int(Media) == 2:
+             total_page = int(get_data["data"]["page_info"]["total_page"])
+             for advertiser_id in get_data["data"]["advertiser_ids"]:
+                 os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId,ServiceCode,advertiser_id,Media,DataFile,hostname))
+          elif int(Media) == 203:
+             for list_data in get_data["data"]["list"]:
+                 os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId, ServiceCode, list_data["advertiser_id"], Media, DataFile, hostname))
+      else:
+          # 没权限及token失败
+          if int(code) in [40002, 40105, 40104]:
+              remark = "正常"
+              data = str(get_data).replace(" ", "")
+          else:
+              remark = "异常"
+              data = str(get_data).replace(" ", "")
+    except Exception as e:
+      remark = "异常"
+      data = "请求失败"
+    if PageFileData is not None and len(PageFileData) > 0 and PageFileData != "":
+      os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (total_page, ServiceId, ServiceCode, remark, data, ServiceId, TaskFlag,Media, PageFileData,hostname))
+    return remark

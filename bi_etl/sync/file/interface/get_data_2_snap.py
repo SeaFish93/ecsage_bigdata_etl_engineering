@@ -7,11 +7,15 @@
 
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
 
 
 #落地至snap
 def exec_snap_hive_table(AirflowDagId="",AirflowTaskId="",HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate=""):
+   get_select_columns = get_table_columns_info(HiveSession=HiveSession, SourceDB=SourceDB, SourceTable=SourceTable,
+                                               TargetDB=TargetDB, TargetTable=TargetTable, IsTargetPartition="N")
+   source_table_columns = get_select_columns[2]
    #设置snap查询字段
    snap_columns = ""
    if IsReport == 0:
@@ -27,6 +31,7 @@ def exec_snap_hive_table(AirflowDagId="",AirflowTaskId="",HiveSession="",Beeline
            else:
                key_columns_join = "and a.`%s` = b.`%s`" % (key, key)
            key_columns_joins = key_columns_joins + " " + key_columns_join
+           num = num + 1
        #获取ods表字段
        ok,ods_table_columns = HiveSession.get_column_info(SourceDB,SourceTable)
        ods_columns = ""
@@ -60,7 +65,7 @@ def exec_snap_hive_table(AirflowDagId="",AirflowTaskId="",HiveSession="",Beeline
               union all
            select %s from %s.%s a where etl_date = '%s'
        """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,SourceDB,SourceTable,
-            key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
+            key_columns_joins,ExecDate,is_null_col,source_table_columns,SourceDB, SourceTable,ExecDate
             )
    else:
        # 获取ods表字段
@@ -93,7 +98,7 @@ def exec_snap_hive_table(AirflowDagId="",AirflowTaskId="",HiveSession="",Beeline
            union all
         select %s
         from %s.%s a where etl_date = '%s' 
-       """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,ExecDate,snap_columns,SourceDB,SourceTable,ExecDate)
+       """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,ExecDate,source_table_columns,SourceDB,SourceTable,ExecDate)
    ok = BeelineSession.execute_sql(sql)
    if ok is False:
        msg = get_alert_info_d(DagId=AirflowDagId, TaskId=AirflowTaskId,

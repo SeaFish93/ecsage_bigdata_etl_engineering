@@ -8,16 +8,17 @@
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_create_hive_table_columns
 import json
+import ast
 #初期表结构字段需要配置表配置，
 # 如果desc没有表结构，通过配置字段建表，然后解析etl_mid文件字段，比较 ？desc 比较表结构不同就，alter :看是否可以调用已有的函数
 #
 #
 
-def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag=""):
+def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag="",IsReplace=""):
     etlmid_table_columns = []
     etlmid_table_columns_str = analysis_etlmid_cloumns(HiveSession=HiveSession, SourceTable=SourceTable,
                                                        TargetTable=TargetTable
-                                                       , ExecDate=ExecDate, ArrayFlag=ArrayFlag)
+                                                       , ExecDate=ExecDate, ArrayFlag=ArrayFlag,IsReplace=IsReplace)
     for etlmid_table_column in etlmid_table_columns_str.split(','):
         etlmid_table_columns.append(etlmid_table_column.split(".")[-1])
 
@@ -72,7 +73,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
     return list(diff_source_target_columns),target_table_columns,etlmid_table_columns,etlmid_table_columns_str
 
 #解析etl_mid文档
-def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag=""):
+def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag="",IsReplace="Y"):
     filter_line = """ where etl_date = '%s' and length(request_data) > 1000 limit 1 """%(ExecDate)
     spec_pars = """dimensions,metrics"""
     spec_pars_list = list(spec_pars.split(","))
@@ -83,10 +84,16 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         split_flag = """## {"""
         return_Str= data[0][0]
         #print("获取etl_mid的样本数据" + data[0][0])
-        data_str = return_Str[return_Str.find(split_flag) + 3:]
+        if IsReplace == "N":
+            data_str = return_Str
+            data_str2 = ast.literal_eval(json.loads(json.dumps(data_str)))
+            data_str2 = data_str2['data'][0]
+        else:
+            data_str = return_Str[return_Str.find(split_flag) + 3:]
+            data_str2 = json.loads(data_str)
+            data_str2 = data_str2['data']
         #print(data_str)
-        data_str2 = json.loads(data_str)
-        data_str2 = data_str2['data']
+        #data_str2 = data_str2['data']
         if ArrayFlag is not None and len(ArrayFlag) > 0:
             data_str3 = data_str2[ArrayFlag][0]
         else:
@@ -101,5 +108,4 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         msg = "【etl_mid库】中，%s的%s接入数据可能存在异常" % (ExecDate,TargetTable)
         print(msg)
         set_exit(LevelStatu="red", MSG=msg)
-
     return ','.join(all_pars_list)

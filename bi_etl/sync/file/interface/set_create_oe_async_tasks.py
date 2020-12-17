@@ -38,6 +38,13 @@ def main(TaskInfo,**kwargs):
     #获取每台服务处理数据量
     sql,max_min = get_account_sql(MediaType=media_type)
     ok,host_data = etl_md.get_all_rows("""select ip,user_name,passwd from metadb.request_account_host""")
+    shell = """rm -f /tmp/*"""
+    shell_1 = """rm -f /tmp/*"""
+    for host in host_data:
+        exec_remote_proc(HostName=host[0],UserName=host[1],PassWord=host[2], ShellCommd=shell)
+        exec_remote_proc(HostName=host[0], UserName=host[1], PassWord=host[2], ShellCommd=shell_1)
+    for i in range(1000000):
+        pass
     n = 0
     host_num = 0
     host_i = 0
@@ -142,6 +149,7 @@ def get_account_sql(MediaType=""):
        select concat_ws(' ',@row_num:=@row_num+1,account_id, media, service_code)
             from big_data_mdg.media_advertiser a,(select @row_num:=0) r
             where media = %s
+             and is_actived = '1'
        """ % (MediaType)
     os.system("rm -f %s"%(account_file))
     mysql_session.select_data_to_local_file(sql=account_2_mysql_sql,filename=account_file)
@@ -176,7 +184,7 @@ def get_account_sql(MediaType=""):
         fmax = int(all_rows[0][2])
         source_cnt = fcnt
         print("min=%s, max=%s, count=%s" % (str(fmin), str(fmax), str(fcnt)))
-        if fcnt < 100:
+        if fcnt < 1:
             # 100以下的数据量不用分批跑
             sql_list.clear()
             sql_list.append(source_data_sql)
@@ -228,6 +236,7 @@ def get_token(MediaType="",AccountTokenFile="",AccountTokenExceptionFile=""):
          select  service_code,count(1)
          from big_data_mdg.media_advertiser a
          where media = %s
+          and is_actived = '1'
           -- and service_code = 'tt-101244061737'
          group by service_code
         """%(MediaType)

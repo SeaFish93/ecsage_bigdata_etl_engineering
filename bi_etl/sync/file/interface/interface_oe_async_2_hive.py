@@ -35,6 +35,7 @@ def main(TaskInfo,**kwargs):
     airflow = Airflow(kwargs)
     media_type = TaskInfo[1]
     task_type = TaskInfo[4]
+    task_id = TaskInfo[2]
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
     """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token"""
@@ -47,250 +48,152 @@ def main(TaskInfo,**kwargs):
     elif task_type == 5:
        get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 1:
-       get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
-       #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
+       if task_id == "set_create_oe_async_account":
+         print("执行创建筛选子账户")
+         get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,MediaType=media_type, ExecDate=exec_date)
+       else:
+         get_oe_async_tasks_create(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,TaskInfo=TaskInfo,MediaType=media_type,ExecDate=exec_date)
+    elif task_type == 0:
+        get_oe_async_tasks_status_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
+
+def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="",TaskInfo="",ExecDate=""):
+    media_type = 2
+    interface_flag = TaskInfo[20]
+    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s" % (AirflowDagId, AirflowTaskId)
+    async_status_exception_file = """%s/async_status_exception.log""" % (async_account_file)
+    async_notempty_file = """%s/async_notempty.log""" % (async_account_file)
+    async_empty_file = """%s/async_empty.log""" % (async_account_file)
+    celery_task_status_file = """%s/celery_task_status_file.log"""%(async_account_file)
+    os.system("""mkdir -p %s""" % (async_account_file))
+    os.system("""rm -f %s/*""" % (async_account_file))
+    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where  exec_date = '%s' """ % (ExecDate))
+    etl_md.execute_sql("""delete from metadb.oe_not_valid_account_interface where exec_date = '%s' """ % (ExecDate))
+    #获取子账户
+    source_data_sql = """
+        select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+        from(
+         select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+         from oe_async_create_task a
+         left join (select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+                    from metadb.oe_async_create_task a
+                    where task_id = '0'
+                      and task_name = '999999'
+                      and interface_flag = '%s'
+                    group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+         ) b
+         on a.media_type = b.media_type
+         and a.service_code = b.service_code
+         and a.account_id = b.account_id
+         where a.interface_flag = '%s'
+           and a.task_id <> '0'
+                     union all
+         select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+         from(select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+              from metadb.oe_async_create_task a
+              where task_id = '0'
+                and task_name = '999999'
+                and interface_flag = '%s'
+              group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+             ) a
+         left join oe_async_create_task b
+         on a.media_type = b.media_type
+         and a.service_code = b.service_code
+         and a.account_id = b.account_id
+         and b.interface_flag = '%s'
+         and b.task_id <> '0'
+         where b.task_id is null
+      ) a group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+    """%(interface_flag,interface_flag,interface_flag,interface_flag)
+    ok, datas = etl_md.get_all_rows(source_data_sql)
+    if datas is not None and len(datas) > 0:
+       for get_data in datas:
+             status_id = get_oe_async_tasks_status_celery.delay(AsyncNotemptyFile=async_notempty_file,AsyncEmptyFile=async_empty_file,
+                                                                AsyncStatusExceptionFile=async_status_exception_file,ExecData=get_data,ExecDate=ExecDate)
+             os.system("""echo "%s">>%s"""%(status_id,celery_task_status_file))
+       #获取状态
+       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+       print("正在等待celery队列执行完成！！！")
+       wait_for_celery_status(StatusList=celery_task_id)
+       print("celery队列执行完成！！！")
+       print("等待重试异常任务！！！")
+       rerun_exception_tasks(AsyncAccountDir=async_account_file,ExceptionFile=async_status_exception_file,
+                             AsyncNotemptyFile=async_notempty_file,AsyncemptyFile=async_empty_file,
+                             CeleryTaskStatusFile=celery_task_status_file,ExecDate=ExecDate)
+       print("重试异常任务执行完成！！！")
+       time.sleep(60)
+       columns = "exec_date,account_id,media_type,service_code,token_data,task_id,task_name"
+       #落地有数据
+       load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file, TableName="oe_valid_account_interface",Columns=columns)
+       #落地没数据
+       load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,TableName="oe_not_valid_account_interface",Columns=columns)
+       insert_sql = """
+             insert into metadb.`oe_account_interface`
+             select a.account_id, a.media_type, a.service_code,a.token_data,a.exec_date
+             from metadb.oe_valid_account_interface a
+             left join metadb.oe_not_valid_account_interface b
+             on a.media_type = b.media_type
+             and a.account_id = b.account_id
+             and a.service_code = b.service_code
+             and a.exec_date = b.exec_date
+             where b.service_code is null
+               and a.exec_date = '%s'
+             group by a.account_id, a.media_type, a.service_code,a.token_data,a.exec_date
+           """ % (ExecDate)
+       etl_md.execute_sql("delete from metadb.oe_account_interface where exec_date = '%s' " % (ExecDate))
+       ok = etl_md.execute_sql(insert_sql)
+       if ok is False:
+           msg = "写入目标MySQL筛选子账户表出现异常！！！"
+           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                  TargetTable="%s.%s" % ("", ""),
+                                  BeginExecDate=ExecDate,
+                                  EndExecDate=ExecDate,
+                                  Status="Error",
+                                  Log=msg,
+                                  Developer="developer")
+           set_exit(LevelStatu="red", MSG=msg)
 
 #创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
-    media_type = int(MediaType)
     interface_flag = TaskInfo[20]
     group_by = TaskInfo[11]
     fields = TaskInfo[21]
-    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s/%s" % (AirflowDagId, AirflowTaskId, media_type)
-    async_create_task_file = """%s/async_create_%s.log""" % (async_account_file, media_type)
-    async_task_exception_file = """%s/async_exception_%s.log""" % (async_account_file, media_type)
-    celery_task_status_file = """%s/celery_task_status_%s.log""" % (async_account_file, media_type)
+    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s" % (AirflowDagId, AirflowTaskId)
+    async_create_task_file = """%s/async_create.log""" % (async_account_file)
+    async_task_exception_file = """%s/async_exception.log""" % (async_account_file)
+    celery_task_status_file = """%s/celery_task_status.log""" % (async_account_file)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s/*""" % (async_account_file))
-    sql_list = []
-    account_sql_1 = """
-      select * from(
-      select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-      from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-           from metadb.media_advertiser
-          ) tmp,(select @row_num:=0) r
-          ) tmp1 where rn >=1 and rn < 2000
+    account_sql = """
+      select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+      from metadb.media_advertiser
     """ % (interface_flag, group_by, fields)
-    account_sql_2 = """
-          select * from(
-          select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-          from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-               from metadb.media_advertiser
-              ) tmp,(select @row_num:=0) r
-              ) tmp1 where rn >=2000 and rn < 4000
-        """ % (interface_flag, group_by, fields)
-    account_sql_3 = """
-              select * from(
-              select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-              from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                   from metadb.media_advertiser
-                  ) tmp,(select @row_num:=0) r
-                  ) tmp1 where rn >=4000 and rn < 6000
-            """ % (interface_flag, group_by, fields)
-    account_sql_4 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=6000 and rn < 8000
-                """ % (interface_flag, group_by, fields)
-    account_sql_5 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=8000 and rn < 10000
-                """ % (interface_flag, group_by, fields)
-    account_sql_6 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=10000 and rn < 12000
-                """ % (interface_flag, group_by, fields)
-    account_sql_7 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=12000 and rn < 14000
-                """ % (interface_flag, group_by, fields)
-    account_sql_8 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=14000 and rn < 16000
-                """ % (interface_flag, group_by, fields)
-    account_sql_9 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=16000 and rn < 18000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_10 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=18000 and rn < 20000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_11 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=20000 and rn < 22000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_12 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=22000 and rn < 24000
-                """ % (interface_flag, group_by, fields)
+    ok, all_rows = etl_md.get_all_rows(account_sql)
+    n = 1
+    for data in all_rows:
+        status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
+                                                               AsyncTaskFile=async_create_task_file,
+                                                               AsyncTaskExceptionFile=async_task_exception_file,
+                                                               ExecData=data, ExecDate=ExecDate)
+        os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
+        n = n + 1
 
-    account_sql_13 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=24000 and rn < 26000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_14 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=26000 and rn < 28000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_15 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=28000 and rn < 30000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_16 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=30000 and rn < 32000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_17 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=32000 and rn < 34000
-                """ % (interface_flag, group_by, fields)
-    
-    account_sql_18 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=34000 and rn < 36000
-                """ % (interface_flag, group_by, fields)
-    account_sql_19 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=36000 and rn < 38000
-                """ % (interface_flag, group_by, fields)
-    account_sql_20 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=38000 and rn < 40000
-                """ % (interface_flag, group_by, fields)
-    account_sql_21 = """
-                  select * from(
-                  select account_id,interface_flag,media_type,service_code,group_by,fields,token_code,@row_num:=@row_num+1 as rn
-                  from(select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-                       from metadb.media_advertiser
-                      ) tmp,(select @row_num:=0) r
-                      ) tmp1 where rn >=40000
-                """ % (interface_flag, group_by, fields)
-    sql_list.append(account_sql_1)
-    sql_list.append(account_sql_2)
-    sql_list.append(account_sql_3)
-    sql_list.append(account_sql_4)
-    sql_list.append(account_sql_5)
-    sql_list.append(account_sql_6)
-    sql_list.append(account_sql_7)
-    sql_list.append(account_sql_8)
-    sql_list.append(account_sql_9)
-    sql_list.append(account_sql_10)
-    sql_list.append(account_sql_11)
-    sql_list.append(account_sql_12)
-    sql_list.append(account_sql_13)
-    sql_list.append(account_sql_14)
-    sql_list.append(account_sql_15)
-    sql_list.append(account_sql_16)
-    sql_list.append(account_sql_17)
-    sql_list.append(account_sql_18)
-    sql_list.append(account_sql_19)
-    sql_list.append(account_sql_20)
-    sql_list.append(account_sql_21)
-    th = []
-    i = 0
-    for sql in sql_list:
-        etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
-                               my_run=run_get_oe_async_tasks_create,
-                               Sql=sql, AsyncTaskFile=async_create_task_file,
-                               AsyncTaskExceptionFile=async_task_exception_file,
-                               ExecDate=ExecDate, CeleryTaskStatusFile=celery_task_status_file, Flag="%s" % (i)
-                               )
-        etl_thread.start()
-        th.append(etl_thread)
-        time.sleep(10)
-        i = i + 1
-    for etl_th in th:
-        etl_th.join()
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
     print("正在等待celery队列执行完成！！！")
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
-    # 保存MySQL
-    #columns = """media_type,token_data,service_code,account_id,task_id,task_name,interface_flag"""
-    #etl_md.execute_sql("delete from metadb.oe_async_create_task where media_type=%s and interface_flag='%s' " % (media_type, interface_flag))
-    #load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
-    #                TableName="oe_async_create_task", Columns=columns)
     print("等待重试异常任务！！！")
-    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
+    rerun_exception_account_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
                                    DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
-                                   LogSession="log.logger", InterfaceFlag="create", ExecDate=ExecDate)
+                                   Columns= "account_id,interface_flag,media_type,service_code,group_by,fields,token_data",
+                                   InterfaceFlag=interface_flag,ExecDate=ExecDate)
     print("等待重试异常任务完成！！！")
+    # 保存MySQL
+    columns = """account_id,interface_flag,media_type,service_code,interface_group_by,interface_columns,token_data,task_id,task_name"""
+    etl_md.execute_sql("delete from metadb.oe_async_create_task where interface_flag='%s' " % (interface_flag))
+    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
+                    TableName="oe_async_create_task", Columns=columns)
 
 def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
     media_type = int(MediaType)
@@ -336,23 +239,6 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     etl_md.execute_sql("delete from metadb.oe_async_create_task_interface where interface_flag='%s' " % (interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,TableName="oe_async_create_task_interface", Columns=columns)
 
-def run_get_oe_async_tasks_create(Sql="",AsyncTaskFile="",AsyncTaskExceptionFile="",ExecDate="",CeleryTaskStatusFile="",Flag="",arg=None):
-  if arg is not None or len(arg) > 0:
-    Sql = arg["Sql"]
-    AsyncTaskFile = arg["AsyncTaskFile"]
-    AsyncTaskExceptionFile = arg["AsyncTaskExceptionFile"]
-    ExecDate = arg["ExecDate"]
-    CeleryTaskStatusFile = arg["CeleryTaskStatusFile"]
-    Flag = arg["Flag"]
-    ok, all_rows = etl_md.get_all_rows(Sql)
-    n = 1
-    for data in all_rows:
-        status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s%s" % (Flag,n),
-                                                           AsyncTaskFile=AsyncTaskFile,
-                                                           AsyncTaskExceptionFile=AsyncTaskExceptionFile,
-                                                           ExecData=data, ExecDate=ExecDate)
-        os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], CeleryTaskStatusFile))
-        n = n + 1
 #存储token
 def get_oe_async_tasks_token(MediaType=""):
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
@@ -367,6 +253,7 @@ def get_oe_async_tasks_token(MediaType=""):
              select  service_code
              from big_data_mdg.media_advertiser a
              where media in (%s)
+               and is_actived = '1' 
              group by service_code
             """ % (get_media_type)
     ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
@@ -379,6 +266,7 @@ def get_oe_async_tasks_token(MediaType=""):
                  select  account_id, media, service_code
                  from big_data_mdg.media_advertiser a
                  where media in (%s)
+                   and is_actived = '1'
                  group by account_id, media, service_code
                 """ % (get_media_type)
     ok, all_rows = mysql_session.get_all_rows(get_account_sql)
@@ -607,9 +495,9 @@ def get_celery_job_data(CeleryTaskId="",OpenFileSession=""):
     value = set_task.get()
     print(CeleryTaskId,type(value),"##################################################")
     if 'str' in str(type(value)):
-      OpenFileSession.write(value)
+      OpenFileSession.write(value+"\n")
     else:
-      OpenFileSession.write(value.decode())
+      OpenFileSession.write(str(value.decode())+"\n")
     OpenFileSession.flush()
 
 #本地数据落地至hive
@@ -805,6 +693,60 @@ def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",TaskInfo="",ExecDate=""):
     exec_snap_hive_table(AirflowDagId=AirflowDagId, AirflowTaskId=AirflowTaskId, HiveSession=hive_session, BeelineSession=beeline_session,
                          SourceDB=source_db,SourceTable=source_table,TargetDB=target_db, TargetTable=target_table, IsReport=1,
                          KeyColumns="", ExecDate=ExecDate)
+
+def rerun_exception_account_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns="",ExecDate=""):
+    async_data_file = """%s/%s"""%(AsyncAccountDir,DataFile.split("/")[-1])
+    celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
+    async_data_exception_file = """%s/%s""" % (AsyncAccountDir, ExceptionFile.split("/")[-1])
+    # 先保留第一次
+    delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+    etl_md.execute_sql(delete_sql)
+    columns = Columns
+    table_name = "oe_async_exception_create_tasks_interface"
+    save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
+    n = 10
+    for i in range(n):
+        sql = """
+              select distinct %s
+              from metadb.oe_async_exception_create_tasks_interface a
+              where interface_flag = '%s'
+            """ % (columns,InterfaceFlag)
+        ok, datas = etl_md.get_all_rows(sql)
+        if datas is not None and len(datas) > 0:
+            print("开始第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+            for data in datas:
+                status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
+                                                                       AsyncTaskFile=async_data_file,
+                                                                       AsyncTaskExceptionFile=async_data_exception_file,
+                                                                       ExecData=data, ExecDate=ExecDate)
+                os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file + ".%s" % (i)))
+                n = n + 1
+            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s" % i)
+            wait_for_celery_status(StatusList=celery_task_id)
+            delete_sql = """delete from metadb.oe_async_exception_create_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+            etl_md.execute_sql(delete_sql)
+            save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
+            print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+            # 判断结果是否还有异常
+            ex_sql = """
+                         select %s
+                         from metadb.oe_async_exception_create_tasks_interface a
+                         where interface_flag = '%s'
+                         limit 1
+                  """ % (Columns,InterfaceFlag)
+            ok, ex_datas = etl_md.get_all_rows(ex_sql)
+            if ex_datas is not None and len(ex_datas) > 0:
+                print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+                time.sleep(60)
+    ex_sql = """
+             select %s
+             from metadb.oe_async_exception_create_tasks_interface a
+             where interface_flag = '%s'
+        """ % (Columns,InterfaceFlag)
+    ok, ex_datas = etl_md.get_all_rows(ex_sql)
+    if ex_datas is not None and len(ex_datas) > 0:
+        print("还有特别异常任务存在！！！")
+        print(ex_datas[0])
 
 def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag=""):
     async_data_file = """%s/%s"""%(AsyncAccountDir,DataFile.split("/")[-1])
