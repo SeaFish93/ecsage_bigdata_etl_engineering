@@ -47,8 +47,12 @@ def main(TaskInfo,Level="",**kwargs):
        get_sync_interface_2_local(BeelineSession=beeline_session,TargetDB=target_db,TargetTable=target_table,
                                   AirflowDag=airflow.dag, AirflowTask=airflow.task,
                                   TaskInfo=TaskInfo, ExecDate=exec_date)
-    elif Level == "file" and TaskInfo[0] == "metadb_oe_service_account":
-        get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
+    elif Level == "file":
+       if TaskInfo[0] == "metadb_oe_service_account":
+          get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
+       else:
+          get_advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, BeelineSession=beeline_session,
+                                TargetDB=target_db, TargetTable=target_table, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif Level == "file" and TaskInfo[0] == "etl_mid_oe_getadvertiser_advertiser":
         get_advertisers_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, BeelineSession=beeline_session,
                              TargetDB=target_db, TargetTable=target_table, TaskInfo=TaskInfo,ExecDate=exec_date)
@@ -321,7 +325,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
        on a.service_code = b.service_code
        where a.media in (201,203)
      """
-     ok = mysql_session.mysql_data_to_local_file(sql=sql,filename=data_file)
+     ok = mysql_session.select_data_to_local_file(sql=sql,filename=data_file)
      if ok is False:
          msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                 SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
