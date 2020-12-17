@@ -125,7 +125,6 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             group by a.account_id, a.media_type, a.service_code
             limit 1
        """%(task_flag,media_type)
-  print(sql,"======================================")
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
