@@ -625,7 +625,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile=
     return code
 
 #翻页处理
-def set_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",ReturnColumns="",TaskFlag="",PageTaskFile=""):
+def set_first_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",ReturnColumns="",TaskFlag="",PageTaskFile=""):
     page = 0
     data = ""
     try:

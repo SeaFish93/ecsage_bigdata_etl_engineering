@@ -16,6 +16,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_advertisers_data as get_advertisers_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_page_data as get_service_page_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page as get_not_page_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_first_page as get_first_page_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure as get_ods_columns
@@ -130,15 +131,13 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   if int(is_page) == 1:
     for data in db_data:
        param_json["advertiser_id"] = data[0]
-       param_json["service_code"] = data[2]
-       param_json["filtering"]["campaign_ids"] = [int(data[3])]
        task_flag = data[4]
-       celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
-                                                                   PageTaskFile=PageTaskFile,
-                                                                   DataFileDir=DataFileDir, DataFile=DataFile,
-                                                                   TaskFlag=task_flag
-                                                                   )
-       os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id, data[0], data[1], data[2], CelerySyncTaskFile))
+       service_code = data[2]
+       celery_task_id = get_first_page_celery.delay(UrlPath=url_path,ParamJson=param_json,ServiceCode=service_code,
+                                                    DataFileDir=local_dir,DataFile=data_file,ReturnAccountId=data[0],
+                                                    ReturnColumns=data[2],TaskFlag=task_flag,PageTaskFile=page_task_file,
+                                                    TaskExceptionFile=task_exception_file)
+       os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], celery_get_data_status))
   else:
     for data in db_data:
       if int(is_advertiser_list) == 1:
