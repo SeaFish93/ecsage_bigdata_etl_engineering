@@ -154,8 +154,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
           data_task_file_list.append("%s/%s"%(local_dir, files))
   #数据落地至etl_mid
-  #load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
-  #                    TargetTable=TargetTable, ExecDate=ExecDate)
+  load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
+                      TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
+                      )
 
 #落地数据至snap
 def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",TaskInfo="",ExecDate=""):
@@ -720,7 +721,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
      load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
                          TargetTable=TargetTable, ExecDate=ExecDate)
 
-def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate=""):
+def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",MediaType=""):
     if LocalFileList is None and len(LocalFileList) == 0:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
@@ -736,7 +737,7 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
         create table if not exists %s.%s
         (
          request_data string
-        )partitioned by(etl_date string)
+        )partitioned by(etl_date string,request_type string)
         row format delimited fields terminated by '\\001' 
         ;
     """ % (TargetDB,TargetTable,TargetDB,TargetTable)
@@ -753,17 +754,18 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
         if load_num == 0:
             load_table_sql_0 = """
                          load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {target_db}.{target_table}
-                         partition(etl_date='{exec_date}')
+                         partition(etl_date='{exec_date}',request_type='{request_type}')
                          ;\n
             """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], target_db=TargetDB,
-                       target_table=TargetTable,exec_date=ExecDate)
+                       target_table=TargetTable,exec_date=ExecDate,request_type=MediaType)
         else:
             load_table_sql = """
                          load data inpath '{hdfs_dir}/{file_name}' INTO TABLE {target_db}.{target_table}
-                         partition(etl_date='{exec_date}')
+                         partition(etl_date='{exec_date}',request_type='{request_type}')
                          ;\n
                      """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1],
-                                target_db=TargetDB,target_table=TargetTable,exec_date=ExecDate)
+                                target_db=TargetDB,target_table=TargetTable,exec_date=ExecDate,request_type=MediaType
+                                )
         load_table_sqls = load_table_sql + load_table_sqls
         load_num = load_num + 1
     load_table_sqls = load_table_sql_0 + load_table_sqls
