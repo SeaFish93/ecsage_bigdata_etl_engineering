@@ -388,7 +388,6 @@ def set_oe_async_tasks_create(AccountId="",AsyncTaskName="",Fields="",ExecDate="
         'Access-Token': Token,
         'Connection': "close"
     }
-    print(params,"====================================")
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
     return resp_data
@@ -417,7 +416,6 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
         mess = "请求失败"
     if int(code) != 0:
        os.system("""echo "%s %s">>%s/%s.%s """ % (AccountId,mess,LocalDir,InterfaceFlag,hostname))
-    code = 1
     return code
 
 def set_oe_async_tasks_data_return(DataFile="",ExecData="",AirflowInstance=""):
