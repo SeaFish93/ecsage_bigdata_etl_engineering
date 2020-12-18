@@ -123,7 +123,7 @@ def adj_snap_structure(HiveSession="",BeelineSession="",SourceDB="",SourceTable=
         if columns[0] == "etl_date":
             break;
     tgt_tb_create_str = ''.join(tgt_tb_create).replace(",", "", 1)
-    print(tgt_tb_create_str)
+    #print(tgt_tb_create_str)
 
 
     # 明确Snap存在与否
