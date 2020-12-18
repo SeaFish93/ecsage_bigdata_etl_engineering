@@ -159,7 +159,6 @@ def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
 
 #多线程上传hdfs
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):
-    print(DataFileList,"=========================================")
     th = []
     i = 0
     file_num = 0

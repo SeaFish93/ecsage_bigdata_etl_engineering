@@ -733,7 +733,6 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
     mid_sql = """
-        drop table if exists %s.%s;
         create table if not exists %s.%s
         (
          request_data string
