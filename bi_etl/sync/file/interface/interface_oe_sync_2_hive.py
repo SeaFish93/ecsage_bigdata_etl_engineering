@@ -75,7 +75,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
   local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
   celery_get_page_status = """%s/celery_get_page_status.log"""%(local_dir)
-  celery_get_data_status = "%s/celery_get_data_status.log"%(local_dir)
+  celery_page_status_file = "%s/celery_get_data_status.log"%(local_dir)
   page_task_file = "%s/page_task_file.log"%(local_dir)
   data_task_file = """%s/data_task_file.log"""%(local_dir)
   tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
@@ -129,15 +129,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
-    for data in db_data:
-       param_json["advertiser_id"] = data[0]
-       task_flag = data[4]
-       service_code = data[2]
-       celery_task_id = get_first_page_celery.delay(UrlPath=url_path,ParamJson=param_json,ServiceCode=service_code,
-                                                    DataFileDir=local_dir,DataFile=data_file,ReturnAccountId=data[0],
-                                                    ReturnColumns=data[2],TaskFlag=task_flag,PageTaskFile=page_task_file,
-                                                    TaskExceptionFile=task_exception_file)
-       os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], celery_get_data_status))
+    set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
+                        DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=task_exception_file,
+                        PageTaskFile=page_task_file, CeleryPageStatusFile=celery_page_status_file)
   else:
     for data in db_data:
       if int(is_advertiser_list) == 1:
@@ -150,10 +144,10 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                                                  DataFileDir=local_dir,
                                                  DataFile=data_file,TaskExceptionFile=task_exception_file
                                                 )
-      os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], celery_get_data_status))
+      os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], celery_page_status_file))
   # 获取状态
   print("正在等待celery队列执行完成！！！")
-  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
+  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_page_status_file)
   wait_for_celery_status(StatusList=celery_task_id)
   print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
   #获取数据文件
@@ -166,6 +160,17 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
                       TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
                       )
+
+def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile=""):
+    for data in DataRows:
+       ParamJson["advertiser_id"] = data[0]
+       task_flag = data[4]
+       service_code = data[2]
+       celery_task_id = get_first_page_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
+                                                    DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
+                                                    ReturnColumns=data[2],TaskFlag=task_flag,PageTaskFile=PageTaskFile,
+                                                    TaskExceptionFile=TaskExceptionFile)
+       os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
 
 #落地数据至snap
 def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",TaskInfo="",ExecDate=""):
