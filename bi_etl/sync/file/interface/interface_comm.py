@@ -621,5 +621,6 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile=
     except Exception as e:
         code = 1
         data = "请求失败"
-    os.system(""" echo "%s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,DataFileDir, "account_status.log", hostname))
+    if int(code) != 0:
+      os.system(""" echo "%s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,DataFileDir, "account_status.log", hostname))
     return code
