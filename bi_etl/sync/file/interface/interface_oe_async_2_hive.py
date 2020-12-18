@@ -780,7 +780,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
     columns = """account_id,media_type,service_code,token_data,task_id,task_name,interface_flag"""
     table_name = "oe_async_exception_create_tasks_interface"
     save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
-    n = 10
+    n = 100
     for i in range(n):
         sql = """
               select distinct %s
