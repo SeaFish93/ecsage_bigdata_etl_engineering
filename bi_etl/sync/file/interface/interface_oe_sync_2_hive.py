@@ -42,6 +42,7 @@ def main(TaskInfo,Level="",**kwargs):
     target_table = TaskInfo[15]
     source_db = TaskInfo[11]
     source_table = TaskInfo[12]
+    key_columns = TaskInfo[19]
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
@@ -62,7 +63,7 @@ def main(TaskInfo,Level="",**kwargs):
     elif Level == "ods":
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
-                       ExecDate=exec_date,ArrayFlag="",KeyColumns="id")
+                       ExecDate=exec_date,ArrayFlag="",KeyColumns=key_columns)
     elif Level == "snap":
         get_ods_2_snap(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,
                        SourceDB=source_db,SourceTable=source_table,TargetDB=target_db,
@@ -177,13 +178,9 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                                          , SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
                                          , IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=None,IsReplace="N")
     print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
-    source_target_columns_diff = etl_ods_field_diff[0]
-    target_columns = etl_ods_field_diff[1]
-    source_columns = etl_ods_field_diff[2]
     ok, get_ods_column = HiveSession.get_column_info(TargetDB, TargetTable)
     system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
-    select_system_table_column = "returns_account_id,returns_colums,request_type,'%s' as extract_system_time"%(system_time)
     is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable,
                    ExecDate=ExecDate, KeyColumns=KeyColumns)
     row_number_columns = ""
@@ -246,7 +243,7 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                             from(select %s
                                         ,%s
                                         ,%s
-                                        ,'request_type' as request_type
+                                        ,request_type
                                  from %s.%s a
                                  where a.etl_date = '%s'
                                 ) a
