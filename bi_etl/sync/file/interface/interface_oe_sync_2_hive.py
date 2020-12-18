@@ -123,7 +123,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             from metadb.oe_service_account a
             where a.media_type = '%s'
             group by a.account_id, a.media_type, a.service_code
-            limit 1
+            limit 10
        """%(task_flag,media_type)
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
@@ -722,7 +722,7 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
                          TargetTable=TargetTable, ExecDate=ExecDate)
 
 def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",MediaType=""):
-    if LocalFileList is None and len(LocalFileList) == 0:
+    if LocalFileList is None or len(LocalFileList) == 0:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
                                TargetTable="%s.%s" % (TargetDB, TargetTable),
