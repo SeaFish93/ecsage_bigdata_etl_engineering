@@ -38,8 +38,8 @@ def get_test(string=""):
     test_log.info(str(now)+"############")
 
 #定义oe任务创建
-@app.task(rate_limit='50/m')
-def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
+@app.task(rate_limit='1000/m')
+def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate="",LocalDir=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
     media_type = ExecData[2]
@@ -58,7 +58,7 @@ def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskE
       try:
         get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
                                        AccountId=account_id, AsyncTaskName=AsyncTaskName, AsyncTaskFile=AsyncTaskFile,
-                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields,Token=token)
+                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields,LocalDir=LocalDir)
         set_true = False
       except Exception as e:
         if n > 1:
