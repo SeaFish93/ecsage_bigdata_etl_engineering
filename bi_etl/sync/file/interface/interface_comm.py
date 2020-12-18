@@ -394,36 +394,30 @@ def set_oe_async_tasks_create(AccountId="",AsyncTaskName="",Fields="",ExecDate="
     return resp_data
 
 #执行头条异步任务创建
-def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",AccountId="",AsyncTaskName="",AsyncTaskFile="",ExecDate="",GroupBy="",Fields="",Token=""):
-    n = 1
-    set_run = True
-    token = Token
-    resp_data = ""
-    while set_run:
+def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",AccountId="",AsyncTaskName="",AsyncTaskFile="",ExecDate="",GroupBy="",Fields="",LocalDir=""):
+    mess = ""
+    try:
+        token = get_oe_account_token(ServiceCode=ServiceCode)
         resp_data = set_oe_async_tasks_create(AccountId=AccountId, AsyncTaskName=AsyncTaskName, Fields=Fields,
                                               ExecDate=ExecDate, Token=token, GroupBy=GroupBy)
         mess = str(resp_data).replace(" ","")
         code = resp_data["code"]
-        if code == 40105 or code == 40104:
-            token = get_oe_account_token(ServiceCode=ServiceCode)
-            if n > 3:
-              resp_data["data"]["task_name"] = mess
-              resp_data["data"]["task_id"] = 40105
-              set_run = False
+        if int(code) == 0:
+            task_id = resp_data["data"]["task_id"]
+            task_name = resp_data["data"]["task_name"]
+            async_task_file = """%s.%s""" % (AsyncTaskFile, hostname)
+            os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (AccountId, InterfaceFlag, MediaType, ServiceCode, "##", "##", token, task_id, task_name, async_task_file))
         #没权限创建
-        elif code == 40002:
-            resp_data["data"]["task_name"] = mess
-            resp_data["data"]["task_id"] = 40002
-            set_run = False
+        elif int(code) in [40002, 40105, 40104]:
+            code = 0
         else:
-            set_run = False
-        n = n + 1
-    task_id = resp_data["data"]["task_id"]
-    task_name = resp_data["data"]["task_name"]
-    async_task_file = """%s.%s"""%(AsyncTaskFile,hostname)
-    os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (AccountId,InterfaceFlag,MediaType,ServiceCode, "##","##",token, task_id, task_name, async_task_file))
-    #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, "/home/ecsage_data/oceanengine/async/ttttttt.%s"%(hostname)))
-
+            code = 1
+    except Exception as e:
+        code = 1
+        mess = "请求失败"
+    if int(code) != 0:
+       os.system("""echo "%s %s">>%s/%s.%s """ % (AccountId,mess,LocalDir,InterfaceFlag,hostname))
+    return code
 
 def set_oe_async_tasks_data_return(DataFile="",ExecData="",AirflowInstance=""):
     get_data = ExecData

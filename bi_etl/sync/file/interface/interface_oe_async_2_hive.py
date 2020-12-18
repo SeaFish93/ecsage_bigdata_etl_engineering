@@ -217,7 +217,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     ok, all_rows = etl_md.get_all_rows(source_data_sql)
     n = 1
     for data in all_rows:
-        status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (n),
+        status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (n),LocalDir=async_account_file,
                                                            AsyncTaskFile=async_create_task_file,
                                                            AsyncTaskExceptionFile=async_task_exception_file,
                                                            ExecData=data, ExecDate=ExecDate)
@@ -844,7 +844,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
     table_name = "oe_async_exception_create_tasks_interface"
     save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
-    n = 10
+    n = 100
     for i in range(n):
         sql = """
           select distinct a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
@@ -855,9 +855,10 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
         if datas is not None and len(datas) > 0:
            print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
-               status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i), AsyncTaskFile=async_data_file,
-                                                              AsyncTaskExceptionFile=async_data_exception_file,
-                                                              ExecData=data, ExecDate=ExecDate)
+               status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i), LocalDir=AsyncAccountDir,
+                                                                  AsyncTaskFile=async_data_file,
+                                                                  AsyncTaskExceptionFile=async_data_exception_file,
+                                                                  ExecData=data, ExecDate=ExecDate)
                os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
            wait_for_celery_status(StatusList=celery_task_id)
