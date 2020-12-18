@@ -739,7 +739,7 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
         )partitioned by(etl_date string,request_type string)
         row format delimited fields terminated by '\\001' 
         ;
-    """ % (TargetDB,TargetTable,TargetDB,TargetTable)
+    """ % (TargetDB,TargetTable)
     BeelineSession.execute_sql(mid_sql)
     load_num = 0
     hdfs_dir = conf.get("Airflow_New", "hdfs_home")
