@@ -109,3 +109,47 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         print(msg)
         set_exit(LevelStatu="red", MSG=msg)
     return ','.join(all_pars_list)
+
+def adj_snap_structure(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
+                        TargetDB="", TargetTable="",CustomSetParameter=""):
+    # 获取ods表字段
+    ok, src_table_structure = HiveSession.get_column_info(SourceDB, SourceTable)
+    tgt_tb_create = [] #收集目标表结构语句
+    src_tb_columns= [] #收集源表表结构字段
+    for columns in src_table_structure:
+        create_col = """,`%s`  %s comment'%s' \n""" % (columns[0], columns[1], columns[2])
+        tgt_tb_create.append(create_col)
+        src_tb_columns.append(columns[0])#直到etl_date为止，Snap没分区
+        if columns[0] == "etl_date":
+            break;
+    tgt_tb_create_str = ''.join(tgt_tb_create).replace(",", "", 1)
+
+    # 明确Snap存在与否
+    sql = """ show tables in %s like '%s' """ % (TargetDB, TargetTable)
+    ok, get_target_table = HiveSession.get_all_rows(sql)
+
+    if ok:
+        if get_target_table :
+            target_table_columns_list = get_create_hive_table_columns(HiveSession=HiveSession, DB=TargetDB,Table=TargetTable)
+            tgt_tb_columns = target_table_columns_list[2]
+            # 找出源表在目标表不一致的字段
+            diff_src_tgt_columns = set(src_tb_columns).difference(set(tgt_tb_columns))
+            # 若是源表含有在目标表没有的字段，则目标表需添加不一致的字段
+            if diff_src_tgt_columns:
+                for diff_src_tgt_column in diff_src_tgt_columns:
+                    if diff_src_tgt_column not in tgt_tb_columns:
+                        alter_table_sql = """alter table %s.%s add columns(`%s` %s) CASCADE""" % (TargetDB, TargetTable, diff_src_tgt_column, "String")
+                        HiveSession.execute_sql(alter_table_sql)
+        else:
+            create_snap_sql = """
+                   create table if not exists %s.%s(
+                     %s
+                   )
+                   row format delimited fields terminated by '\\001' 
+                   stored as parquet
+                   """ % (TargetDB, TargetTable, tgt_tb_create_str)
+            HiveSession.execute_sql(create_snap_sql)
+    else:
+        msg = "语句：查询Snap表存在与否出现问题！！" % (TargetDB, TargetTable)
+        print(msg)
+        set_exit(LevelStatu="red", MSG=msg)
