@@ -128,7 +128,17 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
-     pass
+    for data in db_data:
+       param_json["advertiser_id"] = data[0]
+       param_json["service_code"] = data[2]
+       param_json["filtering"]["campaign_ids"] = [int(data[3])]
+       task_flag = data[4]
+       celery_task_id = get_oe_sync_tasks_data_return_celery.delay(ParamJson=str(param_json), UrlPath=UrlPath,
+                                                                   PageTaskFile=PageTaskFile,
+                                                                   DataFileDir=DataFileDir, DataFile=DataFile,
+                                                                   TaskFlag=task_flag
+                                                                   )
+       os.system("""echo "%s %s %s %s">>%s""" % (celery_task_id, data[0], data[1], data[2], CelerySyncTaskFile))
   else:
     for data in db_data:
       if int(is_advertiser_list) == 1:
