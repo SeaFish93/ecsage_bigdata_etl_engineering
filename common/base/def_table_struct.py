@@ -141,7 +141,7 @@ def adj_snap_structure(HiveSession="",BeelineSession="",SourceDB="",SourceTable=
             if diff_src_tgt_columns:
                 for diff_src_tgt_column in diff_src_tgt_columns:
                     if diff_src_tgt_column not in tgt_tb_columns:
-                        alter_table_sql = """alter table %s.%s add columns(`%s` %s) CASCADE""" % (TargetDB, TargetTable, diff_src_tgt_column, "String")
+                        alter_table_sql = """alter table %s.%s add columns(`%s` %s)""" % (TargetDB, TargetTable, diff_src_tgt_column, "String")
                         HiveSession.execute_sql(alter_table_sql)
         else:
             create_snap_sql = """
