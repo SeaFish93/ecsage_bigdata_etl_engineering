@@ -718,8 +718,8 @@ def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",Airf
                          TargetTable=TargetTable, ExecDate=ExecDate)
 
 def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",MediaType=""):
-    if LocalFileList is None or len(LocalFileList) == 0:
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+   if LocalFileList is None or len(LocalFileList) == 0:
+      msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
                                TargetTable="%s.%s" % (TargetDB, TargetTable),
                                BeginExecDate=ExecDate,
@@ -727,7 +727,8 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
                                Status="Error",
                                Log="API采集没执行！！！",
                                Developer="developer")
-        set_exit(LevelStatu="yellow", MSG=msg)
+      set_exit(LevelStatu="yellow", MSG=msg)
+   else:
     mid_sql = """
         create table if not exists %s.%s
         (
