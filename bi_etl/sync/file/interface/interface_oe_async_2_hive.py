@@ -174,7 +174,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
         status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
                                                                AsyncTaskFile=async_create_task_file,
                                                                AsyncTaskExceptionFile=async_task_exception_file,
-                                                               ExecData=data, ExecDate=ExecDate)
+                                                               ExecData=data, ExecDate=ExecDate,LocalDir=async_account_file)
         os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
         n = n + 1
 
@@ -740,7 +740,7 @@ def rerun_exception_account_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="
                 status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
                                                                        AsyncTaskFile=async_data_file,
                                                                        AsyncTaskExceptionFile=async_data_exception_file,
-                                                                       ExecData=data, ExecDate=ExecDate)
+                                                                       ExecData=data, ExecDate=ExecDate,LocalDir=AsyncAccountDir)
                 os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file + ".%s" % (i)))
                 n = n + 1
             celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s" % i)
