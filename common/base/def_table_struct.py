@@ -123,6 +123,8 @@ def adj_snap_structure(HiveSession="",BeelineSession="",SourceDB="",SourceTable=
         if columns[0] == "etl_date":
             break;
     tgt_tb_create_str = ''.join(tgt_tb_create).replace(",", "", 1)
+    print(tgt_tb_create_str)
+
 
     # 明确Snap存在与否
     sql = """ show tables in %s like '%s' """ % (TargetDB, TargetTable)
@@ -134,6 +136,7 @@ def adj_snap_structure(HiveSession="",BeelineSession="",SourceDB="",SourceTable=
             tgt_tb_columns = target_table_columns_list[2]
             # 找出源表在目标表不一致的字段
             diff_src_tgt_columns = set(src_tb_columns).difference(set(tgt_tb_columns))
+            print(diff_src_tgt_columns)
             # 若是源表含有在目标表没有的字段，则目标表需添加不一致的字段
             if diff_src_tgt_columns:
                 for diff_src_tgt_column in diff_src_tgt_columns:
