@@ -132,7 +132,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   else:
     for data in db_data:
       if int(is_advertiser_list) == 1:
-        param_json["advertiser_id"] = [int(data[0])]
+        param_json["advertiser_ids"] = [int(data[0])]
       else:
         param_json["advertiser_id"] = int(data[0])
       celery_task_id = get_not_page_celery.delay(UrlPath=url_path,ParamJson=param_json,
