@@ -213,6 +213,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
             from metadb.oe_account_interface a
             where a.exec_date = '%s'
             --  and a.account_id = '1645016270409747'
+            limit 1
             """ % (interface_flag,group_by,fields, ExecDate)
     ok, all_rows = etl_md.get_all_rows(source_data_sql)
     n = 1
