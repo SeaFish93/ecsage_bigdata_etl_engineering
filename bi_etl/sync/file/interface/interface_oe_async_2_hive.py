@@ -844,7 +844,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
     table_name = "oe_async_exception_create_tasks_interface"
     save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
-    n = 3
+    n = 10
     for i in range(n):
         sql = """
           select distinct a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
