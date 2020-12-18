@@ -727,7 +727,7 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
                                Status="Error",
                                Log="API采集没执行！！！",
                                Developer="developer")
-        set_exit(LevelStatu="red", MSG=msg)
+        set_exit(LevelStatu="yellow", MSG=msg)
     mid_sql = """
         create table if not exists %s.%s
         (
