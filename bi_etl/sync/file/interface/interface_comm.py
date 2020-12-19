@@ -235,9 +235,13 @@ def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEm
            os.system("""echo "%s %s %s %s %s %s %s">>%s """%(ExecDate,account_id, media_type,service_code, token, task_id,"无数",AsyncEmptyFile+".%s"%(hostname)))
        else:
            print("有数据：%s"%(account_id))
-           os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"有数", AsyncNotemptyFile+".%s"%(hostname)))
+           status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"有数", AsyncNotemptyFile+".%s"%(hostname)))
+           if int(status) != 0:
+               a = 1/0
     else:
-       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"未执行完成", AsyncNotemptyFile+".%s"%(hostname)))
+       status_1 = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"未执行完成", AsyncNotemptyFile+".%s"%(hostname)))
+       if int(status_1) != 0:
+           a = 1 / 0
 
 #获取oe异步任务执行状态
 def get_oe_tasks_status(AccountId="",TaskId="",Token=""):

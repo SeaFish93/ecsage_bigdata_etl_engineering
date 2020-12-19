@@ -194,6 +194,19 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     etl_md.execute_sql("delete from metadb.oe_async_create_task where interface_flag='%s' " % (interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
                     TableName="oe_async_create_task", Columns=columns)
+    #加载因网络抖动写入nfs系统漏数
+    sql = """
+       insert into metadb.oe_async_create_task
+       select a.media_type,a.token_code,a.service_code
+              ,a.account_id,'0' as task_id,'999999' as task_name,'##'
+              ,'##','%s' as interface_flag
+       from metadb.media_advertiser a
+       left join metadb.oe_async_create_task b
+       on a.account_id = b.account_id
+       and a.service_code = b.service_code
+       where b.account_id is null
+    """%(interface_flag)
+    etl_md.execute_sql(sql)
 
 def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
     media_type = int(MediaType)
