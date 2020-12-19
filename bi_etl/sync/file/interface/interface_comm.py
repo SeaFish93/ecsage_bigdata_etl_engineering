@@ -405,7 +405,11 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
             task_id = resp_data["data"]["task_id"]
             task_name = resp_data["data"]["task_name"]
             async_task_file = """%s.%s""" % (AsyncTaskFile, hostname)
-            os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (AccountId, InterfaceFlag, MediaType, ServiceCode, "##", "##", token, task_id, task_name, async_task_file))
+            status = os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (AccountId, InterfaceFlag, MediaType, ServiceCode, "##", "##", token, task_id, task_name, async_task_file))
+            if int(status) != 0:
+               print("写入失败：%s"%(AccountId))
+               code = 1
+               mess = "写入失败"
         #没权限创建
         elif int(code) in [40002, 40105, 40104]:
             code = 0
