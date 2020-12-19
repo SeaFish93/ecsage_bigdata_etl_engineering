@@ -129,6 +129,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
+    print("处理分页逻辑！！！")
     set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
                         DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=task_exception_file,
                         PageTaskFile=page_task_file, CeleryPageStatusFile=celery_page_status_file)
