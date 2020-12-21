@@ -287,12 +287,13 @@ def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",T
     beeline_handler = "beeline"
     target_db = TargetDB
     target_table = TargetTable
+    key_columns = TaskInfo[19]
 
     hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
     exec_snap_hive_table(AirflowDagId=AirflowDagId, AirflowTaskId=AirflowTaskId, HiveSession=hive_session, BeelineSession=beeline_session,
                          SourceDB=source_db,SourceTable=source_table,TargetDB=target_db, TargetTable=target_table, IsReport=0,
-                         KeyColumns="id", ExecDate=ExecDate)
+                         KeyColumns=key_columns, ExecDate=ExecDate)
 
 def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",ArrayFlag="",KeyColumns="",SelectExcludeColumns=""):
     etl_ods_field_diff = get_ods_columns(HiveSession=HiveSession, BeelineSession=BeelineSession
