@@ -157,6 +157,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                """ % (AirflowDag, AirflowTask, AirflowDag, AirflowTask, "%OK%", AirflowDag, AirflowTask)
           ok, db_data = etl_md.get_all_rows(sql)
           if db_data is not None and len(db_data) > 0:
+              os.system("""rm -f %s*""" % (celery_rerun_page_status_file.split(".")[0]))
+              os.system("""rm -f %s*""" % (rerun_page_task_file.split(".")[0]))
+              os.system("""rm -f %s*""" % (rerun_task_exception_file.split(".")[0]))
               set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
                                   DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,
                                   PageTaskFile=rerun_page_task_file, CeleryPageStatusFile=celery_rerun_page_status_file,
@@ -1129,7 +1132,7 @@ def is_key_columns(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDat
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
 
-#首页异常重试
+#分页异常重试
 def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",PageTaskFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns=""):
     celery_task_data_file = """%s/%s"""%(DataFileDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
