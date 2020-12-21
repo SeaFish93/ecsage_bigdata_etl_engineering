@@ -125,6 +125,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             from metadb.oe_service_account a
             where a.media_type = '%s'
             group by a.account_id, a.media_type, a.service_code
+            limit 5000
        """%(task_flag,media_type)
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
