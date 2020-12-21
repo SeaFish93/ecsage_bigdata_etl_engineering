@@ -129,6 +129,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
+    print(len(db_data),"=============================")
     print("处理分页逻辑！！！")
     #####etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (task_flag))
     set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
