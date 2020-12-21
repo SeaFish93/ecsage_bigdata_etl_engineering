@@ -152,9 +152,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                 where page_num = 0
                   and remark = '正常'
                   and data like '%s'
-                  and flag = '%s.%s'
+                  and flag = '%s'
                group by account_id, service_code,request_filter,request_filter,flag
-               """ % (AirflowDag, AirflowTask, AirflowDag, AirflowTask, "%OK%", AirflowDag, AirflowTask)
+               """ % ("%OK%", task_flag)
           ok, db_data = etl_md.get_all_rows(sql)
           if db_data is not None and len(db_data) > 0:
               os.system("""rm -f %s*""" % (celery_rerun_page_status_file.split(".")[0]))
@@ -175,9 +175,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
         select a.account_id, a.media_type as media_type, a.service_code,a.page_num,a.request_filter
         from metadb.oe_sync_page_interface a 
         where page_num > 1
-          and flag = '%s.%s'
+          and flag = '%s'
         group by a.account_id,  a.service_code,a.page_num,a.request_filter,a.media_type
-    """ % (AirflowDag, AirflowTask, AirflowDag, AirflowTask, "%OK%", AirflowDag, AirflowTask)
+    """ % (task_flag)
     ok, db_data = etl_md.get_all_rows(sql)
     set_other_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,
                         DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
@@ -246,6 +246,10 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
                                 DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
                                 InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag"
                                )
+    # 保存MySQL
+    columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
+    load_data_mysql(AsyncAccountFile=DataFileDir, DataFile=PageTaskFile, DbName="metadb",
+                    TableName="oe_sync_page_interface", Columns=columns)
 
 #处理其它分页
 def set_other_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",PageSize=""):
