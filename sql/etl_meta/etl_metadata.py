@@ -101,11 +101,50 @@ class EtlMetaDataSQL():
             ,update_user
             ,exclude_account_id
             ,array_flag
-            ,specified_pars_str
+            ,custom_set_parameter
     from metadb.interface_tasks_info_bak
     where status = 1
       and dag_id = '%s'
   """ % ("##{dag_id}##")
+#获取创建接口tasks
+  get_interface_oe_sync_tasks_sql = """
+    select `task_id` 
+  ,`tasks_model_id`
+  ,`dag_id`
+  ,`interface_module`
+  ,`interface_url`
+  ,`data_json`
+  ,`start_date_name`
+  ,`end_date_name`
+  ,`filter_modify_time_name`
+  ,`sync_level`
+  ,`source_handle`
+  ,`source_db`
+  ,`source_table`
+  ,`target_handle`
+  ,`target_db`
+  ,`target_table`
+  ,`status`
+  ,`select_exclude_columns`
+  ,`is_report`
+  ,`key_columns`
+  ,`exclude_account_id`
+  ,filter_db_name
+  ,filter_table_name
+  ,filter_column_name
+  ,filter_config
+  ,is_page
+  ,media_type
+  ,is_advertiser_list
+  ,`create_user`
+  ,`update_user`
+  ,`create_time`
+  ,`update_time`
+   from metadb.interface_sync_tasks_info
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
+
 
   #获取创建接口tasks
   get_interface_sync_account_tasks_sql = """
@@ -433,7 +472,7 @@ class EtlMetaDataSQL():
    from metadb.etl_job_dep a
    where dep_task_id = '%s'
    ) a
-   inner join metadb.sync_tasks_info b
+   inner join metadb.v_task_info b
    on a.task_id = b.task_id) a
    inner join(
    select b.dag_id from(
@@ -441,9 +480,10 @@ class EtlMetaDataSQL():
    from metadb.etl_job_dep a
    where dep_task_id = '%s'
    ) a
-   inner join metadb.sync_tasks_info b
+   inner join metadb.v_task_info b
    on a.dep_task_id = b.task_id
    ) b
+   on a.dag_id = b.dag_id
   """ % ("##{dep_task_id}##","##{dep_task_id}##")
   # 查找上游依赖
   get_downstream_depend_sql = """

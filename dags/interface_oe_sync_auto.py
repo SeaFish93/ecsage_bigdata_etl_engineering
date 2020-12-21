@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/11/19 17:05
 # @Author  : wangsong
-# @FileName: interface_sync_oe_async_auto.py
+# @FileName: interface_oe_sync_auto.py
 # @Software: PyCharm
-#function info：oe异步数据采集
+#function info：接口数据采集
 
 import datetime
 from ecsage_bigdata_etl_engineering.bi_etl.sync.db.mysql.mysql_2_hive import main as sync_hive_main
@@ -11,7 +11,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import DAG
 import airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_oe_async_2_hive import main as interface_oe_async_main
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_oe_sync_2_hive import main as sync_interface_main
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
@@ -20,7 +20,7 @@ import os
 
 etl_meta = EtlMetadata()
 #获取dag信息
-ok, get_dags = etl_meta.execute_sql(sqlName="get_data_dags_sql",Parameter={"exec_type":"interface-oe-async"},IsReturnData="Y")
+ok, get_dags = etl_meta.execute_sql(sqlName="get_data_dags_sql",Parameter={"exec_type":"oe_sync_interface"},IsReturnData="Y")
 if ok is False:
     msg = get_create_dag_alert(FileName="%s"%(os.path.basename(__file__)),Log="获取Dags元数据出现异常！！！",Developer="工程维护")
     set_exit(LevelStatu="red", MSG=msg)
@@ -72,7 +72,7 @@ for dag_info in get_dags:
     start_sync_task = DummyOperator(task_id="start_sync_task", dag=dag)
     end_sync_task = DummyOperator(task_id="end_sync_task", dag=dag)
     # 同步任务配置
-    ok, get_tasks = etl_meta.execute_sql(sqlName="get_interface_oe_async_tasks_sql",Parameter={"dag_id":dag_id},IsReturnData="Y")
+    ok, get_tasks = etl_meta.execute_sql(sqlName="get_interface_oe_sync_tasks_sql",Parameter={"dag_id":dag_id},IsReturnData="Y")
     if ok is False:
       msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="获取Tasks元数据出现异常！！！",Developer="工程维护")
       set_exit(LevelStatu="red", MSG=msg)
@@ -80,9 +80,9 @@ for dag_info in get_dags:
     if len(get_tasks) > 0:
        for tasks_info in get_tasks:
           #配置跑批任务属性
-          task_id = tasks_info[2]
+          task_id = tasks_info[0]
           print(task_id,"@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!================================")
-          level = tasks_info[4]
+          level = tasks_info[9]
           tasks.append({"task_id": task_id, "batch_type": batch_type})
           task = locals()
           #定义task对象
@@ -94,11 +94,11 @@ for dag_info in get_dags:
                                         op_args=(tasks_info, level,),
                                         dag=dag)
           elif batch_type == "day":
-             task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                                     python_callable=interface_oe_async_main,
-                                                     provide_context=True,
-                                                     op_args=(tasks_info,),
-                                                     dag=dag)
+              task['%s' % (task_id)] = PythonOperator(task_id=task_id,
+                                         python_callable=sync_interface_main,
+                                         provide_context=True,
+                                         op_args=(tasks_info, level,),
+                                         dag=dag)
           else:
               pass
        for task_name in tasks:
@@ -125,6 +125,7 @@ for dag_info in get_dags:
                                                                                         dag=dag)
                               task[task_dep[2]].set_upstream(external_task[external_task_id])
                               external_task[external_task_id].set_upstream(start_sync_task)
+
                               ####external_task = PythonOperator(task_id='external_%s_%s' % (task_dep[0], task_dep[1]),
                               ####                               python_callable=dep_task_main,
                               ####                               provide_context=True,

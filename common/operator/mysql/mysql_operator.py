@@ -162,5 +162,5 @@ SELECT t.COLUMN_NAME              AS c_name,
         if result == 0:
             return True
         else:
-            print("mysql select_data_to_local_file Error:" + sql)
+            print("mysql local_file_to_mysql Error:" + sql)
             return False
