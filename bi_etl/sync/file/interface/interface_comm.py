@@ -608,7 +608,7 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     return remark
 
 #不翻页处理
-def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",ReturnColumns=""):
+def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId=""):
     code = 1
     data = ""
     try:
@@ -616,7 +616,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile=
       rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
       code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
-      rsp_data["returns_columns"] = str(ReturnColumns)
+      rsp_data["returns_columns"] = str(ParamJson)
       if int(code) == 0:
           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
           test_log.info(json.dumps(rsp_data))
