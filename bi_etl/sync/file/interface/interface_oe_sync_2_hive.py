@@ -16,7 +16,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_advertisers_data as get_advertisers_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_page_data as get_service_page_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page as get_not_page_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_first_page as get_first_page_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages as get_pages_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure as get_ods_columns
@@ -74,12 +74,17 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
   local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
-  celery_get_page_status = """%s/celery_get_page_status.log"""%(local_dir)
-  celery_page_status_file = "%s/celery_get_data_status.log"%(local_dir)
-  page_task_file = "%s/page_task_file.log"%(local_dir)
+  celery_first_page_status_file = "%s/celery_first_page_status_file.log"%(local_dir)
+  celery_other_page_status_file = "%s/celery_other_page_status_file.log" % (local_dir)
+  celery_rerun_page_status_file = "%s/celery_rerun_page_status_file.log" % (local_dir)
+  first_page_task_file = "%s/first_page_task_file.log"%(local_dir)
+  other_page_task_file = "%s/other_page_task_file.log" % (local_dir)
+  rerun_page_task_file = "%s/rerun_page_task_file.log" % (local_dir)
   data_task_file = """%s/data_task_file.log"""%(local_dir)
   tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
-  task_exception_file = "%s/task_exception_file.log"%(local_dir)
+  first_task_exception_file = "%s/first_task_exception_file.log"%(local_dir)
+  other_task_exception_file = "%s/other_task_exception_file.log" % (local_dir)
+  rerun_task_exception_file = "%s/rerun_task_exception_file.log" % (local_dir)
   data_file = data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
   param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
   #设置查询日期
@@ -125,7 +130,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             from metadb.oe_service_account a
             where a.media_type = '%s'
             group by a.account_id, a.media_type, a.service_code
-           -- limit 5000
+            limit 5000
        """%(task_flag,media_type)
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
@@ -133,72 +138,52 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     print("处理分页逻辑！！！")
     etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (task_flag))
     set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
-                        DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=task_exception_file,
-                        PageTaskFile=page_task_file, CeleryPageStatusFile=celery_page_status_file,TaskFlag=task_flag
+                        DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=first_task_exception_file,
+                        PageTaskFile=first_page_task_file, CeleryPageStatusFile=celery_first_page_status_file,TaskFlag=task_flag,
+                        Page=1,PageSize=1000
                         )
-    # 重试异常
-    #############n = 3
-    #############for i in range(n):
-    #############    sql = """
-    #############             select tmp1.account_id, '222' media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
-    #############          from(select account_id,service_code,request_filter,count(distinct remark) as rn
-    #############               from metadb.oe_sync_page_interface
-    #############               where flag = '%s.%s'
-    #############               group by account_id,service_code,request_filter
-    #############               having count(distinct remark) = 1
-    #############              ) tmp
-    #############          inner join metadb.oe_sync_page_interface tmp1
-    #############          on tmp.account_id = tmp1.account_id
-    #############          and tmp.service_code = tmp1.service_code
-    #############          and tmp.request_filter = tmp1.request_filter
-    #############          where tmp1.remark = '异常'
-    #############            and tmp1.flag = '%s.%s'
-    #############          group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter,tmp1.flag
-    #############             union all
-    #############          select account_id, '222' media_type, service_code,trim(replace(replace(request_filter,'[',''),']','')),flag
-    #############          from metadb.oe_sync_page_interface a
-    #############          where page_num = 0
-    #############            and remark = '正常'
-    #############            and data like '%s'
-    #############            and flag = '%s.%s'
-    #############         group by account_id, service_code,request_filter,request_filter,flag
-    #############         """ % (AirflowDag, AirflowTask, AirflowDag, AirflowTask, "%OK%", AirflowDag, AirflowTask)
-    #############    ok, db_data = etl_md.get_all_rows(sql)
-    #############    if db_data is not None and len(db_data) > 0:
-    #############        os.system("""rm -f %s*""" % (celery_get_page_status.split(".")[0]))
-    #############        os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
-    #############        os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
-    #############        os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
-    #############        set_sync_pages_number(DataList=db_data, ParamJson=param_json, UrlPath=url_path, SyncDir=local_dir,
-    #############                              IsFilter=is_filter,
-    #############                              PageTaskFile=page_task_file, CelerySyncTaskFile=celery_get_page_status,
-    #############                              DataFileDir=local_dir,
-    #############                              DataFile=data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) +
-    #############                                       data_task_file.split("/")[-1].split(".")[1])
-    #############
-    #############        ok, db_data = etl_md.get_all_rows(sql)
-    #############        if db_data is not None and len(db_data) > 0:
-    #############            time.sleep(60)
-    #############        else:
-    #############            break
+    if is_report == 1:
+      # 重试页数为0
+      n = 3
+      for i in range(n):
+          sql = """
+                select account_id, '222' media_type, service_code,request_filter,flag
+                from metadb.oe_sync_page_interface a
+                where page_num = 0
+                  and remark = '正常'
+                  and data like '%s'
+                  and flag = '%s.%s'
+               group by account_id, service_code,request_filter,request_filter,flag
+               """ % (AirflowDag, AirflowTask, AirflowDag, AirflowTask, "%OK%", AirflowDag, AirflowTask)
+          ok, db_data = etl_md.get_all_rows(sql)
+          if db_data is not None and len(db_data) > 0:
+              set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
+                                  DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,
+                                  PageTaskFile=rerun_page_task_file, CeleryPageStatusFile=celery_rerun_page_status_file,
+                                  TaskFlag=task_flag, Page=1, PageSize=1000
+                                  )
+              ok, db_data = etl_md.get_all_rows(sql)
+              if db_data is not None and len(db_data) > 0:
+                  time.sleep(60)
+              else:
+                  break
+    #处理其它分页
+    sql = """
+        select a.account_id, a.media_type as media_type, a.service_code,a.page_num,a.request_filter
+        from metadb.oe_sync_page_interface a 
+        where page_num > 1
+          and flag = '%s.%s'
+        group by a.account_id,  a.service_code,a.page_num,a.request_filter,a.media_type
+    """ % (AirflowDag, AirflowTask, AirflowDag, AirflowTask, "%OK%", AirflowDag, AirflowTask)
+    ok, db_data = etl_md.get_all_rows(sql)
+    set_other_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,
+                        DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
+                        CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=1000)
+
   else:
-    for data in db_data:
-      if int(is_advertiser_list) == 1:
-        param_json["advertiser_ids"] = [int(data[0])]
-      else:
-        param_json["advertiser_id"] = int(data[0])
-      celery_task_id = get_not_page_celery.delay(UrlPath=url_path,ParamJson=param_json,
-                                                 ServiceCode=data[2],ReturnAccountId=data[0],
-                                                 ReturnColumns="",TaskFlag=task_flag,
-                                                 DataFileDir=local_dir,
-                                                 DataFile=data_file,TaskExceptionFile=task_exception_file
-                                                )
-      os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], celery_page_status_file))
-  # 获取状态
-  print("正在等待celery队列执行完成！！！")
-  celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_page_status_file)
-  wait_for_celery_status(StatusList=celery_task_id)
-  print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    set_not_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,
+                      DataFile=data_file, TaskExceptionFile=other_task_exception_file,TaskFlag=task_flag,
+                      IsAdvertiserList=is_advertiser_list, CeleryPageStatusFile=celery_other_page_status_file)
   #获取数据文件
   target_file = os.listdir(local_dir)
   data_task_file_list = []
@@ -210,13 +195,34 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                       TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
                       )
 
-def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag=""):
+#处理不分页
+def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",IsAdvertiserList="",CeleryPageStatusFile="",TaskFlag=""):
+    for data in DataRows:
+       if int(IsAdvertiserList) == 1:
+           ParamJson["advertiser_ids"] = [int(data[0])]
+       else:
+           ParamJson["advertiser_id"] = int(data[0])
+       celery_task_id = get_not_page_celery.delay(UrlPath=UrlPath, ParamJson=ParamJson,
+                                                  ServiceCode=data[2], ReturnAccountId=data[0],
+                                                  ReturnColumns="", TaskFlag=TaskFlag,
+                                                  DataFileDir=DataFileDir,
+                                                  DataFile=DataFile, TaskExceptionFile=TaskExceptionFile
+                                                  )
+       os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
+       # 获取状态
+    print("正在等待celery队列执行完成！！！")
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("celery队列执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+
+#处理首页
+def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize=""):
     for data in DataRows:
        ParamJson["advertiser_id"] = data[0]
-       ParamJson["page"] = 1
-       ParamJson["page_size"] = 1000
+       ParamJson["page"] = int(Page)
+       ParamJson["page_size"] = int(PageSize)
        service_code = data[2]
-       celery_task_id = get_first_page_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
+       celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
                                                     DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                     TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
                                                     TaskExceptionFile=TaskExceptionFile)
@@ -228,14 +234,38 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
     print("获取页数celery队列执行完成！！！")
     print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     #重试异常
-    rerun_exception_tasks_firstpage(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,
+    rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,
+                                DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
+                                InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag"
+                               )
+
+#处理其它分页
+def set_other_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",PageSize=""):
+    for data in DataRows:
+      page_number = int(data[3])
+      for page in range(page_number):
+        if page > 0:
+           pages = page + 1
+           ParamJson["advertiser_id"] = data[0]
+           ParamJson["page"] = int(pages)
+           ParamJson["page_size"] = int(PageSize)
+           service_code = data[2]
+           celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
+                                                    DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
+                                                    TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
+                                                    TaskExceptionFile=TaskExceptionFile)
+           os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
+    # 获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
+    print("正在等待获取页数celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("获取页数celery队列执行完成！！！")
+    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    #重试异常
+    rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,
                                     DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
                                     InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag"
                                     )
-    # 保存MySQL
-    columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
-    load_data_mysql(AsyncAccountFile=DataFileDir, DataFile=PageTaskFile, DbName="metadb",
-                    TableName="oe_sync_page_interface", Columns=columns)
 
 #落地数据至snap
 def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",TaskInfo="",ExecDate=""):
@@ -1100,7 +1130,7 @@ def is_key_columns(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDat
         set_exit(LevelStatu="red", MSG=msg)
 
 #首页异常重试
-def rerun_exception_tasks_firstpage(DataFileDir="",ExceptionFile="",DataFile="",PageTaskFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns=""):
+def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",PageTaskFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns=""):
     celery_task_data_file = """%s/%s"""%(DataFileDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface_bak where interface_flag = '%s' """ % (InterfaceFlag)
@@ -1122,7 +1152,7 @@ def rerun_exception_tasks_firstpage(DataFileDir="",ExceptionFile="",DataFile="",
            print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
              param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
-             status_id = get_first_page_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],
+             status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],
                                                      DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
                                                      TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile
                                                     )

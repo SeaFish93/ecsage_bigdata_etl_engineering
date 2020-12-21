@@ -17,7 +17,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_creative_detail_datas
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_services
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_not_page
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_first_page
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_pages
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 import json
@@ -339,11 +339,11 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",ReturnAccountId="",Retur
 
 #处理分页
 @app.task(rate_limit='1000/m')
-def get_first_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile=""):
+def get_pages(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile=""):
     set_true = True
     n = 0
     while set_true:
-      remark = set_first_page(UrlPath=UrlPath,ParamJson=ParamJson,
+      remark = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,
                       ServiceCode=ServiceCode,DataFileDir=DataFileDir,
                       DataFile=DataFile,ReturnAccountId=ReturnAccountId,
                       TaskFlag=TaskFlag,PageTaskFile=PageTaskFile
