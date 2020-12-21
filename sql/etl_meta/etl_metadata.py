@@ -472,7 +472,7 @@ class EtlMetaDataSQL():
    from metadb.etl_job_dep a
    where dep_task_id = '%s'
    ) a
-   inner join metadb.sync_tasks_info b
+   inner join metadb.v_task_info b
    on a.task_id = b.task_id) a
    inner join(
    select b.dag_id from(
@@ -480,9 +480,10 @@ class EtlMetaDataSQL():
    from metadb.etl_job_dep a
    where dep_task_id = '%s'
    ) a
-   inner join metadb.sync_tasks_info b
+   inner join metadb.v_task_info b
    on a.dep_task_id = b.task_id
    ) b
+   on a.dag_id = b.dag_id
   """ % ("##{dep_task_id}##","##{dep_task_id}##")
   # 查找上游依赖
   get_downstream_depend_sql = """

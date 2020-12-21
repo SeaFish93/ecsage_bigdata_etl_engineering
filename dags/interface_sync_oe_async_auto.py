@@ -106,6 +106,7 @@ for dag_info in get_dags:
               # 设置task依赖
               ok, task_deps = etl_meta.execute_sql(sqlName="get_task_dep_sql", Parameter={"task_id": task_name["task_id"]},IsReturnData="Y")
               if len(task_deps) > 0:
+                  external_task = locals()
                   for task_dep in task_deps:
                       if task_dep[0] == task_dep[3]:
                           task[task_dep[2]].set_upstream(task[task_dep[1]])
@@ -113,13 +114,24 @@ for dag_info in get_dags:
                           if len(task_downstream_deps) == 0:
                               task[task_dep[1]].set_upstream(start_sync_task)
                       else:
-                          external_task = PythonOperator(task_id='external_%s_%s' % (task_dep[0], task_dep[1]),
-                                                         python_callable=dep_task_main,
-                                                         provide_context=True,
-                                                         op_args=(task_dep[0], task_dep[1], task_dep[4],),
-                                                         dag=dag)
-                          task[task_dep[2]].set_upstream(external_task)
-                          external_task.set_upstream(start_sync_task)
+                          external_task_id = 'external_%s_%s' % (task_dep[0], task_dep[1])
+                          if external_task_id in list(external_task.keys()) and external_task[external_task_id].dag_id == dag_id:
+                              task[task_dep[2]].set_upstream(external_task[external_task_id])
+                          else:
+                              external_task['%s' % (external_task_id)] = PythonOperator(task_id=external_task_id,
+                                                                                        python_callable=dep_task_main,
+                                                                                        provide_context=True,
+                                                                                        op_args=(task_dep[0], task_dep[1],task_dep[4],),
+                                                                                        dag=dag)
+                              task[task_dep[2]].set_upstream(external_task[external_task_id])
+                              external_task[external_task_id].set_upstream(start_sync_task)
+                              ####external_task = PythonOperator(task_id='external_%s_%s' % (task_dep[0], task_dep[1]),
+                              ####                               python_callable=dep_task_main,
+                              ####                               provide_context=True,
+                              ####                               op_args=(task_dep[0], task_dep[1], task_dep[4],),
+                              ####                               dag=dag)
+                              ####task[task_dep[2]].set_upstream(external_task)
+                              ####external_task.set_upstream(start_sync_task)
               else:
                   task['%s' % (task_name["task_id"])].set_upstream(start_sync_task)
               ok, task_upstream_deps = etl_meta.execute_sql(sqlName="get_ods_upstream_depend_sql",Parameter={"dep_task_id": task_name["task_id"]}, IsReturnData="Y")

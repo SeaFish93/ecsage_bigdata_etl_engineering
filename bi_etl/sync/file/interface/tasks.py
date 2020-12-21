@@ -17,6 +17,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_creative_detail_datas
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_services
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_not_page
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_pages
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 import json
@@ -37,8 +38,8 @@ def get_test(string=""):
     test_log.info(str(now)+"############")
 
 #定义oe任务创建
-@app.task(rate_limit='750/m')
-def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
+@app.task(rate_limit='1000/m')
+def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate="",LocalDir=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
     media_type = ExecData[2]
@@ -54,12 +55,12 @@ def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskE
     n = 1
     print("执行创建子账户：%s"%(account_id))
     while set_true:
-      try:
-        get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
+      code = get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
                                        AccountId=account_id, AsyncTaskName=AsyncTaskName, AsyncTaskFile=AsyncTaskFile,
-                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields,Token=token)
+                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields,LocalDir=LocalDir)
+      if int(code) == 0:
         set_true = False
-      except Exception as e:
+      else:
         if n > 1:
           print("异常创建子账户：%s" % (account_id))
           get_oe_save_exception_file(ExceptionType="create",ExecData=ExecData,AsyncNotemptyFile=AsyncTaskFile,AsyncStatusExceptionFile=AsyncTaskExceptionFile,ExecDate=ExecDate)
@@ -104,14 +105,13 @@ def get_oe_async_tasks_create_all_exception(AsyncTaskName="", AsyncTaskFile="", 
 
 #定义oe任务创建
 @app.task(rate_limit='1000/m')
-def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
+def get_oe_async_tasks_create(AsyncTaskName="", LocalDir="",AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
     media_type = ExecData[2]
     service_code = ExecData[3]
     group_by = str(ExecData[4]).split(",")
     fields = ExecData[5]
-    token = ExecData[6]
     if fields == "" or fields is None or len(fields) == 0 or fields == "NULL" or fields == "null":
         fields = []
     else:
@@ -120,20 +120,18 @@ def get_oe_async_tasks_create(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExcep
     n = 1
     print("执行创建子账户：%s"%(account_id))
     while set_true:
-      try:
-        #if int(AsyncTaskName)%2 == 0:
-        # time.sleep(2)
-        get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
+      code = get_set_oe_async_tasks_create(InterfaceFlag=interface_flag, MediaType=media_type, ServiceCode=service_code,
                                        AccountId=account_id, AsyncTaskName=AsyncTaskName, AsyncTaskFile=AsyncTaskFile,
-                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields,Token=token)
+                                       ExecDate=ExecDate,GroupBy=group_by, Fields=fields,LocalDir=LocalDir)
+      if int(code) == 0:
         set_true = False
-      except Exception as e:
-         #if n > 3:
+      else:
+        if n > 3:
          print("异常创建子账户：%s" % (account_id))
          get_oe_save_exception_file(ExceptionType="create",ExecData=ExecData,AsyncNotemptyFile=AsyncTaskFile,AsyncStatusExceptionFile=AsyncTaskExceptionFile,ExecDate=ExecDate)
          set_true = False
-         #else:
-         # time.sleep(360)
+        else:
+          time.sleep(10)
       n = n + 1
 
 #定义oe任务状态
@@ -323,18 +321,51 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
 
 #处理不分页
 @app.task(rate_limit='1000/m')
-def get_not_page(UrlPath="",ParamJson="",ServiceCode="",ReturnAccountId="",ReturnColumns="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile=""):
+def get_not_page(UrlPath="",ParamJson="",ServiceCode="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile=""):
     set_true = True
     n = 0
     while set_true:
-      code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ReturnColumns=ReturnColumns)
+      code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId)
       if int(code) == 0:
           set_true = False
       else:
           if n > 2:
-            print("异常：%s,%s"%(ReturnAccountId,ServiceCode))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""),str(ReturnColumns).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+            print("处理不分页异常：%s,%s"%(ReturnAccountId,ServiceCode))
+            status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+            if int(status) != 0:
+                for i in range(10):
+                  status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+                  if int(status) == 0:
+                      break;
             set_true = False
           else:
             time.sleep(5)
       n = n + 1
+
+#处理分页
+@app.task(rate_limit='1000/m')
+def get_pages(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile=""):
+    set_true = True
+    n = 0
+    while set_true:
+      remark = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,
+                      ServiceCode=ServiceCode,DataFileDir=DataFileDir,
+                      DataFile=DataFile,ReturnAccountId=ReturnAccountId,
+                      TaskFlag=TaskFlag,PageTaskFile=PageTaskFile
+                     )
+      if remark == "正常":
+          set_true = False
+      else:
+          if n > 2:
+            print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
+            status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+            if int(status) != 0:
+                for i in range(10):
+                  status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,TaskExceptionFile + ".%s" % hostname))
+                  if int(status) == 0:
+                      break;
+            set_true = False
+          else:
+            time.sleep(5)
+      n = n + 1
+

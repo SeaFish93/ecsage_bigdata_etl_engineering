@@ -20,8 +20,8 @@ from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
-
-
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+#etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 hostname = socket.gethostname()
 
 def build_url(path, query=""):
@@ -191,7 +191,7 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
             load data local infile '%s' into table metadb.monitor_collect_file_log fields terminated by ' ' lines terminated by '\\n' (target_file_dir,target_file,target_file_size)
         """ % (size_error_file)
         print(insert_sql)
-        EtlMdSession.local_file_to_mysql(sql=insert_sql)
+       #etl_md.local_file_to_mysql(sql=insert_sql)
 
     if len(DataFileList) != file_num:
        msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
@@ -235,9 +235,13 @@ def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEm
            os.system("""echo "%s %s %s %s %s %s %s">>%s """%(ExecDate,account_id, media_type,service_code, token, task_id,"无数",AsyncEmptyFile+".%s"%(hostname)))
        else:
            print("有数据：%s"%(account_id))
-           os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"有数", AsyncNotemptyFile+".%s"%(hostname)))
+           status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"有数", AsyncNotemptyFile+".%s"%(hostname)))
+           if int(status) != 0:
+               a = 1/0
     else:
-       os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"未执行完成", AsyncNotemptyFile+".%s"%(hostname)))
+       status_1 = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (ExecDate,account_id, media_type,service_code, token, task_id,"未执行完成", AsyncNotemptyFile+".%s"%(hostname)))
+       if int(status_1) != 0:
+           a = 1 / 0
 
 #获取oe异步任务执行状态
 def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
@@ -388,42 +392,39 @@ def set_oe_async_tasks_create(AccountId="",AsyncTaskName="",Fields="",ExecDate="
         'Access-Token': Token,
         'Connection': "close"
     }
-    print(params,"====================================")
     resp = requests.post(url, json=params, headers=headers)
     resp_data = resp.json()
     return resp_data
 
 #执行头条异步任务创建
-def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",AccountId="",AsyncTaskName="",AsyncTaskFile="",ExecDate="",GroupBy="",Fields="",Token=""):
-    n = 1
-    set_run = True
-    token = Token
-    resp_data = ""
-    while set_run:
+def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",AccountId="",AsyncTaskName="",AsyncTaskFile="",ExecDate="",GroupBy="",Fields="",LocalDir=""):
+    mess = ""
+    try:
+        token = get_oe_account_token(ServiceCode=ServiceCode)
         resp_data = set_oe_async_tasks_create(AccountId=AccountId, AsyncTaskName=AsyncTaskName, Fields=Fields,
                                               ExecDate=ExecDate, Token=token, GroupBy=GroupBy)
         mess = str(resp_data).replace(" ","")
         code = resp_data["code"]
-        if code == 40105 or code == 40104:
-            token = get_oe_account_token(ServiceCode=ServiceCode)
-            if n > 3:
-              resp_data["data"]["task_name"] = mess
-              resp_data["data"]["task_id"] = 40105
-              set_run = False
+        if int(code) == 0:
+            task_id = resp_data["data"]["task_id"]
+            task_name = resp_data["data"]["task_name"]
+            async_task_file = """%s.%s""" % (AsyncTaskFile, hostname)
+            status = os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (AccountId, InterfaceFlag, MediaType, ServiceCode, "##", "##", token, task_id, task_name, async_task_file))
+            if int(status) != 0:
+               print("写入失败：%s"%(AccountId))
+               code = 1
+               mess = "写入失败"
         #没权限创建
-        elif code == 40002:
-            resp_data["data"]["task_name"] = mess
-            resp_data["data"]["task_id"] = 40002
-            set_run = False
+        elif int(code) in [40002, 40105, 40104]:
+            code = 0
         else:
-            set_run = False
-        n = n + 1
-    task_id = resp_data["data"]["task_id"]
-    task_name = resp_data["data"]["task_name"]
-    async_task_file = """%s.%s"""%(AsyncTaskFile,hostname)
-    os.system("""echo "%s %s %s %s %s %s %s %s %s">>%s """ % (AccountId,InterfaceFlag,MediaType,ServiceCode, "##","##",token, task_id, task_name, async_task_file))
-    #os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (MediaType, token, ServiceCode, AccountId, task_id, task_name, InterfaceFlag, "/home/ecsage_data/oceanengine/async/ttttttt.%s"%(hostname)))
-
+            code = 1
+    except Exception as e:
+        code = 1
+        mess = "请求失败"
+    if int(code) != 0:
+       os.system("""echo "%s %s">>%s/%s.%s """ % (AccountId,mess,LocalDir,InterfaceFlag,hostname))
+    return code
 
 def set_oe_async_tasks_data_return(DataFile="",ExecData="",AirflowInstance=""):
     get_data = ExecData
@@ -607,7 +608,7 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     return remark
 
 #不翻页处理
-def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",ReturnColumns=""):
+def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId=""):
     code = 1
     data = ""
     try:
@@ -615,7 +616,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile=
       rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
       code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
-      rsp_data["returns_columns"] = str(ReturnColumns)
+      rsp_data["returns_columns"] = str(ParamJson)
       if int(code) == 0:
           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
           test_log.info(json.dumps(rsp_data))
@@ -627,5 +628,42 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile=
     except Exception as e:
         code = 1
         data = "请求失败"
-    os.system(""" echo "%s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,DataFileDir, "account_status.log", hostname))
+    if int(code) != 0:
+      os.system(""" echo "%s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,DataFileDir, "account_status.log", hostname))
     return code
+
+#翻页处理
+def set_pages(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile=""):
+    page = 0
+    data = ""
+    try:
+      token = get_oe_account_token(ServiceCode=ServiceCode)
+      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+      code = rsp_data["code"]
+      rsp_data["returns_account_id"] = str(ReturnAccountId)
+      rsp_data["returns_columns"] = str(ParamJson)
+      if int(code) == 0:
+         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
+         test_log.info(json.dumps(rsp_data))
+         page = rsp_data["data"]["page_info"]["total_page"]
+         remark = "正常"
+         if page == 0:
+            data = str(rsp_data).replace(" ", "")
+         else:
+            data = ""
+      elif int(code) in [40002, 40105, 40104]:
+          remark = "正常"
+          data = str(rsp_data).replace(" ", "")
+      else:
+          remark = "异常"
+          data = str(rsp_data).replace(" ", "")
+    except Exception as e:
+        remark = "异常"
+        data = "请求失败"
+    status = os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag, PageTaskFile,hostname))
+    if int(status) != 0:
+        for i in range(10):
+            status = os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag, PageTaskFile,hostname))
+            if int(status) == 0:
+                break;
+    return remark

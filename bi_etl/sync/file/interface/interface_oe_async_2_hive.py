@@ -174,7 +174,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
         status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
                                                                AsyncTaskFile=async_create_task_file,
                                                                AsyncTaskExceptionFile=async_task_exception_file,
-                                                               ExecData=data, ExecDate=ExecDate)
+                                                               ExecData=data, ExecDate=ExecDate,LocalDir=async_account_file)
         os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
         n = n + 1
 
@@ -194,6 +194,19 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     etl_md.execute_sql("delete from metadb.oe_async_create_task where interface_flag='%s' " % (interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
                     TableName="oe_async_create_task", Columns=columns)
+    #加载因网络抖动写入nfs系统漏数
+    sql = """
+       insert into metadb.oe_async_create_task
+       select a.media_type,a.token_code,a.service_code
+              ,a.account_id,'0' as task_id,'999999' as task_name,'##'
+              ,'##','%s' as interface_flag
+       from metadb.media_advertiser a
+       left join metadb.oe_async_create_task b
+       on a.account_id = b.account_id
+       and a.service_code = b.service_code
+       where b.account_id is null
+    """%(interface_flag)
+    etl_md.execute_sql(sql)
 
 def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaType="",ExecDate=""):
     media_type = int(MediaType)
@@ -213,11 +226,12 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
             from metadb.oe_account_interface a
             where a.exec_date = '%s'
             --  and a.account_id = '1645016270409747'
+           -- limit 1
             """ % (interface_flag,group_by,fields, ExecDate)
     ok, all_rows = etl_md.get_all_rows(source_data_sql)
     n = 1
     for data in all_rows:
-        status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (n),
+        status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (n),LocalDir=async_account_file,
                                                            AsyncTaskFile=async_create_task_file,
                                                            AsyncTaskExceptionFile=async_task_exception_file,
                                                            ExecData=data, ExecDate=ExecDate)
@@ -739,7 +753,7 @@ def rerun_exception_account_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="
                 status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
                                                                        AsyncTaskFile=async_data_file,
                                                                        AsyncTaskExceptionFile=async_data_exception_file,
-                                                                       ExecData=data, ExecDate=ExecDate)
+                                                                       ExecData=data, ExecDate=ExecDate,LocalDir=AsyncAccountDir)
                 os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file + ".%s" % (i)))
                 n = n + 1
             celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s" % i)
@@ -779,7 +793,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
     columns = """account_id,media_type,service_code,token_data,task_id,task_name,interface_flag"""
     table_name = "oe_async_exception_create_tasks_interface"
     save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
-    n = 10
+    n = 100
     for i in range(n):
         sql = """
               select distinct %s
@@ -844,7 +858,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
     table_name = "oe_async_exception_create_tasks_interface"
     save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
-    n = 3
+    n = 100
     for i in range(n):
         sql = """
           select distinct a.account_id,a.interface_flag,a.media_type,a.service_code,a.group_by,a.fields,a.token_data
@@ -855,9 +869,10 @@ def rerun_exception_create_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=""
         if datas is not None and len(datas) > 0:
            print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
-               status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i), AsyncTaskFile=async_data_file,
-                                                              AsyncTaskExceptionFile=async_data_exception_file,
-                                                              ExecData=data, ExecDate=ExecDate)
+               status_id = get_oe_async_tasks_create_celery.delay(AsyncTaskName="%s" % (i), LocalDir=AsyncAccountDir,
+                                                                  AsyncTaskFile=async_data_file,
+                                                                  AsyncTaskExceptionFile=async_data_exception_file,
+                                                                  ExecData=data, ExecDate=ExecDate)
                os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
            wait_for_celery_status(StatusList=celery_task_id)
