@@ -158,7 +158,7 @@ def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
     return remark,page
 
 #多线程上传hdfs
-def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir=""):
+def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir="",EtlMdSession=""):
     th = []
     i = 0
     file_num = 0
@@ -186,7 +186,7 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
             file_num = file_num + 1
 
     error_file_size = os.path.getsize(size_error_file)
-    if int(error_file_size) > 0:
+    if int(error_file_size) > 0 and EtlMdSession is not None and len(EtlMdSession) > 0:
         insert_sql = """
             load data local infile '%s' into table metadb.monitor_collect_file_log fields terminated by ' ' lines terminated by '\\n' (target_file_dir,target_file,target_file_size)
         """ % (size_error_file)

@@ -16,6 +16,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
+from ecsage_bigdata_etl_engineering.common.base.def_table_struct import adj_snap_structure
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import analysis_etlmid_cloumns
 
 import datetime
@@ -274,9 +275,9 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     ####   md5_file_false.clear()
     ####   sleep_num = sleep_num + 1
     #落地临时表
-    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DeleteType=delete_type,DB=DB,Table=Table,ExecDate=ExecDate,CustomSetParameter=CustomSetParameter)
+    exec_file_2_hive(HiveSession=HiveSession,BeelineSession=BeelineSession,LocalFileName=file_dir_name_list,RequestType=request_type,DeleteType=delete_type,DB=DB,Table=Table,ExecDate=ExecDate,CustomSetParameter=CustomSetParameter,EtlMdSession=etl_md)
 
-def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DeleteType="",DB="",Table="",ExecDate="",CustomSetParameter=""):
+def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestType="",DeleteType="",DB="",Table="",ExecDate="",CustomSetParameter="",EtlMdSession=""):
     mid_table = """%s.%s""" % (DB, Table)
     # 创建data临时表
     mid_sql = """
@@ -321,7 +322,7 @@ def exec_file_2_hive(HiveSession="",BeelineSession="",LocalFileName="",RequestTy
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
     #上传hdfs
-    get_local_hdfs_thread(TargetDb=DB, TargetTable=Table, ExecDate=ExecDate, DataFileList=LocalFileName,HDFSDir=hdfs_dir)
+    get_local_hdfs_thread(TargetDb=DB, TargetTable=Table, ExecDate=ExecDate, DataFileList=LocalFileName,HDFSDir=hdfs_dir,EtlMdSession=EtlMdSession)
     #落地至hive
     ok_data = BeelineSession.execute_sql(load_table_sqls,CustomSetParameter)
     if ok_data is False:
@@ -613,8 +614,16 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
 #落地至snap
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate="",CustomSetParameter=""):
+   adj_snap_structure(HiveSession=HiveSession,BeelineSession=BeelineSession,SourceDB=SourceDB,SourceTable=SourceTable,
+                        TargetDB=TargetDB, TargetTable=TargetTable,CustomSetParameter=CustomSetParameter)
    #设置snap查询字段
    snap_columns = ""
+   # 获取snap表字段
+   ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
+   for column in snap_table_columns:
+       snap_columns = snap_columns + "," + "a.`%s`" % (column[0])
+   snap_columns = snap_columns.replace(",", "", 1)
+
    if IsReport == 0:
        is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB,
                       TargetTable=TargetTable, ExecDate=ExecDate, KeyColumns=KeyColumns)
@@ -630,28 +639,7 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
            num += 1
            key_columns_joins = key_columns_joins + " " + key_columns_join
            num = num + 1
-       #获取ods表字段
-       ok,ods_table_columns = HiveSession.get_column_info(SourceDB,SourceTable)
-       ods_columns = ""
-       for column in ods_table_columns:
-           create_col = """,`%s`  %s comment'%s' \n"""%(column[0],column[1],column[2])
-           ods_columns = ods_columns + create_col
-           if column[0] == "etl_date":
-               break;
-       ods_columns = ods_columns.replace(",", "", 1)
-       create_snap_sql = """
-       create table if not exists %s.%s(
-         %s
-       )
-       row format delimited fields terminated by '\\001' 
-       stored as parquet
-       """%(TargetDB,TargetTable,ods_columns)
-       HiveSession.execute_sql(create_snap_sql)
-       #获取snap表字段
-       ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
-       for column in snap_table_columns:
-           snap_columns = snap_columns + "," + "a.`%s`"%(column[0])
-       snap_columns = snap_columns.replace(",", "", 1)
+
        sql = """
            insert overwrite table %s.%s
            select %s
@@ -666,28 +654,6 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
             key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
             )
    else:
-       # 获取ods表字段
-       ok, ods_table_columns = HiveSession.get_column_info(SourceDB, SourceTable)
-       ods_columns = ""
-       for column in ods_table_columns:
-           create_col = """,`%s`  %s comment'%s' \n""" % (column[0], column[1], column[2])
-           ods_columns = ods_columns + create_col
-           if column[0] == "etl_date":
-               break;
-       ods_columns = ods_columns.replace(",", "", 1)
-       create_snap_sql = """
-              create table if not exists %s.%s(
-                %s
-              )
-              row format delimited fields terminated by '\\001' 
-              stored as parquet
-              """ % (TargetDB, TargetTable, ods_columns)
-       HiveSession.execute_sql(create_snap_sql)
-       # 获取snap表字段
-       ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
-       for column in snap_table_columns:
-           snap_columns = snap_columns + "," + "a.`%s`" % (column[0])
-       snap_columns = snap_columns.replace(",", "", 1)
        sql = """
         insert overwrite table %s.%s
         select %s
