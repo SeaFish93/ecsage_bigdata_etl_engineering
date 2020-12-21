@@ -133,7 +133,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (task_flag))
     set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
                         DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=task_exception_file,
-                        PageTaskFile=page_task_file, CeleryPageStatusFile=celery_page_status_file)
+                        PageTaskFile=page_task_file, CeleryPageStatusFile=celery_page_status_file,TaskFlag=task_flag
+                        )
     # 重试异常
     #############n = 3
     #############for i in range(n):
@@ -208,16 +209,15 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                       TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
                       )
 
-def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile=""):
+def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag=""):
     for data in DataRows:
        ParamJson["advertiser_id"] = data[0]
        ParamJson["page"] = 1
        ParamJson["page_size"] = 1000
-       task_flag = data[4]
        service_code = data[2]
        celery_task_id = get_first_page_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
                                                     DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
-                                                    TaskFlag=task_flag,PageTaskFile=PageTaskFile,
+                                                    TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
                                                     TaskExceptionFile=TaskExceptionFile)
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
     # 获取状态
@@ -226,6 +226,11 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
     wait_for_celery_status(StatusList=celery_task_id)
     print("获取页数celery队列执行完成！！！")
     print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    #重试异常
+    rerun_exception_tasks_firstpage(AsyncAccountDir=DataFileDir,ExceptionFile=TaskExceptionFile,
+                                    DataFile=DataFile,CeleryTaskDataFile=CeleryPageStatusFile,
+                                    InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag"
+                                    )
     # 保存MySQL
     columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
     load_data_mysql(AsyncAccountFile=DataFileDir, DataFile=PageTaskFile, DbName="metadb",
@@ -1093,73 +1098,59 @@ def is_key_columns(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDat
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
 
-def rerun_exception_tasks_firstpage(UrlPath="",AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",ExecDate="",IsfilterID="",Columns="",ParamJson=""):
+#首页异常重试
+def rerun_exception_tasks_firstpage(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns=""):
     celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
-    delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+    delete_sql = """delete from metadb.oe_sync_exception_tasks_interface_bak where interface_flag = '%s' """ % (InterfaceFlag)
     etl_md.execute_sql(delete_sql)
     columns = Columns
     db_name = "metadb"
-    table_name = "oe_sync_exception_tasks_interface"
+    table_name = "oe_sync_exception_tasks_interface_bak"
     save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,DbName=db_name,TableName=table_name,Columns=columns)
     #
-    n = 10
-    for i in range(n):
-        sql = """
-          select distinct %s
-          from %s.%s a
-          where interface_flag = '%s' 
-        """% (columns,db_name,table_name,InterfaceFlag)
-        ok,datas = etl_md.get_all_rows(sql)
-        if datas is not None and len(datas) > 0:
-           print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-           for data in datas:
-               if IsfilterID == "Y":
-                   account_id = int(data[0])
-                   ad_id = int(data[3])
-                   service_code = str(data[1])
-                   ParamJson["advertiser_id"] = account_id
-                   ParamJson["ad_id"] = ad_id
-                   ParamJson["service_code"] = service_code
-                   status_id = get_creative_detail_data_celery.delay(ParamJson=str(ParamJson), UrlPath=UrlPath,
-                                                                     TaskExceptionFile=ExceptionFile,
-                                                                     DataFileDir=AsyncAccountDir,
-                                                                     DataFile=DataFile,
-                                                                     InterfaceFlag=InterfaceFlag
-                                                                    )
-                   os.system("""echo "%s %s %s %s ">>%s""" % (status_id, account_id, ad_id, service_code, celery_task_data_file+".%s"%(i)))
-               else:
-                  status_id = get_advertisers_data_celery.delay(AccountIdList=[int(data[0])], ServiceCode=data[1],
-                                                             DataFileDir=AsyncAccountDir,DataFile=DataFile,
-                                                             TaskExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag
-                                                             )
-                  os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
-           celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
-           wait_for_celery_status(StatusList=celery_task_id)
-           delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
-           etl_md.execute_sql(delete_sql)
-           save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, DbName = db_name,TableName=table_name,Columns=columns)
-           print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-           #判断结果是否还有异常
-           ex_sql = """
-                     select %s
-                     from %s.%s a
-                     where interface_flag = '%s'
-                     limit 1
-              """% (columns,db_name,table_name,InterfaceFlag)
-           ok, ex_datas = etl_md.get_all_rows(ex_sql)
-           if ex_datas is not None and len(ex_datas) > 0:
-               print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-               if i == 0:
-                 time.sleep(360)
-               else:
-                 time.sleep(180)
-    ex_sql = """
-         select %s
-         from %s.%s a
-         where interface_flag = '%s'
-    """% (columns,db_name,table_name,InterfaceFlag)
-    ok, ex_datas = etl_md.get_all_rows(ex_sql)
-    if ex_datas is not None and len(ex_datas) > 0:
-        print("还有特别异常任务存在！！！")
-        print(ex_datas[0])
+    ######################n = 10
+    ######################for i in range(n):
+    ######################    sql = """
+    ######################      select distinct %s
+    ######################      from %s.%s a
+    ######################      where interface_flag = '%s'
+    ######################    """% (columns,db_name,table_name,InterfaceFlag)
+    ######################    ok,datas = etl_md.get_all_rows(sql)
+    ######################    if datas is not None and len(datas) > 0:
+    ######################       print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    ######################       for data in datas:
+    ######################              status_id = get_advertisers_data_celery.delay(AccountIdList=[int(data[0])], ServiceCode=data[1],
+    ######################                                                         DataFileDir=AsyncAccountDir,DataFile=DataFile,
+    ######################                                                         TaskExceptionFile=ExceptionFile,InterfaceFlag=InterfaceFlag
+    ######################                                                         )
+    ######################              os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
+    ######################       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
+    ######################       wait_for_celery_status(StatusList=celery_task_id)
+    ######################       delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
+    ######################       etl_md.execute_sql(delete_sql)
+    ######################       save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, DbName = db_name,TableName=table_name,Columns=columns)
+    ######################       print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    ######################       #判断结果是否还有异常
+    ######################       ex_sql = """
+    ######################                 select %s
+    ######################                 from %s.%s a
+    ######################                 where interface_flag = '%s'
+    ######################                 limit 1
+    ######################          """% (columns,db_name,table_name,InterfaceFlag)
+    ######################       ok, ex_datas = etl_md.get_all_rows(ex_sql)
+    ######################       if ex_datas is not None and len(ex_datas) > 0:
+    ######################           print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    ######################           if i == 0:
+    ######################             time.sleep(360)
+    ######################           else:
+    ######################             time.sleep(180)
+    ######################ex_sql = """
+    ######################     select %s
+    ######################     from %s.%s a
+    ######################     where interface_flag = '%s'
+    ######################"""% (columns,db_name,table_name,InterfaceFlag)
+    ######################ok, ex_datas = etl_md.get_all_rows(ex_sql)
+    ######################if ex_datas is not None and len(ex_datas) > 0:
+    ######################    print("还有特别异常任务存在！！！")
+    ######################    print(ex_datas[0])
