@@ -339,21 +339,21 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",ReturnAccountId="",Retur
 
 #处理分页
 @app.task(rate_limit='1000/m')
-def get_first_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",ReturnColumns="",TaskFlag="",PageTaskFile="",TaskExceptionFile=""):
+def get_first_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile=""):
     set_true = True
     n = 0
     while set_true:
       remark = set_first_page(UrlPath=UrlPath,ParamJson=ParamJson,
                       ServiceCode=ServiceCode,DataFileDir=DataFileDir,
                       DataFile=DataFile,ReturnAccountId=ReturnAccountId,
-                      ReturnColumns=ReturnColumns,TaskFlag=TaskFlag,PageTaskFile=PageTaskFile
+                      TaskFlag=TaskFlag,PageTaskFile=PageTaskFile
                      )
       if remark == "正常":
           set_true = False
       else:
           if n > 2:
             print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""),str(ReturnColumns).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+            os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
             set_true = False
           else:
             time.sleep(5)
