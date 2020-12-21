@@ -660,5 +660,10 @@ def set_first_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFil
     except Exception as e:
         remark = "异常"
         data = "请求失败"
-    os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (page, ServiceCode, ServiceCode, remark, data, ParamJson, TaskFlag, PageTaskFile,hostname))
+    status = os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (page, ServiceCode, ServiceCode, remark, data, ParamJson, TaskFlag, PageTaskFile,hostname))
+    if int(status) != 0:
+        for i in range(10):
+            status = os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (page, ServiceCode, ServiceCode, remark, data, ParamJson, TaskFlag, PageTaskFile,hostname))
+            if int(status) == 0:
+                break;
     return remark

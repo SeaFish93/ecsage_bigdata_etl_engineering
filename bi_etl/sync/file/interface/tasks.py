@@ -353,7 +353,12 @@ def get_first_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFil
       else:
           if n > 2:
             print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
-            os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+            status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+            if int(status) != 0:
+                for i in range(10):
+                  status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,TaskExceptionFile + ".%s" % hostname))
+                  if int(status) == 0:
+                      break;
             set_true = False
           else:
             time.sleep(5)
