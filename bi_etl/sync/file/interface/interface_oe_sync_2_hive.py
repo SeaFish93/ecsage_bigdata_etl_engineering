@@ -182,8 +182,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     set_other_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,
                         DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
                         CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=1000)
-
   else:
+    #不分页
     set_not_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,
                       DataFile=data_file, TaskExceptionFile=other_task_exception_file,TaskFlag=task_flag,
                       IsAdvertiserList=is_advertiser_list, CeleryPageStatusFile=celery_other_page_status_file)
