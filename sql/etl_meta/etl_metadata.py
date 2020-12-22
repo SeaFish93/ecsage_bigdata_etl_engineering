@@ -138,6 +138,7 @@ class EtlMetaDataSQL():
   ,is_advertiser_list
   ,array_flag
   ,filter_time
+  ,interface_filter_list
   ,`create_user`
   ,`update_user`
   ,`create_time`

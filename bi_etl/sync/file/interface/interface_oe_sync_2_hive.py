@@ -102,6 +102,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   media_type = TaskInfo[26]
   is_advertiser_list = TaskInfo[27]
   filter_time = TaskInfo[29]
+  interface_filter_list = TaskInfo[30]
   filter_time_sql = ""
   if filter_time is not None and len(filter_time) > 0:
       filter_time_sql = """ and %s >= '%s 00:00:00' and %s <= '%s 23:59:59' """%(filter_time,ExecDate,filter_time,ExecDate)
@@ -125,16 +126,15 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
       columns = """advertiser_id,flag,filter_id"""
       load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
-      exit(0)
-      ###sql = """
-      ###      select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag
-      ###      from metadb.oe_account_interface a
-      ###      inner join metadb.oe_sync_filter_info b
-      ###      on a.account_id = b.advertiser_id
-      ###      where a.exec_date = '%s'
-      ###        and b.flag = '%s'
-      ###      group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
-      ### """%(ExecDate,task_flag)
+      sql = """
+            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag
+            from metadb.oe_account_interface a
+            inner join metadb.oe_sync_filter_info b
+            on a.account_id = b.advertiser_id
+            where a.exec_date = '%s'
+              and b.flag = '%s'
+            group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
+       """%(ExecDate,task_flag)
   else:
       #处理维度表分支
       if int(is_report) == 0:
@@ -197,7 +197,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                         CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=1000)
   else:
     #不分页
-    set_not_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,
+    set_not_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                       DataFile=data_file, TaskExceptionFile=other_task_exception_file,TaskFlag=task_flag,
                       IsAdvertiserList=is_advertiser_list, CeleryPageStatusFile=celery_other_page_status_file)
   #获取数据文件
@@ -212,12 +212,22 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                       )
 
 #处理不分页
-def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",IsAdvertiserList="",CeleryPageStatusFile="",TaskFlag=""):
+def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",IsAdvertiserList="",CeleryPageStatusFile="",TaskFlag="",InterfaceFilterList=""):
     for data in DataRows:
+       if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
+          filter_list = InterfaceFilterList.split(",")
+          for lists in filter_list:
+              get_list = lists.split(".")
+          if len(get_list) == 1:
+             ParamJson["%s"%(get_list[0])] = int(data[3])
+          else:
+             print("含有filter")
        if int(IsAdvertiserList) == 1:
            ParamJson["advertiser_ids"] = [int(data[0])]
        else:
            ParamJson["advertiser_id"] = int(data[0])
+       print(ParamJson,"###############################")
+       exit(0)
        celery_task_id = get_not_page_celery.delay(UrlPath=UrlPath, ParamJson=ParamJson,
                                                   ServiceCode=data[2], ReturnAccountId=data[0],
                                                   TaskFlag=TaskFlag,DataFileDir=DataFileDir,
