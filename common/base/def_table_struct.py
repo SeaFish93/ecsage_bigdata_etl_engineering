@@ -91,7 +91,10 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
             if """'list'""" in data:
                 data_str2 = data_str2['data']
             else:
-              data_str2 = data_str2['data'][0]
+              if "list" in str(type(data)):
+                 data_str2 = data_str2['data'][0]
+              else:
+                 data_str2 = data_str2['data']
         else:
             data_str = return_Str[return_Str.find(split_flag) + 3:]
             data_str2 = json.loads(data_str)
