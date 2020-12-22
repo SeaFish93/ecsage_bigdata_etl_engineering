@@ -933,24 +933,32 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
 def load_data_mysql(AsyncAccountFile="",DataFile="",DbName="",TableName="",Columns=""):
     target_file = os.listdir(AsyncAccountFile)
     for files in target_file:
+        n = 0
+        set_run = True
         if DataFile.split("/")[-1] in files:
             print(files, "###############################################")
             # 记录子账户
             insert_sql = """
                   load data local infile '%s' into table %s.%s fields terminated by ' ' lines terminated by '\\n' (%s)
                """ % (AsyncAccountFile + "/" + files,DbName,TableName,Columns)
-            ok = etl_md.local_file_to_mysql(sql=insert_sql)
-            if ok is False:
-                msg = "写入MySQL出现异常！！！\n%s" % (DataFile)
-                msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
-                                       SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                                       TargetTable="%s.%s" % ("", ""),
-                                       BeginExecDate="",
-                                       EndExecDate="",
-                                       Status="Error",
-                                       Log=msg,
-                                       Developer="developer")
-                set_exit(LevelStatu="red", MSG=msg)
+            while set_run:
+              ok = etl_md.local_file_to_mysql(sql=insert_sql)
+              if ok is False:
+                 if n > 3:
+                   set_run = False
+                   msg = "写入MySQL出现异常！！！\n%s" % (DataFile)
+                   msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
+                                      SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                      TargetTable="%s.%s" % ("", ""),
+                                      BeginExecDate="",
+                                      EndExecDate="",
+                                      Status="Error",
+                                      Log=msg,
+                                      Developer="developer")
+                   set_exit(LevelStatu="red", MSG=msg)
+              else:
+                  set_run = False
+              n = n+1
 
 def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
