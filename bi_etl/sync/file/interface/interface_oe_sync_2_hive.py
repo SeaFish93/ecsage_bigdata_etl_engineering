@@ -125,7 +125,15 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       print("过滤sql：%s"%(filter_sql))
       ok = os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
       if ok != 0:
-          exit(1)
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="拉取snap表出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
       columns = """advertiser_id,flag,filter_id"""
       load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
@@ -225,7 +233,7 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
           if len(get_list) == 1:
              ParamJson["%s"%(get_list[0])] = int(data[3])
           else:
-             print("含有filter")
+             print("含有filter...")
        if int(IsAdvertiserList) == 1:
            ParamJson["advertiser_ids"] = [int(data[0])]
        else:
