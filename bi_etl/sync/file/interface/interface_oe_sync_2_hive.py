@@ -103,26 +103,31 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   is_advertiser_list = TaskInfo[27]
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
-  is_filter = False
   #判断是否从列表过滤
   if filter_db_name is not None and len(filter_db_name) > 0:
       filter_sql = """
-      select concat_ws(' ',%s,'%s') from %s.%s where etl_date='%s' %s group by %s
-      """%(filter_column_name,task_flag,filter_db_name,filter_table_name,ExecDate,filter_config,filter_column_name)
-      os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
-      etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
-      columns = """advertiser_id,filter_id,flag"""
-      load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
-      sql = """
-            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag
-            from metadb.oe_account_interface a
-            inner join metadb.oe_sync_filter_info b
-            on a.account_id = b.advertiser_id
-            where a.exec_date = '%s'
-              and b.flag = '%s'
-            group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
-       """%(ExecDate,task_flag)
-      is_filter = True
+      select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',%s)) 
+      from %s.%s 
+      where etl_date='%s'
+        %s 
+        and request_type = '%s'
+      group by returns_account_id,%s
+      """%(task_flag,filter_column_name,filter_db_name,filter_table_name,ExecDate,filter_config,media_type,filter_column_name)
+      print("过滤sql：%s"%(filter_sql))
+      exit(0)
+      #os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
+      #etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
+      #columns = """advertiser_id,filter_id,flag"""
+      #load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
+      ###sql = """
+      ###      select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag
+      ###      from metadb.oe_account_interface a
+      ###      inner join metadb.oe_sync_filter_info b
+      ###      on a.account_id = b.advertiser_id
+      ###      where a.exec_date = '%s'
+      ###        and b.flag = '%s'
+      ###      group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
+      ### """%(ExecDate,task_flag)
   else:
       #处理维度表分支
       if int(is_report) == 0:
