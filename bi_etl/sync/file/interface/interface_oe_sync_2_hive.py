@@ -226,8 +226,6 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
            ParamJson["advertiser_ids"] = [int(data[0])]
        else:
            ParamJson["advertiser_id"] = int(data[0])
-       print(ParamJson,"###############################")
-       exit(0)
        celery_task_id = get_not_page_celery.delay(UrlPath=UrlPath, ParamJson=ParamJson,
                                                   ServiceCode=data[2], ReturnAccountId=data[0],
                                                   TaskFlag=TaskFlag,DataFileDir=DataFileDir,
