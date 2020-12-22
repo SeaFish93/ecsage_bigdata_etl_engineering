@@ -119,7 +119,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       group by returns_account_id,%s
       """%(task_flag,filter_column_name,filter_db_name,filter_table_name,ExecDate,filter_config,media_type,filter_time_sql,filter_column_name)
       print("过滤sql：%s"%(filter_sql))
-      os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
+      ok = os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
+      if ok != 0:
+          exit(1)
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
       columns = """advertiser_id,flag,filter_id"""
       load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
