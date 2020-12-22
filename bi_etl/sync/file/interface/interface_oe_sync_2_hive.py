@@ -92,6 +92,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   if TaskInfo[6] is not None and len(TaskInfo[6]) > 0 and TaskInfo[6] != "":
      param_json["start_date"] = ExecDate
      param_json["end_date"] = ExecDate
+  #设置查询filter_modify_time_name
+  if TaskInfo[8] is not None and len(TaskInfo[8]) > 0 and TaskInfo[8] != "":
+     param_json["filtering"]["%s" % (TaskInfo[8])] = ExecDate
   url_path = TaskInfo[4]
   filter_db_name = TaskInfo[21]
   filter_table_name = TaskInfo[22]
