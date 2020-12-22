@@ -44,6 +44,7 @@ def main(TaskInfo,Level="",**kwargs):
     source_db = TaskInfo[11]
     source_table = TaskInfo[12]
     key_columns = TaskInfo[19]
+    array_flag = TaskInfo[28]
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
@@ -64,7 +65,7 @@ def main(TaskInfo,Level="",**kwargs):
     elif Level == "ods":
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
-                       ExecDate=exec_date,ArrayFlag="",KeyColumns=key_columns)
+                       ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns)
     elif Level == "snap":
         get_ods_2_snap(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,
                        SourceDB=source_db,SourceTable=source_table,TargetDB=target_db,
@@ -298,7 +299,7 @@ def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",T
 def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",ArrayFlag="",KeyColumns="",SelectExcludeColumns=""):
     etl_ods_field_diff = get_ods_columns(HiveSession=HiveSession, BeelineSession=BeelineSession
                                          , SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
-                                         , IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=None,IsReplace="N")
+                                         , IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag,IsReplace="N")
     print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
     ok, get_ods_column = HiveSession.get_column_info(TargetDB, TargetTable)
     system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
