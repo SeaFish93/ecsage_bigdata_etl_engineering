@@ -101,6 +101,10 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   is_page = TaskInfo[25]
   media_type = TaskInfo[26]
   is_advertiser_list = TaskInfo[27]
+  filter_time = TaskInfo[29]
+  filter_time_sql = ""
+  if filter_time is not None and len(filter_time) > 0:
+      filter_time_sql = """ and %s >= '%s 00:00:00' and %s <= '%s 23:59:59' """%(filter_time,ExecDate,filter_time,ExecDate)
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
   #判断是否从列表过滤
@@ -111,8 +115,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       where etl_date='%s'
         %s 
         and request_type = '%s'
+        %s
       group by returns_account_id,%s
-      """%(task_flag,filter_column_name,filter_db_name,filter_table_name,ExecDate,filter_config,media_type,filter_column_name)
+      """%(task_flag,filter_column_name,filter_db_name,filter_table_name,ExecDate,filter_config,media_type,filter_column_name,filter_time_sql)
       print("过滤sql：%s"%(filter_sql))
       os.system("""spark-sql -S -e"%s"> %s"""%(filter_sql,tmp_data_task_file))
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
