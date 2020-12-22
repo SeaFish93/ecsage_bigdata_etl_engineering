@@ -1153,7 +1153,9 @@ def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",DbName="",TableName
        for file in exception_file_list:
            print(file,"##################################")
            load_data_mysql(AsyncAccountFile=file[0], DataFile=file[1],DbName=DbName,TableName=TableName, Columns=Columns)
-           os.system("""rm -f %s/%s"""%(file[0],file[1]))
+           status = os.system("""rm -f %s/%s"""%(file[0],file[1]))
+           if status != 0:
+              os.system("""rm -f %s/%s""" % (file[0], file[1]))
 
 def set_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",ExecDate="",LocalDir="",DataFile=""):
     target_file = os.listdir(LocalDir)
