@@ -99,6 +99,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   is_advertiser_list = TaskInfo[27]
   filter_time = TaskInfo[29]
   interface_filter_list = TaskInfo[30]
+  page_size = TaskInfo[31]
+  if page_size is None or len(str(page_size)) == 0 or page_size == 0:
+    page_size = 1000
   filter_time_sql = ""
   if filter_time is not None and len(filter_time) > 0:
       filter_time_sql = """ and %s >= '%s 00:00:00' and %s <= '%s 23:59:59' """%(filter_time,ExecDate,filter_time,ExecDate)
@@ -158,7 +161,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
                         DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=first_task_exception_file,
                         PageTaskFile=first_page_task_file, CeleryPageStatusFile=celery_first_page_status_file,TaskFlag=task_flag,
-                        Page=1,PageSize=1000
+                        Page=1,PageSize=page_size
                         )
     if is_report == 1:
       # 重试页数为0
@@ -181,7 +184,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
               set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
                                   DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,
                                   PageTaskFile=rerun_page_task_file, CeleryPageStatusFile=celery_rerun_page_status_file,
-                                  TaskFlag=task_flag, Page=1, PageSize=1000
+                                  TaskFlag=task_flag, Page=1, PageSize=page_size
                                   )
               ok, db_data = etl_md.get_all_rows(sql)
               if db_data is not None and len(db_data) > 0:
@@ -199,7 +202,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     ok, db_data = etl_md.get_all_rows(sql)
     set_other_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,
                         DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
-                        CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=1000)
+                        CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=page_size)
   else:
     #不分页
     set_not_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
