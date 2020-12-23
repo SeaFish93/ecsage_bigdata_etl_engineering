@@ -997,6 +997,17 @@ def get_celery_job_status(CeleryTaskId=""):
     status = set_task.status
     if status == "SUCCESS":
        return True
+    if status == "FAILURE":
+        msg = "celery队列执行失败！！！"
+        msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % ("", ""),
+                               BeginExecDate="",
+                               EndExecDate="",
+                               Status="Error",
+                               Log=msg,
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
     else:
        return False
 
