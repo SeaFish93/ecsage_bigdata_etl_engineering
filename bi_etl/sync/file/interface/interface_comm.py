@@ -608,13 +608,17 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     return remark
 
 #不翻页处理
-def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId=""):
+def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId=""):
     code = 1
     data = ""
     try:
-      token = get_oe_account_token(ServiceCode=ServiceCode)
-      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
       code = rsp_data["code"]
+      # token无效重试
+      if int(code) == 40105:
+          token = get_oe_account_token(ServiceCode=ServiceCode)
+          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+          code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
       if int(code) == 0:
@@ -629,7 +633,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile=
         code = 1
         data = "请求失败"
     if int(code) != 0:
-      os.system(""" echo "%s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,DataFileDir, "account_status.log", hostname))
+      os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,Token,DataFileDir, "account_status.log", hostname))
     return code
 
 #翻页处理

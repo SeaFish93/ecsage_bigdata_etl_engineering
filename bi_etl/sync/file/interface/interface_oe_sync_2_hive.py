@@ -134,16 +134,27 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
       columns = """advertiser_id,flag,filter_id"""
       load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
-      sql = """
-            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag
+      if int(is_report) == 1:
+        sql = """
+            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token_data
             from metadb.oe_account_interface a
             inner join metadb.oe_sync_filter_info b
             on a.account_id = b.advertiser_id
             where a.exec_date = '%s'
               and b.flag = '%s'
               and a.media_type = '%s'
-            group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag
-       """%(ExecDate,task_flag,media_type)
+            group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token_data
+        """%(ExecDate,task_flag,media_type)
+      else:
+        sql = """
+             select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token
+             from metadb.oe_service_account a
+             inner join metadb.oe_sync_filter_info b
+             on a.account_id = b.advertiser_id
+             where b.flag = '%s'
+               and a.media_type = '%s'
+             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token
+        """ % (ExecDate, task_flag, media_type)
   else:
       #处理维度表分支
       if int(is_report) == 0:
@@ -235,7 +246,7 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
            ParamJson["advertiser_ids"] = [int(data[0])]
        else:
            ParamJson["advertiser_id"] = int(data[0])
-       celery_task_id = get_not_page_celery.delay(UrlPath=UrlPath, ParamJson=ParamJson,
+       celery_task_id = get_not_page_celery.delay(UrlPath=UrlPath, ParamJson=ParamJson,Token=data[5],
                                                   ServiceCode=data[2], ReturnAccountId=data[0],
                                                   TaskFlag=TaskFlag,DataFileDir=DataFileDir,
                                                   DataFile=DataFile, TaskExceptionFile=TaskExceptionFile
@@ -250,7 +261,7 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
     rerun_exception_tasks_pages(DataFileDir=DataFileDir, ExceptionFile=TaskExceptionFile, IsPage="N",
                                 DataFile=DataFile, PageTaskFile="/tmp/loglog.log", CeleryTaskDataFile=CeleryPageStatusFile,
                                 InterfaceFlag=TaskFlag,
-                                Columns="interface_url,interface_param_json,service_code,account_id,interface_flag"
+                                Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
                                 )
 
 #处理首页
@@ -1229,7 +1240,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
                                                      TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile
                                                     )
              else:
-                status_id = get_not_page_celery.delay(UrlPath=data[0], ParamJson=param_json,
+                status_id = get_not_page_celery.delay(UrlPath=data[0], ParamJson=param_json,Token=data[5],
                                                       ServiceCode=data[2], ReturnAccountId=data[3],
                                                       TaskFlag=data[4], DataFileDir=DataFileDir,
                                                       DataFile=DataFile, TaskExceptionFile=ExceptionFile
