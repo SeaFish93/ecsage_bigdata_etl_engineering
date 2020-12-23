@@ -86,18 +86,20 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         #print("获取etl_mid的样本数据" + data[0][0])
         if IsReplace == "N":
             data_str = return_Str
-            data_str2 = json.loads(data_str)
-            data = str(data_str2['data'])
-            if """'list'""" in data:
-                data_str2 = data_str2['data']
-                print("========================")
-            else:
-              if "list" in str(type(data)):
-                 data_str2 = data_str2['data'][0]
-                 print("------------------------")
-              else:
-                 data_str2 = data_str2['data']
-                 print("+++++++++++++++++++")
+            data_str2 = json.loads((json.loads(json.dumps(data_str))))
+            data = data_str2['data']
+            if isinstance(data,list):
+                data_str2=data[0]
+                print("+===================++")
+            #if """'list'""" in data:
+            #    data_str2 = data_str2['data']
+            #else:
+            #  if "list" in str(type(data)):
+            #     data_str2 = data_str2['data'][0]
+            #  else:
+            #     data_str2 = data_str2['data']
+
+
         else:
             data_str = return_Str[return_Str.find(split_flag) + 3:]
             data_str2 = json.loads(data_str)
