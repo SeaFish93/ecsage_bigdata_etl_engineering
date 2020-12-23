@@ -186,11 +186,13 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
             file_num = file_num + 1
 
     error_file_size = os.path.getsize(size_error_file)
-    if int(error_file_size) > 0 and EtlMdSession is not None and len(EtlMdSession) > 0:
+    if int(error_file_size) > 0 and EtlMdSession is not None :
         insert_sql = """
             load data local infile '%s' into table metadb.monitor_collect_file_log fields terminated by ' ' lines terminated by '\\n' (target_file_dir,target_file,target_file_size)
         """ % (size_error_file)
         print(insert_sql)
+        if len(EtlMdSession) > 0:#故意错误代码
+            print("利用报错使其重跑！！！并记录到Mysql！")
        #etl_md.local_file_to_mysql(sql=insert_sql)
 
     if len(DataFileList) != file_num:

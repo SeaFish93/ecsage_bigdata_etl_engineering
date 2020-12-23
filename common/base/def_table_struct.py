@@ -111,6 +111,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
                     all_pars_list.append(keys + "." + key)
             else:
                 all_pars_list.append(keys)
+        print(all_pars_list)
     else:
         msg = "【etl_mid库】中，%s的%s接入数据可能存在异常" % (ExecDate,TargetTable)
         print(msg)
@@ -118,17 +119,22 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
     return ','.join(all_pars_list)
 
 def adj_snap_structure(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
-                        TargetDB="", TargetTable="",CustomSetParameter=""):
+                        TargetDB="", TargetTable="",CustomSetParameter="",IsReport=""):
     # 获取ods表字段
     ok, src_table_structure = HiveSession.get_column_info(SourceDB, SourceTable)
     tgt_tb_create = [] #收集目标表结构语句
     src_tb_columns= [] #收集源表表结构字段
+    IsTargetPartition = "Y" if IsReport==1 else "N"
     for columns in src_table_structure:
         create_col = """,`%s`  %s comment'%s' \n""" % (columns[0], columns[1], columns[2])
-        tgt_tb_create.append(create_col)
-        src_tb_columns.append(columns[0])#直到etl_date为止，Snap没分区
         if columns[0] == "etl_date":
+            if IsTargetPartition=="N" :#默认非日报=不分区
+                tgt_tb_create.append(create_col)
+                src_tb_columns.append(columns[0])
             break;
+        else:
+            tgt_tb_create.append(create_col)
+            src_tb_columns.append(columns[0])
     tgt_tb_create_str = ''.join(tgt_tb_create).replace(",", "", 1)
     #print(tgt_tb_create_str)
 
@@ -148,16 +154,28 @@ def adj_snap_structure(HiveSession="",BeelineSession="",SourceDB="",SourceTable=
             if diff_src_tgt_columns:
                 for diff_src_tgt_column in diff_src_tgt_columns:
                     if diff_src_tgt_column not in tgt_tb_columns:
-                        alter_table_sql = """alter table %s.%s add columns(`%s` %s)""" % (TargetDB, TargetTable, diff_src_tgt_column, "String")
+                        if IsTargetPartition == "Y":
+                            alter_table_sql = """alter table %s.%s add columns(`%s` %s) CASCADE""" % (TargetDB, TargetTable, diff_src_tgt_column, "String")
+                        else:
+                            alter_table_sql = """alter table %s.%s add columns(`%s` %s)""" % (TargetDB, TargetTable, diff_src_tgt_column, "String")
                         HiveSession.execute_sql(alter_table_sql)
         else:
-            create_snap_sql = """
-                   create table if not exists %s.%s(
-                     %s
-                   )
-                   row format delimited fields terminated by '\\001' 
-                   stored as parquet
-                   """ % (TargetDB, TargetTable, tgt_tb_create_str)
+            if IsTargetPartition=="N":
+                create_snap_sql = """
+                       create table if not exists %s.%s(
+                         %s
+                       )
+                       row format delimited fields terminated by '\\001' 
+                       stored as parquet
+                       """ % (TargetDB, TargetTable, tgt_tb_create_str)
+            else:
+                create_snap_sql = """
+                                       create table if not exists %s.%s(
+                                         %s
+                                       )partitioned by(etl_date string)
+                                       row format delimited fields terminated by '\\001' 
+                                       stored as parquet
+                                       """ % (TargetDB, TargetTable, tgt_tb_create_str)
             HiveSession.execute_sql(create_snap_sql)
     else:
         msg = "语句：查询Snap表存在与否出现问题！！" % (TargetDB, TargetTable)

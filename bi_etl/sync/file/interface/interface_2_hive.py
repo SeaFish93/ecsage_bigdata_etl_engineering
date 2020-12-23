@@ -206,6 +206,8 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
                   where rn >= %s and rn <= %s
                """ % (media_type,table,where,int(data_json["mt"]),group_by,int(account_run_num), int(account_avg))
            ok, accounts_list = select_session.get_all_rows(account_sql)
+           #data_json["ec_tn"]=airflow.task
+           #data_json["ec_src"]="OE" if InterfaceModule == "oceanengine" else "TC"
            #提交请求
            interface_url = """http://%s%s"""%(host,InterfaceUrl)
            file = request_commit_account(AccountData=accounts_list, Num=n, InterfaceUrl=interface_url, ExecDate=ExecDate, FileDir=file_dir,
@@ -615,14 +617,21 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                         TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate="",CustomSetParameter=""):
    adj_snap_structure(HiveSession=HiveSession,BeelineSession=BeelineSession,SourceDB=SourceDB,SourceTable=SourceTable,
-                        TargetDB=TargetDB, TargetTable=TargetTable,CustomSetParameter=CustomSetParameter)
-   #设置snap查询字段
-   snap_columns = ""
+                        TargetDB=TargetDB, TargetTable=TargetTable,CustomSetParameter=CustomSetParameter,IsReport=IsReport)
    # 获取snap表字段
    ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
+
+   snap_columns_tmp_0 = []  # 日报一定得分区，同时排除分区字段etl_date
+   snap_columns_tmp_1 = []  # 日报一定得分区，同时排除分区字段etl_date
    for column in snap_table_columns:
-       snap_columns = snap_columns + "," + "a.`%s`" % (column[0])
-   snap_columns = snap_columns.replace(",", "", 1)
+       snap_columns_tmp_0.append("a.`%s`" % (column[0]))
+       if column[0] != 'etl_date':
+           snap_columns_tmp_1.append("a.`%s`" % (column[0]))
+       else:
+           break;
+   snap_columns = ",".join(snap_columns_tmp_0)
+   snap_columns_1 = ",".join(snap_columns_tmp_1)
+
 
    if IsReport == 0:
        is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB,
@@ -654,15 +663,13 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
             key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
             )
    else:
+
        sql = """
         insert overwrite table %s.%s
-        select %s
-        from %s.%s a
-        where etl_date != '%s'
-           union all
+        partition(etl_date = '%s')
         select %s
         from %s.%s a where etl_date = '%s' 
-       """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,ExecDate,snap_columns,SourceDB,SourceTable,ExecDate)
+       """%(TargetDB,TargetTable,ExecDate,snap_columns_1,SourceDB,SourceTable,ExecDate)
    ok = BeelineSession.execute_sql(sql,CustomSetParameter)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
