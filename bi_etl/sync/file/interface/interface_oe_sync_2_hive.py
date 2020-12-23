@@ -21,6 +21,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure as get_ods_columns
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import os
 import time
@@ -147,10 +148,10 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       #处理维度表分支
       if int(is_report) == 0:
        sql = """
-            select a.account_id, a.media_type, a.service_code,'' as id,'%s'
+            select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token
             from metadb.oe_service_account a
             where a.media_type = '%s'
-            group by a.account_id, a.media_type, a.service_code
+            group by a.account_id, a.media_type, a.service_code,a.token
            -- limit 5000
        """%(task_flag,media_type)
   ok,db_data = etl_md.get_all_rows(sql)
@@ -259,10 +260,12 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
        ParamJson["page"] = int(Page)
        ParamJson["page_size"] = int(PageSize)
        service_code = data[2]
+       token = data[5]
        celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
-                                                    DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
-                                                    TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
-                                                    TaskExceptionFile=TaskExceptionFile)
+                                               DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
+                                               TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
+                                               TaskExceptionFile=TaskExceptionFile,Token=token
+                                               )
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
@@ -291,10 +294,12 @@ def set_other_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
            ParamJson["page"] = int(pages)
            ParamJson["page_size"] = int(PageSize)
            service_code = data[2]
+           token = data[5]
            celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
                                                     DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                     TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
-                                                    TaskExceptionFile=TaskExceptionFile)
+                                                    TaskExceptionFile=TaskExceptionFile,Token=token
+                                                   )
            os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
@@ -577,6 +582,19 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
          set_exit(LevelStatu="red", MSG=msg)
      columns = """service_id,service_code,account_id,media_type"""
      load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file, DbName="metadb",TableName="oe_service_account", Columns=columns)
+     #获取token
+     sql = """
+        select  service_code
+        from metadb.oe_service_account a
+        group by service_code
+     """
+     ok,token_data = etl_md.get_all_rows(sql)
+     for service_code in token_data:
+        token = get_oe_account_token(ServiceCode=service_code[0])
+        update_sql = """
+         update metadb.oe_service_account set token='%s' where service_code = '%s'
+        """%(token,service_code[0])
+        etl_md.execute_sql(update_sql)
 
 #广告创意
 def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
