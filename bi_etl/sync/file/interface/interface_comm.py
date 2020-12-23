@@ -645,6 +645,8 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",
       if int(code) == 0:
          test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
          test_log.info(json.dumps(rsp_data))
+         test1 = LogManager("""test1-%s"""%(hostname)).get_logger_and_add_handlers(2,log_path="/tmp",log_filename="""test1-%s.log""" % (hostname))
+         test1.info(json.dumps(rsp_data))
          page = rsp_data["data"]["page_info"]["total_page"]
          remark = "正常"
          if page == 0:
