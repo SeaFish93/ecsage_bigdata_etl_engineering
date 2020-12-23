@@ -134,7 +134,6 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
       columns = """advertiser_id,flag,filter_id"""
       load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
-      exit(0)
       if int(is_report) == 1:
         sql = """
             select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token_data
@@ -167,6 +166,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
            -- limit 5000
        """%(task_flag,media_type)
   ok,db_data = etl_md.get_all_rows(sql)
+  print(ok)
+  exit(0)
   #处理翻页
   if int(is_page) == 1:
     print("处理分页逻辑！！！")
