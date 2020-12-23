@@ -136,6 +136,10 @@ class EtlMetaDataSQL():
   ,is_page
   ,media_type
   ,is_advertiser_list
+  ,array_flag
+  ,filter_time
+  ,interface_filter_list
+  ,page_size
   ,`create_user`
   ,`update_user`
   ,`create_time`

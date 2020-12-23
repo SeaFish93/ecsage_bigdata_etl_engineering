@@ -633,13 +633,20 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile=
     return code
 
 #翻页处理
-def set_pages(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile=""):
+def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile=""):
     page = 0
     data = ""
+    set_run = True
+    n = 0
+    token = None
     try:
-      token = get_oe_account_token(ServiceCode=ServiceCode)
-      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
       code = rsp_data["code"]
+      #token无效重试
+      if int(code) == 40105:
+          token = get_oe_account_token(ServiceCode=ServiceCode)
+          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+          code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
       if int(code) == 0:
@@ -660,10 +667,10 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",
     except Exception as e:
         remark = "异常"
         data = "请求失败"
-    status = os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag, PageTaskFile,hostname))
+    status = os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag,Token, PageTaskFile,hostname))
     if int(status) != 0:
         for i in range(10):
-            status = os.system("""echo "%s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag, PageTaskFile,hostname))
+            status = os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag,Token, PageTaskFile,hostname))
             if int(status) == 0:
                 break;
     return remark
