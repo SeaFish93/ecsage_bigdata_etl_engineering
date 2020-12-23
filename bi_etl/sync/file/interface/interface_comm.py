@@ -653,6 +653,8 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
+      #is_exist = os.popen("grep -o '202012232333130100100231620B363864' %s"%("data_task_file_1_2020-12-23_20_52_55-bd59-node.log"))
+      #is_exist_value = is_exist.read().split()
       if int(code) == 0:
          test_log1 = LogManager("""%s-%s""" % ("testlocaldata", hostname)).get_logger_and_add_handlers(2,log_path="/tmp",log_filename="""%s-%s.%s""" % ("testlocaldata",hostname,"log"))
          test_log1.info(json.dumps(rsp_data))
