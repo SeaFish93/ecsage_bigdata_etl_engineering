@@ -279,7 +279,7 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
                                 InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
                                )
     # 保存MySQL
-    columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
+    columns = """page_num,account_id,service_code,remark,data,request_filter,flag,token"""
     load_data_mysql(AsyncAccountFile=DataFileDir, DataFile=PageTaskFile, DbName="metadb",
                     TableName="oe_sync_page_interface", Columns=columns)
 
