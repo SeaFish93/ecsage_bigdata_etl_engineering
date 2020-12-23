@@ -154,7 +154,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
              where b.flag = '%s'
                and a.media_type = '%s'
              group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token
-        """ % (ExecDate, task_flag, media_type)
+        """ % (task_flag, media_type)
   else:
       #处理维度表分支
       if int(is_report) == 0:
