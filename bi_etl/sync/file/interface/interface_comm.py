@@ -642,6 +642,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     try:
       rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
       code = rsp_data["code"]
+      #token无效重试
       if int(code) == 40105:
           token = get_oe_account_token(ServiceCode=ServiceCode)
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
