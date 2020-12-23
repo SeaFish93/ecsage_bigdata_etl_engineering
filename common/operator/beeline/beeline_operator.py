@@ -29,7 +29,7 @@ class BeelineNoSqlDB(BaseDB):
         exec_sql = config_param + sql
         (res, output) = subprocess.getstatusoutput("""%s --showHeader="false" --outputformat="tsv2" -e "%s">%s"""%(self.conn, exec_sql,file_name))
         if res != 0:
-            print("beeline execute_sql_result_2_local_file sql Error:" + sql)
+            print("beeline execute_sql_result_2_local_file sql Error:" + exec_sql)
             print("错误日志：%s" % output)
             return False
         else:
