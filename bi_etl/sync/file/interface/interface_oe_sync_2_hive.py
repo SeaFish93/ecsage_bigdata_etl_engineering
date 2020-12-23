@@ -47,6 +47,7 @@ def main(TaskInfo,Level="",**kwargs):
     key_columns = TaskInfo[19]
     array_flag = TaskInfo[28]
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
+    hive_session.execute_sql("select 1")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
        if TaskInfo[0] == "metadb_oe_service_account":
