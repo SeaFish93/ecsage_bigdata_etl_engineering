@@ -91,6 +91,9 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
             if isinstance(data,list):
                 data_str2=data[0]
                 print("+===================++")
+            else:
+                data_str2=data_str2['data']
+                print("+++++++++++++++++++++++")
             #if """'list'""" in data:
             #    data_str2 = data_str2['data']
             #else:
