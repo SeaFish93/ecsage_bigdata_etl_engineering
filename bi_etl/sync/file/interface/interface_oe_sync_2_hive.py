@@ -169,13 +169,13 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       n = 3
       for i in range(n):
           sql = """
-                select account_id, '222' media_type, service_code,request_filter,flag
+                select account_id, '222' media_type, service_code,request_filter,flag,token
                 from metadb.oe_sync_page_interface a
                 where page_num = 0
                   and remark = '正常'
                   and data like '%s'
                   and flag = '%s'
-               group by account_id, service_code,request_filter,request_filter,flag
+               group by account_id, service_code,request_filter,request_filter,flag,token
                """ % ("%OK%", task_flag)
           ok, db_data = etl_md.get_all_rows(sql)
           if db_data is not None and len(db_data) > 0:
@@ -194,11 +194,11 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                   break
     #处理其它分页
     sql = """
-        select a.account_id, a.media_type as media_type, a.service_code,a.page_num,a.request_filter
+        select a.account_id, a.media_type as media_type, a.service_code,a.page_num,a.request_filter,a.token
         from metadb.oe_sync_page_interface a 
         where page_num > 1
           and flag = '%s'
-        group by a.account_id,  a.service_code,a.page_num,a.request_filter,a.media_type
+        group by a.account_id,  a.service_code,a.page_num,a.request_filter,a.media_type,a.token
     """ % (task_flag)
     ok, db_data = etl_md.get_all_rows(sql)
     set_other_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,
@@ -276,7 +276,7 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
     #重试异常
     rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
                                 DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
-                                InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag"
+                                InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
                                )
     # 保存MySQL
     columns = """page_num,account_id,service_code,remark,data,request_filter,flag"""
@@ -309,9 +309,9 @@ def set_other_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
     print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     #重试异常
     rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
-                                    DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
-                                    InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag"
-                                    )
+                                DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
+                                InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
+                              )
 
 #落地数据至snap
 def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",TaskInfo="",ExecDate=""):
@@ -1224,7 +1224,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
            for data in datas:
              param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
              if IsPage == "Y":
-                status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],
+                status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
                                                      DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
                                                      TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile
                                                     )
