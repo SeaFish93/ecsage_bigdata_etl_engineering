@@ -20,6 +20,21 @@ class BeelineNoSqlDB(BaseDB):
         print(self.conn,"#########################################=======================")
         # self.conn = "/usr/bin/beeline -u 'jdbc:hive2://%s/' -n %s " % (self.metastore_uris, self.user)
 
+    #hive数据落地本地
+    def execute_sql_result_2_local_file(self,sql="",file_name="",task_name=""):
+        config_param = """set mapred.task.timeout=1800000;
+                          set mapreduce.map.memory.mb=2048;
+                          set hive.auto.convert.join=false;
+          """
+        exec_sql = config_param + sql
+        (res, output) = subprocess.getstatusoutput("""%s --showHeader="false" --outputformat="tsv2" -e "%s">%s"""%(self.conn, exec_sql,file_name))
+        if res != 0:
+            print("beeline execute_sql_result_2_local_file sql Error:" + sql)
+            print("错误日志：%s" % output)
+            return False
+        else:
+            return True
+
     def execute_sql(self, sql,custom_set_parameter="", task_name=""):
         t = time.time()
         sql_file = "/tmp/tmp_%s_%s.sql" % (task_name, str(t))
