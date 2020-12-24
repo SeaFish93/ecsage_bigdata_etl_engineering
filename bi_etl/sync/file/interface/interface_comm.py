@@ -767,7 +767,7 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                                             ,request_type
                                      from %s.%s a
                                      where a.etl_date = '%s'
-                                       and %s
+                                        %s
                                     ) a
                                 where data_colums is not null
                                     and data_colums  <> '[]'
