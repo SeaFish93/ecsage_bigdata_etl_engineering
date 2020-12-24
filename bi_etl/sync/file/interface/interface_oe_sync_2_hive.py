@@ -230,9 +230,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
           data_task_file_list.append("%s/%s"%(local_dir, files))
   #数据落地至etl_mid
-  load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
-                      TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
-                      )
+  ######load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
+  ######                    TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
+  ######                    )
 
 #处理不分页
 def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",IsAdvertiserList="",CeleryPageStatusFile="",TaskFlag="",InterfaceFilterList=""):
