@@ -321,20 +321,20 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
 
 #处理不分页
 @app.task(rate_limit='1000/m')
-def get_not_page(UrlPath="",ParamJson="",ServiceCode="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile=""):
+def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile=""):
     set_true = True
     n = 0
     while set_true:
-      code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId)
+      code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId)
       if int(code) == 0:
           set_true = False
       else:
           if n > 2:
             print("处理不分页异常：%s,%s"%(ReturnAccountId,ServiceCode))
-            status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+            status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
             if int(status) != 0:
-                for i in range(10):
-                  status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+                for i in range(100):
+                  status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
                   if int(status) == 0:
                       break;
             set_true = False
@@ -344,11 +344,11 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",ReturnAccountId="",TaskF
 
 #处理分页
 @app.task(rate_limit='1000/m')
-def get_pages(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile=""):
+def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile=""):
     set_true = True
     n = 0
     while set_true:
-      remark = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,
+      remark = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
                       ServiceCode=ServiceCode,DataFileDir=DataFileDir,
                       DataFile=DataFile,ReturnAccountId=ReturnAccountId,
                       TaskFlag=TaskFlag,PageTaskFile=PageTaskFile
@@ -358,10 +358,10 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",
       else:
           if n > 2:
             print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
-            status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag, TaskExceptionFile + ".%s" % hostname))
+            status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
             if int(status) != 0:
-                for i in range(10):
-                  status = os.system("""echo "%s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,TaskExceptionFile + ".%s" % hostname))
+                for i in range(100):
+                  status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,TaskExceptionFile + ".%s" % hostname))
                   if int(status) == 0:
                       break;
             set_true = False

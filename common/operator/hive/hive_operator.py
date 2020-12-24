@@ -45,7 +45,8 @@ class HiveNoSqlDB(BaseDB):
 
     def __del__(self):
         print("HiveNoSqlDB %s __del__ : do cursor.close()" % self.host)
-        self.cursor.close()
+        if self.cursor is not None:
+           self.cursor.close()
         print("HiveNoSqlDB %s __del__ : do conn.close()" % self.host)
         self.conn.close()
 
