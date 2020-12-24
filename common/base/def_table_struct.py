@@ -86,6 +86,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
         print(return_Str)
         #print("获取etl_mid的样本数据" + data[0][0])
         if IsReplace == "N":
+            print("------------------------------")
             data_str = return_Str
             data_str2 = json.loads((json.loads(json.dumps(data_str))))
             data = data_str2['data']
