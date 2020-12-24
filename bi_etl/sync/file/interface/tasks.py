@@ -333,7 +333,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
             print("处理不分页异常：%s,%s"%(ReturnAccountId,ServiceCode))
             status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
             if int(status) != 0:
-                for i in range(10):
+                for i in range(100):
                   status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
                   if int(status) == 0:
                       break;
