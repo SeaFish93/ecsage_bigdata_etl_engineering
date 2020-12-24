@@ -19,10 +19,12 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages as get_pages_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure as get_ods_columns
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
+
 import os
 import time
 import json
@@ -59,7 +61,7 @@ def main(TaskInfo,Level="",**kwargs):
     elif Level == "ods":
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
-                       ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns)
+                       ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns,IsReplace="N",DagId=airflow.dag,TaskId=airflow.task)
     elif Level == "snap":
         get_ods_2_snap(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,
                        SourceDB=source_db,SourceTable=source_table,TargetDB=target_db,
@@ -343,7 +345,7 @@ def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",T
                          SourceDB=source_db,SourceTable=source_table,TargetDB=target_db, TargetTable=target_table, IsReport=0,
                          KeyColumns=key_columns, ExecDate=ExecDate)
 
-def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",ArrayFlag="",KeyColumns="",SelectExcludeColumns=""):
+def get_data_2_ods_tmp(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",ArrayFlag="",KeyColumns="",SelectExcludeColumns=""):
     etl_ods_field_diff = get_ods_columns(HiveSession=HiveSession, BeelineSession=BeelineSession
                                          , SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
                                          , IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag,IsReplace="N")
