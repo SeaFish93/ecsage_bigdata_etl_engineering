@@ -164,7 +164,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             where a.media_type = '%s'
           --   and a.account_id in ('1675330446032899','1682305992183822')
             group by a.account_id, a.media_type, a.service_code,a.token
-           -- limit 5000
+            limit 1
        """%(task_flag,media_type)
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
