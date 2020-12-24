@@ -162,7 +162,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token
             from metadb.oe_service_account a
             where a.media_type = '%s'
-             and a.account_id in ('1675330446032899','1682305992183822')
+          --   and a.account_id in ('1675330446032899','1682305992183822')
             group by a.account_id, a.media_type, a.service_code,a.token
            -- limit 5000
        """%(task_flag,media_type)
@@ -230,9 +230,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
           data_task_file_list.append("%s/%s"%(local_dir, files))
   #数据落地至etl_mid
-  ######load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
-  ######                    TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
-  ######                    )
+  load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
+                      TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
+                    )
 
 #处理不分页
 def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",IsAdvertiserList="",CeleryPageStatusFile="",TaskFlag="",InterfaceFilterList=""):
