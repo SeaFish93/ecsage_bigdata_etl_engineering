@@ -126,7 +126,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     #获取请求域名个数
     host_count_sql = """
          select count(1)
-         from metadb.request_hostname_interface a
+         from metadb.request_hostname_interface_tmp a
     """
     ok, host_count = etl_md.get_all_rows(host_count_sql)
     if IsReport == 1:
@@ -168,7 +168,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
            host_sql = """
               select hostname
               from(select hostname,@row_num:=@row_num+1 as rn
-                   from metadb.request_hostname_interface a,(select @row_num:=0) r
+                   from metadb.request_hostname_interface_tmp a,(select @row_num:=0) r
                   ) tmp
               where rn = %s
            """%(n)
