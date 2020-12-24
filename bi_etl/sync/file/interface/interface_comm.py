@@ -653,20 +653,28 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
-      #is_exist = os.popen("grep -o '202012232333130100100231620B363864' %s"%("data_task_file_1_2020-12-23_20_52_55-bd59-node.log"))
-      #is_exist_value = is_exist.read().split()
+      request_id = rsp_data["request_id"]
       if int(code) == 0:
-         test_log1 = LogManager("""%s-%s""" % ("testlocaldata", hostname)).get_logger_and_add_handlers(2,log_path="/tmp",log_filename="""%s-%s.%s""" % ("testlocaldata",hostname,"log"))
-         test_log1.info(json.dumps(rsp_data))
-         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
-         test_log.info(json.dumps(rsp_data))
-         #if
+         file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
+         while set_run:
+           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
+           test_log.info(json.dumps(rsp_data))
+           is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,DataFileDir,file_name))
+           is_exist_value = is_exist.read().split()
+           if is_exist_value is not None and len(is_exist_value) > 0:
+               set_run = False
+               remark = "正常"
+           else:
+               if n > 10:
+                  remark = "异常"
+                  data = "写入日志失败"
+                  set_run = False
+               else:
+                  time.sleep(2)
+           n = n + 1
          page = rsp_data["data"]["page_info"]["total_page"]
-         remark = "正常"
          if page == 0:
             data = str(rsp_data).replace(" ", "")
-         else:
-            data = ""
       elif int(code) in [40002, 40105, 40104]:
           remark = "正常"
           data = str(rsp_data).replace(" ", "")
