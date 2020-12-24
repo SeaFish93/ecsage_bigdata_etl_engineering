@@ -608,28 +608,55 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     return remark
 
 #不翻页处理
-def set_not_page(UrlPath="",ParamJson="",ServiceCode="",DataFileDir="",DataFile="",ReturnAccountId=""):
+def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId=""):
     code = 1
     data = ""
+    set_run = True
+    n = 0
     try:
-      token = get_oe_account_token(ServiceCode=ServiceCode)
-      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
       code = rsp_data["code"]
+      # token无效重试
+      if int(code) == 40105:
+          token = get_oe_account_token(ServiceCode=ServiceCode)
+          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+          code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
+      request_id = rsp_data["request_id"]
       if int(code) == 0:
-          test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
+        file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
+        while set_run:
+          test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
           test_log.info(json.dumps(rsp_data))
+          is_exist = os.popen("grep -o '%s' %s/%s" % (request_id, DataFileDir, file_name))
+          is_exist_value = is_exist.read().split()
+          if is_exist_value is not None and len(is_exist_value) > 0:
+              set_run = False
+          else:
+              if n > 10:
+                  code = 1
+                  set_run = False
+                  data = "写入日志失败"
+              else:
+                  time.sleep(2)
+          n = n + 1
       elif int(code) in [40002, 40105, 40104]:
           code = 0
+          data = str(rsp_data).replace(" ", "")
       else:
           code = 1
-      data = str(rsp_data).replace(" ","")
+          data = str(rsp_data).replace(" ","")
     except Exception as e:
         code = 1
         data = "请求失败"
     if int(code) != 0:
-      os.system(""" echo "%s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,DataFileDir, "account_status.log", hostname))
+      status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,Token,DataFileDir, "account_status.log", hostname))
+      if int(status) != 0:
+       for i in range(10):
+        status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+        if int(status) == 0:
+            break;
     return code
 
 #翻页处理
@@ -649,15 +676,28 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
+      request_id = rsp_data["request_id"]
       if int(code) == 0:
-         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
-         test_log.info(json.dumps(rsp_data))
+         file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
+         while set_run:
+           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
+           test_log.info(json.dumps(rsp_data))
+           is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,DataFileDir,file_name))
+           is_exist_value = is_exist.read().split()
+           if is_exist_value is not None and len(is_exist_value) > 0:
+               set_run = False
+               remark = "正常"
+           else:
+               if n > 10:
+                  remark = "异常"
+                  data = "写入日志失败"
+                  set_run = False
+               else:
+                  time.sleep(2)
+           n = n + 1
          page = rsp_data["data"]["page_info"]["total_page"]
-         remark = "正常"
          if page == 0:
             data = str(rsp_data).replace(" ", "")
-         else:
-            data = ""
       elif int(code) in [40002, 40105, 40104]:
           remark = "正常"
           data = str(rsp_data).replace(" ", "")
@@ -667,10 +707,17 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     except Exception as e:
         remark = "异常"
         data = "请求失败"
-    status = os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag,Token, PageTaskFile,hostname))
-    if int(status) != 0:
-        for i in range(10):
-            status = os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag,Token, PageTaskFile,hostname))
-            if int(status) == 0:
-                break;
+    set_run = True
+    n = 0
+    while set_run:
+      status = os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag,Token, PageTaskFile,hostname))
+      if int(status) == 0:
+         set_run = False
+      else:
+         if n > 10:
+           remark = "异常"
+           set_run = False
+         else:
+           time.sleep(2)
+      n = n + 1
     return remark
