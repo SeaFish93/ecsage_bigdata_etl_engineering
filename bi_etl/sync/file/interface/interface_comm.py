@@ -684,7 +684,7 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
     etl_ods_field_diff = def_ods_structure(HiveSession=HiveSession, BeelineSession=BeelineSession
                                            ,SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
                                            ,IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag
-                                           ,IsReplace="N")
+                                           ,IsReplace=IsReplace)
     print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
     ok, get_ods_column = HiveSession.get_column_info(TargetDB, TargetTable)
     system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
