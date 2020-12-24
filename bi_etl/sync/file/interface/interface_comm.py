@@ -684,10 +684,17 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     except Exception as e:
         remark = "异常"
         data = "请求失败"
-    status = os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag,Token, PageTaskFile,hostname))
-    if int(status) != 0:
-        for i in range(10):
-            status = os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag,Token, PageTaskFile,hostname))
-            if int(status) == 0:
-                break;
+    set_run = True
+    n = 0
+    while set_run:
+      status = os.system("""echo "%s %s %s %s %s %s %s %s">>%s.%s""" % (page, ReturnAccountId, ServiceCode, remark, data, str(ParamJson).replace(" ",""), TaskFlag,Token, PageTaskFile,hostname))
+      if int(status) == 0:
+         set_run = False
+      else:
+         if n > 10:
+           remark = "异常"
+           set_run = False
+         else:
+           time.sleep(2)
+      n = n + 1
     return remark
