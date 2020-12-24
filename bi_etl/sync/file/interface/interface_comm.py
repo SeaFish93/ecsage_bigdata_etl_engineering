@@ -724,7 +724,7 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
         if IsReplace == "Y":
             regexp_extract = """concat(concat('[',get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data')),']') as data_colums"""
         else:
-            regexp_extract = """concat(concat('[',get_json_object(a.request_data,'$.data')),']') as data_colums"""
+            regexp_extract = """concat(concat('[',regexp_replace(get_json_object(a.request_data,'$.data'),'^\\\\[|\\\\]$','')),']'),) as data_colums"""
     if IsReplace == "Y":
         return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
         returns_account_id = """trim(get_json_object(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}## )',1),'##',''),' ',''),'$.accountId')) as returns_account_id"""
