@@ -162,7 +162,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token
             from metadb.oe_service_account a
             where a.media_type = '%s'
-            --  and a.account_id = '1668280358806536'
+             and a.account_id in ('1675330446032899','1682305992183822')
             group by a.account_id, a.media_type, a.service_code,a.token
            -- limit 5000
        """%(task_flag,media_type)
