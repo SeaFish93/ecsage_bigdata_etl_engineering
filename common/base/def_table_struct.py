@@ -83,6 +83,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
     if len(data)>0:
         split_flag = """## {"""
         return_Str= data[0][0]
+        print(return_Str)
         #print("获取etl_mid的样本数据" + data[0][0])
         if IsReplace == "N":
             data_str = return_Str
@@ -98,6 +99,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
             data_str = return_Str[return_Str.find(split_flag) + 3:]
             data_str2 = json.loads(data_str)
             data_str2 = data_str2['data']
+            print(data_str)
         if ArrayFlag is not None and len(ArrayFlag) > 0:
             data_str3 = data_str2[ArrayFlag][0]
         else:
