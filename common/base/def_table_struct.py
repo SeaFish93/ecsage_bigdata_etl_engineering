@@ -83,7 +83,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
     if len(data)>0:
         split_flag = """## {"""
         return_Str= data[0][0]
-        print(return_Str)
+        #print(return_Str)
         #print("获取etl_mid的样本数据" + data[0][0])
         if IsReplace == "N":
             print("------------------------------")
