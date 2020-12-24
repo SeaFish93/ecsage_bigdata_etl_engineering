@@ -7,9 +7,10 @@
 
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 
-etl_md = EtlMetadata()
+#etl_md = EtlMetadata()
 
 def sensitive_column(platform,db, tb, column):
+    etl_md = EtlMetadata()
     # 对从ods导入到snap的敏感数据做md5加密
     if db in etl_md.get_sensitive_column():
         if tb in etl_md.get_sensitive_column()[db]:

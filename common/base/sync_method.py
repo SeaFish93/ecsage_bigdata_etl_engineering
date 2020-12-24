@@ -5,7 +5,7 @@
 # @Software: PyCharm
 #function info：数据采集方法
 
-#from ecsage_bigdata_etl_engineering.common.base.sensitive_column import sensitive_column
+from ecsage_bigdata_etl_engineering.common.base.sensitive_column import sensitive_column
 from ecsage_bigdata_etl_engineering.config.column_type import get_column_hive_type
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 
