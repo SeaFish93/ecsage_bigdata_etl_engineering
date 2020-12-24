@@ -13,6 +13,7 @@ from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb impo
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
@@ -84,10 +85,10 @@ def main(TaskInfo, Level,**kwargs):
                       ,CustomSetParameter=custom_set_parameter
                      )
     elif Level == "ods":
-      exec_ods_hive_table(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
+      get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,SourceTable=source_table,
                           TargetDB=target_db, TargetTable=target_table,IsReport=is_report,SelectExcludeColumns=select_exclude_columns,KeyColumns=key_columns,ExecDate=exec_date
-                          ,ArrayFlag=array_flag
-                          ,CustomSetParameter=custom_set_parameter)
+                          ,ArrayFlag=array_flag,CustomSetParameter=custom_set_parameter
+                          ,DagId=airflow.dag,TaskId=airflow.task)
     elif Level == "snap":
       exec_snap_hive_table(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
                              TargetDB=target_db, TargetTable=target_table, IsReport=is_report
@@ -126,7 +127,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
     #获取请求域名个数
     host_count_sql = """
          select count(1)
-         from metadb.request_hostname_interface_tmp a
+         from metadb.request_hostname_interface a
     """
     ok, host_count = etl_md.get_all_rows(host_count_sql)
     if IsReport == 1:
@@ -168,7 +169,7 @@ def get_file_2_hive(HiveSession="",BeelineSession="",InterfaceUrl="",DataJson={}
            host_sql = """
               select hostname
               from(select hostname,@row_num:=@row_num+1 as rn
-                   from metadb.request_hostname_interface_tmp a,(select @row_num:=0) r
+                   from metadb.request_hostname_interface a,(select @row_num:=0) r
                   ) tmp
               where rn = %s
            """%(n)
@@ -427,7 +428,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
    ok,get_ods_column = HiveSession.get_column_info(TargetDB,TargetTable)
    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
-   select_system_table_column = "returns_account_id,returns_colums,request_type,'%s' as extract_system_time"%(system_time)
    is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB,TargetTable=TargetTable, ExecDate=ExecDate, KeyColumns=KeyColumns)
    row_number_columns = ""
    key_column_list = KeyColumns.split(",")
@@ -458,20 +458,12 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
        regexp_extract = """get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data.%s') as data_colums""" % (array_flag)
    else:
        regexp_extract = """concat(concat('[',get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data')),']') as data_colums"""
-   ####regexp_extract = """get_json_object(get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data'),'$.list') as data_colums"""
+
 
    return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
    returns_account_id = """trim(get_json_object(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}## )',1),'##',''),' ',''),'$.accountId')) as returns_account_id"""
    filter_line = """length(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1)) > 0"""
-   ######if IsReport == 1:
-   ######    regexp_extract = """get_json_object(get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data'),'$.list') as data_colums"""
-   ######    return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
-   ######    returns_account_id = """trim(get_json_object(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}## )',1),'##',''),' ',''),'$.accountId')) as returns_account_id"""
-   ######else:
-   ######   regexp_extract = """get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.list') as data_colums"""
-   ######   return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums"""
-   ######   returns_account_id = """trim(regexp_replace(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(accountId:.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"',''),'accountId: ',''),',.*','')) as returns_account_id"""
-   #get_field_sql_pre=""""""
+
    specified_pars_str = etl_ods_field_diff[3]
    specified_pars_list = etl_ods_field_diff[2]
    null_field_set=list(set(json_tuple_column.split(",")).difference(set(specified_pars_list)))
@@ -513,36 +505,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
               ;
         """%("etl_mid",TargetTable,"etl_mid",TargetTable,columns,pars_str,null_field_str,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line)
 
-   else:
-        sql = """
-        add file hdfs:///tmp/airflow/get_arrary.py;
-        drop table if exists %s.%s_tmp;
-        create table %s.%s_tmp stored as parquet as 
-        select %s,%s
-        from (select returns_colums,data_num_colums,returns_account_id,request_type
-              from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
-                          ,split(data_colums,'@@####@@')[1] as data_colums
-                          ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
-                          ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
-                   from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                        from(select %s
-                                    ,%s
-                                    ,%s
-                                    ,request_type
-                             from %s.%s a
-                             where a.etl_date = '%s'
-                               and %s
-                            ) a
-                        where data_colums is not null
-                        ) b
-                   ) c
-                   lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
-              ) a
-              lateral view json_tuple(data_num_colums,%s) b
-              as %s
-               ;
-        """%("etl_mid",TargetTable,"etl_mid",TargetTable,select_json_tuple_column,select_system_table_column,return_regexp_extract,regexp_extract,returns_account_id,SourceDB,SourceTable,ExecDate,filter_line,json_tuple_columns,select_json_tuple_column)
-
    ok = BeelineSession.execute_sql(sql,CustomSetParameter)
    if ok is False:
        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -575,43 +537,6 @@ def exec_ods_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable
                               Log="ods入库失败！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
-   ######## #校验ods与临时数据条数是否一致
-   ######## sql = """
-   ########     select a.total_number as total_number_mid,b.total_number as total_number_ods
-   ########     from(
-   ########          select sum(cast(tmp1.total_number as int)) as total_number
-   ########          from(select returns_colums,total_number
-   ########               from(select regexp_replace(regexp_extract(a.request_data,'(returns :.*\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\")',1),'\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\"','') as returns_colums
-   ########                           ,get_json_object(get_json_object(get_json_object(regexp_extract(a.request_data,'(\\\\{\\\\"code\\\\":0,\\\\"message\\\\":\\\\"OK\\\\".*)',1),'$.data'),'$.page_info'),'$.total_number') as total_number
-   ########                    from %s.%s a
-   ########                    inner join %s.%s_param b
-   ########                    on a.etl_date = b.etl_date
-   ########                    and a.md5_id = b.md5_id
-   ########                    where a.etl_date = '%s'
-   ########                    ) a
-   ########               group by returns_colums,total_number
-   ########              ) tmp1
-   ########          ) a
-   ########     inner join (select count(1) as total_number from %s.%s where etl_date = '%s') b
-   ########     on 1 = 1
-   ########     where a.total_number <> b.total_number
-   ######## """%(SourceDB,SourceTable,SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
-   ######## ok,data = HiveSession.get_all_rows(sql)
-   ######## data = []
-   ######## print("ods入库数据：" + str(data))
-   ######## if ok is False or len(data) > 0:
-   ########     print("ods入库异常数据：" + str(data))
-   ########     msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-   ########                            SourceTable="%s.%s" % (SourceDB, SourceTable),
-   ########                            TargetTable="%s.%s" % (TargetDB, TargetTable),
-   ########                            BeginExecDate=ExecDate,
-   ########                            EndExecDate=ExecDate,
-   ########                            Status="Error",
-   ########                            Log="ods校验失败！！！",
-   ########                            Developer="developer")
-   ########     set_exit(LevelStatu="red", MSG=msg)
-   #BeelineSession.execute_sql("drop table if exists %s.%s" % (SourceDB, SourceTable))
-   #BeelineSession.execute_sql("drop table if exists %s.%s_param" % (SourceDB, SourceTable))
 
 #落地至snap
 def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",

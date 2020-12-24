@@ -94,26 +94,14 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
             else:
                 data_str2=data_str2['data']
                 print("+++++++++++++++++++++++")
-            #if """'list'""" in data:
-            #    data_str2 = data_str2['data']
-            #else:
-            #  if "list" in str(type(data)):
-            #     data_str2 = data_str2['data'][0]
-            #  else:
-            #     data_str2 = data_str2['data']
-
-
         else:
             data_str = return_Str[return_Str.find(split_flag) + 3:]
             data_str2 = json.loads(data_str)
             data_str2 = data_str2['data']
-        print(data_str2)
-        #data_str2 = data_str2['data']
         if ArrayFlag is not None and len(ArrayFlag) > 0:
             data_str3 = data_str2[ArrayFlag][0]
         else:
             data_str3 = data_str2
-        print(data_str3)
         for keys in data_str3:
             if keys in spec_pars_list and isinstance(data_str3[keys], dict):
                 for key in data_str3[keys]:
