@@ -20,7 +20,8 @@ from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
-from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
+#from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 #etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 hostname = socket.gethostname()
 
@@ -186,11 +187,13 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
             file_num = file_num + 1
 
     error_file_size = os.path.getsize(size_error_file)
-    if int(error_file_size) > 0 and EtlMdSession is not None and len(EtlMdSession) > 0:
+    if int(error_file_size) > 0 and EtlMdSession is not None :
         insert_sql = """
             load data local infile '%s' into table metadb.monitor_collect_file_log fields terminated by ' ' lines terminated by '\\n' (target_file_dir,target_file,target_file_size)
         """ % (size_error_file)
         print(insert_sql)
+        if len(EtlMdSession) > 0:#故意错误代码
+            print("利用报错使其重跑！！！并记录到Mysql！")
        #etl_md.local_file_to_mysql(sql=insert_sql)
 
     if len(DataFileList) != file_num:
@@ -721,3 +724,151 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
            time.sleep(2)
       n = n + 1
     return remark
+
+#etl_mid->Ods层
+def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="", TargetTable=""
+                   ,IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag="",CustomSetParameter="",IsReplace="Y",DagId="",TaskId=""):
+    etl_ods_field_diff = def_ods_structure(HiveSession=HiveSession, BeelineSession=BeelineSession
+                                           ,SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
+                                           ,IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag
+                                           ,IsReplace=IsReplace)
+    print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
+    ok, get_ods_column = HiveSession.get_column_info(TargetDB, TargetTable)
+    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
+    is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable,
+                   ExecDate=ExecDate, KeyColumns=KeyColumns,DagId=DagId,TaskId=TaskId)
+    row_number_columns = ""
+    key_column_list = KeyColumns.split(",")
+    for key in key_column_list:
+        row_number_columns = row_number_columns + "," + "`" + key + "`"
+    row_number_columns = row_number_columns.replace(",", "", 1)
+    select_exclude_columns = SelectExcludeColumns
+    if select_exclude_columns is None or len(select_exclude_columns) == 0:
+        select_exclude_columns = "000000"
+    columns = ""
+    for column in get_ods_column:
+        columns = columns + "," + column[0]
+        if column[0] == "etl_date":
+            break;
+    columns = columns.replace(",", "", 1)
+    json_tuple_columns = ""
+    for get_json_tuple_column in columns.split(","):
+        if get_json_tuple_column not in select_exclude_columns.split(
+                ",") and get_json_tuple_column not in system_table_columns.split(","):
+            json_tuple_columns = json_tuple_columns + "," + "'%s'" % (get_json_tuple_column)
+    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
+    json_tuple_column = json_tuple_columns.replace("'", "")
+    select_json_tuple_column = json_tuple_columns.replace("'", "`")
+    columns = ','.join("`%s`" % (x) for x in columns.split(",") if x != 'etl_date')
+    array_flag = ArrayFlag
+    if array_flag in ["list", "custom_audience_list"]:
+        if IsReplace == "Y":
+            regexp_extract = """get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data.%s') as data_colums""" % (array_flag)
+        else:
+            regexp_extract = """get_json_object(a.request_data,'$.data.%s') as data_colums""" % (array_flag)
+    else:
+        if IsReplace == "Y":
+            regexp_extract = """concat(concat('[',get_json_object(regexp_replace(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1),'\\\\"\\\\}## ',''),'$.data')),']') as data_colums"""
+        else:
+            regexp_extract = """concat(concat('[',regexp_replace(get_json_object(a.request_data,'$.data'),'^\\\\[|\\\\]$','')),']') as data_colums"""
+    if IsReplace == "Y":
+        return_regexp_extract = """regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}##)',1),'##','') as returns_colums"""
+        returns_account_id = """trim(get_json_object(regexp_replace(regexp_replace(regexp_extract(a.request_data,'(##\\\\{\\\\"accountId\\\\":.*\\\\}## )',1),'##',''),' ',''),'$.accountId')) as returns_account_id"""
+        filter_line = """ and length(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1)) > 0"""
+    else:
+        return_regexp_extract = """trim(get_json_object(a.request_data,'$.returns_columns')) as returns_colums"""
+        returns_account_id = """trim(get_json_object(a.request_data,'$.returns_account_id')) as returns_account_id"""
+        filter_line = ""
+
+    specified_pars_str = etl_ods_field_diff[3]
+    specified_pars_list = etl_ods_field_diff[2]
+    null_field_set = list(set(json_tuple_column.split(",")).difference(set(specified_pars_list)))
+    null_field_list = []
+    for null_field in null_field_set:
+        null_field_list.append(",cast( null as String) as `%s`" % (null_field))
+    null_field_str = ''.join(null_field_list)
+    null_field_str = null_field_str + ",'%s' as `extract_system_time`" % (system_time)
+
+    print("Json待解析字段：" + specified_pars_str)
+    if specified_pars_str is not None and len(specified_pars_str) > 0:
+        pars_str_list = []
+        for pars_field in specified_pars_str.split(","):
+            as_str = pars_field.split(".")[-1]
+            pars_str_list.append("get_json_object(data_num_colums,'$.%s') as `%s`" % (pars_field, as_str))
+        pars_str = ','.join(pars_str_list)
+        sql = """
+                add file hdfs:///tmp/airflow/get_arrary.py;
+                drop table if exists %s.%s_tmp;
+                create table %s.%s_tmp stored as parquet as 
+                select %s
+                from (select returns_colums,%s %s,returns_account_id,request_type
+                      from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
+                                  ,split(data_colums,'@@####@@')[1] as data_colums
+                                  ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
+                                  ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
+                           from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
+                                from(select %s
+                                            ,%s
+                                            ,%s
+                                            ,request_type
+                                     from %s.%s a
+                                     where a.etl_date = '%s'
+                                        %s
+                                    ) a
+                                where data_colums is not null
+                                    and data_colums  <> '[]'
+                                ) b
+                           ) c
+                           lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
+                      ) a
+                      ;
+                """ % (
+        "etl_mid", TargetTable, "etl_mid", TargetTable, columns, pars_str, null_field_str, return_regexp_extract,
+        regexp_extract, returns_account_id, SourceDB, SourceTable, ExecDate, filter_line)
+
+    ok = BeelineSession.execute_sql(sql, CustomSetParameter)
+    if ok is False:
+        msg = get_alert_info_d(DagId=DagId, TaskId=TaskId,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="ods入库-tmp失败！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    sql = """
+                insert overwrite table %s.%s
+                partition(etl_date = '%s')
+                select %s from(
+                select %s,row_number()over(partition by %s order by 1) as rn_row_number
+                from %s.%s_tmp
+                ) tmp where rn_row_number = 1
+                       ;
+                drop table if exists %s.%s_tmp;
+                """ % (
+    TargetDB, TargetTable, ExecDate, columns, columns, row_number_columns, "etl_mid", TargetTable, "etl_mid", TargetTable)
+    ok = BeelineSession.execute_sql(sql, CustomSetParameter)
+    if ok is False:
+        msg = get_alert_info_d(DagId=DagId, TaskId=TaskId,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="ods入库失败！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+
+def is_key_columns(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",KeyColumns="",DagId="",TaskId=""):
+    if KeyColumns is None or len(KeyColumns) == 0:
+        msg = get_alert_info_d(DagId=DagId, TaskId=TaskId,
+                               SourceTable="%s.%s" % (SourceDB, SourceTable),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="请确认配置表指定主键字段是否正确！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
