@@ -546,14 +546,17 @@ def exec_snap_hive_table(HiveSession="",BeelineSession="",SourceDB="",SourceTabl
    # 获取snap表字段
    ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
 
+   IsTargetPartition = "Y" if IsReport == 1 else "N"
    snap_columns_tmp_0 = []  # 日报一定得分区，同时排除分区字段etl_date
    snap_columns_tmp_1 = []  # 日报一定得分区，同时排除分区字段etl_date
    for column in snap_table_columns:
        snap_columns_tmp_0.append("a.`%s`" % (column[0]))
        if column[0] != 'etl_date':
            snap_columns_tmp_1.append("a.`%s`" % (column[0]))
+       elif IsTargetPartition == "N":#兼容新增字段加载etl_date后面
+           continue
        else:
-           break;
+           break
    snap_columns = ",".join(snap_columns_tmp_0)
    snap_columns_1 = ",".join(snap_columns_tmp_1)
 
