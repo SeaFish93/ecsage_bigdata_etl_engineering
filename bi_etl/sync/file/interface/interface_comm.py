@@ -21,7 +21,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
-from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+#from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 #etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 hostname = socket.gethostname()
 
