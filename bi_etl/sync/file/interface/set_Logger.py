@@ -141,7 +141,9 @@ class LogManager(object):
       # linux下可以使用ConcurrentRotatingFileHandler，进程安全的日志方式
       rotate_file_handler = ConcurrentRotatingFileHandler(log_file, mode="a",
                                                           maxBytes=self._log_file_size * 1024 * 1024,
-                                                          backupCount=10, encoding="utf-8")
+                                                          backupCount=10, encoding="utf-8",
+                                                          delay=True
+                                                          )
     rotate_file_handler.setLevel(self._logger_level)
     rotate_file_handler.setFormatter(self._formatter)
     self.logger.addHandler(rotate_file_handler)
