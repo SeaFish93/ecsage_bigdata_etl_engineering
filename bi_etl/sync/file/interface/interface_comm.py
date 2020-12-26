@@ -53,7 +53,7 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     }
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     s = requests.session()
-    retries = Retry(total=50,
+    retries = Retry(total=5,
                     backoff_factor=0.1,
                     status_forcelist=[500, 502, 503, 504])
     s.mount('http://', HTTPAdapter(max_retries=retries))
@@ -90,8 +90,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
       if "page_info" in data_list["data"]:
          data_list["returns_account_id"] = advertiser_id
-         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0],hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,
-                                                                                                  log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
+         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0],hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
          test_log.info(json.dumps(data_list))
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
