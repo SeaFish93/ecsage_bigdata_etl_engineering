@@ -60,6 +60,7 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     s.mount('https://', HTTPAdapter(max_retries=retries))
     s.keep_alive = False
     rsp = s.get(url=url, headers=headers, verify=False,timeout=3)
+    rsp.close()
     #rsp = requests.get(url, headers=headers,verify=False)
     return rsp.json()
 
