@@ -14,8 +14,8 @@ import socket
 import time
 import json
 import ast
-from celery.result import AsyncResult
 from six import string_types
+import urllib3
 from six.moves.urllib.parse import urlencode, urlunparse
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
@@ -51,7 +51,7 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
         'Connection': "close",
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
     }
-    #requests.adapters.DEFAULT_RETRIES = 5
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     s = requests.session()
     retries = Retry(total=5,
                     backoff_factor=0.1,
@@ -59,7 +59,7 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     s.mount('http://', HTTPAdapter(max_retries=retries))
     s.mount('https://', HTTPAdapter(max_retries=retries))
     s.keep_alive = False
-    rsp = s.get(url=url, headers=headers, stream=False, timeout=3)
+    rsp = s.get(url=url, headers=headers, verify=False, stream=False, timeout=3)
     rsp.close()
     #rsp = requests.get(url, headers=headers,verify=False)
     return rsp.json()
