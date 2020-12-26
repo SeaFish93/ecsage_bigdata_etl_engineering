@@ -49,7 +49,11 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
         'Connection': "close",
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
     }
-    rsp = requests.get(url, headers=headers,verify=False)
+    requests.adapters.DEFAULT_RETRIES = 5
+    s = requests.session()
+    s.keep_alive = False
+    rsp = s.get(url=url, headers=headers, verify=False)
+    #rsp = requests.get(url, headers=headers,verify=False)
     return rsp.json()
 
 def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",DataFile="",TaskFlag=""):
