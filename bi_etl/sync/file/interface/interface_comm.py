@@ -6,6 +6,8 @@
 # function info：接口处理方法
 
 import requests
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 import os
 import datetime
 import socket
@@ -49,10 +51,15 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
         'Connection': "close",
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
     }
-    requests.adapters.DEFAULT_RETRIES = 5
+    #requests.adapters.DEFAULT_RETRIES = 5
     s = requests.session()
+    retries = Retry(total=5,
+                    backoff_factor=0.1,
+                    status_forcelist=[500, 502, 503, 504])
+    s.mount('http://', HTTPAdapter(max_retries=retries))
+    s.mount('https://', HTTPAdapter(max_retries=retries))
     s.keep_alive = False
-    rsp = s.get(url=url, headers=headers, verify=False)
+    rsp = s.get(url=url, headers=headers, verify=False,timeout=3)
     #rsp = requests.get(url, headers=headers,verify=False)
     return rsp.json()
 
