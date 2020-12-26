@@ -42,7 +42,7 @@ class LogManager(object):
     self._formatter = None
 
   def get_logger_and_add_handlers(self, log_level_int=1, is_add_stream_handler=True, log_path=None, log_filename=None,
-                                  log_file_size=8000):
+                                  log_file_size=20):
     """
    :param log_level_int: 日志输出级别，设置为 1 2 3 4 5，分别对应输出DEBUG，INFO，WARNING，ERROR,CRITICAL日志
    :param is_add_stream_handler: 是否打印日志到控制台
@@ -141,7 +141,7 @@ class LogManager(object):
       # linux下可以使用ConcurrentRotatingFileHandler，进程安全的日志方式
       rotate_file_handler = ConcurrentRotatingFileHandler(log_file, mode="a",
                                                           maxBytes=self._log_file_size * 1024 * 1024,
-                                                          backupCount=10, encoding="utf-8",
+                                                          backupCount=100, encoding="utf-8",
                                                           delay=True
                                                           )
     rotate_file_handler.setLevel(self._logger_level)
