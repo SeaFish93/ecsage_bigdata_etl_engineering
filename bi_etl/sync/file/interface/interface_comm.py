@@ -632,8 +632,8 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
         while set_run:
           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
           test_log.info(json.dumps(rsp_data))
-          is_exist = os.popen("grep -o '%s' %s/%s" % (request_id, DataFileDir, file_name))
-          is_exist_value = is_exist.read().split()
+          #is_exist = os.popen("grep -o '%s' %s/%s" % (request_id, DataFileDir, file_name))
+          is_exist_value = ["33"] #is_exist.read().split()
           if is_exist_value is not None and len(is_exist_value) > 0:
               set_run = False
           else:
