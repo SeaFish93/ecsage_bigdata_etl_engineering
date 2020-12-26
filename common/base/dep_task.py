@@ -34,7 +34,7 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
                                     execution_date.minute, execution_date.second)
         # pendulum 2.0.5及以后，可以直接传入execution_date（pendulum类型）
         cron = croniter(DepTaskCrontab, ex_date_datetime)
-        print(cron.all_prev(datetime),"############################",cron.all_next(datetime))
+        print(cron.start_time,"############################")
         cron_prev = cron.get_current(datetime)
         cron_next = cron.get_next(datetime)
         cron_prev_01 = cron.get_prev(datetime)
