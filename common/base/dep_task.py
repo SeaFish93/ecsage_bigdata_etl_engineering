@@ -18,7 +18,7 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
     execution_date = Airflow(kwargs).execution_date
     dag_id = "external_" + DepDagID
     args = {
-        'owner': 'akulaku_etl',
+        'owner': 'etl',
         'depends_on_past': False,
         'priority_weight': 10000,
         'retries': 0,
@@ -34,6 +34,7 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
                                     execution_date.minute, execution_date.second)
         # pendulum 2.0.5及以后，可以直接传入execution_date（pendulum类型）
         cron = croniter(DepTaskCrontab, ex_date_datetime)
+        print(cron.start_time,"############################")
         cron_prev = cron.get_current(datetime)
         cron_next = cron.get_next(datetime)
         cron_prev_01 = cron.get_prev(datetime)
@@ -50,7 +51,10 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
                                                   cron_prev.minute,
                                                   cron_prev.second,
                                                   cron_prev.microsecond)
-        print(ex_date_datetime,DepTaskCrontab,cron_prev_pendulum,cron_prev,cron_prev_01,cron_next,str(execution_date)[11:19],str(cron_prev_01)[11:19],"====================================")
+        """
+        2020-12-24 16:10:00 0 0,16,22 * * * 2020-12-24T16:00:00+00:00 2020-12-24 16:00:00 2020-12-24 16:00:00 2020-12-24 22:00:00 16:10:00 16:00:00
+        """
+        print(ex_date_datetime,"##",DepTaskCrontab,"##",cron_prev_pendulum,"##",cron_prev,"##",cron_prev_01,"##",cron_next,"##",str(execution_date)[11:19],"##",str(cron_prev_01)[11:19],"====================================")
         return cron_prev_pendulum
     external_task = ExternalTaskSensor(external_task_id=DepTaskID,
                                        external_dag_id=DepDagID,
