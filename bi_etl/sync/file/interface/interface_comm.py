@@ -56,11 +56,11 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     retries = Retry(total=5,
                     backoff_factor=0.1,
                     status_forcelist=[500, 502, 503, 504])
-    s.mount('http://', HTTPAdapter(max_retries=retries))
+    #s.mount('http://', HTTPAdapter(max_retries=retries))
     s.mount('https://', HTTPAdapter(max_retries=retries))
     s.keep_alive = False
     rsp = s.get(url=url, headers=headers, verify=False, stream=False, timeout=3)
-    rsp.close()
+    #rsp.close()
     #rsp = requests.get(url, headers=headers,verify=False)
     return rsp.json()
 
