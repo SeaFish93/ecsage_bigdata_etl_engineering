@@ -652,7 +652,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
           data = str(rsp_data).replace(" ","")
     except Exception as e:
         code = 1
-        data = "请求失败：%s"%(str(e).replace("\n",""))
+        data = "请求失败：%s"%(str(e).replace("\n","").replace(" ",""))
     if int(code) != 0:
       status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,Token,DataFileDir, "account_status.log", hostname))
       if int(status) != 0:
@@ -709,7 +709,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           data = str(rsp_data).replace(" ", "")
     except Exception as e:
         remark = "异常"
-        data = "请求失败"
+        data = "请求失败：%s"%(str(e).replace("\n","").replace(" ",""))
     set_run = True
     n = 0
     while set_run:
