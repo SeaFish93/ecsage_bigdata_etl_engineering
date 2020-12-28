@@ -6,14 +6,16 @@
 # function info：接口处理方法
 
 import requests
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 import os
 import datetime
 import socket
 import time
 import json
 import ast
-from celery.result import AsyncResult
 from six import string_types
+import urllib3
 from six.moves.urllib.parse import urlencode, urlunparse
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
@@ -46,9 +48,20 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     url = build_url(UrlPath, query_string)
     headers = {
         "Access-Token": Token,
-        'Connection': "close"
+        'Connection': "close",
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
     }
-    rsp = requests.get(url, headers=headers,timeout=2400)
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    s = requests.session()
+    retries = Retry(total=5,
+                    backoff_factor=0.1,
+                    status_forcelist=[500, 502, 503, 504])
+    #s.mount('http://', HTTPAdapter(max_retries=retries))
+    s.mount('https://', HTTPAdapter(max_retries=retries))
+    s.keep_alive = False
+    rsp = s.get(url=url, headers=headers, verify=False, stream=False, timeout=300)
+    #rsp.close()
+    #rsp = requests.get(url, headers=headers,verify=False)
     return rsp.json()
 
 def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",DataFile="",TaskFlag=""):
@@ -77,8 +90,7 @@ def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",
       data_list = set_sync_data(ParamJson=param_json,UrlPath=UrlPath,Token=token)
       if "page_info" in data_list["data"]:
          data_list["returns_account_id"] = advertiser_id
-         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0],hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,
-                                                                                                  log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
+         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0],hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
          test_log.info(json.dumps(data_list))
          page = data_list["data"]["page_info"]["total_page"]
          remark = "正常"
@@ -486,18 +498,34 @@ def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
       code = 0
     return code,resp_data
 
-def get_write_local_file(CeleryTaskId="",AccountId="",DataLocalFile=""):
-    pass
-    #set_task = AsyncResult(id=str(CeleryTaskId))
-    #value = set_task.get()
-    #datas = value["data"]["list"]
-    #for data in datas:
-    #   data["returns_account_id"]=AccountId
-    #   shell_cmd = """
-    #   cat >> %s << endwritefilewwwww
-#%s
-#endwritefilewwwww""" % (DataLocalFile + ".%s" % (hostname), str(data).replace("""`""","%%@@%%"))
-#       os.system(shell_cmd)
+def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""):
+    file_name = """%s-%s.%s""" % (DataFile.split(".")[0], hostname, DataFile.split(".")[1])
+    print(file_name,"===========================================",DataFile)
+    n = 0
+    data = ""
+    not_exist = "N"
+    while set_run:
+        test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
+        test_log.info(RequestsData)
+        get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
+        for files in get_dir.read().split():
+            is_exist = os.popen("grep -o '%s' %s/%s" % (RequestID, DataFileDir, files))
+            is_exist_value = is_exist.read().split()
+            if is_exist_value is not None and len(is_exist_value) > 0:
+                not_exist = "Y"
+                break;
+        if not_exist == "Y":
+            remark = "正常"
+            set_run = False
+        else:
+            if n > 20:
+                remark = "异常"
+                data = "写入日志失败"
+                set_run = False
+            else:
+                time.sleep(2)
+        n = n + 1
+    return remark,data
 
 #广告主
 def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=""):
@@ -616,6 +644,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
     data = ""
     set_run = True
     n = 0
+    not_exist = "N"
     try:
       rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
       code = rsp_data["code"]
@@ -632,15 +661,20 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
         while set_run:
           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
           test_log.info(json.dumps(rsp_data))
-          is_exist = os.popen("grep -o '%s' %s/%s" % (request_id, DataFileDir, file_name))
-          is_exist_value = is_exist.read().split()
-          if is_exist_value is not None and len(is_exist_value) > 0:
+          get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
+          for files in get_dir.read().split():
+              is_exist = os.popen("grep -o '%s' %s/%s" % (request_id, DataFileDir, files))
+              is_exist_value = is_exist.read().split()
+              if is_exist_value is not None and len(is_exist_value) > 0:
+                  not_exist = "Y"
+                  break;
+          if not_exist == "Y":
               set_run = False
           else:
-              if n > 10:
+              if n > 20:
                   code = 1
-                  set_run = False
                   data = "写入日志失败"
+                  set_run = False
               else:
                   time.sleep(2)
           n = n + 1
@@ -652,7 +686,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
           data = str(rsp_data).replace(" ","")
     except Exception as e:
         code = 1
-        data = "请求失败"
+        data = "请求失败：%s"%(str(e).replace("\n","").replace(" ","").replace("""\"""",""))
     if int(code) != 0:
       status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,Token,DataFileDir, "account_status.log", hostname))
       if int(status) != 0:
@@ -669,6 +703,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     set_run = True
     n = 0
     token = None
+    not_exist = "N"
     try:
       rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
       code = rsp_data["code"]
@@ -685,17 +720,22 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
          while set_run:
            test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
            test_log.info(json.dumps(rsp_data))
-           is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,DataFileDir,file_name))
-           is_exist_value = is_exist.read().split()
-           if is_exist_value is not None and len(is_exist_value) > 0:
-               set_run = False
-               remark = "正常"
+           get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
+           for files in get_dir.read().split():
+               is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,DataFileDir,files))
+               is_exist_value = is_exist.read().split()
+               if is_exist_value is not None and len(is_exist_value) > 0:
+                  not_exist = "Y"
+                  break;
+           if not_exist == "Y":
+              remark = "正常"
+              set_run = False
            else:
-               if n > 10:
+              if n > 20:
                   remark = "异常"
                   data = "写入日志失败"
                   set_run = False
-               else:
+              else:
                   time.sleep(2)
            n = n + 1
          page = rsp_data["data"]["page_info"]["total_page"]
@@ -709,7 +749,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           data = str(rsp_data).replace(" ", "")
     except Exception as e:
         remark = "异常"
-        data = "请求失败"
+        data = "请求失败：%s"%(str(e).replace("\n","").replace(" ","").replace("""\"""",""))
     set_run = True
     n = 0
     while set_run:

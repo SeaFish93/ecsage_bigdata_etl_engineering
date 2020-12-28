@@ -6,6 +6,7 @@ do
 done
 cd /root/bigdata_item_code/ecsage_bigdata_etl_engineering
 git pull
+
 rm -f /home/airflow/logs/celery.log
 nohup /usr/local/python3/bin/celery -A ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope worker -l info >/home/airflow/logs/celery.log 2>&1 &
 tail -f /home/airflow/logs/celery.log

@@ -320,7 +320,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
         n = n + 1
 
 #处理不分页
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='500/m')
 def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile=""):
     set_true = True
     n = 0
@@ -343,7 +343,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
       n = n + 1
 
 #处理分页
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='500/m')
 def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile=""):
     set_true = True
     n = 0
