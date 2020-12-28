@@ -77,7 +77,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   first_page_task_file = "%s/first_page_task_file.log"%(local_dir)
   other_page_task_file = "%s/other_page_task_file.log" % (local_dir)
   rerun_page_task_file = "%s/rerun_page_task_file.log" % (local_dir)
-  data_task_file = """%s/%s_data.log"""%(local_dir,AirflowTask)
+  data_task_file = """%s/data_%s.log"""%(local_dir,AirflowTask)
   tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
   first_task_exception_file = "%s/first_task_exception_file.log"%(local_dir)
   other_task_exception_file = "%s/other_task_exception_file.log" % (local_dir)
