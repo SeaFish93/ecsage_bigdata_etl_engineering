@@ -288,7 +288,21 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
             if len(get_list) == 1:
                 ParamJson["%s" % (get_list[0])] = int(data[3])
             else:
-                print("含有filter...")
+                list_1 = get_list[0]
+                list_value = get_list[1].split("##")
+                list_value_1 = list_value[0]
+                list_value_2 = list_value[1]
+                list_value_3 = list_value[2]
+                if list_value_2 == "[]" and list_value_3 == "int":
+                   ParamJson["%s" % (list_1)]["%s" % (list_value_1)] = [int(data[3])]
+                elif list_value_2 == "[]" and list_value_3 == "string":
+                   ParamJson["%s" % (list_1)]["%s" % (list_value_1)] = [str(data[3])]
+                elif list_value_2 != "[]" and list_value_3 == "string":
+                   ParamJson["%s" % (list_1)]["%s" % (list_value_1)] = str(data[3])
+                elif list_value_2 != "[]" and list_value_3 == "int":
+                   ParamJson["%s" % (list_1)]["%s" % (list_value_1)] = int(data[3])
+                else:
+                   set_exit("red","请输入正确参数！！！")
        ParamJson["advertiser_id"] = data[0]
        ParamJson["page"] = int(Page)
        ParamJson["page_size"] = int(PageSize)
