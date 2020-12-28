@@ -681,6 +681,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     set_run = True
     n = 0
     token = None
+    not_exist = "N"
     try:
       rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
       code = rsp_data["code"]
@@ -697,17 +698,21 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
          while set_run:
            test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
            test_log.info(json.dumps(rsp_data))
-           is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,DataFileDir,file_name))
-           is_exist_value = is_exist.read().split()
-           if is_exist_value is not None and len(is_exist_value) > 0:
-               set_run = False
-               remark = "正常"
+           get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
+           for files in get_dir.read().split():
+               is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,DataFileDir,files))
+               is_exist_value = is_exist.read().split()
+               if is_exist_value is not None and len(is_exist_value) > 0:
+                  not_exist = "Y"
+                  break;
+           if not_exist == "Y":
+              set_run = False
            else:
-               if n > 20:
+              if n > 20:
                   remark = "异常"
                   data = "写入日志失败"
                   set_run = False
-               else:
+              else:
                   time.sleep(2)
            n = n + 1
          page = rsp_data["data"]["page_info"]["total_page"]
