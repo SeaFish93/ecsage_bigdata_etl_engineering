@@ -649,7 +649,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
           if is_exist_value is not None and len(is_exist_value) > 0:
               set_run = False
           else:
-              if n > 10:
+              if n > 20:
                   code = 1
                   set_run = False
                   data = "写入日志失败"
@@ -703,7 +703,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
                set_run = False
                remark = "正常"
            else:
-               if n > 10:
+               if n > 20:
                   remark = "异常"
                   data = "写入日志失败"
                   set_run = False
