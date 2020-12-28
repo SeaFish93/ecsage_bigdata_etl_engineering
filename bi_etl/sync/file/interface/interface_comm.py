@@ -706,6 +706,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
                   not_exist = "Y"
                   break;
            if not_exist == "Y":
+              remark = "正常"
               set_run = False
            else:
               if n > 20:
