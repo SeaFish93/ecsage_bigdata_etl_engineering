@@ -113,7 +113,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   #判断是否从列表过滤
   if filter_db_name is not None and len(filter_db_name) > 0:
       filter_sql = """
-      select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',%s)) 
+      select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',cast(%s as string))) 
       from %s.%s 
       where etl_date='%s'
         %s 
