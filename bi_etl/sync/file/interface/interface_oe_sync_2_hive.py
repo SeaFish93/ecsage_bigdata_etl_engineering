@@ -216,7 +216,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     """ % (task_flag)
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
-       set_other_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,
+       set_other_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                            DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
                            CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=page_size
                            )
@@ -268,16 +268,7 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
                                 InterfaceFlag=TaskFlag,
                                 Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
                                 )
-"""
-       if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
-          filter_list = InterfaceFilterList.split(",")
-          for lists in filter_list:
-              get_list = lists.split(".")
-          if len(get_list) == 1:
-             ParamJson["%s"%(get_list[0])] = int(data[3])
-          else:
-             print("含有filter...")
-"""
+
 #处理首页
 def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize="",InterfaceFilterList=""):
     for data in DataRows:
@@ -308,8 +299,6 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
        ParamJson["page_size"] = int(PageSize)
        service_code = data[2]
        token = data[5]
-       print(ParamJson,"########################################")
-       exit(0)
        celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
                                                DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
@@ -333,11 +322,33 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
                     TableName="oe_sync_page_interface", Columns=columns)
 
 #处理其它分页
-def set_other_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",PageSize=""):
+def set_other_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",PageSize="",InterfaceFilterList=""):
     for data in DataRows:
       page_number = int(data[3])
       for page in range(page_number):
         if page > 0:
+           if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
+                filter_list = InterfaceFilterList.split(",")
+                for lists in filter_list:
+                    get_list = lists.split(".")
+                if len(get_list) == 1:
+                    ParamJson["%s" % (get_list[0])] = int(data[3])
+                else:
+                    list_1 = get_list[0]
+                    list_value = get_list[1].split("##")
+                    list_value_1 = list_value[0]
+                    list_value_2 = list_value[1]
+                    list_value_3 = list_value[2]
+                    if list_value_2 == "[]" and list_value_3 == "int":
+                        ParamJson["%s" % (list_1)]["%s" % (list_value_1)] = [int(data[3])]
+                    elif list_value_2 == "[]" and list_value_3 == "string":
+                        ParamJson["%s" % (list_1)]["%s" % (list_value_1)] = [str(data[3])]
+                    elif list_value_2 != "[]" and list_value_3 == "string":
+                        ParamJson["%s" % (list_1)]["%s" % (list_value_1)] = str(data[3])
+                    elif list_value_2 != "[]" and list_value_3 == "int":
+                        ParamJson["%s" % (list_1)]["%s" % (list_value_1)] = int(data[3])
+                    else:
+                        set_exit("red", "请输入正确参数！！！")
            pages = page + 1
            ParamJson["advertiser_id"] = data[0]
            ParamJson["page"] = int(pages)
