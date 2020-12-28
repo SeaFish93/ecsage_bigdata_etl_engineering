@@ -144,9 +144,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             on a.account_id = b.advertiser_id
             where a.exec_date = '%s'
               and b.flag = '%s'
-              and a.media_type = '%s'
             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token_data
-        """%(ExecDate,task_flag,media_type)
+        """%(ExecDate,task_flag)
       else:
         sql = """
              select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token
@@ -154,9 +153,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
              inner join metadb.oe_sync_filter_info b
              on a.account_id = b.advertiser_id
              where b.flag = '%s'
-               and a.media_type = '%s'
              group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token
-        """ % (task_flag, media_type)
+        """ % (task_flag)
   else:
       #处理维度表分支
       if int(is_report) == 0:
