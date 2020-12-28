@@ -277,6 +277,8 @@ def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataF
        ParamJson["page_size"] = int(PageSize)
        service_code = data[2]
        token = data[5]
+       print(ParamJson,"########################################")
+       exit(0)
        celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
                                                DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
