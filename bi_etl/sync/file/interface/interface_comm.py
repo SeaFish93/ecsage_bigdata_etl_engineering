@@ -500,6 +500,7 @@ def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
 
 def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""):
     file_name = """%s-%s.%s""" % (DataFile.split(".")[0], hostname, DataFile.split(".")[1])
+    print(file_name,"===========================================")
     n = 0
     data = ""
     not_exist = "N"
