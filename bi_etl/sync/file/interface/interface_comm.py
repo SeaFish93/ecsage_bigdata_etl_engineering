@@ -23,8 +23,8 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
-#from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
-#etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+from ecsage_bigdata_etl_engineering.common.base.def_table_struct import adj_snap_structure
+
 hostname = socket.gethostname()
 
 def build_url(path, query=""):
@@ -912,3 +912,101 @@ def is_key_columns(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDat
                                Log="请确认配置表指定主键字段是否正确！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
+
+#Ods->Snap层
+def get_data_2_snap(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
+                        TargetDB="", TargetTable="",IsReport="",KeyColumns="",ExecDate="",CustomSetParameter="",DagId="",TaskId=""):
+   adj_snap_structure(HiveSession=HiveSession,BeelineSession=BeelineSession,SourceDB=SourceDB,SourceTable=SourceTable,
+                        TargetDB=TargetDB, TargetTable=TargetTable,CustomSetParameter=CustomSetParameter,IsReport=IsReport)
+   # 获取snap表字段
+   ok, snap_table_columns = HiveSession.get_column_info(TargetDB, TargetTable)
+
+   IsTargetPartition = "Y" if IsReport == 1 else "N"
+   snap_columns_tmp_0 = []  # 日报一定得分区，同时排除分区字段etl_date
+   snap_columns_tmp_1 = []  # 日报一定得分区，同时排除分区字段etl_date
+   for column in snap_table_columns:
+       snap_columns_tmp_0.append("a.`%s`" % (column[0]))
+       if column[0] != 'etl_date':
+           snap_columns_tmp_1.append("a.`%s`" % (column[0]))
+       elif IsTargetPartition == "N":#兼容新增字段加载etl_date后面
+           continue
+       else:
+           break
+   snap_columns = ",".join(snap_columns_tmp_0)
+   snap_columns_1 = ",".join(snap_columns_tmp_1)
+
+
+   if IsTargetPartition == "N":
+       is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB,
+                      TargetTable=TargetTable, ExecDate=ExecDate, KeyColumns=KeyColumns)
+       key_column_list = KeyColumns.split(",")
+       is_null_col = "`"+key_column_list[0]+"`"
+       key_columns_joins = ""
+       num = 0
+       for key in key_column_list:
+           if num == 0:
+              key_columns_join = "on a.`%s` = b.`%s`"%(key,key)
+           else:
+               key_columns_join = "and a.`%s` = b.`%s`" % (key, key)
+           num += 1
+           key_columns_joins = key_columns_joins + " " + key_columns_join
+           num = num + 1
+
+       sql = """
+           insert overwrite table %s.%s
+           select %s
+           from %s.%s a
+           left join %s.%s b
+           %s
+           and b.etl_date = '%s'
+           where b.%s is null
+              union all
+           select %s from %s.%s a where etl_date = '%s'
+       """%(TargetDB,TargetTable,snap_columns,TargetDB,TargetTable,SourceDB,SourceTable,
+            key_columns_joins,ExecDate,is_null_col,snap_columns,SourceDB, SourceTable,ExecDate
+            )
+   else:
+
+       sql = """
+        insert overwrite table %s.%s
+        partition(etl_date = '%s')
+        select %s
+        from %s.%s a where etl_date = '%s' 
+       """%(TargetDB,TargetTable,ExecDate,snap_columns_1,SourceDB,SourceTable,ExecDate)
+   ok = BeelineSession.execute_sql(sql,CustomSetParameter)
+   if ok is False:
+       msg = get_alert_info_d(DagId=DagId, TaskId=TaskId,
+                              SourceTable="%s.%s" % (SourceDB, SourceTable),
+                              TargetTable="%s.%s" % (TargetDB, TargetTable),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="snap入库失败！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
+   sql_check = """
+               select a.source_cnt,b.target_cnt
+               from(select count(1) as source_cnt
+                    from %s.%s where etl_date = '%s'
+                   ) a
+               inner join (
+                    select count(1) as target_cnt
+                    from %s.%s where etl_date = '%s'
+               ) b
+               on 1 = 1
+               where a.source_cnt <> b.target_cnt
+               """%(SourceDB,SourceTable,ExecDate,TargetDB,TargetTable,ExecDate)
+   #ok, data = HiveSession.get_all_rows(sql_check)
+   data = []
+   ok = True
+   print("snap入库数据：" + str(data))
+   if ok is False or len(data) > 0:
+       msg = get_alert_info_d(DagId=DagId, TaskId=TaskId,
+                              SourceTable="%s.%s" % (SourceDB, SourceTable),
+                              TargetTable="%s.%s" % (TargetDB, TargetTable),
+                              BeginExecDate=ExecDate,
+                              EndExecDate=ExecDate,
+                              Status="Error",
+                              Log="snap入库数据对比不上！！！",
+                              Developer="developer")
+       set_exit(LevelStatu="red", MSG=msg)
