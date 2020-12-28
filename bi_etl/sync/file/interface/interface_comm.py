@@ -498,18 +498,33 @@ def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
       code = 0
     return code,resp_data
 
-def get_write_local_file(CeleryTaskId="",AccountId="",DataLocalFile=""):
-    pass
-    #set_task = AsyncResult(id=str(CeleryTaskId))
-    #value = set_task.get()
-    #datas = value["data"]["list"]
-    #for data in datas:
-    #   data["returns_account_id"]=AccountId
-    #   shell_cmd = """
-    #   cat >> %s << endwritefilewwwww
-#%s
-#endwritefilewwwww""" % (DataLocalFile + ".%s" % (hostname), str(data).replace("""`""","%%@@%%"))
-#       os.system(shell_cmd)
+def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""):
+    file_name = """%s-%s.%s""" % (DataFile.split(".")[0], hostname, DataFile.split(".")[1])
+    n = 0
+    data = ""
+    not_exist = "N"
+    while set_run:
+        test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
+        test_log.info(json.dumps(RequestsData))
+        get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
+        for files in get_dir.read().split():
+            is_exist = os.popen("grep -o '%s' %s/%s" % (RequestID, DataFileDir, files))
+            is_exist_value = is_exist.read().split()
+            if is_exist_value is not None and len(is_exist_value) > 0:
+                not_exist = "Y"
+                break;
+        if not_exist == "Y":
+            remark = "正常"
+            set_run = False
+        else:
+            if n > 20:
+                remark = "异常"
+                data = "写入日志失败"
+                set_run = False
+            else:
+                time.sleep(2)
+        n = n + 1
+    return remark,data
 
 #广告主
 def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=""):
@@ -694,28 +709,29 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
       rsp_data["returns_columns"] = str(ParamJson)
       request_id = rsp_data["request_id"]
       if int(code) == 0:
-         file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
-         while set_run:
-           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
-           test_log.info(json.dumps(rsp_data))
-           get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
-           for files in get_dir.read().split():
-               is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,DataFileDir,files))
-               is_exist_value = is_exist.read().split()
-               if is_exist_value is not None and len(is_exist_value) > 0:
-                  not_exist = "Y"
-                  break;
-           if not_exist == "Y":
-              remark = "正常"
-              set_run = False
-           else:
-              if n > 20:
-                  remark = "异常"
-                  data = "写入日志失败"
-                  set_run = False
-              else:
-                  time.sleep(2)
-           n = n + 1
+         remark,data = get_write_local_file(RequestsData=rsp_data, RequestID=request_id, DataFileDir=DataFileDir, DataFile=DataFile)
+         ####file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
+         ####while set_run:
+         ####  test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
+         ####  test_log.info(json.dumps(rsp_data))
+         ####  get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
+         ####  for files in get_dir.read().split():
+         ####      is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,DataFileDir,files))
+         ####      is_exist_value = is_exist.read().split()
+         ####      if is_exist_value is not None and len(is_exist_value) > 0:
+         ####         not_exist = "Y"
+         ####         break;
+         ####  if not_exist == "Y":
+         ####     remark = "正常"
+         ####     set_run = False
+         ####  else:
+         ####     if n > 20:
+         ####         remark = "异常"
+         ####         data = "写入日志失败"
+         ####         set_run = False
+         ####     else:
+         ####         time.sleep(2)
+         ####  n = n + 1
          page = rsp_data["data"]["page_info"]["total_page"]
          if page == 0:
             data = str(rsp_data).replace(" ", "")
