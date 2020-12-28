@@ -173,7 +173,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   if int(is_page) == 1:
     print("处理分页逻辑！！！")
     etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (task_flag))
-    set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
+    set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,InterfaceFilterList=interface_filter_list,
                         DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=first_task_exception_file,
                         PageTaskFile=first_page_task_file, CeleryPageStatusFile=celery_first_page_status_file,TaskFlag=task_flag,
                         Page=1,PageSize=page_size
@@ -196,7 +196,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
               os.system("""rm -f %s*""" % (celery_rerun_page_status_file.split(".")[0]))
               os.system("""rm -f %s*""" % (rerun_page_task_file.split(".")[0]))
               os.system("""rm -f %s*""" % (rerun_task_exception_file.split(".")[0]))
-              set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,
+              set_first_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json,InterfaceFilterList=interface_filter_list,
                                   DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,
                                   PageTaskFile=rerun_page_task_file, CeleryPageStatusFile=celery_rerun_page_status_file,
                                   TaskFlag=task_flag, Page=1, PageSize=page_size
