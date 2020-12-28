@@ -268,10 +268,27 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
                                 InterfaceFlag=TaskFlag,
                                 Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
                                 )
-
+"""
+       if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
+          filter_list = InterfaceFilterList.split(",")
+          for lists in filter_list:
+              get_list = lists.split(".")
+          if len(get_list) == 1:
+             ParamJson["%s"%(get_list[0])] = int(data[3])
+          else:
+             print("含有filter...")
+"""
 #处理首页
-def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize=""):
+def set_first_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize="",InterfaceFilterList=""):
     for data in DataRows:
+       if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
+            filter_list = InterfaceFilterList.split(",")
+            for lists in filter_list:
+                get_list = lists.split(".")
+            if len(get_list) == 1:
+                ParamJson["%s" % (get_list[0])] = int(data[3])
+            else:
+                print("含有filter...")
        ParamJson["advertiser_id"] = data[0]
        ParamJson["page"] = int(Page)
        ParamJson["page_size"] = int(PageSize)
