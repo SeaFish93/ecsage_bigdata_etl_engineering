@@ -20,6 +20,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure as get_ods_columns
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
@@ -46,6 +47,7 @@ def main(TaskInfo,Level="",**kwargs):
     target_table = TaskInfo[15]
     source_db = TaskInfo[11]
     source_table = TaskInfo[12]
+    is_report = TaskInfo[18]
     key_columns = TaskInfo[19]
     array_flag = TaskInfo[28]
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
@@ -63,9 +65,10 @@ def main(TaskInfo,Level="",**kwargs):
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
                        ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns,IsReplace="N",DagId=airflow.dag,TaskId=airflow.task)
     elif Level == "snap":
-        get_ods_2_snap(AirflowDagId=airflow.dag,AirflowTaskId=airflow.task,
-                       SourceDB=source_db,SourceTable=source_table,TargetDB=target_db,
-                       TargetTable=target_table,TaskInfo=TaskInfo,ExecDate=exec_date)
+        get_data_2_snap(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
+                             TargetDB=target_db, TargetTable=target_table, IsReport=is_report
+                            ,KeyColumns=key_columns, ExecDate=exec_date
+                            ,DagId=airflow.dag,TaskId=airflow.task)
 
 def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
@@ -352,22 +355,6 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskEx
                                 DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
                                 InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
                               )
-
-#落地数据至snap
-def get_ods_2_snap(AirflowDagId="",AirflowTaskId="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",TaskInfo="",ExecDate=""):
-    source_db = SourceDB
-    source_table = SourceTable
-    hive_handler = "hive"
-    beeline_handler = "beeline"
-    target_db = TargetDB
-    target_table = TargetTable
-    key_columns = TaskInfo[19]
-
-    hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
-    beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
-    exec_snap_hive_table(AirflowDagId=AirflowDagId, AirflowTaskId=AirflowTaskId, HiveSession=hive_session, BeelineSession=beeline_session,
-                         SourceDB=source_db,SourceTable=source_table,TargetDB=target_db, TargetTable=target_table, IsReport=0,
-                         KeyColumns=key_columns, ExecDate=ExecDate)
 
 def get_data_2_ods_tmp(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",ArrayFlag="",KeyColumns="",SelectExcludeColumns=""):
     etl_ods_field_diff = get_ods_columns(HiveSession=HiveSession, BeelineSession=BeelineSession
