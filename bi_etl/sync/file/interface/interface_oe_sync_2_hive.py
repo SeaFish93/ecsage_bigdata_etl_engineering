@@ -106,6 +106,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   filter_time = TaskInfo[29]
   interface_filter_list = TaskInfo[30]
   page_size = TaskInfo[31]
+  is_rerun_firstpage = TaskInfo[32]
   if page_size is None or len(str(page_size)) == 0 or page_size == 0:
     page_size = 1000
   filter_time_sql = ""
@@ -189,7 +190,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                         PageTaskFile=first_page_task_file, CeleryPageStatusFile=celery_first_page_status_file,TaskFlag=task_flag,
                         Page=1,PageSize=page_size
                         )
-    if is_report == 1:
+    if int(is_rerun_firstpage) == 1:
       # 重试页数为0
       n = 3
       for i in range(n):

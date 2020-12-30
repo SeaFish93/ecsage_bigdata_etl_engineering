@@ -140,6 +140,7 @@ class EtlMetaDataSQL():
   ,filter_time
   ,interface_filter_list
   ,page_size
+  ,is_rerun_firstpage
   ,`create_user`
   ,`update_user`
   ,`create_time`
