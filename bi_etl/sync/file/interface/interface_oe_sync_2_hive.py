@@ -170,7 +170,16 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             group by a.account_id, a.media_type, a.service_code,a.token
           --  limit 1
        """%(task_flag,media_type)
+      else:
+       sql = """
+        select a.account_id, a.media_type, a.service_code,'' as id,'%s' as flag,a.token_data
+        from metadb.oe_account_interface a
+        where a.exec_date = '%s'
+        group by a.account_id, a.media_type, a.service_code,a.token_data
+      """ % (ExecDate, task_flag)
   ok,db_data = etl_md.get_all_rows(sql)
+  print(db_data)
+  exit(0)
   #处理翻页
   if int(is_page) == 1:
     print("处理分页逻辑！！！")
