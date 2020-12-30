@@ -319,6 +319,10 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
                                                TaskExceptionFile=TaskExceptionFile,Token=token
                                                )
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
+       #记录celery任务日志
+       #celery_task_status_log(CeleryFileLog="", ExecDate="", CeleryTaskID="", CeleryTaskFlag="", CeleryTaskStatus="",
+       #                       InterfaceURL="", InterfaceParamJson={},
+       #                       InterfaceServiceCode="", InterfaceAccountID="", InterfaceFlag="", InterfaceToken="")
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
     print("正在等待获取页数celery队列执行完成！！！")
@@ -1311,3 +1315,49 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
     if ex_datas is not None and len(ex_datas) > 0:
         print("还有特别异常任务存在！！！")
         print(ex_datas[0])
+
+def celery_task_status_log(CeleryFileLog="",ExecDate="",CeleryTaskID="",CeleryTaskFlag="",CeleryTaskStatus="",InterfaceURL="",InterfaceParamJson={},
+                           InterfaceServiceCode="",InterfaceAccountID="",InterfaceFlag="",InterfaceToken=""):
+    # 记录celery任务日志
+    """
+    ExecDate：执行日期
+    CeleryTaskID：celery任务id
+    CeleryTaskFlag：celery任务执行步骤标识
+    CeleryTaskStatus：celery任务执行状态
+    InterfaceURL：接口请求url
+    InterfaceParamJson：接口请求json参数
+    InterfaceServiceCode：代理商code，用来识别token
+    InterfaceAccountID：请求子账户
+    InterfaceFlag：接口标识
+    InterfaceToken：请求接口token
+    """
+    celery_task_id = str(CeleryTaskID).replace(" ","")
+    celery_task_flag = str(CeleryTaskFlag).replace(" ","")
+    celery_task_status = str(CeleryTaskStatus).replace(" ","")
+    interface_url = str(InterfaceURL).replace(" ","")
+    interface_param_json = str(InterfaceParamJson).replace(" ","")
+    interface_service_code = str(InterfaceServiceCode).replace(" ","")
+    interface_account_id = str(InterfaceAccountID).replace(" ","")
+    interface_flag = str(InterfaceFlag).replace(" ","")
+    interface_token = str(InterfaceToken).replace(" ","")
+    set_run = True
+    n = 0
+    while set_run:
+        status = os.system("""echo "%s %s %s %s %s %s %s %s %s %s">>%s """ % (ExecDate,celery_task_id,celery_task_flag,celery_task_status,interface_url,interface_param_json,interface_service_code,interface_account_id,interface_flag,interface_token,CeleryFileLog))
+        if int(status) == 0:
+            set_run = False
+        else:
+            if n > 10:
+                set_run = False
+                msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                       SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                       TargetTable="%s.%s" % ("TargetDB", "TargetTable"),
+                                       BeginExecDate=ExecDate,
+                                       EndExecDate=ExecDate,
+                                       Status="Error",
+                                       Log="请确认配置表指定主键字段是否正确！！！",
+                                       Developer="developer")
+                set_exit(LevelStatu="red", MSG=msg)
+            else:
+                time.sleep(2)
+        n = n + 1
