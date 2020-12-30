@@ -214,7 +214,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                                   )
               ok, db_data = etl_md.get_all_rows(sql)
               if db_data is not None and len(db_data) > 0:
-                  time.sleep(60)
+                  time.sleep(10)
               else:
                   break
     #处理其它分页
