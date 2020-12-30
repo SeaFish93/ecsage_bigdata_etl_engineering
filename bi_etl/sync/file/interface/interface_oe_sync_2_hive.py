@@ -171,6 +171,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           --  limit 1
        """%(task_flag,media_type)
       else:
+      #处理报表分支
        sql = """
         select a.account_id, a.media_type, a.service_code,'' as id,'%s' as flag,a.token_data
         from metadb.oe_account_interface a
