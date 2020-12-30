@@ -180,8 +180,6 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
         group by a.account_id, a.media_type, a.service_code,a.token_data
       """ % (task_flag,ExecDate,media_type)
   ok,db_data = etl_md.get_all_rows(sql)
-  print(len(db_data))
-  exit(0)
   #处理翻页
   if int(is_page) == 1:
     print("处理分页逻辑！！！")
