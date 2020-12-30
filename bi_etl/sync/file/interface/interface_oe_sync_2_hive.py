@@ -176,8 +176,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
         select a.account_id, a.media_type, a.service_code,'' as id,'%s' as flag,a.token_data
         from metadb.oe_account_interface a
         where a.exec_date = '%s'
+          and a.media_type = '%s'
         group by a.account_id, a.media_type, a.service_code,a.token_data
-      """ % (task_flag,ExecDate)
+      """ % (task_flag,ExecDate,media_type)
   ok,db_data = etl_md.get_all_rows(sql)
   print(len(db_data))
   exit(0)
