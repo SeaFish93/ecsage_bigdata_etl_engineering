@@ -256,31 +256,31 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     etl_md.execute_sql("delete from metadb.oe_async_create_task_interface where interface_flag='%s' " % (interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,TableName="oe_async_create_task_interface", Columns=columns)
     #检测是否有媒体创建异步异常任务
-    time.sleep(60)
-    sql = """
-      select account_id,task_id,token_data
-      from metadb.oe_async_create_task_interface 
-      where interface_flag='%s'
-        and task_id != '0'
-    """% (interface_flag)
-    ok,datas = etl_md.get_all_rows(sql)
-    for data in datas:
-     try:
-       resp_data = get_oe_tasks_status(AccountId=data[0], TaskId=data[1], Token=data[2])
-       task_status = resp_data["data"]["list"][0]["task_status"]
-       if task_status == "ASYNC_TASK_STATUS_FAILED":
-           msg = "创建异步任务出现异常！！！"
-           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                                  TargetTable="%s.%s" % ("", ""),
-                                  BeginExecDate="",
-                                  EndExecDate="",
-                                  Status="Error",
-                                  Log=msg,
-                                  Developer="developer")
-           set_exit(LevelStatu="red", MSG=msg)
-     except:
-        pass
+    ######time.sleep(60)
+    ######sql = """
+    ######  select account_id,task_id,token_data
+    ######  from metadb.oe_async_create_task_interface
+    ######  where interface_flag='%s'
+    ######    and task_id != '0'
+    ######"""% (interface_flag)
+    ######ok,datas = etl_md.get_all_rows(sql)
+    ######for data in datas:
+    ###### try:
+    ######   resp_data = get_oe_tasks_status(AccountId=data[0], TaskId=data[1], Token=data[2])
+    ######   task_status = resp_data["data"]["list"][0]["task_status"]
+    ######   if task_status == "ASYNC_TASK_STATUS_FAILED":
+    ######       msg = "创建异步任务出现异常！！！"
+    ######       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+    ######                              SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+    ######                              TargetTable="%s.%s" % ("", ""),
+    ######                              BeginExecDate="",
+    ######                              EndExecDate="",
+    ######                              Status="Error",
+    ######                              Log=msg,
+    ######                              Developer="developer")
+    ######       set_exit(LevelStatu="red", MSG=msg)
+    ###### except:
+    ######    pass
 
 #存储token
 def get_oe_async_tasks_token(MediaType=""):
