@@ -404,7 +404,6 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
                                               ExecDate=ExecDate, Token=token, GroupBy=GroupBy)
         mess = str(resp_data).replace(" ","")
         code = resp_data["code"]
-        async_task_status = resp_data["task_status"]
         if int(code) == 0:
             task_id = resp_data["data"]["task_id"]
             task_name = resp_data["data"]["task_name"]
