@@ -38,7 +38,7 @@ def get_test(string=""):
     test_log.info(str(now)+"############")
 
 #定义oe任务创建
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='500/m')
 def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate="",LocalDir=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
