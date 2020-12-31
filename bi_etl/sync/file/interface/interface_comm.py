@@ -494,6 +494,7 @@ def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""
     n = 0
     data = "写入日志正常"
     not_exist = "N"
+    set_run = True
     while set_run:
         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
         test_log.info(RequestsData)
