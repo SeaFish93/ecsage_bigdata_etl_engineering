@@ -575,8 +575,8 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     load_sql_0 = ""
     load_sql = ""
     n = 0
-    print(target_file,"======================================")
     for files in target_file:
+        print(data_file,"######",files,"#######",target_file,"======================================")
         if data_file in files and '.lock' not in files:
             data_file_list.append("""%s/%s"""%(AsyncAccountDir,files))
             if n == 0:
