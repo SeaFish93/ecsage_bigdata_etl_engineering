@@ -794,7 +794,7 @@ def rerun_exception_async_tasks(DataFileDir="", ExceptionFile="", DataFile="",Ce
     columns = Columns
     db_name = "metadb"
     table_name = "oe_sync_exception_tasks_interface_bak"
-    save_exception_tasks(AsyncAccountDir=DataFileDir,ExceptionFile=ExceptionFile,DbName=db_name,TableName=table_name,Columns=columns)
+    save_exception_tasks(AsyncAccountDir=DataFileDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
     n = 50
     for i in range(n):
@@ -819,7 +819,7 @@ def rerun_exception_async_tasks(DataFileDir="", ExceptionFile="", DataFile="",Ce
            wait_for_celery_status(StatusList=celery_task_id)
            delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
            etl_md.execute_sql(delete_sql)
-           save_exception_tasks(AsyncAccountDir=DataFileDir, ExceptionFile=ExceptionFile, DbName = db_name,TableName=table_name,Columns=columns)
+           save_exception_tasks(AsyncAccountDir=DataFileDir, ExceptionFile=ExceptionFile, TableName=table_name,Columns=columns)
            print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            #判断结果是否还有异常
            ex_sql = """
@@ -897,7 +897,7 @@ def rerun_exception_downfile_tasks(AsyncAccountDir="",ExceptionFile="",DataFile=
         print(ex_datas[0])
 
 #
-def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",TableName="",Columns=""):
+def save_exception_tasks(AsyncAccountDir="",ExceptionFile="", TableName="",Columns=""):
     exception_file = ExceptionFile.split("/")[-1]
     exception_file_list = []
     target_file = os.listdir(AsyncAccountDir)
