@@ -23,6 +23,8 @@ from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import os
 import time
+import ast
+import json
 
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
@@ -458,15 +460,15 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
     target_db = TaskInfo[9]
     target_table = TaskInfo[10]
     interface_flag = TaskInfo[20]
-    airflow_instance = "%s.%s"%(AirflowDagId,AirflowTaskId)
-    async_account_file = "/home/ecsage_data/oceanengine/async/%s"%(media_type)
-    async_data_exception_file = """%s/%s_%s_exception.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
-    async_data_file = """%s/%s_%s_data.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
-    celery_task_data_file = """%s/%s_%s_celery_status.%s.log""" % (async_account_file,AirflowDagId,AirflowTaskId,ExecDate)
-    os.system("""mkdir -p %s""" % (async_account_file))
-    os.system("""rm -f %s/*""" % (async_account_file))
-    os.system("""rm -f %s*""" % (async_data_exception_file))
-    os.system("""rm -f %s*""" % (celery_task_data_file))
+    task_flag = "%s.%s" % (AirflowDagId, AirflowTaskId)
+    local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+    local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s""" % (ExecDate, AirflowDagId, AirflowTaskId)
+    celery_status_file = "%s/celery_status_file.log" % (local_dir)
+    data_task_file = """%s/data_%s.log""" % (local_dir, AirflowTaskId)
+    task_exception_file = "%s/task_exception_file.log" % (local_dir)
+    data_file = data_task_file.split("/")[-1].split(".")[0] + "%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
+    os.system("""mkdir -p %s""" % (local_dir))
+    os.system("""rm -f %s/*""" % (local_dir))
     # 获取子账户
     source_data_sql = """
         -- 正常创建异步任务
@@ -496,34 +498,35 @@ def get_oe_async_tasks_data(AirflowDagId="",AirflowTaskId="",TaskInfo="",MediaTy
        group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
     """ % (interface_flag,media_type,interface_flag,media_type,interface_flag,media_type)
     ok, datas = etl_md.get_all_rows(source_data_sql)
+    params = {}
     for get_data in datas:
-        status_id = get_oe_async_tasks_data_celery.delay(DataFile=async_data_file,ExceptionFile=async_data_exception_file,ExecData=get_data,ExecDate=ExecDate,AirflowInstance=airflow_instance)
-        os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_task_data_file))
-
+        params["advertiser_id"] = get_data[0]
+        params["task_id"] = get_data[4]
+        status_id = get_oe_async_tasks_data_celery.delay(DataFileDir=local_dir, DataFile=data_file,
+                                                         UrlPath="/open_api/2/async_task/download/",
+                                                         ParamJson=params, Token=get_data[3], ReturnAccountId=get_data[0],
+                                                         ServiceCode=get_data[2], TaskFlag=interface_flag,
+                                                         TaskExceptionFile=task_exception_file)
+        os.system("""echo "%s %s">>%s""" % (status_id,get_data[0], celery_status_file))
     #获取状态
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file)
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_status_file)
     print("正在等待celery队列执行完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     print("等待重试异常任务，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-    rerun_exception_downfile_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_data_exception_file, DataFile=async_data_file, CeleryTaskDataFile=celery_task_data_file,
-                                   InterfaceFlag=airflow_instance)
+    rerun_exception_async_tasks(DataFileDir=local_dir, ExceptionFile=task_exception_file, DataFile=data_file,
+                                CeleryTaskDataFile=celery_status_file,InterfaceFlag=interface_flag,
+                                Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
+                               )
     print("等待重试异常任务完成，时间：%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     time.sleep(30)
-    open_file_session = open(async_data_file, mode="w")
-    target_file = os.listdir(async_account_file)
-    status_data_file = celery_task_data_file.split("/")[-1]
-    for files in target_file:
-        if status_data_file in files:
-            get_file = "%s/%s"%(async_account_file,files)
-            with open(get_file) as lines:
-                array = lines.readlines()
-                for data in array:
-                    get_data1 = data.strip('\n').split(" ")
-                    get_celery_job_data(CeleryTaskId=get_data1[0],OpenFileSession=open_file_session)
-    open_file_session.close()
     #上传至hdfs
-    get_local_file_2_hive(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=async_account_file,DataFile=async_data_file,ExecDate=ExecDate)
+    target_file = os.listdir(local_dir)
+    data_task_file_list = []
+    for files in target_file:
+        if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
+            data_task_file_list.append("%s/%s" % (local_dir, files))
+    get_local_file_2_hive(MediaType=MediaType,TargetHandleHive=target_handle, TargetHandleBeeline=beeline_handler,TargetDb=target_db, TargetTable=target_table,AsyncAccountDir=local_dir,DataFile=data_file,ExecDate=ExecDate)
 
 def get_celery_job_data(CeleryTaskId="",OpenFileSession=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
@@ -549,7 +552,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     load_sql = ""
     n = 0
     for files in target_file:
-        if data_file in files:
+        if data_file in files and '.lock' not in files:
             data_file_list.append("""%s/%s"""%(AsyncAccountDir,files))
             if n == 0:
                load_sql_0 = """load data inpath '%s/%s' OVERWRITE INTO TABLE %s;\n"""%(hdfs_dir,files,etl_mid_tmp_table)
@@ -778,6 +781,65 @@ def rerun_exception_account_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="
              from metadb.oe_async_exception_create_tasks_interface a
              where interface_flag = '%s'
         """ % (Columns,InterfaceFlag)
+    ok, ex_datas = etl_md.get_all_rows(ex_sql)
+    if ex_datas is not None and len(ex_datas) > 0:
+        print("还有特别异常任务存在！！！")
+        print(ex_datas[0])
+
+def rerun_exception_async_tasks(DataFileDir="", ExceptionFile="", DataFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns=""):
+    celery_task_data_file = """%s/%s"""%(DataFileDir,CeleryTaskDataFile.split("/")[-1])
+    #先保留第一次
+    delete_sql = """delete from metadb.oe_sync_exception_tasks_interface_bak where interface_flag = '%s' """ % (InterfaceFlag)
+    etl_md.execute_sql(delete_sql)
+    columns = Columns
+    db_name = "metadb"
+    table_name = "oe_sync_exception_tasks_interface_bak"
+    save_exception_tasks(AsyncAccountDir=DataFileDir,ExceptionFile=ExceptionFile,DbName=db_name,TableName=table_name,Columns=columns)
+    #
+    n = 50
+    for i in range(n):
+        sql = """
+          select distinct %s
+          from %s.%s a
+          where interface_flag = '%s'
+        """% (columns,db_name,table_name,InterfaceFlag)
+        ok,datas = etl_md.get_all_rows(sql)
+        if datas is not None and len(datas) > 0:
+           print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           for data in datas:
+             param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
+             status_id = get_oe_async_tasks_data_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
+                                                              UrlPath="/open_api/2/async_task/download/",
+                                                              ParamJson=param_json, Token=data[5], ReturnAccountId=data[3],
+                                                              ServiceCode=data[2], TaskFlag=InterfaceFlag,
+                                                              TaskExceptionFile=ExceptionFile
+                                                             )
+             os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
+           celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
+           wait_for_celery_status(StatusList=celery_task_id)
+           delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
+           etl_md.execute_sql(delete_sql)
+           save_exception_tasks(AsyncAccountDir=DataFileDir, ExceptionFile=ExceptionFile, DbName = db_name,TableName=table_name,Columns=columns)
+           print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           #判断结果是否还有异常
+           ex_sql = """
+                     select %s
+                     from %s.%s a
+                     where interface_flag = '%s'
+                     limit 1
+              """% (columns,db_name,table_name,InterfaceFlag)
+           ok, ex_datas = etl_md.get_all_rows(ex_sql)
+           if ex_datas is not None and len(ex_datas) > 0:
+               print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+               if i == 0:
+                 time.sleep(360)
+               else:
+                 time.sleep(180)
+    ex_sql = """
+         select %s
+         from %s.%s a
+         where interface_flag = '%s'
+    """% (columns,db_name,table_name,InterfaceFlag)
     ok, ex_datas = etl_md.get_all_rows(ex_sql)
     if ex_datas is not None and len(ex_datas) > 0:
         print("还有特别异常任务存在！！！")
