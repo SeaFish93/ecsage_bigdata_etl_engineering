@@ -568,7 +568,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     etl_mid_table = """%s.%s""" % (TargetDb, TargetTable)
     beeline_session = set_db_session(SessionType="beeline", SessionHandler=TargetHandleBeeline)
     target_file = os.listdir(AsyncAccountDir)
-    data_file = DataFile.split("/")[-1]
+    data_file = str(DataFile.split("/")[-1]).split(".")[0]
     hdfs_dir = conf.get("Airflow_New", "hdfs_home") #"/tmp/datafolder_new"
     data_file_list = []
     load_sqls = ""
