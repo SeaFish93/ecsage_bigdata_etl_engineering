@@ -265,6 +265,7 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     """% (interface_flag)
     ok,datas = etl_md.get_all_rows(sql)
     for data in datas:
+     try:
        resp_data = get_oe_tasks_status(AccountId=data[0], TaskId=data[1], Token=data[2])
        task_status = resp_data["data"]["list"][0]["task_status"]
        if task_status == "ASYNC_TASK_STATUS_FAILED":
@@ -278,6 +279,8 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
                                   Log=msg,
                                   Developer="developer")
            set_exit(LevelStatu="red", MSG=msg)
+     except:
+        pass
 
 #存储token
 def get_oe_async_tasks_token(MediaType=""):
