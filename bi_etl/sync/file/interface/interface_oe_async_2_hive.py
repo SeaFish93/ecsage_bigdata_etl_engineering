@@ -655,7 +655,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
                from %s a 
               ) tmp
           where trim(request_data) != 'empty result'
-          and trim(request_data) not like 'request_id#&#ds{%s')
+          and trim(request_data) not like 'request_id#&#ds{%s'
      ) tmp1
      ;
     """%(etl_mid_table,ExecDate,MediaType,select_colums.replace(",","",1),etl_mid_tmp_table,"%")
