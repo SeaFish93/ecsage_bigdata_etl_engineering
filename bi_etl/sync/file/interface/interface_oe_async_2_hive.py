@@ -857,9 +857,9 @@ def rerun_exception_async_tasks(DataFileDir="", ExceptionFile="", DataFile="",Ce
            if ex_datas is not None and len(ex_datas) > 0:
                print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
                if i == 0:
-                 time.sleep(360)
+                 time.sleep(60)
                else:
-                 time.sleep(180)
+                 time.sleep(60)
     ex_sql = """
          select %s
          from %s.%s a
