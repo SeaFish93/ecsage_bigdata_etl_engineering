@@ -259,7 +259,9 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     time.sleep(60)
     sql = """
       select account_id,task_id,token_data
-      from metadb.oe_async_create_task_interface where interface_flag='%s'
+      from metadb.oe_async_create_task_interface 
+      where interface_flag='%s'
+        and task_id != '0'
     """% (interface_flag)
     ok,datas = etl_md.get_all_rows(sql)
     for data in datas:
