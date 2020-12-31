@@ -576,7 +576,6 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     load_sql = ""
     n = 0
     for files in target_file:
-        print(data_file,"######",files,"#######",target_file,"======================================")
         if data_file in files and '.lock' not in files:
             data_file_list.append("""%s/%s"""%(AsyncAccountDir,files))
             if n == 0:
@@ -602,7 +601,7 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
     if data_file_list is not None and len(data_file_list) > 0:
       get_local_hdfs_thread(TargetDb=TargetDb, TargetTable=TargetTable, ExecDate=ExecDate, DataFileList=data_file_list, HDFSDir=hdfs_dir)
     #获取列名
-    get_source_columns = os.popen("""grep -v 'empty result' %s |head -1""" % (data_file_list[0]))
+    get_source_columns = os.popen("""grep -v 'empty result' %s |head -1|sed "s/request_id#&#ds{.*}request_id#&#ds//g" """ % (data_file_list[0]))
     source_columns = get_source_columns.read().split()[0]
     source_columns_list = source_columns.split(",")
     if len(source_columns_list) <= 1:
@@ -656,10 +655,10 @@ def get_local_file_2_hive(MediaType="",TargetHandleHive="", TargetHandleBeeline=
                from %s a 
               ) tmp
           where trim(request_data) != 'empty result'
-          and md5(trim(request_data)) != md5('%s')
+          and trim(request_data) not like 'request_id#&#ds{%s')
      ) tmp1
      ;
-    """%(etl_mid_table,ExecDate,MediaType,select_colums.replace(",","",1),etl_mid_tmp_table,source_columns.strip())
+    """%(etl_mid_table,ExecDate,MediaType,select_colums.replace(",","",1),etl_mid_tmp_table,"%")
     ok = beeline_session.execute_sql(insert_sql)
     if ok is False:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
