@@ -16,6 +16,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all as get_oe_async_tasks_create_all_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all_exception as get_oe_async_tasks_create_all_exception_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_tasks_status
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
@@ -254,6 +255,27 @@ def get_oe_async_tasks_create(AirflowDagId="",AirflowTaskId="",TaskInfo="",Media
     columns = """account_id,interface_flag,media_type,service_code,group_by,fields,token_data,task_id,task_name"""
     etl_md.execute_sql("delete from metadb.oe_async_create_task_interface where interface_flag='%s' " % (interface_flag))
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,TableName="oe_async_create_task_interface", Columns=columns)
+    #检测是否有媒体创建异步异常任务
+    time.sleep(60)
+    sql = """
+      select account_id,task_id,token_data
+      from metadb.oe_async_create_task_interface where interface_flag='%s'
+    """% (interface_flag)
+    ok,datas = etl_md.get_all_rows(sql)
+    for data in datas:
+       resp_data = get_oe_tasks_status(AccountId=data[0], TaskId=data[1], Token=data[2])
+       task_status = resp_data["data"]["list"][0]["task_status"]
+       if task_status == "ASYNC_TASK_STATUS_FAILED":
+           msg = "创建异步任务出现异常！！！"
+           msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                  SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                  TargetTable="%s.%s" % ("", ""),
+                                  BeginExecDate="",
+                                  EndExecDate="",
+                                  Status="Error",
+                                  Log=msg,
+                                  Developer="developer")
+           set_exit(LevelStatu="red", MSG=msg)
 
 #存储token
 def get_oe_async_tasks_token(MediaType=""):
