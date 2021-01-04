@@ -18,6 +18,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_services
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_not_page
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_pages
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_create_async_tasks
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 import json
@@ -371,3 +372,26 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
             time.sleep(5)
       n = n + 1
 
+#创建异步任务
+@app.task(rate_limit='500/m')
+def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",MediaType="",TaskExceptionFile=""):
+    set_true = True
+    n = 0
+    while set_true:
+        code = set_oe_create_async_tasks(DataFileDir=DataFileDir, DataFile=DataFile, UrlPath=UrlPath, ParamJson=ParamJson, Token=Token,
+                                         ReturnAccountId=ReturnAccountId, ServiceCode=ServiceCode, InterfaceFlag=InterfaceFlag, MediaType=MediaType)
+        if int(code) == 0:
+            set_true = False
+        else:
+            if n > 2:
+                print("处理创建异步任务异常：%s,%s" % (ReturnAccountId, ServiceCode))
+                status = os.system("""echo "%s %s %s %s %s %s">>%s """ % ( UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType,Token, TaskExceptionFile + ".%s" % hostname))
+                if int(status) != 0:
+                    for i in range(100):
+                        status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),MediaType, Token, TaskExceptionFile + ".%s" % hostname))
+                        if int(status) == 0:
+                            break;
+                set_true = False
+            else:
+                time.sleep(5)
+        n = n + 1
