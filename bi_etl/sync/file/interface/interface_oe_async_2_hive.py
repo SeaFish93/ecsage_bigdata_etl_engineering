@@ -56,10 +56,10 @@ def main(TaskInfo, **kwargs):
     elif task_type == 1:
         if task_id == "set_create_oe_async_account":
             print("执行创建筛选子账户")
-            get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-                                          MediaType=media_type, ExecDate=exec_date)
-            #get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-            #                                 MediaType=media_type, ExecDate=exec_date)
+            #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
+            #                              MediaType=media_type, ExecDate=exec_date)
+            get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
+                                             MediaType=media_type, ExecDate=exec_date)
         else:
             get_oe_async_tasks_create(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
                                       MediaType=media_type, ExecDate=exec_date)
