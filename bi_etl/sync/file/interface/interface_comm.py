@@ -433,7 +433,7 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
     return code
 
 #定义设置头条异步任务创建
-def set_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",MediaType=""):
+def set_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",MediaType="",TaskFlag=""):
     code = 1
     data = ""
     try:
@@ -448,7 +448,7 @@ def set_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
         if int(code) == 0:
             task_id = resp_data["data"]["task_id"]
             task_name = resp_data["data"]["task_name"]
-            resp_data = """%s %s %s %s %s %s %s %s"""%(ReturnAccountId, InterfaceFlag, MediaType, ServiceCode, Token, task_id,task_name,str(resp_data).replace(" ",""))
+            resp_data = """%s %s %s %s %s %s %s %s %s"""%(ReturnAccountId, InterfaceFlag, MediaType, ServiceCode, Token, task_id,task_name,str(resp_data).replace(" ",""),TaskFlag)
             remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id, DataFileDir=DataFileDir,DataFile=DataFile)
             if remark != "正常":
                 code = 1
@@ -456,7 +456,7 @@ def set_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
             code = 0
             task_id = "111111"
             task_name = "无权限"
-            resp_data = """%s %s %s %s %s %s %s %s""" % (ReturnAccountId, InterfaceFlag, MediaType, ServiceCode, Token, task_id, task_name,str(resp_data).replace(" ", ""))
+            resp_data = """%s %s %s %s %s %s %s %s %s""" % (ReturnAccountId, InterfaceFlag, MediaType, ServiceCode, Token, task_id, task_name,str(resp_data).replace(" ", ""),TaskFlag)
             remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id, DataFileDir=DataFileDir,DataFile=DataFile)
             if remark != "正常":
                 code = 1

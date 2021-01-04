@@ -232,13 +232,14 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
 # 创建oe异步任务
 def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
     interface_flag = TaskInfo[20]
+    task_flag = """%s.%s"""%(AirflowDagId,AirflowTaskId)
     group_by = TaskInfo[11]
     fields = TaskInfo[21]
     local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
     local_dir = """/home/ecsage_data/oceanengine/async/%s/%s/%s""" % (ExecDate, AirflowDagId, AirflowTaskId)
     data_task_file = """%s/data_%s.log""" % (local_dir, AirflowTaskId)
     task_exception_file = "%s/task_exception_file.log" % (local_dir)
-    celery_task_status_file = "%s/celery_first_page_status_file.log" % (local_dir)
+    celery_task_status_file = "%s/celery_task_status_file.log" % (local_dir)
     data_file = data_task_file.split("/")[-1].split(".")[0] + "_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
@@ -270,11 +271,11 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
             params["task_name"] = str(n)
             field_list = fields.split(",")
             params["task_params"]["fields"] = field_list
-        print(params,"=====================================")
         status_id = get_oe_create_async_tasks_celery.delay(DataFileDir=local_dir,DataFile=data_file,
                                                            UrlPath="/open_api/2/async_task/create/",ParamJson=params,
                                                            Token=token,ReturnAccountId=account_id,ServiceCode=service_code,
-                                                           InterfaceFlag=interface_flag,MediaType=media_type,TaskExceptionFile=task_exception_file
+                                                           InterfaceFlag=interface_flag,TaskFlag=task_flag,
+                                                           MediaType=media_type,TaskExceptionFile=task_exception_file
                                                           )
         os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
         n = n + 1
