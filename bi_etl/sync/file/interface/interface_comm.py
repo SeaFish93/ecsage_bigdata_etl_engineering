@@ -33,17 +33,6 @@ def build_url(path, query=""):
 
 #头条同步API
 def set_sync_data(ParamJson="",UrlPath="",Token=""):
-    """
-    {"end_date": "2020-11-29",
-     "page_size": "1",
-     "start_date": "2020-11-29",
-     "advertiser_id": "",
-     "group_by": "",
-     "time_granularity": "",
-     "page": "1"
-     "service_code":"tt-hnhd-03"
-     }
-    """
     query_string = urlencode({k: v if isinstance(v, string_types) else json.dumps(v) for k, v in ParamJson.items()})
     url = build_url(UrlPath, query_string)
     headers = {
@@ -53,15 +42,10 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     }
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     s = requests.session()
-    retries = Retry(total=5,
-                    backoff_factor=0.1,
-                    status_forcelist=[500, 502, 503, 504])
-    #s.mount('http://', HTTPAdapter(max_retries=retries))
+    retries = Retry(total=5,backoff_factor=0.1,status_forcelist=[500, 502, 503, 504])
     s.mount('https://', HTTPAdapter(max_retries=retries))
     s.keep_alive = False
     rsp = s.get(url=url, headers=headers, verify=False, stream=False, timeout=300)
-    #rsp.close()
-    #rsp = requests.get(url, headers=headers,verify=False)
     return rsp.json()
 
 def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",DataFile="",TaskFlag=""):
@@ -174,6 +158,7 @@ def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir="",EtlMdSession=""):
     th = []
     i = 0
+    th_n = 0
     file_num = 0
     for data_files in DataFileList:
         etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
@@ -181,9 +166,13 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
                                )
         etl_thread.start()
         th.append(etl_thread)
+        if th_n >=1 or len(DataFileList)-1 == i:
+           for etl_th in th:
+              etl_th.join()
+           th = []
+           th_n = -1
+        th_n = th_n + 1
         i = i + 1
-    for etl_th in th:
-        etl_th.join()
 
     size_error_file = DataFileList[0].rsplit("/", 1)[0] + '/' + 'file_size_error.log'
     os.system(""" > %s"""%(size_error_file))
@@ -441,69 +430,76 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
        os.system("""echo "%s %s">>%s/%s.%s """ % (AccountId,mess,LocalDir,InterfaceFlag,hostname))
     return code
 
-def set_oe_async_tasks_data_return(DataFile="",ExecData="",AirflowInstance=""):
-    get_data = ExecData
-    media_type = get_data[1]
-    service_code = get_data[2]
-    account_id = get_data[0]
-    task_id = get_data[4]
-    token = get_data[3]
-    task_name = get_data[5]
-    resp_datas = ""
-    n = 1
-    set_run = True
-    code = 0
-    resp_datas = "####"
-    while set_run:
-       code,resp_datas = get_oe_async_tasks_data_return(Token=token, AccountId=account_id, TaskId=task_id)
-       if int(code) == 40105:
-           token = get_oe_account_token(ServiceCode=service_code)
-           if n >2:
-             set_run = False
-             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s_%s" % (AirflowInstance,hostname)))
-           else:
-             time.sleep(2)
-       elif int(code) == 40002:
-           os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "permission_exception_%s_%s" % (AirflowInstance, hostname)))
-           code = 0
-           resp_datas = "No permission to operate advertiser %s"%(account_id)
-           set_run = False
-       else:
-           set_run = False
-       n = n + 1
-    return code,resp_datas
+def set_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode=""):
+    code = 1
+    data = ""
+    try:
+        resp_datas = get_oe_async_tasks_data_return(UrlPath=UrlPath, ParamJson=ParamJson, Token=Token)
+        try:
+          #异步返回数据若是json格式，则是异常
+          code = eval(resp_datas.decode())["code"]
+          data = str(resp_datas.decode()).replace(" ","").replace("'","")
+        except:
+          code = 0
+        # token无效重试
+        if int(code) == 40105:
+            token = get_oe_account_token(ServiceCode=ServiceCode)
+            resp_datas = get_oe_async_tasks_data_return(UrlPath=UrlPath,ParamJson=ParamJson,Token=token)
+            try:
+                code = eval(resp_datas.decode())["code"]
+                data = str(resp_datas.decode()).replace(" ","").replace("'","")
+            except:
+                code = 0
+        if int(code) == 0:
+            request_id = "request_id#&#ds"+str(ParamJson).replace("'", "")+"request_id#&#ds"
+            resp_data = request_id + resp_datas.decode()
+            remark,data = get_write_local_file(RequestsData=resp_data, RequestID=request_id, DataFileDir=DataFileDir, DataFile=DataFile)
+            if remark != "正常":
+               code = 1
+        elif int(code) in [40002, 40105, 40104]:
+            code = 0
+            data = str(data).replace(" ", "")
+        else:
+            code = 1
+            data = str(data).replace(" ", "")
+    except Exception as e:
+        code = 1
+        data = "请求失败：%s" % (str(e).replace("\n", "").replace(" ", "").replace("""\"""", ""))
+    if int(code) != 0 or (int(code) == 0 and len(data) > 0):
+        status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+        if int(status) != 0:
+            for i in range(10):
+                status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+                if int(status) == 0:
+                    break;
+    return code
 
-def get_oe_async_tasks_data_return(Token="",AccountId="",TaskId=""):
-    resp_datas = ""
+def get_oe_async_tasks_data_return(UrlPath="",ParamJson="",Token=""):
     open_api_domain = "https://ad.toutiao.com"
-    path = "/open_api/2/async_task/download/"
-    url = open_api_domain + path
-    params = {
-        "advertiser_id": AccountId,
-        "task_id": TaskId
-    }
+    url = open_api_domain + UrlPath
+    #params = {
+    #    "advertiser_id": AccountId,
+    #    "task_id": TaskId
+    #}
     headers = {
         'Content-Type': "application/json",
         'Access-Token': Token,
         'Connection': "close"
     }
-    return_resp_data = ""
-    resp_data = ""
-    try:
-      resp = requests.get(url, json=params, headers=headers)
-      resp_data = resp.content
-      return_resp_data = resp.iter_lines()
-      code = eval(resp_data.decode())["code"]
-    except Exception as e:
-      code = 0
-    return code,resp_data
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    s = requests.session()
+    retries = Retry(total=5,backoff_factor=0.1,status_forcelist=[500, 502, 503, 504])
+    s.mount('https://', HTTPAdapter(max_retries=retries))
+    s.keep_alive = False
+    resp = s.get(url=url, json=ParamJson,headers=headers, verify=False, stream=False, timeout=300)
+    return resp.content
 
 def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""):
     file_name = """%s-%s.%s""" % (DataFile.split(".")[0], hostname, DataFile.split(".")[1])
-    print(file_name,"===========================================",DataFile)
     n = 0
-    data = ""
+    data = "写入日志正常"
     not_exist = "N"
+    set_run = True
     while set_run:
         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
         test_log.info(RequestsData)

@@ -38,7 +38,7 @@ def get_test(string=""):
     test_log.info(str(now)+"############")
 
 #定义oe任务创建
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='500/m')
 def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate="",LocalDir=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
@@ -104,7 +104,7 @@ def get_oe_async_tasks_create_all_exception(AsyncTaskName="", AsyncTaskFile="", 
       n = n + 1
 
 #定义oe任务创建
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='500/m')
 def get_oe_async_tasks_create(AsyncTaskName="", LocalDir="",AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
@@ -135,7 +135,7 @@ def get_oe_async_tasks_create(AsyncTaskName="", LocalDir="",AsyncTaskFile="", As
       n = n + 1
 
 #定义oe任务状态
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='500/m')
 def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     set_true = True
@@ -175,26 +175,28 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
        n = n + 1
 
 #定义oe任务数据
-@app.task(rate_limit='1000/m',time_limit=600)
-def get_oe_async_tasks_data_return(DataFile="",ExceptionFile="",ExecData="",ExecDate="",AirflowInstance=""):
-    account_id = ExecData[0]
+@app.task(rate_limit='500/m')
+def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",TaskFlag="",TaskExceptionFile=""):
+    print("执行数据子账户：%s"%(ReturnAccountId))
     set_true = True
-    n = 1
-    data = "####"
-    print("执行数据子账户：%s"%(account_id))
+    n = 0
     while set_true:
-       code,data = set_oe_async_tasks_data_return(DataFile=DataFile,ExecData=ExecData,AirflowInstance=AirflowInstance)
-       if code != 0 or str(data) == "" or str(data) == "####":
-         if n > 3:
-            print("异常数据子账户：%s" % (account_id))
-            get_oe_save_exception_file(ExceptionType="data",ExecData=ExecData, AsyncNotemptyFile="",AsyncStatusExceptionFile=ExceptionFile,ExecDate=ExecDate,AirflowInstance=AirflowInstance)
+        code = set_oe_async_tasks_data_return(DataFileDir=DataFileDir,DataFile=DataFile,UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,ReturnAccountId=ReturnAccountId,ServiceCode=ServiceCode)
+        if int(code) == 0:
             set_true = False
-         else:
-            time.sleep(2)
-       else:
-         set_true = False
-       n = n + 1
-    return data
+        else:
+            if n > 2:
+                print("异常处理异步数据子账户：%s,%s" % (ReturnAccountId, ServiceCode))
+                status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
+                if int(status) != 0:
+                    for i in range(100):
+                        status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),TaskFlag, Token, TaskExceptionFile + ".%s" % hostname))
+                        if int(status) == 0:
+                            break;
+                set_true = False
+            else:
+                time.sleep(5)
+        n = n + 1
 
 #定义oe同步数据
 @app.task(rate_limit='1000/m')
