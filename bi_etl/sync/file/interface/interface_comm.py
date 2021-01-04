@@ -27,14 +27,13 @@ from ecsage_bigdata_etl_engineering.common.base.def_table_struct import adj_snap
 
 hostname = socket.gethostname()
 
-def build_url(path, query=""):
-    scheme, netloc = "https", "ad.oceanengine.com"
+def build_url(path="", netloc="",query=""):
+    scheme= "https"
     return urlunparse((scheme, netloc, path, "", query, ""))
-
 #头条同步API
-def set_sync_data(ParamJson="",UrlPath="",Token=""):
+def set_sync_data(ParamJson="",UrlPath="",netloc="ad.oceanengine.com",Token="",IsPost="N"):
     query_string = urlencode({k: v if isinstance(v, string_types) else json.dumps(v) for k, v in ParamJson.items()})
-    url = build_url(UrlPath, query_string)
+    url = build_url(UrlPath,netloc, query_string)
     headers = {
         "Access-Token": Token,
         'Connection': "close",
@@ -45,7 +44,10 @@ def set_sync_data(ParamJson="",UrlPath="",Token=""):
     retries = Retry(total=5,backoff_factor=0.1,status_forcelist=[500, 502, 503, 504])
     s.mount('https://', HTTPAdapter(max_retries=retries))
     s.keep_alive = False
-    rsp = s.get(url=url, headers=headers, verify=False, stream=False, timeout=300)
+    if IsPost == "Y":
+        rsp = s.post(url=url, headers=headers, verify=False, stream=False, timeout=300)
+    else:
+       rsp = s.get(url=url, headers=headers, verify=False, stream=False, timeout=300)
     return rsp.json()
 
 def get_sync_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFileDir="",DataFile="",TaskFlag=""):
@@ -428,6 +430,49 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
         mess = "请求失败"
     if int(code) != 0:
        os.system("""echo "%s %s">>%s/%s.%s """ % (AccountId,mess,LocalDir,InterfaceFlag,hostname))
+    return code
+
+#定义设置头条异步任务创建
+def set_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",MediaType="",TaskFlag=""):
+    code = 1
+    data = ""
+    try:
+        resp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, netloc="ad.toutiao.com", Token=Token,IsPost="Y")
+        code = resp_data["code"]
+        # token无效重试
+        if int(code) == 40105:
+            token = get_oe_account_token(ServiceCode=ServiceCode)
+            resp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, netloc="ad.toutiao.com", Token=token,IsPost="Y")
+            code = resp_data["code"]
+        request_id = resp_data["request_id"]
+        if int(code) == 0:
+            task_id = resp_data["data"]["task_id"]
+            task_name = resp_data["data"]["task_name"]
+            resp_data = """%s %s %s %s %s %s %s %s %s"""%(ReturnAccountId, InterfaceFlag, MediaType, ServiceCode, Token, task_id,task_name,str(resp_data).replace(" ",""),TaskFlag)
+            remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id, DataFileDir=DataFileDir,DataFile=DataFile)
+            if remark != "正常":
+                code = 1
+        elif int(code) in [40002, 40105, 40104]:
+            code = 0
+            task_id = "111111"
+            task_name = "无权限"
+            resp_data = """%s %s %s %s %s %s %s %s %s""" % (ReturnAccountId, InterfaceFlag, MediaType, ServiceCode, Token, task_id, task_name,str(resp_data).replace(" ", ""),TaskFlag)
+            remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id, DataFileDir=DataFileDir,DataFile=DataFile)
+            if remark != "正常":
+                code = 1
+        else:
+            code = 1
+            data = str(resp_data).replace(" ", "")
+    except Exception as e:
+        code = 1
+        data = "请求失败：%s" % (str(e).replace("\n", "").replace(" ", "").replace("""\"""", ""))
+    if int(code) != 0:
+        status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+        if int(status) != 0:
+            for i in range(10):
+                status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+                if int(status) == 0:
+                    break;
     return code
 
 def set_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode=""):

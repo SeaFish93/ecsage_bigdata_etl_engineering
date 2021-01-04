@@ -14,7 +14,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_data_return as get_oe_async_tasks_data_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create as get_oe_async_tasks_create_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all as get_oe_async_tasks_create_all_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_async_tasks_create_all_exception as get_oe_async_tasks_create_all_exception_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_oe_create_async_tasks as get_oe_create_async_tasks_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_tasks_status
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
@@ -56,8 +56,10 @@ def main(TaskInfo, **kwargs):
     elif task_type == 1:
         if task_id == "set_create_oe_async_account":
             print("执行创建筛选子账户")
-            get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-                                          MediaType=media_type, ExecDate=exec_date)
+            #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
+            #                              MediaType=media_type, ExecDate=exec_date)
+            get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
+                                             MediaType=media_type, ExecDate=exec_date)
         else:
             get_oe_async_tasks_create(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
                                       MediaType=media_type, ExecDate=exec_date)
@@ -225,6 +227,88 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     """ % (interface_flag)
     etl_md.execute_sql(sql)
 
+
+
+# 创建oe异步任务
+def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
+    interface_flag = TaskInfo[20]
+    task_flag = """%s.%s"""%(AirflowDagId,AirflowTaskId)
+    group_by = TaskInfo[11]
+    fields = TaskInfo[21]
+    local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+    local_dir = """/home/ecsage_data/oceanengine/async/%s/%s/%s""" % (ExecDate, AirflowDagId, AirflowTaskId)
+    data_task_file = """%s/data_%s.log""" % (local_dir, AirflowTaskId)
+    task_exception_file = "%s/task_exception_file.log" % (local_dir)
+    celery_task_status_file = "%s/celery_task_status_file.log" % (local_dir)
+    data_file = data_task_file.split("/")[-1].split(".")[0] + "_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
+    os.system("""mkdir -p %s""" % (local_dir))
+    os.system("""rm -f %s/*""" % (local_dir))
+    account_sql = """
+      select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+      from metadb.media_advertiser
+      where media_type = %s
+      limit 1
+    """ % (interface_flag, group_by, fields,MediaType)
+    ok, all_rows = etl_md.get_all_rows(account_sql)
+    n = 1
+    params = {}
+    params["task_type"] = "REPORT"
+    params["force"] = "true"
+    params["task_params"] = {}
+    params["task_params"]["group_by"] = group_by.split(",")
+    params["task_params"]["start_date"] = ExecDate
+    params["task_params"]["end_date"] = ExecDate
+    for data in all_rows:
+        token = data[6]
+        account_id = data[0]
+        service_code = data[3]
+        media_type = data[2]
+        if fields is None or len(fields) == 0:
+            params["advertiser_id"] = str(account_id)
+            params["task_name"] = str(n)
+        else:
+            params["advertiser_id"] = str(account_id)
+            params["task_name"] = str(n)
+            field_list = fields.split(",")
+            params["task_params"]["fields"] = field_list
+        status_id = get_oe_create_async_tasks_celery.delay(DataFileDir=local_dir,DataFile=data_file,
+                                                           UrlPath="/open_api/2/async_task/create/",ParamJson=params,
+                                                           Token=token,ReturnAccountId=account_id,ServiceCode=service_code,
+                                                           InterfaceFlag=interface_flag,TaskFlag=task_flag,
+                                                           MediaType=media_type,TaskExceptionFile=task_exception_file
+                                                          )
+        os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
+        n = n + 1
+
+    # 获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+    print("正在等待celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("celery队列执行完成！！！")
+    print("等待重试异常任务！！！")
+    ####rerun_exception_account_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
+    ####                              DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
+    ####                              Columns="account_id,interface_flag,media_type,service_code,group_by,fields,token_data",
+    ####                              InterfaceFlag=interface_flag, ExecDate=ExecDate)
+    print("等待重试异常任务完成！！！")
+    # 保存MySQL
+    #columns = """account_id,interface_flag,media_type,service_code,interface_group_by,interface_columns,token_data,task_id,task_name"""
+    #etl_md.execute_sql("delete from metadb.oe_async_create_task where interface_flag='%s' " % (interface_flag))
+    #load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
+    #                TableName="oe_async_create_task", Columns=columns)
+    # 加载因网络抖动写入nfs系统漏数
+    ######sql = """
+    ######   insert into metadb.oe_async_create_task
+    ######   select a.media_type,a.token_code,a.service_code
+    ######          ,a.account_id,'0' as task_id,'999999' as task_name,'##'
+    ######          ,'##','%s' as interface_flag
+    ######   from metadb.media_advertiser a
+    ######   left join metadb.oe_async_create_task b
+    ######   on a.account_id = b.account_id
+    ######   and a.service_code = b.service_code
+    ######   where b.account_id is null
+    ######""" % (interface_flag)
+    ######etl_md.execute_sql(sql)
 
 def get_oe_async_tasks_create(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
     media_type = int(MediaType)
