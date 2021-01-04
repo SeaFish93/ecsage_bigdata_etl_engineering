@@ -145,6 +145,7 @@ class EtlMetaDataSQL():
   ,`update_user`
   ,`create_time`
   ,`update_time`
+  ,`custom_set_parameter`
    from metadb.interface_sync_tasks_info
     where status = 1
       and dag_id = '%s'
