@@ -158,6 +158,7 @@ def get_sync_data(ParamJson="",UrlPath="",DataFileDir="",DataFile=""):
 def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList="",HDFSDir="",EtlMdSession=""):
     th = []
     i = 0
+    th_n = 0
     file_num = 0
     for data_files in DataFileList:
         etl_thread = EtlThread(thread_id=i, thread_name="%d" % (i),
@@ -165,9 +166,13 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
                                )
         etl_thread.start()
         th.append(etl_thread)
+        if th_n >=1 or len(DataFileList)-1 == i:
+           for etl_th in th:
+              etl_th.join()
+           th = []
+           th_n = -1
+        th_n = th_n + 1
         i = i + 1
-    for etl_th in th:
-        etl_th.join()
 
     size_error_file = DataFileList[0].rsplit("/", 1)[0] + '/' + 'file_size_error.log'
     os.system(""" > %s"""%(size_error_file))
