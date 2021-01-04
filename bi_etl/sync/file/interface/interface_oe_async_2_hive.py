@@ -252,6 +252,7 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     params = {}
     params["task_type"] = "REPORT"
     params["force"] = "true"
+    params["task_params"] = {}
     params["task_params"]["group_by"] = group_by.split(",")
     params["task_params"]["start_date"] = ExecDate
     params["task_params"]["end_date"] = ExecDate
