@@ -246,6 +246,7 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
       select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
       from metadb.media_advertiser
       where media_type = %s
+      limit 1
     """ % (interface_flag, group_by, fields,MediaType)
     ok, all_rows = etl_md.get_all_rows(account_sql)
     n = 1
@@ -269,6 +270,7 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
             params["task_name"] = str(n)
             field_list = fields.split(",")
             params["task_params"]["fields"] = field_list
+        print(params,"=====================================")
         status_id = get_oe_create_async_tasks_celery.delay(DataFileDir=local_dir,DataFile=data_file,
                                                            UrlPath="/open_api/2/async_task/create/",ParamJson=params,
                                                            Token=token,ReturnAccountId=account_id,ServiceCode=service_code,
