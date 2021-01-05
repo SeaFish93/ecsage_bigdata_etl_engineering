@@ -1040,7 +1040,7 @@ def get_celery_job_status(CeleryTaskId=""):
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
     else:
-       print(CeleryTaskId,"##",status)
+       #print(CeleryTaskId,"##",status)
        return False
 
 def get_celery_status_list(CeleryTaskStatusFile=""):
