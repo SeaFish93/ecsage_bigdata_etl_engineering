@@ -78,6 +78,7 @@ def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     celery_task_status_file = """%s/celery_task_status_file.log""" % (async_account_file)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s/*""" % (async_account_file))
+    os.system("""chmod -R 777 %s""" % (async_account_file))
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where  exec_date = '%s' """ % (ExecDate))
     etl_md.execute_sql("""delete from metadb.oe_not_valid_account_interface where exec_date = '%s' """ % (ExecDate))
     # 获取子账户
@@ -181,6 +182,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     celery_task_status_file = """%s/celery_task_status.log""" % (async_account_file)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s/*""" % (async_account_file))
+    os.system("""chmod -R 777 %s"""%(async_account_file))
     account_sql = """
       select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
       from metadb.media_advertiser
@@ -243,6 +245,7 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     data_file = data_task_file.split("/")[-1].split(".")[0] + "_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
+    os.system("""chmod -R 777 %s""" % (local_dir))
     account_sql = """
       select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
       from metadb.media_advertiser
@@ -321,6 +324,7 @@ def get_oe_async_tasks_create(AirflowDagId="", AirflowTaskId="", TaskInfo="", Me
     celery_task_status_file = """%s/celery_task_status_%s.log""" % (async_account_file, media_type)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s/*""" % (async_account_file))
+    os.system("""chmod -R 777 %s""" % (async_account_file))
 
     source_data_sql = """
             select a.account_id,'%s' as interface_flag,a.media_type,a.service_code,'%s' as group_by
@@ -615,6 +619,7 @@ def get_oe_async_tasks_data(AirflowDagId="", AirflowTaskId="", TaskInfo="", Medi
                 data_task_file.split("/")[-1].split(".")[1]
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
+    os.system("""chmod -R 777 %s""" % (local_dir))
     # 获取子账户
     source_data_sql = """
         -- 正常创建异步任务
