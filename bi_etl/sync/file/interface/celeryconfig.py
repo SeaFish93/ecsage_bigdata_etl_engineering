@@ -1,7 +1,7 @@
 #broker use redis 测试库
-BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/99'
+BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/9'
 #backend use redis 测试库
-CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/100'
+CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/10'
 #use json
 #CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
