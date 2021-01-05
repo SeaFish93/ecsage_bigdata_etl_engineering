@@ -4,6 +4,7 @@ ps -ef|grep celery|awk '{print $2}'|while read line ;
 do
  kill -9 $line
 done
+
 cd /root/bigdata_item_code/ecsage_bigdata_etl_engineering
 git pull
 
