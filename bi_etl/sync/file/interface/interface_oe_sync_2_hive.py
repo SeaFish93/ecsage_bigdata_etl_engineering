@@ -108,6 +108,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   interface_filter_list = TaskInfo[30]
   page_size = TaskInfo[31]
   is_rerun_firstpage = TaskInfo[32]
+  page_style = TaskInfo[38]
   if page_size is None or len(str(page_size)) == 0 or page_size == 0:
     page_size = 1000
   filter_time_sql = ""
@@ -189,7 +190,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     set_first_page_info(IsRerun="N",DataRows=db_data, UrlPath=url_path, ParamJson=param_json,InterfaceFilterList=interface_filter_list,
                         DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=first_task_exception_file,
                         PageTaskFile=first_page_task_file, CeleryPageStatusFile=celery_first_page_status_file,TaskFlag=task_flag,
-                        Page=1,PageSize=page_size
+                        Page=1,PageSize=page_size,Pagestyle=page_style
                         )
     if int(is_rerun_firstpage) == 1:
       # 重试页数为0
@@ -212,7 +213,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
               set_first_page_info(IsRerun="Y",DataRows=db_data, UrlPath=url_path,DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                                   DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,
                                   PageTaskFile=rerun_page_task_file, CeleryPageStatusFile=celery_rerun_page_status_file,
-                                  TaskFlag=task_flag, Page=1, PageSize=page_size
+                                  TaskFlag=task_flag, Page=1, PageSize=page_size,Pagestyle=page_style
                                   )
               ok, db_data = etl_md.get_all_rows(sql)
               if db_data is not None and len(db_data) > 0:
@@ -311,7 +312,7 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
        else:
          ParamJson = ast.literal_eval(json.loads(json.dumps(str(data[3]).replace("""'""", """\""""))))
        ParamJson["advertiser_id"] = data[0]
-       if Pagestyle is not None and len(Pagestyle)>0:#page_style=[{"offset":0,"limit":100},"offset"]
+       if Pagestyle is not None and len(Pagestyle)>0:#page_style=[{"offset":0,"limit":100},"offset","limit"]
            ParamJson.update(Pagestyle[0])
            print(ParamJson)
        else:
@@ -323,7 +324,7 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
        celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
                                                DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
-                                               TaskExceptionFile=TaskExceptionFile,Token=token
+                                               TaskExceptionFile=TaskExceptionFile,Token=token,Pagestyle=Pagestyle
                                                )
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
        #记录celery任务日志
@@ -347,21 +348,26 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
                     TableName="oe_sync_page_interface", Columns=columns)
 
 #处理其它分页
-def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",PageSize="",InterfaceFilterList=""):
+def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",PageSize="",InterfaceFilterList="",Pagestyle=""):
     for data in DataRows:
       page_number = int(data[3])
       for page in range(page_number):
         if page > 0:
            param_json = ast.literal_eval(json.loads(json.dumps(str(data[4]).replace("""'""", """\""""))))
-           pages = page + 1
-           param_json["page"] = int(pages)
-           param_json["page_size"] = int(PageSize)
+           if Pagestyle is not None and len(Pagestyle) > 0:
+               tmp_offset = page * Pagestyle[0][Pagestyle[2]] #Pagestyle=[{"offset":0,"limit":100},"offset","limit"]
+               update_offset = {Pagestyle[1]:tmp_offset}#{"offset":page * offset}
+               param_json.update(update_offset)
+           else:
+               pages = page + 1
+               param_json["page"] = int(pages)
+               param_json["page_size"] = int(PageSize)
            service_code = data[2]
            token = data[5]
            celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=param_json,ServiceCode=service_code,
                                                     DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                     TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
-                                                    TaskExceptionFile=TaskExceptionFile,Token=token
+                                                    TaskExceptionFile=TaskExceptionFile,Token=token,Pagestyle=Pagestyle
                                                    )
            os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
     # 获取状态
@@ -375,123 +381,6 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskEx
                                 DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
                                 InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
                               )
-
-def get_data_2_ods_tmp(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDate="",ArrayFlag="",KeyColumns="",SelectExcludeColumns=""):
-    etl_ods_field_diff = get_ods_columns(HiveSession=HiveSession, BeelineSession=BeelineSession
-                                         , SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
-                                         , IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag,IsReplace="N")
-    print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
-    ok, get_ods_column = HiveSession.get_column_info(TargetDB, TargetTable)
-    system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
-    is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable,
-                   ExecDate=ExecDate, KeyColumns=KeyColumns)
-    row_number_columns = ""
-    key_column_list = KeyColumns.split(",")
-    for key in key_column_list:
-        row_number_columns = row_number_columns + "," + "`" + key + "`"
-    row_number_columns = row_number_columns.replace(",", "", 1)
-    select_exclude_columns = SelectExcludeColumns
-    if select_exclude_columns is None or len(select_exclude_columns) == 0:
-        select_exclude_columns = "000000"
-    columns = ""
-    for column in get_ods_column:
-        columns = columns + "," + column[0]
-        if column[0] == "etl_date":
-            break;
-    columns = columns.replace(",", "", 1)
-    json_tuple_columns = ""
-    for get_json_tuple_column in columns.split(","):
-        if get_json_tuple_column not in select_exclude_columns.split(",") and get_json_tuple_column not in system_table_columns.split(","):
-            json_tuple_columns = json_tuple_columns + "," + "'%s'" % (get_json_tuple_column)
-    json_tuple_columns = json_tuple_columns.replace(",", "", 1)
-    json_tuple_column = json_tuple_columns.replace("'", "")
-    select_json_tuple_column = json_tuple_columns.replace("'", "`")
-    columns = ','.join("`%s`" % (x) for x in columns.split(",") if x != 'etl_date')
-    array_flag = ArrayFlag
-    if array_flag in ["list", "custom_audience_list"]:
-        regexp_extract = """get_json_object(a.request_data,'$.data.%s') as data_colums""" % (array_flag)
-    else:
-        regexp_extract = """get_json_object(a.request_data,'$.data') as data_colums"""
-    return_regexp_extract = """trim(get_json_object(a.request_data,'$.returns_columns')) as returns_colums"""
-    returns_account_id = """trim(get_json_object(a.request_data,'$.returns_account_id')) as returns_account_id"""
-    filter_line = """length(regexp_extract(a.request_data,'(\\\\"\\\\}## \\\\{\\\\".*)',1)) > 0"""
-    specified_pars_str = etl_ods_field_diff[3]
-    specified_pars_list = etl_ods_field_diff[2]
-    null_field_set = list(set(json_tuple_column.split(",")).difference(set(specified_pars_list)))
-    null_field_list = []
-    for null_field in null_field_set:
-        null_field_list.append(",cast( null as String) as `%s`" % (null_field))
-    null_field_str = ''.join(null_field_list)
-    null_field_str = null_field_str + ",'%s' as `extract_system_time`" % (system_time)
-
-    print("Json待解析字段：" + specified_pars_str)
-    if specified_pars_str is not None and len(specified_pars_str) > 0:
-        pars_str_list = []
-        for pars_field in specified_pars_str.split(","):
-            as_str = pars_field.split(".")[-1]
-            pars_str_list.append("get_json_object(data_num_colums,'$.%s') as `%s`" % (pars_field, as_str))
-        pars_str = ','.join(pars_str_list)
-        sql = """
-            add file hdfs:///tmp/airflow/get_arrary.py;
-            drop table if exists %s.%s_tmp;
-            create table %s.%s_tmp stored as parquet as 
-            select %s
-            from (select returns_colums,%s %s,returns_account_id,request_type
-                  from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
-                              ,split(data_colums,'@@####@@')[1] as data_colums
-                              ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
-                              ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
-                       from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                            from(select %s
-                                        ,%s
-                                        ,%s
-                                        ,request_type
-                                 from %s.%s a
-                                 where a.etl_date = '%s'
-                                ) a
-                            where data_colums is not null
-                              and data_colums  <> '[]'
-                            ) b
-                       ) c
-                       lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
-                  ) a
-                  ;
-            """ % ("etl_mid", TargetTable, "etl_mid", TargetTable, columns, pars_str, null_field_str, return_regexp_extract,
-                   regexp_extract, returns_account_id, SourceDB, SourceTable, ExecDate)
-    ok = BeelineSession.execute_sql(sql)
-    if ok is False:
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                               TargetTable="%s.%s" % (TargetDB, TargetTable),
-                               BeginExecDate=ExecDate,
-                               EndExecDate=ExecDate,
-                               Status="Error",
-                               Log="ods入库-tmp失败！！！",
-                               Developer="developer")
-        set_exit(LevelStatu="red", MSG=msg)
-    sql = """
-            insert overwrite table %s.%s
-            partition(etl_date = '%s')
-            select %s from(
-            select %s,row_number()over(partition by %s order by 1) as rn_row_number
-            from %s.%s_tmp
-            ) tmp where rn_row_number = 1
-                   ;
-            drop table if exists %s.%s_tmp;
-            """ % (TargetDB, TargetTable, ExecDate, columns, columns, row_number_columns, "etl_mid", TargetTable, "etl_mid",TargetTable)
-    ok = BeelineSession.execute_sql(sql)
-    if ok is False:
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                               TargetTable="%s.%s" % (TargetDB, TargetTable),
-                               BeginExecDate=ExecDate,
-                               EndExecDate=ExecDate,
-                               Status="Error",
-                               Log="ods入库失败！！！",
-                               Developer="developer")
-        set_exit(LevelStatu="red", MSG=msg)
-
 
 def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
     for data in DataRows:
@@ -1259,7 +1148,7 @@ def is_key_columns(SourceDB="",SourceTable="",TargetDB="",TargetTable="",ExecDat
         set_exit(LevelStatu="red", MSG=msg)
 
 #分页异常重试
-def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",PageTaskFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns="",IsPage=""):
+def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",PageTaskFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns="",IsPage="",Pagestyle=""):
     celery_task_data_file = """%s/%s"""%(DataFileDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface_bak where interface_flag = '%s' """ % (InterfaceFlag)
@@ -1284,7 +1173,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
              if IsPage == "Y":
                 status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
                                                      DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
-                                                     TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile
+                                                     TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile,Pagestyle=Pagestyle
                                                     )
              else:
                 status_id = get_not_page_celery.delay(UrlPath=data[0], ParamJson=param_json,Token=data[5],
