@@ -268,12 +268,12 @@ def set_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
             if task_status == "ASYNC_TASK_STATUS_COMPLETED":
                 remark = "正常"
                 if int(file_size) > 12:
-                    print("有数据：%s" % (ReturnAccountId,ServiceCode))
+                    print("有数据：%s %s" % (ReturnAccountId,ServiceCode))
                     task_id = resp_data["data"]["list"][0]["task_id"]
                     resp_data = """%s %s %s %s %s %s %s %s %s""" % (ExecDate, ReturnAccountId, MediaType, ServiceCode, Token, task_id, "有数",TaskFlag,request_id)
                     remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id,DataFileDir=DataFileDir,DataFile=DataFile)
             else:
-                print("媒体异步任务未执行完成：%s" % (ReturnAccountId))
+                print("媒体异步任务未执行完成：%s %s" % (ReturnAccountId,ServiceCode))
                 task_id = resp_data["data"]["list"][0]["task_id"]
                 resp_data = """%s %s %s %s %s %s %s %s %s""" % (ExecDate, ReturnAccountId, MediaType, ServiceCode, Token, task_id, "未执行完成", TaskFlag, request_id)
                 remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id,DataFileDir=DataFileDir, DataFile=DataFile)
