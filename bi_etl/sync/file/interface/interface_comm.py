@@ -266,6 +266,7 @@ def set_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
             file_size = resp_data["data"]["list"][0]["file_size"]
             task_status = resp_data["data"]["list"][0]["task_status"]
             if task_status == "ASYNC_TASK_STATUS_COMPLETED":
+                remark = "正常"
                 if int(file_size) > 12:
                     print("有数据：%s" % (ReturnAccountId,ServiceCode))
                     task_id = resp_data["data"]["list"][0]["task_id"]
