@@ -390,7 +390,7 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
     table_name = "oe_sync_exception_tasks_interface_bak"
     save_exception_tasks(AsyncAccountDir=DataFileDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
-    n = 10
+    n = 50
     for i in range(n):
         sql = """
           select distinct %s
