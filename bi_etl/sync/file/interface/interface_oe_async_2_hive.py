@@ -43,7 +43,7 @@ def main(TaskInfo, **kwargs):
     task_id = TaskInfo[2]
     print(TaskInfo, "####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
-    """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token"""
+    """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token，6：写入目标account筛选表"""
     os.system("""chmod -R 777 /home/ecsage_data/oceanengine""")
     if task_type == 2:
         get_oe_async_tasks_data(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
@@ -55,6 +55,9 @@ def main(TaskInfo, **kwargs):
         get_ods_2_snap(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
     elif task_type == 5:
         get_oe_async_tasks_token(MediaType=media_type)
+    elif task_type == 6:
+        pass
+        #get_oe_async_tasks_account(ExecDate=exec_date,TaskInfo="")
     elif task_type == 1:
         if task_id == "set_create_oe_async_account":
             print("执行创建筛选子账户")
@@ -196,7 +199,6 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
           and media_type = '%s'
           and interface_flag = '%s'
         group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-        limit 100
     """ % (media_type, interface_flag)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     params = {}
