@@ -297,10 +297,9 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
                                       )
     print("等待重试异常任务完成！！！")
     # 保存MySQL
-    #columns = """account_id,interface_flag,media_type,service_code,interface_group_by,interface_columns,token_data,task_id,task_name"""
-    #etl_md.execute_sql("delete from metadb.oe_async_create_task where interface_flag='%s' " % (interface_flag))
-    #load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
-    #                TableName="oe_async_create_task", Columns=columns)
+    columns = """account_id,interface_flag,media_type,service_code,token_data,task_id,task_name,return_data,airflow_task_id"""
+    etl_md.execute_sql("delete from metadb.oe_async_create_task where airflow_task_id='%s.%s' " % (AirflowDagId,AirflowTaskId))
+    load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file,TableName="oe_async_create_task", Columns=columns)
     # 加载因网络抖动写入nfs系统漏数
     ######sql = """
     ######   insert into metadb.oe_async_create_task
