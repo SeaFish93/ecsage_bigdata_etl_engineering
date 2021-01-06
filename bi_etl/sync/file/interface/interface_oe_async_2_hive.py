@@ -324,7 +324,7 @@ def rerun_async_create_tasks_exception(DataFileDir="",ExceptionFile="",DataFile=
     columns = Columns
     db_name = "metadb"
     table_name = "oe_sync_exception_tasks_interface_bak"
-    save_exception_tasks(AsyncAccountDir=DataFileDir,ExceptionFile=ExceptionFile,DbName=db_name,TableName=table_name,Columns=columns)
+    save_exception_tasks(AsyncAccountDir=DataFileDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
     n = 50
     for i in range(n):
@@ -338,23 +338,23 @@ def rerun_async_create_tasks_exception(DataFileDir="",ExceptionFile="",DataFile=
            print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
              param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
-             if IsPage == "Y":
-                status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
-                                                     DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
-                                                     TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile
-                                                    )
-             else:
-                status_id = get_not_page_celery.delay(UrlPath=data[0], ParamJson=param_json,Token=data[5],
-                                                      ServiceCode=data[2], ReturnAccountId=data[3],
-                                                      TaskFlag=data[4], DataFileDir=DataFileDir,
-                                                      DataFile=DataFile, TaskExceptionFile=ExceptionFile
-                                                    )
-             os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
+             """
+             interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag
+             """
+             status_id = get_oe_create_async_tasks_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
+                                                                UrlPath=data[0],ParamJson=param_json,
+                                                                Token=data[5], ReturnAccountId=data[3],
+                                                                ServiceCode=data[2],InterfaceFlag=str(data[6]).split("##")[1],
+                                                                TaskFlag=str(data[6]).split("##")[0],
+                                                                MediaType=data[4],
+                                                                TaskExceptionFile=ExceptionFile
+                                                                )
+             os.system("""echo "%s %s">>%s""" % (status_id, data[3], celery_task_data_file+".%s"%(i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
            wait_for_celery_status(StatusList=celery_task_id)
            delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
            etl_md.execute_sql(delete_sql)
-           save_exception_tasks(AsyncAccountDir=DataFileDir, ExceptionFile=ExceptionFile, DbName = db_name,TableName=table_name,Columns=columns)
+           save_exception_tasks(AsyncAccountDir=DataFileDir, ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
            print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            #判断结果是否还有异常
            ex_sql = """
