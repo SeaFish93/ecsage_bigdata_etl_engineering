@@ -463,7 +463,6 @@ def set_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
         else:
             code = 1
             data = str(resp_data).replace(" ", "")
-        a = 1/0
     except Exception as e:
         code = 1
         data = "请求失败：%s" % (str(e).replace("\n", "").replace(" ", "").replace("""\"""", ""))
