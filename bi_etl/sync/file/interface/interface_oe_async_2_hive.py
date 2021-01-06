@@ -303,9 +303,9 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     # 加载因网络抖动写入nfs系统漏数
     sql = """
        insert into metadb.oe_async_create_task
+       (media_type,token_data,service_code,account_id,task_id,task_name,interface_flag)
        select a.media_type,a.token_code,a.service_code
-              ,a.account_id,'0' as task_id,'999999' as task_name,'##'
-              ,'##','%s' as interface_flag
+              ,a.account_id,'0' as task_id,'999999' as task_name,'%s' as interface_flag
        from metadb.media_advertiser a
        left join metadb.oe_async_create_task b
        on a.account_id = b.account_id
