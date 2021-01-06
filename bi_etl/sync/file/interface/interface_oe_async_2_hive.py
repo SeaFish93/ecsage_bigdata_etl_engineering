@@ -301,18 +301,21 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     etl_md.execute_sql("delete from metadb.oe_async_create_task where airflow_task_id='%s.%s' " % (AirflowDagId,AirflowTaskId))
     load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file,TableName="oe_async_create_task", Columns=columns)
     # 加载因网络抖动写入nfs系统漏数
-    ######sql = """
-    ######   insert into metadb.oe_async_create_task
-    ######   select a.media_type,a.token_code,a.service_code
-    ######          ,a.account_id,'0' as task_id,'999999' as task_name,'##'
-    ######          ,'##','%s' as interface_flag
-    ######   from metadb.media_advertiser a
-    ######   left join metadb.oe_async_create_task b
-    ######   on a.account_id = b.account_id
-    ######   and a.service_code = b.service_code
-    ######   where b.account_id is null
-    ######""" % (interface_flag)
-    ######etl_md.execute_sql(sql)
+    sql = """
+       insert into metadb.oe_async_create_task
+       select a.media_type,a.token_code,a.service_code
+              ,a.account_id,'0' as task_id,'999999' as task_name,'##'
+              ,'##','%s' as interface_flag
+       from metadb.media_advertiser a
+       left join metadb.oe_async_create_task b
+       on a.account_id = b.account_id
+       and a.service_code = b.service_code
+       and b.media_type = '%s'
+       and b.airflow_task_id = '%s.%s'
+       where b.account_id is null
+         and a.media_type = '%s'
+    """ % (interface_flag,media_type,AirflowDagId,AirflowTaskId,media_type)
+    etl_md.execute_sql(sql)
 
 #异常重试
 def rerun_async_create_tasks_exception(DataFileDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns=""):
@@ -325,7 +328,7 @@ def rerun_async_create_tasks_exception(DataFileDir="",ExceptionFile="",DataFile=
     table_name = "oe_sync_exception_tasks_interface_bak"
     save_exception_tasks(AsyncAccountDir=DataFileDir,ExceptionFile=ExceptionFile,TableName=table_name,Columns=columns)
     #
-    n = 50
+    n = 10
     for i in range(n):
         sql = """
           select distinct %s
@@ -366,9 +369,9 @@ def rerun_async_create_tasks_exception(DataFileDir="",ExceptionFile="",DataFile=
            if ex_datas is not None and len(ex_datas) > 0:
                print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
                if i == 0:
-                 time.sleep(360)
+                 time.sleep(60)
                else:
-                 time.sleep(180)
+                 time.sleep(60)
     ex_sql = """
          select %s
          from %s.%s a
