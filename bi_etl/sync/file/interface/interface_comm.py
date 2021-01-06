@@ -249,6 +249,55 @@ def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEm
        if int(status_1) != 0:
            a = 1 / 0
 
+#新版异步任务状态
+def set_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",MediaType="",TaskFlag=""):
+    code = 1
+    data = ""
+    try:
+        resp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, netloc="ad.toutiao.com", Token=Token,IsPost="N")
+        code = resp_data["code"]
+        # token无效重试
+        if int(code) == 40105:
+            token = get_oe_account_token(ServiceCode=ServiceCode)
+            resp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, netloc="ad.toutiao.com", Token=token,IsPost="N")
+            code = resp_data["code"]
+        request_id = resp_data["request_id"]
+        if int(code) == 0:
+            file_size = resp_data["data"]["list"][0]["file_size"]
+            task_status = resp_data["data"]["list"][0]["task_status"]
+            if task_status == "ASYNC_TASK_STATUS_COMPLETED":
+                if int(file_size) > 12:
+                    print("有数据：%s" % (ReturnAccountId,ServiceCode))
+                    task_id = resp_data["data"]["list"][0]["task_id"]
+                    resp_data = """%s %s %s %s %s %s %s %s %s""" % (ExecDate, ReturnAccountId, MediaType, ServiceCode, Token, task_id, "有数",TaskFlag,request_id)
+                    remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id,DataFileDir=DataFileDir,DataFile=DataFile)
+            else:
+                print("媒体异步任务未执行完成：%s" % (ReturnAccountId))
+                task_id = resp_data["data"]["list"][0]["task_id"]
+                resp_data = """%s %s %s %s %s %s %s %s %s""" % (ExecDate, ReturnAccountId, MediaType, ServiceCode, Token, task_id, "未执行完成", TaskFlag, request_id)
+                remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id,DataFileDir=DataFileDir, DataFile=DataFile)
+            if remark != "正常":
+               code = 1
+        elif int(code) in [40002, 40105, 40104]:
+            code = 0
+            os.system(""" echo "%s %s">>%s/%s """%(ReturnAccountId,str(resp_data).replace(" ", ""),DataFileDir,"account_perssion.log"))
+        else:
+            code = 1
+            data = str(resp_data).replace(" ", "")
+    except Exception as e:
+        code = 1
+        data = "请求失败：%s" % (str(e).replace("\n", "").replace(" ", "").replace("""\"""", ""))
+    if int(code) != 0:
+        status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,
+        str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+        if int(status) != 0:
+            for i in range(10):
+                status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,
+                str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+                if int(status) == 0:
+                    break;
+    return code
+
 #获取oe异步任务执行状态
 def get_oe_tasks_status(AccountId="",TaskId="",Token=""):
     open_api_domain = "https://ad.toutiao.com"
