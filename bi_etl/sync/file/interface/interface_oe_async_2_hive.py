@@ -43,6 +43,7 @@ def main(TaskInfo, **kwargs):
     print(TaskInfo, "####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
     """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token"""
+    os.system("""chmod -R 777 /home/ecsage_data/oceanengine""")
     if task_type == 2:
         get_oe_async_tasks_data(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
                                 MediaType=media_type, ExecDate=exec_date)
