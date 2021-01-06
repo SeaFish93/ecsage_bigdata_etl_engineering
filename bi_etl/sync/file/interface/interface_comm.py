@@ -263,6 +263,7 @@ def set_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
             code = resp_data["code"]
         request_id = resp_data["request_id"]
         if int(code) == 0:
+            a = 1/0
             file_size = resp_data["data"]["list"][0]["file_size"]
             task_status = resp_data["data"]["list"][0]["task_status"]
             if task_status == "ASYNC_TASK_STATUS_COMPLETED":
