@@ -56,8 +56,7 @@ def main(TaskInfo, **kwargs):
     elif task_type == 5:
         get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 6:
-        pass
-        #get_oe_async_tasks_account(ExecDate=exec_date,TaskInfo="")
+        get_oe_async_tasks_account(ExecDate=exec_date,TaskInfo="")
     elif task_type == 1:
         if task_id == "set_create_oe_async_account":
             print("执行创建筛选子账户")
@@ -75,6 +74,26 @@ def main(TaskInfo, **kwargs):
                                          TaskInfo=TaskInfo, ExecDate=exec_date
                                          )
 
+def get_oe_async_tasks_account(ExecDate=""):
+    etl_md.execute_sql("""delete from metadb.oe_account_interface where  exec_date = '%s'""" % (ExecDate))
+    sql = """
+       insert into metadb.oe_account_interface
+       (account_id,media_type,service_code,token_data,exec_date)
+       select account_id,media_type,service_code,token_data,exec_date
+       from metadb.oe_not_valid_account_interface where exec_date = '%s'
+    """ % (ExecDate)
+    ok = etl_md.execute_sql(sql)
+    if ok is False:
+        msg = "写入目标MySQL筛选子账户表出现异常！！！"
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % ("", ""),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log=msg,
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
 
 def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", ExecDate=""):
     media_type = 2
