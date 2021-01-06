@@ -219,9 +219,11 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
         wait_for_celery_status(StatusList=celery_task_id)
         print("celery队列执行完成！！！")
         print("等待重试异常任务！！！")
-        #### rerun_exception_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_status_exception_file,
-        ####                       AsyncNotemptyFile=async_notempty_file, AsyncemptyFile=async_empty_file,
-        ####                       CeleryTaskStatusFile=celery_task_status_file, ExecDate=ExecDate)
+        rerun_async_create_tasks_exception(DataFileDir=local_dir, ExceptionFile=task_exception_file,Flag="status",
+                                           DataFile=data_file, CeleryTaskDataFile=celery_task_status_file,
+                                           InterfaceFlag="%s.%s" % (AirflowDagId, AirflowTaskId),ExecDate=ExecDate,
+                                           Columns="interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag"
+                                           )
         #### print("重试异常任务执行完成！！！")
         #### time.sleep(60)
         #### columns = "exec_date,account_id,media_type,service_code,token_data,task_id,task_name"
@@ -350,7 +352,7 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
-    rerun_async_create_tasks_exception(DataFileDir=local_dir, ExceptionFile=task_exception_file,
+    rerun_async_create_tasks_exception(DataFileDir=local_dir, ExceptionFile=task_exception_file,Flag="create",
                                        DataFile=data_file,CeleryTaskDataFile=celery_task_status_file,
                                        InterfaceFlag="%s.%s##%s"%(AirflowDagId,AirflowTaskId,interface_flag),
                                        Columns="interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag"
@@ -378,7 +380,7 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     etl_md.execute_sql(sql)
 
 #异常重试
-def rerun_async_create_tasks_exception(DataFileDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns=""):
+def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns="",Flag="create"):
     celery_task_data_file = """%s/%s"""%(DataFileDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface_bak where interface_flag = '%s' """ % (InterfaceFlag)
@@ -403,13 +405,22 @@ def rerun_async_create_tasks_exception(DataFileDir="",ExceptionFile="",DataFile=
              """
              interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag
              """
-             status_id = get_oe_create_async_tasks_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
+             if Flag == "create":
+               status_id = get_oe_create_async_tasks_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
                                                                 UrlPath=data[0],ParamJson=param_json,
                                                                 Token=data[5], ReturnAccountId=data[3],
                                                                 ServiceCode=data[2],InterfaceFlag=str(data[6]).split("##")[1],
                                                                 TaskFlag=str(data[6]).split("##")[0],
                                                                 MediaType=data[4],
                                                                 TaskExceptionFile=ExceptionFile
+                                                                )
+             elif Flag == "status":
+               status_id = get_oe_status_async_tasks_celery.delay(ExecDate=ExecDate, DataFileDir=DataFileDir,
+                                                                  DataFile=DataFile,UrlPath=data[0],
+                                                                  ParamJson=param_json, Token=data[5],
+                                                                  ReturnAccountId=data[3],ServiceCode=data[2], MediaType=data[4],
+                                                                  TaskFlag=InterfaceFlag,
+                                                                  TaskExceptionFile=ExceptionFile
                                                                 )
              os.system("""echo "%s %s">>%s""" % (status_id, data[3], celery_task_data_file+".%s"%(i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
