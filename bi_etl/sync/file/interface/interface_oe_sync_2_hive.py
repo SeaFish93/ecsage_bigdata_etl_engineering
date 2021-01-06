@@ -42,6 +42,7 @@ def main(TaskInfo,Level="",**kwargs):
     global regexp_extract_column
     airflow = Airflow(kwargs)
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    os.system("""chmod -R 777 /home/ecsage_data/oceanengine""")
     exec_date = airflow.execution_date_utc8_str[0:10]
     target_db = TaskInfo[14]
     target_table = TaskInfo[15]
@@ -114,6 +115,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   if filter_time is not None and len(filter_time) > 0:
       filter_time_sql = """ and %s >= '%s 00:00:00' and %s <= '%s 23:59:59' """%(filter_time,ExecDate,filter_time,ExecDate)
   os.system("""mkdir -p %s"""%(local_dir))
+  os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
   #判断是否从列表过滤
   if filter_db_name is not None and len(filter_db_name) > 0:
@@ -1040,6 +1042,7 @@ def get_celery_job_status(CeleryTaskId=""):
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
     else:
+       #print(CeleryTaskId,"##",status)
        return False
 
 def get_celery_status_list(CeleryTaskStatusFile=""):
