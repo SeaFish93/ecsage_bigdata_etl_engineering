@@ -109,7 +109,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   interface_filter_list = TaskInfo[30]
   page_size = TaskInfo[31]
   is_rerun_firstpage = TaskInfo[32]
-  page_style = eval(TaskInfo[38])
+  page_style =eval(TaskInfo[38]) if TaskInfo[38] is not None and len(TaskInfo[38]) >0 else TaskInfo[38]
   if page_size is None or len(str(page_size)) == 0 or page_size == 0:
     page_size = 1000
   filter_time_sql = ""
