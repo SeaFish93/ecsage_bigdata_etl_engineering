@@ -217,6 +217,7 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
         where task_id <> '111111'
           and media_type = '%s'
           and interface_flag = '%s'
+          and task_id <> '0'
         group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
     """ % (media_type, interface_flag)
     ok, datas = etl_md.get_all_rows(source_data_sql)
