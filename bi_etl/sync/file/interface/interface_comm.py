@@ -788,7 +788,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
     return code
 
 #翻页处理
-def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile=""):
+def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",Pagestyle=""):
     page = 0
     data = ""
     set_run = True
@@ -829,7 +829,11 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
               else:
                   time.sleep(2)
            n = n + 1
-         page = rsp_data["data"]["page_info"]["total_page"]
+         if Pagestyle is not None and len(Pagestyle) >0:
+             page = int(rsp_data["data"]["total_num"] / Pagestyle[0][Pagestyle[2]]) + 1  # 总条数104/100 + 1，共2页
+             print("++++++++++++%s++++++++++++" % (page))
+         else:
+             page = rsp_data["data"]["page_info"]["total_page"]
          if page == 0:
             data = str(rsp_data).replace(" ", "")
       elif int(code) in [40002, 40105, 40104]:

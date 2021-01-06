@@ -348,14 +348,14 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
 
 #处理分页
 @app.task(rate_limit='1000/m')
-def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile=""):
+def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle=""):
     set_true = True
     n = 0
     while set_true:
       remark = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
                       ServiceCode=ServiceCode,DataFileDir=DataFileDir,
                       DataFile=DataFile,ReturnAccountId=ReturnAccountId,
-                      TaskFlag=TaskFlag,PageTaskFile=PageTaskFile
+                      TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle
                      )
       if remark == "正常":
           set_true = False
