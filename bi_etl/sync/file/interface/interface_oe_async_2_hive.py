@@ -187,7 +187,7 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
     os.system("""chmod -R 777 %s""" % (local_dir))
-    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where  exec_date = '%s' """ % (ExecDate))
+    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where  exec_date = '%s' and airflow_task_id='%s.%s' """ % (ExecDate,AirflowDagId, AirflowTaskId))
     # 获取子账户
     source_data_sql = """
         select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
@@ -226,13 +226,11 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
                                            )
         print("重试异常任务执行完成！！！")
         time.sleep(20)
-        #### columns = "exec_date,account_id,media_type,service_code,token_data,task_id,task_name"
-        #### # 落地有数据
-        #### load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file,
-        ####                 TableName="oe_valid_account_interface", Columns=columns)
-        #### # 落地没数据
-        #### load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_empty_file,
-        ####                 TableName="oe_not_valid_account_interface", Columns=columns)
+        columns = "exec_date,account_id,media_type,service_code,token_data,task_id,remark,airflow_task_id,request_id"
+        # 落地有数据
+        load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file,
+                        TableName="oe_valid_account_interface", Columns=columns)
+
 
 # 创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
