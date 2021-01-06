@@ -224,8 +224,8 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
                                            InterfaceFlag="%s.%s" % (AirflowDagId, AirflowTaskId),ExecDate=ExecDate,
                                            Columns="interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag"
                                            )
-        #### print("重试异常任务执行完成！！！")
-        #### time.sleep(60)
+        print("重试异常任务执行完成！！！")
+        time.sleep(20)
         #### columns = "exec_date,account_id,media_type,service_code,token_data,task_id,task_name"
         #### # 落地有数据
         #### load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_notempty_file,
