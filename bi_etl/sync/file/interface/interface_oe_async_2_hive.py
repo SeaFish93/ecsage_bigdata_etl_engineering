@@ -648,8 +648,8 @@ def get_celery_status_list(CeleryTaskStatusFile=""):
 def load_data_mysql(AsyncAccountFile="", DataFile="", TableName="", Columns=""):
     target_file = os.listdir(AsyncAccountFile)
     for files in target_file:
-        print(DataFile.split("/")[-1], files,"****************************************")
-        if DataFile.split("/")[-1] in files:
+        print(DataFile.split("/")[-1], files,"****************************************",DataFile.split("/")[-1] in files)
+        if DataFile.split("/")[-1] in files and """.lock""" not in files:
             print(files, "###############################################")
             # 记录子账户
             insert_sql = """
