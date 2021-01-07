@@ -260,7 +260,10 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
           for lists in filter_list:
               get_list = lists.split(".")
           if len(get_list) == 1:
-             ParamJson["%s"%(get_list[0])] = int(data[3])
+             list_value = get_list[0].split("##")#campaign_ids##[]##int
+             ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(data[3])] if list_value[1] == '[]' else eval(list_value[2])(data[3])
+             #ParamJson["%s"%(list_value[0])] = int(data[3])
+             #print(ParamJson)
           else:
              print("含有filter...")
        if int(IsAdvertiserList) == 1:
@@ -294,7 +297,9 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
             for lists in filter_list:
                 get_list = lists.split(".")
             if len(get_list) == 1:
-                ParamJson["%s" % (get_list[0])] = int(data[3])
+                list_value = get_list[0].split("##")  # campaign_ids##[]##int
+                ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(data[3])] if list_value[1] == '[]' else eval(list_value[2])(data[3])
+                # ParamJson["%s"%(list_value[0])] = int(data[3])
             else:
                 list_1 = get_list[0]
                 list_value = get_list[1].split("##")
@@ -316,7 +321,6 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
        ParamJson["advertiser_id"] = data[0]
        if Pagestyle is not None and len(Pagestyle)>0:#page_style=[{"offset":0,"limit":100},"offset","limit"]
            ParamJson.update(Pagestyle[0])
-           print(ParamJson)
        else:
            ParamJson["page"] = int(Page)
            ParamJson["page_size"] = int(PageSize)
