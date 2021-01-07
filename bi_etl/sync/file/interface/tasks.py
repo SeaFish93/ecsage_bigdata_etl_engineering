@@ -32,9 +32,9 @@ hostname = socket.gethostname()
 
 #定义oe任务创建
 @app.task(rate_limit='5/m')
-def get_test(args=None):
+def get_test(**kwargs):
     now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
-    return args
+    return kwargs
 
 #定义oe任务创建
 @app.task(rate_limit='500/m')
