@@ -83,12 +83,12 @@ def get_oe_async_tasks_account(ExecDate="",TaskInfo=""):
        select account_id,media_type,service_code,token_data,exec_date
        from metadb.oe_valid_account_interface where exec_date = '%s'
               union all
-       select a.account_id,a.media_type,a.service_code,a.token_data,'2021-01-06' as exec_date
+       select a.account_id,a.media_type,a.service_code,a.token_data,'%s' as exec_date
        from metadb.oe_async_create_task a
        where task_id = '111111'
          and interface_flag = '%s'
          and task_id <> '0'
-    """ % (ExecDate,interface_flag)
+    """ % (ExecDate,ExecDate,interface_flag)
     ok = etl_md.execute_sql(sql)
     if ok is False:
         msg = "写入目标MySQL筛选子账户表出现异常！！！"
