@@ -80,7 +80,7 @@ def get_oe_async_tasks_account(ExecDate=""):
        insert into metadb.oe_account_interface
        (account_id,media_type,service_code,token_data,exec_date)
        select account_id,media_type,service_code,token_data,exec_date
-       from metadb.oe_not_valid_account_interface where exec_date = '%s'
+       from metadb.oe_valid_account_interface where exec_date = '%s'
     """ % (ExecDate)
     ok = etl_md.execute_sql(sql)
     if ok is False:
