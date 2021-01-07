@@ -56,10 +56,9 @@ def main(TaskInfo, **kwargs):
     elif task_type == 5:
         get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 6:
-        pass
-        #get_oe_async_tasks_account(ExecDate=exec_date,TaskInfo="")
+        get_oe_async_tasks_account(ExecDate=exec_date)
     elif task_type == 1:
-        if task_id == "set_create_oe_async_account":
+        if task_id in("set_create_oe_async_account","set_create_oe_async_account_203","set_create_oe_async_account_201"):
             print("执行创建筛选子账户")
             #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
             #                              MediaType=media_type, ExecDate=exec_date)
@@ -75,6 +74,33 @@ def main(TaskInfo, **kwargs):
                                          TaskInfo=TaskInfo, ExecDate=exec_date
                                          )
 
+def get_oe_async_tasks_account(ExecDate="",TaskInfo=""):
+    interface_flag = TaskInfo[20]
+    etl_md.execute_sql("""delete from metadb.oe_account_interface where  exec_date = '%s'""" % (ExecDate))
+    sql = """
+       insert into metadb.oe_account_interface
+       (account_id,media_type,service_code,token_data,exec_date)
+       select account_id,media_type,service_code,token_data,exec_date
+       from metadb.oe_valid_account_interface where exec_date = '%s'
+              union all
+       select a.account_id,a.media_type,a.service_code,a.token_data,'%s' as exec_date
+       from metadb.oe_async_create_task a
+       where task_id = '111111'
+         and interface_flag = '%s'
+         and task_id <> '0'
+    """ % (ExecDate,ExecDate,interface_flag)
+    ok = etl_md.execute_sql(sql)
+    if ok is False:
+        msg = "写入目标MySQL筛选子账户表出现异常！！！"
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % ("", ""),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log=msg,
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
 
 def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", ExecDate=""):
     media_type = 2
@@ -198,6 +224,7 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
         where task_id <> '111111'
           and media_type = '%s'
           and interface_flag = '%s'
+          and task_id <> '0'
         group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
     """ % (media_type, interface_flag)
     ok, datas = etl_md.get_all_rows(source_data_sql)
