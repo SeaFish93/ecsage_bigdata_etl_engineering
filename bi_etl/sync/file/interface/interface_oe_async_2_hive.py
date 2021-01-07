@@ -789,32 +789,14 @@ def get_oe_async_tasks_data(AirflowDagId="", AirflowTaskId="", TaskInfo="", Medi
     os.system("""chmod -R 777 %s""" % (local_dir))
     # 获取子账户
     source_data_sql = """
-        -- 正常创建异步任务
-        select  a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name 
-        from metadb.oe_async_create_task_interface a
-        where interface_flag = '%s'
-          and media_type = %s
-          and task_id <> '0'
-                    union all
-        -- 异常创建异步任务
-        select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-        from (select  a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-              from metadb.oe_async_create_task_interface a
-              where interface_flag = '%s'
-                and media_type = %s
-                and task_id = '0'
-           ) a
-       left join (select  a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-              from metadb.oe_async_create_task_interface a
-              where interface_flag = '%s'
-                and media_type = %s
-                and task_id <> '0'
-           ) b
-       on a.account_id = b.account_id
-       and a.service_code = b.service_code
-       where b.account_id is null
-       group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-    """ % (interface_flag, media_type, interface_flag, media_type, interface_flag, media_type)
+            select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+            from metadb.oe_async_create_task a
+            where task_id <> '111111'
+              and media_type = '%s'
+              and interface_flag = '%s'
+              and task_id <> '0'
+            group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+    """ % (media_type, interface_flag)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     params = {}
     for get_data in datas:
