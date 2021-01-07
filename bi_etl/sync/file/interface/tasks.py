@@ -34,7 +34,7 @@ hostname = socket.gethostname()
 @app.task(rate_limit='5/m')
 def get_test(string=""):
     now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
-    return now
+    return string
 
 #定义oe任务创建
 @app.task(rate_limit='500/m')
