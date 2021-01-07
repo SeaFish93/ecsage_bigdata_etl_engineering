@@ -56,7 +56,7 @@ def main(TaskInfo, **kwargs):
     elif task_type == 5:
         get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 6:
-        get_oe_async_tasks_account(ExecDate=exec_date)
+        get_oe_async_tasks_account(ExecDate=exec_date,TaskInfo=TaskInfo)
     elif task_type == 1:
         if task_id in("set_create_oe_async_account","set_create_oe_async_account_203","set_create_oe_async_account_201"):
             print("执行创建筛选子账户")
