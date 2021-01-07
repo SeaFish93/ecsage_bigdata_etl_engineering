@@ -63,10 +63,12 @@ def main(TaskInfo, **kwargs):
             #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
             #                              MediaType=media_type, ExecDate=exec_date)
             get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-                                             MediaType=media_type, ExecDate=exec_date)
+                                             MediaType=media_type, ExecDate=exec_date,IsFilterAccount="Y")
         else:
-            get_oe_async_tasks_create(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-                                      MediaType=media_type, ExecDate=exec_date)
+            get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
+                                             MediaType=media_type, ExecDate=exec_date,IsFilterAccount="N")
+            #get_oe_async_tasks_create(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
+            #                          MediaType=media_type, ExecDate=exec_date)
     elif task_type == 0:
         #get_oe_async_tasks_status_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
         #                              ExecDate=exec_date)
@@ -322,7 +324,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
 
 
 # 创建oe异步任务
-def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
+def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate="",IsFilterAccount="Y"):
     interface_flag = TaskInfo[20]
     task_flag = """%s.%s"""%(AirflowDagId,AirflowTaskId)
     group_by = TaskInfo[11]
@@ -336,12 +338,20 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
     os.system("""chmod -R 777 %s""" % (local_dir))
-    account_sql = """
-      select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-      from metadb.media_advertiser
-      where media_type = %s
-     -- limit 1
-    """ % (interface_flag, group_by, fields,MediaType)
+    if IsFilterAccount == "Y":
+      account_sql = """
+         select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by
+                ,'%s' as fields,token_code 
+         from metadb.media_advertiser
+         where media_type = %s
+      """ % (interface_flag, group_by, fields,MediaType)
+    else:
+      account_sql = """
+         select a.account_id,'%s' as interface_flag,a.media_type,a.service_code,'%s' as group_by
+                ,'%s' as fields,a.token_data
+         from metadb.oe_account_interface a
+         where a.exec_date = '%s'
+      """ % (interface_flag, group_by, fields, ExecDate)
     ok, all_rows = etl_md.get_all_rows(account_sql)
     n = 1
     params = {}
