@@ -41,6 +41,7 @@ def main(TaskInfo, **kwargs):
     media_type = TaskInfo[1]
     task_type = TaskInfo[4]
     task_id = TaskInfo[2]
+    is_filter_account = int(TaskInfo[22])
     print(TaskInfo, "####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
     """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token，6：写入目标account筛选表"""
@@ -58,20 +59,9 @@ def main(TaskInfo, **kwargs):
     elif task_type == 6:
         get_oe_async_tasks_account(ExecDate=exec_date,TaskInfo=TaskInfo)
     elif task_type == 1:
-        if task_id in("set_create_oe_async_account","set_create_oe_async_account_203","set_create_oe_async_account_201"):
-            print("执行创建筛选子账户")
-            #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-            #                              MediaType=media_type, ExecDate=exec_date)
-            get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-                                             MediaType=media_type, ExecDate=exec_date,IsFilterAccount="Y")
-        else:
-            get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-                                             MediaType=media_type, ExecDate=exec_date,IsFilterAccount="N")
-            #get_oe_async_tasks_create(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-            #                          MediaType=media_type, ExecDate=exec_date)
+        get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
+                                             MediaType=media_type, ExecDate=exec_date,IsFilterAccount=is_filter_account)
     elif task_type == 0:
-        #get_oe_async_tasks_status_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-        #                              ExecDate=exec_date)
         get_oe_async_tasks_status_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, MediaType=media_type,
                                          TaskInfo=TaskInfo, ExecDate=exec_date
                                          )
@@ -324,7 +314,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
 
 
 # 创建oe异步任务
-def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate="",IsFilterAccount="Y"):
+def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate="",IsFilterAccount=""):
     interface_flag = TaskInfo[20]
     task_flag = """%s.%s"""%(AirflowDagId,AirflowTaskId)
     group_by = TaskInfo[11]
@@ -338,7 +328,7 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
     os.system("""chmod -R 777 %s""" % (local_dir))
-    if IsFilterAccount == "Y":
+    if IsFilterAccount == 1:
       account_sql = """
          select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by
                 ,'%s' as fields,token_code 
