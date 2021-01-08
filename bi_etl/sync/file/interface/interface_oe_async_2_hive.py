@@ -41,6 +41,7 @@ def main(TaskInfo, **kwargs):
     media_type = TaskInfo[1]
     task_type = TaskInfo[4]
     task_id = TaskInfo[2]
+    is_filter_account = int(TaskInfo[22])
     print(TaskInfo, "####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
     """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token，6：写入目标account筛选表"""
@@ -58,18 +59,9 @@ def main(TaskInfo, **kwargs):
     elif task_type == 6:
         get_oe_async_tasks_account(ExecDate=exec_date,TaskInfo=TaskInfo)
     elif task_type == 1:
-        if task_id in("set_create_oe_async_account","set_create_oe_async_account_203","set_create_oe_async_account_201"):
-            print("执行创建筛选子账户")
-            #get_oe_async_tasks_create_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-            #                              MediaType=media_type, ExecDate=exec_date)
-            get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-                                             MediaType=media_type, ExecDate=exec_date)
-        else:
-            get_oe_async_tasks_create(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-                                      MediaType=media_type, ExecDate=exec_date)
+        get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
+                                             MediaType=media_type, ExecDate=exec_date,IsFilterAccount=is_filter_account)
     elif task_type == 0:
-        #get_oe_async_tasks_status_all(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
-        #                              ExecDate=exec_date)
         get_oe_async_tasks_status_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, MediaType=media_type,
                                          TaskInfo=TaskInfo, ExecDate=exec_date
                                          )
@@ -322,7 +314,7 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
 
 
 # 创建oe异步任务
-def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
+def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate="",IsFilterAccount=""):
     interface_flag = TaskInfo[20]
     task_flag = """%s.%s"""%(AirflowDagId,AirflowTaskId)
     group_by = TaskInfo[11]
@@ -336,12 +328,20 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
     os.system("""chmod -R 777 %s""" % (local_dir))
-    account_sql = """
-      select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-      from metadb.media_advertiser
-      where media_type = %s
-     -- limit 1
-    """ % (interface_flag, group_by, fields,MediaType)
+    if IsFilterAccount == 1:
+      account_sql = """
+         select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by
+                ,'%s' as fields,token_code 
+         from metadb.media_advertiser
+         where media_type = %s
+      """ % (interface_flag, group_by, fields,MediaType)
+    else:
+      account_sql = """
+         select a.account_id,'%s' as interface_flag,a.media_type,a.service_code,'%s' as group_by
+                ,'%s' as fields,a.token_data
+         from metadb.oe_account_interface a
+         where a.exec_date = '%s'
+      """ % (interface_flag, group_by, fields, ExecDate)
     ok, all_rows = etl_md.get_all_rows(account_sql)
     n = 1
     params = {}
@@ -789,32 +789,14 @@ def get_oe_async_tasks_data(AirflowDagId="", AirflowTaskId="", TaskInfo="", Medi
     os.system("""chmod -R 777 %s""" % (local_dir))
     # 获取子账户
     source_data_sql = """
-        -- 正常创建异步任务
-        select  a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name 
-        from metadb.oe_async_create_task_interface a
-        where interface_flag = '%s'
-          and media_type = %s
-          and task_id <> '0'
-                    union all
-        -- 异常创建异步任务
-        select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-        from (select  a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-              from metadb.oe_async_create_task_interface a
-              where interface_flag = '%s'
-                and media_type = %s
-                and task_id = '0'
-           ) a
-       left join (select  a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-              from metadb.oe_async_create_task_interface a
-              where interface_flag = '%s'
-                and media_type = %s
-                and task_id <> '0'
-           ) b
-       on a.account_id = b.account_id
-       and a.service_code = b.service_code
-       where b.account_id is null
-       group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
-    """ % (interface_flag, media_type, interface_flag, media_type, interface_flag, media_type)
+            select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+            from metadb.oe_async_create_task a
+            where task_id <> '111111'
+              and media_type = '%s'
+              and interface_flag = '%s'
+              and task_id <> '0'
+            group by a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
+    """ % (media_type, interface_flag)
     ok, datas = etl_md.get_all_rows(source_data_sql)
     params = {}
     for get_data in datas:
