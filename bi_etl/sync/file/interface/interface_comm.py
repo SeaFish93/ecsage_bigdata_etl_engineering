@@ -730,7 +730,7 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     return remark
 
 #不翻页处理
-def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId=""):
+def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",ArrayFlag=""):
     code = 1
     data = ""
     set_run = True
@@ -744,6 +744,8 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
           token = get_oe_account_token(ServiceCode=ServiceCode)
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
           code = rsp_data["code"]
+      data_len = len(rsp_data["data"]["%s" % (ArrayFlag)][0]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
+      rsp_data["len_flag"] = 'Y' if data_len > 0 else 'N'
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
       request_id = rsp_data["request_id"]
@@ -788,7 +790,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
     return code
 
 #翻页处理
-def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",Pagestyle=""):
+def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",Pagestyle="",ArrayFlag=""):
     page = 0
     data = ""
     set_run = True
@@ -803,6 +805,8 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           token = get_oe_account_token(ServiceCode=ServiceCode)
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
           code = rsp_data["code"]
+      data_len = len(rsp_data["data"]["%s" % (ArrayFlag)][0]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
+      rsp_data["len_flag"] = 'Y' if data_len > 0 else 'N'
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
       request_id = rsp_data["request_id"]
