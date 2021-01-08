@@ -18,15 +18,3 @@ CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'pickle'
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
-CELERY_QUEUES = (
-Queue('report', Exchange('report'), routing_key='report', consumer_arguments={'x-priority': 100}),
-Queue('oe', Exchange('oe'), routing_key='oe', consumer_arguments={'x-priority': 10}),
-Queue('tc', Exchange('tc'), routing_key='tc', consumer_arguments={'x-priority': 10})
-)
-CELERY_DEFAULT_QUEUE = 'default'
-CELERY_DEFAULT_EXCHANGE = 'default'
-CELERY_DEFAULT_ROUTING_KEY = 'default'
-CELERY_ROUTES = {
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_test': {'queue': 'report'},
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_test': {'queue': 'oe'},
-}
