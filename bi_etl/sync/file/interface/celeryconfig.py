@@ -1,3 +1,4 @@
+from kombu import Queue, Exchange
 #broker use redis 测试库
 BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/9'
 #backend use redis 测试库
