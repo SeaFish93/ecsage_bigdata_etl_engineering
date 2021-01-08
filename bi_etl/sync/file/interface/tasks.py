@@ -325,11 +325,11 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
 
 #处理不分页
 @app.task(rate_limit='500/m')
-def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile=""):
+def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag=""):
     set_true = True
     n = 0
     while set_true:
-      code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId)
+      code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ArrayFlag=ArrayFlag)
       if int(code) == 0:
           set_true = False
       else:
@@ -348,14 +348,14 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
 
 #处理分页
 @app.task(rate_limit='1000/m')
-def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle=""):
+def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag=""):
     set_true = True
     n = 0
     while set_true:
       remark = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
                       ServiceCode=ServiceCode,DataFileDir=DataFileDir,
                       DataFile=DataFile,ReturnAccountId=ReturnAccountId,
-                      TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle
+                      TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag
                      )
       if remark == "正常":
           set_true = False
