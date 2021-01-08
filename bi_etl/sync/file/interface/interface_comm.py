@@ -744,7 +744,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
           token = get_oe_account_token(ServiceCode=ServiceCode)
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
           code = rsp_data["code"]
-      data_len = len(rsp_data["data"]["%s" % (ArrayFlag)][0]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
+      data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
       rsp_data["len_flag"] = 'Y' if data_len > 0 else 'N'
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
