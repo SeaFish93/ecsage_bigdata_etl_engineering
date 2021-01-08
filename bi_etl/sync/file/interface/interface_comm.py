@@ -744,13 +744,14 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
           token = get_oe_account_token(ServiceCode=ServiceCode)
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
           code = rsp_data["code"]
-      data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
-      rsp_data["len_flag"] = 'Y' if data_len > 0 else 'N'
+
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
       request_id = rsp_data["request_id"]
       if int(code) == 0:
         file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
+        data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
+        rsp_data["len_flag"] = 'Y' if data_len > 0 else 'N'
         while set_run:
           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
           test_log.info(json.dumps(rsp_data))
@@ -805,13 +806,14 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           token = get_oe_account_token(ServiceCode=ServiceCode)
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
           code = rsp_data["code"]
-      data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
-      rsp_data["len_flag"] = 'Y' if data_len > 0 else 'N'
+
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
       request_id = rsp_data["request_id"]
       if int(code) == 0:
          file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
+         data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
+         rsp_data["len_flag"] = 'Y' if data_len > 0 else 'N'
          while set_run:
            test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
            test_log.info(json.dumps(rsp_data))
