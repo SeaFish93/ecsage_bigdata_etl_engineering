@@ -85,7 +85,9 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
                               from %s.%s 
                               where etl_date = '%s'
                               ) tmp 
-                        where len_flag= 'Y' """ % ("etl_mid",SourceTable,ExecDate)
+                        where len_flag= 'Y' 
+                        limit 1
+                    """ % ("etl_mid",SourceTable,ExecDate)
 
     ok, data = HiveSession.get_all_rows(get_field_sql)
     if len(data)>0:
