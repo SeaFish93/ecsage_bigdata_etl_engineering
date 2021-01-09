@@ -3,8 +3,8 @@ from kombu import Queue, Exchange
 #BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/0'
 #backend use redis
 #CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/1'
-BROKER_URL = 'amqp://root:1qazXSW2@192.168.30.127:9549/myvhost'
-CELERY_RESULT_BACKEND = 'amqp://root:1qazXSW2@192.168.30.127:9549/myvhost1'
+BROKER_URL = 'amqp://test:123456@192.168.30.127:9549/test'
+CELERY_RESULT_BACKEND = 'amqp://test:123456@192.168.30.127:9549/test'
 #use json
 #CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
