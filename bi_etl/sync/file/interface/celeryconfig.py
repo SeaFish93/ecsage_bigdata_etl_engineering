@@ -1,10 +1,10 @@
 from kombu import Queue, Exchange
 #broker use redis
-BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/9'
+#BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/9'
 #backend use redis
-CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/10'
-#BROKER_URL = 'amqp://root:1qazXSW2@192.168.30.127:9549//test'
-#CELERY_RESULT_BACKEND = 'amqp://root:1qazXSW2@192.168.30.127:9549//test'
+#CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/10'
+BROKER_URL = 'amqp://root:1qazXSW2@192.168.30.127:9549//test'
+CELERY_RESULT_BACKEND = 'amqp://root:1qazXSW2@192.168.30.127:9549//test'
 #use json
 #CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
@@ -27,13 +27,19 @@ CELERY_ACKS_LATE=True
 # worker进程崩掉之后拒绝确认
 CELERY_REJECT_ON_WORKER_LOST=True
 CELERY_QUEUES = (
-Queue('report', Exchange('report'), routing_key='report', consumer_arguments={'x-priority': 100}),
-Queue('oe', Exchange('oe'), routing_key='oe', consumer_arguments={'x-priority': 10})
+Queue('report', Exchange('report'), routing_key='report', consumer_arguments={'x-priority': 10}),
+Queue('oe', Exchange('oe'), routing_key='oe', consumer_arguments={'x-priority': 100})
 )
 CELERY_DEFAULT_QUEUE = 'default'
 CELERY_DEFAULT_EXCHANGE = 'default'
 CELERY_DEFAULT_ROUTING_KEY = 'default'
 CELERY_ROUTES = {
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages': {'queue': 'report'},
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_test_quen': {'queue': 'oe'}
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages': {'queue': 'oe'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_not_page': {'queue': 'oe'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_oe_async_tasks_data_return': {'queue': 'oe'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_oe_create_async_tasks': {'queue': 'oe'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_oe_status_async_tasks': {'queue': 'oe'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_service_page_data': {'queue': 'oe'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_service_data': {'queue': 'oe'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_test_quen': {'queue': 'report'}
 }
