@@ -35,6 +35,11 @@ def get_test(**kwargs):
     now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
     return kwargs
 
+@app.task(rate_limit='5/m')
+def get_test_quen(name=""):
+    now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
+    return name
+
 #定义oe任务创建
 @app.task(rate_limit='500/m')
 def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate="",LocalDir=""):
