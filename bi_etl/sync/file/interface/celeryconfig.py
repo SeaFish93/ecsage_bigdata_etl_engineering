@@ -20,7 +20,12 @@ CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'pickle'
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
-CELERY_ACKS_LATE = True
+# 任务失败或超时自动确认，默认为True
+CELERY_ACKS_ON_FAILURE_OR_TIMEOUT=False
+# 任务完成之后再确认
+CELERY_ACKS_LATE=True
+# worker进程崩掉之后拒绝确认
+CELERY_REJECT_ON_WORKER_LOST=True
 CELERY_QUEUES = (
 Queue('report', Exchange('report'), routing_key='report', consumer_arguments={'x-priority': 100}),
 Queue('default', Exchange('default'), routing_key='default', consumer_arguments={'x-priority': 100})
