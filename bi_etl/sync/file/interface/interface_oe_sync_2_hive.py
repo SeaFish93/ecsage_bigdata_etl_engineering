@@ -52,7 +52,6 @@ def main(TaskInfo,Level="",**kwargs):
     key_columns = TaskInfo[19]
     array_flag = TaskInfo[28]
     custom_set_parameter = TaskInfo[37]
-    hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
        if TaskInfo[0] == "metadb_oe_service_account":
@@ -63,10 +62,12 @@ def main(TaskInfo,Level="",**kwargs):
                              TaskInfo=TaskInfo, ExecDate=exec_date,ArrayFlag=array_flag
                             )
     elif Level == "ods":
+        hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
                        ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns,IsReplace="N",DagId=airflow.dag,TaskId=airflow.task,CustomSetParameter=custom_set_parameter)
     elif Level == "snap":
+        hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
         get_data_2_snap(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
                              TargetDB=target_db, TargetTable=target_table, IsReport=is_report
                             ,KeyColumns=key_columns, ExecDate=exec_date
