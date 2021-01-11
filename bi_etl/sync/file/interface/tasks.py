@@ -38,7 +38,7 @@ def get_test(**kwargs):
 @app.task(rate_limit='5/m')
 def get_test_quen(name=""):
     now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
-    return name+str(now)
+    return name+str(now)+"========"
 
 #定义oe任务创建
 @app.task(rate_limit='500/m')
