@@ -27,6 +27,7 @@ import os
 import time
 import ast
 import json
+import socket
 
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
@@ -45,7 +46,6 @@ def main(TaskInfo, **kwargs):
     print(TaskInfo, "####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
     """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token，6：写入目标account筛选表"""
-    os.system("""chmod -R 777 /home/ecsage_data/oceanengine""")
     if task_type == 2:
         get_oe_async_tasks_data(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
                                 MediaType=media_type, ExecDate=exec_date)
@@ -97,7 +97,8 @@ def get_oe_async_tasks_account(ExecDate="",TaskInfo=""):
 def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", ExecDate=""):
     media_type = 2
     interface_flag = TaskInfo[20]
-    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s" % (AirflowDagId, AirflowTaskId)
+    hostname = socket.gethostname()
+    async_account_file = "/home/ecsage_data/oceanengine/%s/async/%s/%s" % (hostname,AirflowDagId, AirflowTaskId)
     async_status_exception_file = """%s/async_status_exception.log""" % (async_account_file)
     async_notempty_file = """%s/async_notempty.log""" % (async_account_file)
     async_empty_file = """%s/async_empty.log""" % (async_account_file)
@@ -200,7 +201,8 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
     media_type = MediaType
     interface_flag = TaskInfo[20]
     local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-    local_dir = """/home/ecsage_data/oceanengine/async/%s/%s/%s""" % (ExecDate, AirflowDagId, AirflowTaskId)
+    hostname = socket.gethostname()
+    local_dir = """/home/ecsage_data/oceanengine/%s/async/%s/%s/%s""" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
     data_task_file = """%s/data_%s.log""" % (local_dir, AirflowTaskId)
     task_exception_file = "%s/task_exception_file.log" % (local_dir)
     celery_task_status_file = "%s/celery_task_status_file.log" % (local_dir)
@@ -258,7 +260,8 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     interface_flag = TaskInfo[20]
     group_by = TaskInfo[11]
     fields = TaskInfo[21]
-    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s" % (AirflowDagId, AirflowTaskId)
+    hostname = socket.gethostname()
+    async_account_file = "/home/ecsage_data/oceanengine/%s/async/%s/%s" % (hostname,AirflowDagId, AirflowTaskId)
     async_create_task_file = """%s/async_create.log""" % (async_account_file)
     async_task_exception_file = """%s/async_exception.log""" % (async_account_file)
     celery_task_status_file = """%s/celery_task_status.log""" % (async_account_file)
@@ -320,7 +323,8 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     group_by = TaskInfo[11]
     fields = TaskInfo[21]
     local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-    local_dir = """/home/ecsage_data/oceanengine/async/%s/%s/%s""" % (ExecDate, AirflowDagId, AirflowTaskId)
+    hostname = socket.gethostname()
+    local_dir = """/home/ecsage_data/oceanengine/%s/async/%s/%s/%s""" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
     data_task_file = """%s/data_%s.log""" % (local_dir, AirflowTaskId)
     task_exception_file = "%s/task_exception_file.log" % (local_dir)
     celery_task_status_file = "%s/celery_task_status_file.log" % (local_dir)
@@ -485,7 +489,8 @@ def get_oe_async_tasks_create(AirflowDagId="", AirflowTaskId="", TaskInfo="", Me
     interface_flag = TaskInfo[20]
     group_by = TaskInfo[11]
     fields = TaskInfo[21]
-    async_account_file = "/home/ecsage_data/oceanengine/async/%s/%s/%s" % (AirflowDagId, AirflowTaskId, media_type)
+    hostname = socket.gethostname()
+    async_account_file = "/home/ecsage_data/oceanengine/%s/async/%s/%s/%s" % (hostname,AirflowDagId, AirflowTaskId, media_type)
     async_create_task_file = """%s/async_create_%s.log""" % (async_account_file, media_type)
     async_task_exception_file = """%s/async_exception_%s.log""" % (async_account_file, media_type)
     celery_task_status_file = """%s/celery_task_status_%s.log""" % (async_account_file, media_type)
@@ -610,7 +615,8 @@ def get_oe_async_tasks_token(MediaType=""):
 
 def get_oe_async_tasks_status(MediaType="", ExecDate=""):
     media_type = MediaType
-    async_account_file = "/home/ecsage_data/oceanengine/async"
+    hostname = socket.gethostname()
+    async_account_file = "/home/ecsage_data/oceanengine/%s/async"%(hostname)
     async_status_exception_file = """%s/async_status_exception_%s.log""" % (async_account_file, media_type)
     async_notempty_file = """%s/async_notempty_%s.log""" % (async_account_file, media_type)
     async_empty_file = """%s/async_empty_%s.log""" % (async_account_file, media_type)
@@ -778,7 +784,8 @@ def get_oe_async_tasks_data(AirflowDagId="", AirflowTaskId="", TaskInfo="", Medi
     interface_flag = TaskInfo[20]
     task_flag = "%s.%s" % (AirflowDagId, AirflowTaskId)
     local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-    local_dir = """/home/ecsage_data/oceanengine/async/%s/%s/%s""" % (ExecDate, AirflowDagId, AirflowTaskId)
+    hostname = socket.gethostname()
+    local_dir = """/home/ecsage_data/oceanengine/%s/async/%s/%s/%s""" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
     celery_status_file = "%s/celery_status_file.log" % (local_dir)
     data_task_file = """%s/data_%s.log""" % (local_dir, AirflowTaskId)
     task_exception_file = "%s/task_exception_file.log" % (local_dir)

@@ -30,6 +30,7 @@ import os
 import time
 import json
 import ast
+import socket
 
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
@@ -42,7 +43,6 @@ def main(TaskInfo,Level="",**kwargs):
     global regexp_extract_column
     airflow = Airflow(kwargs)
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    os.system("""chmod -R 777 /home/ecsage_data/oceanengine""")
     exec_date = airflow.execution_date_utc8_str[0:10]
     target_db = TaskInfo[14]
     target_table = TaskInfo[15]
@@ -76,7 +76,8 @@ def main(TaskInfo,Level="",**kwargs):
 def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate="",ArrayFlag=""):
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-  local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
+  hostname = socket.gethostname()
+  local_dir = """/home/ecsage_data/oceanengine/%s/sync/%s/%s/%s"""%(hostname,ExecDate,AirflowDag,AirflowTask)
   celery_first_page_status_file = "%s/celery_first_page_status_file.log"%(local_dir)
   celery_other_page_status_file = "%s/celery_other_page_status_file.log" % (local_dir)
   celery_rerun_page_status_file = "%s/celery_rerun_page_status_file.log" % (local_dir)
@@ -418,7 +419,8 @@ def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFla
 def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-  local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
+  hostname = socket.gethostname()
+  local_dir = """/home/ecsage_data/oceanengine/%s/sync/%s/%s/%s"""%(hostname,ExecDate,AirflowDag,AirflowTask)
   celery_get_page_status = """%s/celery_get_page_status.log"""%(local_dir)
   celery_get_data_status = "%s/celery_get_data_status.log"%(local_dir)
   page_task_file = "%s/page_task_file.log"%(local_dir)
@@ -558,7 +560,8 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
   target_table = TaskInfo[15]
   interface_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-  local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
+  hostname = socket.gethostname()
+  local_dir = """/home/ecsage_data/oceanengine/%s/sync/%s/%s/%s"""%(hostname,ExecDate,AirflowDag,AirflowTask)
   celery_get_page_status = """%s/celery_get_page_status.log"""%(local_dir)
   celery_get_data_status = "%s/celery_get_data_status.log"%(local_dir)
   page_task_file = "%s/page_task_file.log"%(local_dir)
@@ -645,7 +648,8 @@ def get_creative_detail_data(BeelineSession="",AirflowDag="",AirflowTask="",Task
 def get_advertisers_info(AirflowDag="", AirflowTask="",BeelineSession="",TargetDB="",TargetTable="",TaskInfo="", ExecDate=""):
     interface_flag = """%s.%s""" % (AirflowDag, AirflowTask)
     local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-    local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s""" % (ExecDate, AirflowDag, AirflowTask)
+    hostname = socket.gethostname()
+    local_dir = """/home/ecsage_data/oceanengine/%s/sync/%s/%s/%s""" % (hostname,ExecDate, AirflowDag, AirflowTask)
     celery_get_data_status = "%s/celery_get_data_status.log" % (local_dir)
     data_task_file = """%s/data_task_file.log""" % (local_dir)
     task_exception_file = "%s/task_exception_file.log" % (local_dir)
@@ -703,7 +707,8 @@ def set_sync_pages_number(DataList="",ParamJson="",UrlPath="",SyncDir="",PageTas
 
 def get_sync_interface_2_local(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-  local_dir = """/home/ecsage_data/oceanengine/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
+  hostname = socket.gethostname()
+  local_dir = """/home/ecsage_data/oceanengine/%s/sync/%s/%s/%s"""%(hostname,ExecDate,AirflowDag,AirflowTask)
   celery_get_page_status = """%s/celery_get_page_status.log"""%(local_dir)
   celery_get_data_status = "%s/celery_get_data_status.log"%(local_dir)
   page_task_file = "%s/page_task_file.log"%(local_dir)
