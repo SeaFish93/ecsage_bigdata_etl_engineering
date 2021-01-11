@@ -19,6 +19,9 @@ CELERYD_PREFETCH_MULTIPLIER = 4
 CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'pickle'
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
+
+CELERY_TIMEZONE = 'Asia/Shanghai'
+CELERY_ENABLE_UTC = False
 CELERY_QUEUES = (
 Queue('report', Exchange('report'), routing_key='report', consumer_arguments={'x-priority': 100}),
 Queue('default', Exchange('default'), routing_key='default', consumer_arguments={'x-priority': 100})
