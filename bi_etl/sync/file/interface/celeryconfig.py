@@ -27,5 +27,5 @@ CELERY_DEFAULT_QUEUE = 'default'
 CELERY_DEFAULT_EXCHANGE = 'default'
 CELERY_DEFAULT_ROUTING_KEY = 'default'
 CELERY_ROUTES = {
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_test_quen': {'queue': 'report'}
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages': {'queue': 'report'}
 }
