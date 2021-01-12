@@ -297,7 +297,7 @@ def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize=
             set_true = False
         else:
             if n > 2:
-                print("异常：%s,%s"%(ServiceId,ServiceCode))
+                print("异常获取子账户：%s,%s,%s"%(TaskFlag,ServiceId,ServiceCode))
                 set_true = False
             else:
                 time.sleep(2)
@@ -317,7 +317,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
             set_true = False
         else:
             if n > 2:
-                print("异常：%s,%s"%(ServiceId,ServiceCode))
+                print("异常获取子账户：%s,%s,%s"%(TaskFlag,ServiceId,ServiceCode))
                 os.system("""echo "%s %s %s %s %s %s">>%s """ % (ServiceId, ServiceCode, TaskFlag,Media, Page,PageSize, TaskExceptionFile + ".%s" % hostname))
                 set_true = False
             else:
@@ -335,7 +335,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
           set_true = False
       else:
           if n > 2:
-            print("处理不分页异常：%s,%s"%(ReturnAccountId,ServiceCode))
+            print("处理不分页异常：%s,%s,%s"%(TaskFlag,ReturnAccountId,ServiceCode))
             status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
             if int(status) != 0:
                 for i in range(100):
@@ -362,7 +362,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           set_true = False
       else:
           if n > 2:
-            print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
+            print("异常分页：%s,%s,%s"%(TaskFlag,ReturnAccountId,ServiceCode))
             status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
             if int(status) != 0:
                 for i in range(100):
@@ -386,7 +386,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
             set_true = False
         else:
             if n > 2:
-                print("处理创建异步任务异常：%s,%s" % (ReturnAccountId, ServiceCode))
+                print("处理创建异步任务异常：%s,%s,%s" % (TaskFlag,ReturnAccountId, ServiceCode))
                 status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % ( UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType,Token,TaskFlag+"##"+InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
                 if int(status) != 0:
                     for i in range(100):
@@ -411,7 +411,7 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
             set_true = False
         else:
             if n > 2:
-                print("处理异步任务状态异常：%s,%s" % (ReturnAccountId, ServiceCode))
+                print("处理异步任务状态异常：%s,%s,%s" % (TaskFlag,ReturnAccountId, ServiceCode))
                 status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType,Token, TaskFlag, TaskExceptionFile + ".%s" % hostname))
                 if int(status) != 0:
                     for i in range(100):
