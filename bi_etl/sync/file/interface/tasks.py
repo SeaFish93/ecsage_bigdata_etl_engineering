@@ -331,12 +331,10 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
       else:
           if n > 2:
             print("处理不分页异常：%s,%s"%(ReturnAccountId,ServiceCode))
-            status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
-            if int(status) != 0:
-                for i in range(100):
-                  status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
-                  if int(status) == 0:
-                      break;
+            for i in range(100):
+              status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
+              if int(status) == 0:
+                  break;
             set_true = False
           else:
             time.sleep(5)
@@ -344,26 +342,25 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
 
 #处理分页
 @app.task(rate_limit='1000/m')
-def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag=""):
+def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
+              ,DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
     while set_true:
       remark = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
-                      ServiceCode=ServiceCode,DataFileDir=DataFileDir,
-                      DataFile=DataFile,ReturnAccountId=ReturnAccountId,
-                      TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag
-                     )
+                            ServiceCode=ServiceCode,DataFileDir=DataFileDir,
+                            DataFile=DataFile,ReturnAccountId=ReturnAccountId,
+                            TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag
+                           )
       if remark == "正常":
           set_true = False
       else:
           if n > 2:
             print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
-            status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
-            if int(status) != 0:
-                for i in range(100):
-                  status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,TaskExceptionFile + ".%s" % hostname))
-                  if int(status) == 0:
-                      break;
+            for i in range(100):
+              status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,TaskExceptionFile + ".%s" % hostname))
+              if int(status) == 0:
+                 break;
             set_true = False
           else:
             time.sleep(5)

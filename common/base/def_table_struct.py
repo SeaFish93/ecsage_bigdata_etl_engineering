@@ -79,13 +79,10 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
     all_pars_list = []
     #filter_line = """ where etl_date = '%s'""" % (ExecDate)
     #get_field_sql = """select request_data from %s.%s %s""" % ("etl_mid",SourceTable,filter_line)
-    get_field_sql = """select request_data 
-                        from (select request_data
-                                    ,get_json_object(request_data,'$.len_flag') as len_flag 
+    get_field_sql = """select request_data
                               from %s.%s 
-                              where etl_date = '%s'
-                              ) tmp 
-                        where len_flag= 'Y' """ % ("etl_mid",SourceTable,ExecDate)
+                              where etl_date = '%s' and request_data like '%len_flag": "Y%' limit 1
+                    """ % ("etl_mid",SourceTable,ExecDate)
 
     ok, data = HiveSession.get_all_rows(get_field_sql)
     if len(data)>0:
