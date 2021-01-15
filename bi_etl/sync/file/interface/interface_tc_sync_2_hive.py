@@ -262,9 +262,9 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
           else:
              print("含有filter...")
        if int(IsAdvertiserList) == 1:
-           ParamJson["advertiser_ids"] = [int(data[0])]
+           ParamJson["account_ids"] = [int(data[0])]
        else:
-           ParamJson["advertiser_id"] = int(data[0])
+           ParamJson["account_id"] = int(data[0])
        celery_task_id = get_not_page_celery.delay(UrlPath=UrlPath, ParamJson=ParamJson,Token=data[5],
                                                   ServiceCode=data[2], ReturnAccountId=data[0],
                                                   TaskFlag=TaskFlag,DataFileDir=DataFileDir,
@@ -303,7 +303,7 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
                 ParamJson["%s" % (list_1)]["%s" % (list_value[0])] = [eval(list_value[2])(data[3])] if list_value[1] == '[]' else eval(list_value[2])(data[3])
        else:
          ParamJson = ast.literal_eval(json.loads(json.dumps(str(data[3]).replace("""'""", """\""""))))
-       ParamJson["advertiser_id"] = data[0]
+       ParamJson["account_id"] = data[0]
        if Pagestyle is not None and len(Pagestyle)>0: #page_style=[{"offset":0,"limit":100},"offset","limit"]
            ParamJson.update(Pagestyle[0])
        else:
