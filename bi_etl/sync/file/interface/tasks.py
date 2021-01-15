@@ -41,7 +41,7 @@ def get_test_quen(name=""):
     return name+str(now)+"========"
 
 #定义oe任务创建
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate="",LocalDir=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
@@ -107,7 +107,7 @@ def get_oe_async_tasks_create_all_exception(AsyncTaskName="", AsyncTaskFile="", 
       n = n + 1
 
 #定义oe任务创建
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_create(AsyncTaskName="", LocalDir="",AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
@@ -138,7 +138,7 @@ def get_oe_async_tasks_create(AsyncTaskName="", LocalDir="",AsyncTaskFile="", As
       n = n + 1
 
 #定义oe任务状态
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     set_true = True
@@ -178,7 +178,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
        n = n + 1
 
 #定义oe任务数据
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",TaskFlag="",TaskExceptionFile=""):
     print("执行数据子账户：%s"%(ReturnAccountId))
     set_true = True
@@ -325,7 +325,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
         n = n + 1
 
 #处理不分页
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag=""):
     set_true = True
     n = 0
@@ -375,7 +375,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
       n = n + 1
 
 #创建异步任务
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",MediaType="",TaskExceptionFile="",TaskFlag=""):
     set_true = True
     n = 0
@@ -399,7 +399,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
         n = n + 1
 
 #定义oe任务状态
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",MediaType="",TaskFlag="",TaskExceptionFile=""):
     set_true = True
     n = 0
