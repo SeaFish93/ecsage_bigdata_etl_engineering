@@ -1,13 +1,13 @@
 from kombu import Queue, Exchange
 
 BROKER_URL = 'amqp://root:1qazXSW2@192.168.30.17:9549//sync'
-CELERY_RESULT_BACKEND = 'amqp://root:1qazXSW2@192.168.30.17:9549//sync'
+CELERY_RESULT_BACKEND = 'db+mysql://root:Yk@123@192.168.30.235:3306/sync'
 #use json
 #CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
 CELERY_TASK_RESULT_EXPIRES = 60*60*24
 #task child killed after 40 times processing
-CELERYD_MAX_TASKS_PER_CHILD = 40
+CELERYD_MAX_TASKS_PER_CHILD = 5
 #celery worker amount
 #CELERY_CONCURRENCY = 20
 CELERYD_CONCURRENCY = 10
