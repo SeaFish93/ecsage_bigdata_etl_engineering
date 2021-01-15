@@ -17,6 +17,9 @@ CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'pickle'
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
+CELERY_TIMEZONE = "Asia/Shanghai"
+CELERY_ENABLE_UTC = False
+
 # 任务失败或超时自动确认，默认为True
 CELERY_ACKS_ON_FAILURE_OR_TIMEOUT=False
 # 任务完成之后再确认
