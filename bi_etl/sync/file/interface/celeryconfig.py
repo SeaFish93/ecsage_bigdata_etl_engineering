@@ -1,10 +1,7 @@
 from kombu import Queue, Exchange
-#broker use redis
-#BROKER_URL = 'redis://:1qazXSW2@192.168.30.17:9543/9'
-#backend use redis
-#CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/10'
-BROKER_URL = 'amqp://root:1qazXSW2@192.168.30.127:9549//test'
-CELERY_RESULT_BACKEND = 'amqp://root:1qazXSW2@192.168.30.127:9549//test'
+
+BROKER_URL = 'amqp://root:1qazXSW2@192.168.30.17:9549//sync'
+CELERY_RESULT_BACKEND = 'amqp://root:1qazXSW2@192.168.30.17:9549//sync'
 #use json
 #CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
