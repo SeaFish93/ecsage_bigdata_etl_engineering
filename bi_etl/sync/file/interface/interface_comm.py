@@ -820,7 +820,8 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           print("!33333333333")
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
-      request_id = rsp_data["request_id"]
+      req_flg={'tc':'trace_id','oe':'request_id'}
+      request_id = rsp_data["%s"%(req_flg[TargetFlag])]
       if int(code) == 0:
          file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
          data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
