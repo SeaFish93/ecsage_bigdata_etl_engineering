@@ -14,6 +14,7 @@ import socket
 import time
 import json
 import ast
+import random
 from six import string_types
 import urllib3
 from six.moves.urllib.parse import urlencode, urlunparse
@@ -219,7 +220,6 @@ def local_hdfs_thread(DataFile="",HDFSDir="",arg=None):
        os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
 
 #创建创意
-#def
 def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEmptyFile="",ExecDate=""):
     get_data = ExecData
     media_type = get_data[1]
@@ -730,20 +730,25 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     return remark
 
 #不翻页处理
-def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",ArrayFlag=""):
+def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",ArrayFlag="",TargetFlag=""):
     code = 1
     data = ""
     set_run = True
     n = 0
     not_exist = "N"
     try:
-      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-      code = rsp_data["code"]
-      # token无效重试
-      if int(code) == 40105:
-          token = get_oe_account_token(ServiceCode=ServiceCode)
-          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
-          code = rsp_data["code"]
+      if TargetFlag == 'oe':
+         rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
+         if int(code = rsp_data["code"]) == 40105:# token无效重试
+             token = get_oe_account_token(ServiceCode=ServiceCode)
+             rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+             code = rsp_data["code"]
+      elif TargetFlag =='tc':
+         rsp_data = get_sync_data_tc(Access_Token=Token, ParamJson=ParamJson, UrlPath=UrlPath)
+         if int(rsp_data["code"]) in [11000, 11002, 11004, 11005, 30101, 30102]:  # token无效重试
+             token = get_oe_account_token(ServiceCode=ServiceCode)
+             rsp_data = get_sync_data_tc(Access_Token=token, ParamJson=ParamJson, UrlPath=UrlPath)
+             code = rsp_data["code"]
 
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
@@ -772,7 +777,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
               else:
                   time.sleep(2)
           n = n + 1
-      elif int(code) in [40002, 40105, 40104]:
+      elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
           code = 0
           data = str(rsp_data).replace(" ", "")
       else:
@@ -782,8 +787,6 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
         code = 1
         data = "请求失败：%s"%(str(e).replace("\n","").replace(" ","").replace("""\"""",""))
     if int(code) != 0:
-      status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,Token,DataFileDir, "account_status.log", hostname))
-      if int(status) != 0:
        for i in range(10):
         status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
         if int(status) == 0:
@@ -791,7 +794,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
     return code
 
 #翻页处理
-def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",Pagestyle="",ArrayFlag=""):
+def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",Pagestyle="",ArrayFlag="",TargetFlag=""):
     page = 0
     data = ""
     set_run = True
@@ -799,13 +802,19 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     token = None
     not_exist = "N"
     try:
-      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-      code = rsp_data["code"]
-      #token无效重试
-      if int(code) == 40105:
-          token = get_oe_account_token(ServiceCode=ServiceCode)
-          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
-          code = rsp_data["code"]
+      if TargetFlag == 'oe':
+          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
+          if int(rsp_data["code"])== 40105:#token无效重试
+              token = get_oe_account_token(ServiceCode=ServiceCode)
+              rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
+              code = rsp_data["code"]
+
+      elif TargetFlag =='tc':
+          rsp_data =  get_sync_data_tc(Access_Token=Token,ParamJson=ParamJson,UrlPath=UrlPath)
+          if int(rsp_data["code"]) in [11000,11002,11004,11005,30101,30102]:#token无效重试
+              token = get_oe_account_token(ServiceCode=ServiceCode)
+              rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
+              code = rsp_data["code"]
 
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
@@ -842,7 +851,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
              page = rsp_data["data"]["page_info"]["total_page"]
          if page == 0:
             data = str(rsp_data).replace(" ", "")
-      elif int(code) in [40002, 40105, 40104]:
+      elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
           remark = "正常"
           data = str(rsp_data).replace(" ", "")
       else:
@@ -1111,3 +1120,20 @@ def get_data_2_snap(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                               Log="snap入库数据对比不上！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
+
+
+
+#腾讯##########################腾讯##########################腾讯##########################腾讯##########################腾讯#########################
+#腾讯同步数据API @Time 2021-01-14
+def get_sync_data_tc(Access_Token="",ParamJson="",UrlPath="daily_reports/get"):
+    url = 'https://api.e.qq.com/v1.3/' + UrlPath
+
+    common_parameters = {
+        'access_token': Access_Token,
+        'timestamp': int(time.time()),
+        'nonce': str(time.time()) + str(random.randint(0, 999999)),
+    }
+    ParamJson.update(common_parameters)
+    ParamJson = {k: v if isinstance(v, string_types) else json.dumps(v) for k, v in ParamJson.items()}
+    r = requests.get(url, params=ParamJson)
+    return r.json()
