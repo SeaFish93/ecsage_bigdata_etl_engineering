@@ -1135,5 +1135,7 @@ def get_sync_data_tc(Access_Token="",ParamJson="",UrlPath="daily_reports/get"):
     }
     ParamJson.update(common_parameters)
     ParamJson = {k: v if isinstance(v, string_types) else json.dumps(v) for k, v in ParamJson.items()}
+    print("==================================")
     r = requests.get(url, params=ParamJson)
+    print("----------------------------------")
     return r.json()
