@@ -178,7 +178,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             from big_data_mdg.media_advertiser a
             where a.is_actived='1' 
                 and media='%s'
-                and account_id='11247466'
+                --and account_id='11247466'
             group by a.account_id, a.media, a.service_code
        """%(task_flag,media_type)
 
@@ -406,6 +406,7 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
       set_exit(LevelStatu="yellow", MSG=msg)
    else:
     time_line =",time_line string" if len(TimeLine)>0 else ""
+    time_part =",time_line= '%s'"%(TimeLine) if len(TimeLine)>0 else ""
     mid_sql = """
         create table if not exists %s.%s
         (
@@ -424,21 +425,22 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
         print(data,"####################################")
         local_file = """%s""" % (data)
         # 落地mid表
-        if load_num == 0:
-            load_table_sql_0 = """
-                         load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {target_db}.{target_table}
-                         partition(etl_date='{exec_date}',request_type='{request_type}',time_line='{time_line}')
-                         ;\n
-            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], target_db=TargetDB,
-                       target_table=TargetTable,exec_date=ExecDate,request_type=MediaType,time_line=TimeLine)
-        else:
-            load_table_sql = """
-                         load data inpath '{hdfs_dir}/{file_name}' INTO TABLE {target_db}.{target_table}
-                         partition(etl_date='{exec_date}',request_type='{request_type}',time_line='{time_line}')
-                         ;\n
-                     """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1],
-                                target_db=TargetDB,target_table=TargetTable,exec_date=ExecDate,request_type=MediaType,time_line=TimeLine
-                                )
+        overwrite_flag= 'OVERWRITE' if load_num == 0 else ''
+        load_table_sql_0 = """
+                     load data inpath  '%s/%s' %s  INTO TABLE %s.%s
+                     partition(etl_date='%s',request_type='%s' %s)
+                     ;\n
+        """%(hdfs_dir, local_file.split("/")[-1], overwrite_flag, TargetDB, TargetTable, ExecDate,MediaType,time_part)
+        #if load_num == 0:
+        #    pass
+        #else:
+        #    load_table_sql = """
+        #                 load data inpath '{hdfs_dir}/{file_name}' INTO TABLE {target_db}.{target_table}
+        #                 partition(etl_date='{exec_date}',request_type='{request_type}',time_line='{time_line}')
+        #                 ;\n
+        #             """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1],
+        #                        target_db=TargetDB,target_table=TargetTable,exec_date=ExecDate,request_type=MediaType,time_line=TimeLine
+        #                        )
         load_table_sqls = load_table_sql + load_table_sqls
         load_num = load_num + 1
     load_table_sqls = load_table_sql_0 + load_table_sqls
