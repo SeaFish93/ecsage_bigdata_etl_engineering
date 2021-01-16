@@ -22,6 +22,7 @@ CELERY_ENABLE_UTC = False
 TIME_ZONE = 'Asia/Shanghai'
 CELERY_TIMEZONE = TIME_ZONE
 
+CELERYD_POOL_RESTARTS = True
 # 任务失败或超时自动确认，默认为True
 CELERY_ACKS_ON_FAILURE_OR_TIMEOUT=False
 # 任务完成之后再确认
