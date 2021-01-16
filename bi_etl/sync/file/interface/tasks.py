@@ -5,7 +5,7 @@
 # @Software: PyCharm
 # function info：定义celery任务
 
-from __future__ import absolute_import, unicode_literals
+#from __future__ import absolute_import, unicode_literals
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import app
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_status_content_content
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
