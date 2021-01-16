@@ -6,7 +6,7 @@ CELERY_RESULT_BACKEND = 'db+mysql://root:Yk@123@192.168.30.235:3306/sync'
 #use json
 #CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
-CELERY_TASK_RESULT_EXPIRES = 60*60*24
+CELERY_RESULT_EXPIRES = 60*60*24
 #task child killed after 40 times processing
 CELERYD_MAX_TASKS_PER_CHILD = 5
 #celery worker amount
@@ -23,6 +23,7 @@ TIME_ZONE = 'Asia/Shanghai'
 CELERY_TIMEZONE = TIME_ZONE
 
 CELERYD_POOL_RESTARTS = True
+BROKER_CONNECTION_TIMEOUT = 60
 # 任务失败或超时自动确认，默认为True
 CELERY_ACKS_ON_FAILURE_OR_TIMEOUT=False
 # 任务完成之后再确认
