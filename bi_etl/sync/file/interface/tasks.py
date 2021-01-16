@@ -325,7 +325,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
         n = n + 1
 
 #处理不分页
-@app.task(rate_limit='1000/m',task_time_limit=3600)
+@app.task(rate_limit='1000/m')
 def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag=""):
     set_true = True
     n = 0
@@ -348,7 +348,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
       n = n + 1
 
 #处理分页
-@app.task(rate_limit='1000/m',task_time_limit=3600)
+@app.task(rate_limit='1000/m')
 def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag=""):
     set_true = True
     n = 0
@@ -375,7 +375,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
       n = n + 1
 
 #创建异步任务
-@app.task(rate_limit='1000/m',task_time_limit=3600)
+@app.task(rate_limit='1000/m')
 def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",MediaType="",TaskExceptionFile="",TaskFlag=""):
     set_true = True
     n = 0
@@ -399,7 +399,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
         n = n + 1
 
 #定义oe任务状态
-@app.task(rate_limit='1000/m',task_time_limit=3600)
+@app.task(rate_limit='1000/m')
 def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",MediaType="",TaskFlag="",TaskExceptionFile=""):
     set_true = True
     n = 0
