@@ -178,7 +178,6 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             from big_data_mdg.media_advertiser a
             where a.is_actived='1' 
                 and media='%s'
-                --and account_id='11247466'
             group by a.account_id, a.media, a.service_code
        """%(task_flag,media_type)
 
