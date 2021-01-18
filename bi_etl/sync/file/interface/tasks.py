@@ -329,9 +329,9 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
       code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token
                           ,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag)
       if TargetFlag == "tc":
-          sucess_code=list(conf.get(conf.get("Tc_Code", "sucess_code")))
+          sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
       else:
-          sucess_code=list(conf.get(conf.get("Oe_Code", "sucess_code")))
+          sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
       if int(code) in sucess_code:
           set_true = False
       else:
@@ -359,9 +359,9 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
                             TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag
                            )
       if TargetFlag == "tc":
-          sucess_code=list(conf.get("Tc_Code", "sucess_code"))
+          sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
       else:
-          sucess_code=list(conf.get("Oe_Code", "sucess_code"))
+          sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
       print(sucess_code)
       if int(code) in sucess_code:
           set_true = False
