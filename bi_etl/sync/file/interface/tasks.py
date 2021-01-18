@@ -359,7 +359,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
           if n > 2:
             print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
             for i in range(100):
-              status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
+              status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
               if int(status) == 0:
                  break;
             set_true = False
