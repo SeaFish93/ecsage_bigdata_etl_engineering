@@ -102,6 +102,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           filter_js['values'] = tmp_list2 if n > 1 else tmp_list2[0]
           filtering.append(filter_js)
       param_json["filtering"] = filtering
+  time_line = param_json["time_line"] if "time_line" in param_json.keys() else ""
   url_path = TaskInfo[4]
   filter_db_name = TaskInfo[21]
   filter_table_name = TaskInfo[22]
@@ -246,7 +247,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           data_task_file_list.append("%s/%s"%(local_dir, files))
   #数据落地至etl_mid
   load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
-                      TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
+                      TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type,TimeLine=time_line
                     )
 
 #处理不分页
@@ -391,7 +392,7 @@ def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFla
                     TableName="oe_sync_page_interface", Columns=columns)
 
 
-def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",MediaType=""):
+def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",MediaType="",TimeLine=""):
    if LocalFileList is None or len(LocalFileList) == 0:
       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
@@ -403,42 +404,34 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
                                Developer="developer")
       set_exit(LevelStatu="yellow", MSG=msg)
    else:
+    time_part=",time_line string" if len(TimeLine)>0 else ""
+    time_line=",time_line = '%s'"%(TimeLine) if len(TimeLine)>0 else ""
     mid_sql = """
         create table if not exists %s.%s
         (
          request_data string
-        )partitioned by(etl_date string,request_type string)
+        )partitioned by(etl_date string,request_type string %s )
         row format delimited fields terminated by '\\001' 
         ;
-    """ % (TargetDB,TargetTable)
+        """ % (TargetDB,TargetTable,time_part)
     BeelineSession.execute_sql(mid_sql)
     load_num = 0
     hdfs_dir = conf.get("Airflow_New", "hdfs_home")
     load_table_sqls = ""
-    load_table_sql_0 = ""
-    load_table_sql = ""
     for data in LocalFileList:
         print(data,"####################################")
         local_file = """%s""" % (data)
         # 落地mid表
-        if load_num == 0:
-            load_table_sql_0 = """
-                         load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {target_db}.{target_table}
-                         partition(etl_date='{exec_date}',request_type='{request_type}')
+        over_flag= "overwrite" if load_num == 0 else ""
+        load_table_sql = """
+                         load data inpath '%s/%s' %s  INTO TABLE %s.%s
+                         partition(etl_date='%s',request_type='%s' %s)
                          ;\n
-            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], target_db=TargetDB,
-                       target_table=TargetTable,exec_date=ExecDate,request_type=MediaType)
-        else:
-            load_table_sql = """
-                         load data inpath '{hdfs_dir}/{file_name}' INTO TABLE {target_db}.{target_table}
-                         partition(etl_date='{exec_date}',request_type='{request_type}')
-                         ;\n
-                     """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1],
-                                target_db=TargetDB,target_table=TargetTable,exec_date=ExecDate,request_type=MediaType
-                                )
-        load_table_sqls = load_table_sql + load_table_sqls
+            """%(hdfs_dir, local_file.split("/")[-1],over_flag, TargetDB,
+                       TargetTable,ExecDate,MediaType,time_line)
+        load_table_sqls += load_table_sql
         load_num = load_num + 1
-    load_table_sqls = load_table_sql_0 + load_table_sqls
+
     # 上传hdfs
     get_local_hdfs_thread(TargetDb=TargetDB, TargetTable=TargetTable, ExecDate=ExecDate, DataFileList=LocalFileList,HDFSDir=hdfs_dir)
     print("结束上传HDFS，启动load")

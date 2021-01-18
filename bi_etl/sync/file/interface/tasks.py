@@ -6,6 +6,7 @@
 # function info：定义celery任务
 
 from __future__ import absolute_import, unicode_literals
+from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import app
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_status_content_content
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
@@ -26,7 +27,7 @@ import ast
 import os
 import time
 import socket
-
+conf = Conf().conf
 hostname = socket.gethostname()
 
 #定义oe任务创建
@@ -327,7 +328,11 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
     while set_true:
       code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token
                           ,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag)
-      if int(code) == 0:
+      if TargetFlag == "tc":
+          sucess_code=list(conf.get(conf.get("Tc_Code", "sucess_code")))
+      else:
+          sucess_code=list(conf.get(conf.get("Oe_Code", "sucess_code")))
+      if int(code) in sucess_code:
           set_true = False
       else:
           if n > 2:
@@ -353,7 +358,12 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
                             DataFile=DataFile,ReturnAccountId=ReturnAccountId,
                             TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag
                            )
-      if int(code) == 0:
+      if TargetFlag == "tc":
+          sucess_code=list(conf.get(conf.get("Tc_Code", "sucess_code")))
+      else:
+          sucess_code=list(conf.get(conf.get("Oe_Code", "sucess_code")))
+      print(sucess_code)
+      if int(code) in sucess_code:
           set_true = False
       else:
           if n > 2:
