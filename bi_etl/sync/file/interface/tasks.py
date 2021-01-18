@@ -359,9 +359,9 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
                             TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag
                            )
       if TargetFlag == "tc":
-          sucess_code=list(conf.get(conf.get("Tc_Code", "sucess_code")))
+          sucess_code=list(conf.get("Tc_Code", "sucess_code"))
       else:
-          sucess_code=list(conf.get(conf.get("Oe_Code", "sucess_code")))
+          sucess_code=list(conf.get("Oe_Code", "sucess_code"))
       print(sucess_code)
       if int(code) in sucess_code:
           set_true = False
