@@ -282,7 +282,7 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
     rerun_exception_tasks_pages(DataFileDir=DataFileDir, ExceptionFile=TaskExceptionFile, IsPage="N",
                                 DataFile=DataFile, PageTaskFile="/tmp/loglog.log", CeleryTaskDataFile=CeleryPageStatusFile,
                                 InterfaceFlag=TaskFlag,
-                                Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
+                                Columns=""
                                 , ArrayFlag=ArrayFlag
                                 )
 
@@ -328,7 +328,7 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
     #重试异常
     rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
                                 DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
-                                InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
+                                InterfaceFlag=TaskFlag,Columns=""
                                 ,ArrayFlag=ArrayFlag
                                )
     # 保存MySQL
@@ -368,7 +368,7 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskEx
     #重试异常
     rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
                                 DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
-                                InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
+                                InterfaceFlag=TaskFlag,Columns=""
                                 ,ArrayFlag=ArrayFlag
                               )
 
@@ -577,7 +577,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
     #先保留第一次
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface_bak where interface_flag = '%s' """ % (InterfaceFlag)
     etl_md.execute_sql(delete_sql)
-    columns = Columns
+    columns = "interface_url,interface_param_json,service_code,account_id,interface_flag,token,err_code" + Columns
     db_name = "metadb"
     table_name = "oe_sync_exception_tasks_interface_bak"
     save_exception_tasks(AsyncAccountDir=DataFileDir,ExceptionFile=ExceptionFile,DbName=db_name,TableName=table_name,Columns=columns)

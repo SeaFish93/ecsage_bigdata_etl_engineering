@@ -802,22 +802,20 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     token = None
     not_exist = "N"
     try:
-      print("!1111111111111")
       if TargetFlag == 'oe':
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
           if int(rsp_data["code"])== 40105:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
-              code = rsp_data["code"]
-          print("!222222222")
+
       elif TargetFlag =='tc':
-          rsp_data =  get_sync_data_tc(Access_Token=Token,ParamJson=ParamJson,UrlPath=UrlPath)
+          token = get_oe_account_token(ServiceCode=ServiceCode)
+          rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
           if int(rsp_data["code"]) in [11000,11002,11004,11005,30101,30102]:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
-              code = rsp_data["code"]
-          print(rsp_data)
-          print("!33333333333")
+
+      code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
       req_flg={'tc':'trace_id','oe':'request_id'}
@@ -876,7 +874,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
          else:
            time.sleep(2)
       n = n + 1
-    return remark
+    return code
 
 #etl_mid->Ods层
 def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="", TargetTable=""
