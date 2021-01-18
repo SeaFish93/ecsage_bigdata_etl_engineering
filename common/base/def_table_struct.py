@@ -81,7 +81,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
     #get_field_sql = """select request_data from %s.%s %s""" % ("etl_mid",SourceTable,filter_line)
     get_field_sql = """select request_data
                               from %s.%s 
-                              where etl_date = '%s' and request_data like '\%len_flag": "Y\%' limit 1
+                              where etl_date = '%s' and request_data like '\\%len_flag": "Y\\%' limit 1
                     """ % ("etl_mid",SourceTable,ExecDate)
 
     ok, data = HiveSession.get_all_rows(get_field_sql)
