@@ -34,14 +34,17 @@ class ImpalaNoSqlDB(BaseDB):
         try:
             self.get_cursor()
             cursor = self.cursor
-            # sql = str(sql).replace("`", "")
             cursor.execute(sql)
+            get_columns = cursor.description
+            columns = []
+            for column in get_columns:
+                columns.append(column[0])
             rows = cursor.fetchall()
         except Exception as e:
             print("impala get_all_rows sql Error:" + sql)
             print(e)
-            return False, None
-        return True, rows
+            return False, None,None
+        return True, rows,columns
 
     def get_one_row(self, sql):
         self.get_cursor()
@@ -49,24 +52,32 @@ class ImpalaNoSqlDB(BaseDB):
         try:
             # sql = str(sql).replace("`", "")
             cursor.execute(sql)
+            get_columns = cursor.description
+            columns = []
+            for column in get_columns:
+                columns.append(column[0])
             row = cursor.fetchone()
         except Exception as e:
             print("impala get_one_row sql Error:" + sql)
             print(e)
-            return False, None
-        return True, row
+            return False, None,None
+        return True, row,columns
 
     def get_many_rows(self, sql, size=1):
         self.get_cursor()
         cursor = self.cursor
         try:
             cursor.execute(sql)
+            get_columns = cursor.description
+            columns = []
+            for column in get_columns:
+                columns.append(column[0])
             rows = cursor.fetchmany(size)
         except Exception as e:
             print("impala execute_sql sql Error:" + sql)
             print(e)
-            return False, None
-        return True, rows
+            return False, None,None
+        return True, rows,columns
 
     def execute_sql(self, sql):
         try:
