@@ -19,7 +19,7 @@ def execute(InterfaceInfo=""):
     interface_id = interface_info["interface_id"]
     #获取接口元数据信息
     sql = """
-      select interface_id,interface_name,project,interface_item,is_page,engine_type
+      select interface_id,interface_name,project,interface_item,is_page,engine_type,engine_handle
       from metadb.web_interface_info
       where status = 1
         and interface_id = '%s'
@@ -32,14 +32,22 @@ def execute(InterfaceInfo=""):
     item = data[3]
     is_page = data[4]
     engine_type = data[5]
+    engine_handle = data[6]
     #获取执行sql
     code,module = get_interface_module(Project=project,Item=item, EngineType=engine_type,Interface=interface_id)
     if int(code) == 40001:
         return None
-    if engine_type == "hive":
-        pass
-    elif engine_type == "impala":
-        pass
+    if engine_type is not None and len(engine_type) > 0:
+       try:
+          exec_session = set_db_session(SessionType=engine_type, SessionHandler=engine_handle)
+          if exec_session is None:
+              code = 40004
+              module = "元数据表定义计算引擎字段错误"
+              return None
+       except Exception as e:
+           code = 40003
+           module = "元数据表定义计算引擎handle错误"
+           return None
     else:
         code = 40002
         return None
