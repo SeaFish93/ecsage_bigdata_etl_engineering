@@ -48,7 +48,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
             field_list = []
             strs = str + ',' + default_table_columns
             for field_str in strs.split(","):
-                field_list.append(field_str + " String\n")
+                field_list.append("`%s`"%(field_str) + " String\n")
             create_table_colums = ','.join(field_list)
 
             create_table_sql = """
@@ -81,7 +81,7 @@ def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", Tar
     #get_field_sql = """select request_data from %s.%s %s""" % ("etl_mid",SourceTable,filter_line)
     get_field_sql = """select request_data
                               from %s.%s 
-                              where etl_date = '%s' and request_data like '%len_flag": "Y%' limit 1
+                              where etl_date = '%s' and request_data like '%%len_flag": "Y%%' limit 1
                     """ % ("etl_mid",SourceTable,ExecDate)
 
     ok, data = HiveSession.get_all_rows(get_field_sql)
