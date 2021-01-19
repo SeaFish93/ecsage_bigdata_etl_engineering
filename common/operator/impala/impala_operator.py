@@ -50,7 +50,6 @@ class ImpalaNoSqlDB(BaseDB):
         self.get_cursor()
         cursor = self.cursor
         try:
-            # sql = str(sql).replace("`", "")
             cursor.execute(sql)
             get_columns = cursor.description
             columns = []
