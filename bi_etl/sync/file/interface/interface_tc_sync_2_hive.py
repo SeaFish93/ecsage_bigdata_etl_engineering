@@ -179,7 +179,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
        sql = """
             select a.account_id, a.media, a.service_code,'' as id,'%s','1111' as token
             from big_data_mdg.media_advertiser a
-            where a.is_actived='1' 
+            where a.is_actived in ('1','2') 
                 and media='%s'
             group by a.account_id, a.media, a.service_code
        """%(task_flag,media_type)
