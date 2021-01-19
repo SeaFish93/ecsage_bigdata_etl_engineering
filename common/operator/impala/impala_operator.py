@@ -9,10 +9,9 @@ import impala.dbapi as pyimpala
 
 
 class ImpalaNoSqlDB(BaseDB):
-    def __init__(self, host=None, port=None, user=None, password=None, default_db=None, metastore_uris=None):
+    def __init__(self, host=None, port=None, user=None, password=None, default_db=None):
         super().__init__(host=host, port=port, user=user, password=password)
         print("Impala NoSql DB:" + host + ":" + str(port) + "@" + user)
-        self.metastore_uris = metastore_uris
         self.default_db = default_db
         self.cursor = None
         print("get connection")
