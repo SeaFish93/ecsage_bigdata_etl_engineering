@@ -48,7 +48,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
             field_list = []
             strs = str + ',' + default_table_columns
             for field_str in strs.split(","):
-                field_list.append(field_str + " String\n")
+                field_list.append("`%s`"%(field_str) + " String\n")
             create_table_colums = ','.join(field_list)
 
             create_table_sql = """
