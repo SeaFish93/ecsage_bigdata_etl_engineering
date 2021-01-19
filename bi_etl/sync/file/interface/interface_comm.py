@@ -879,11 +879,12 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
 
 #etl_mid->Ods层
 def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="", TargetTable=""
-                   ,IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag="",CustomSetParameter="",IsReplace="Y",DagId="",TaskId=""):
+                   ,IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag="",CustomSetParameter=""
+                   ,IsReplace="Y",DagId="",TaskId="",TimeLine=""):
     etl_ods_field_diff = def_ods_structure(HiveSession=HiveSession, BeelineSession=BeelineSession
                                            ,SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
                                            ,IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag
-                                           ,IsReplace=IsReplace)
+                                           ,IsReplace=IsReplace,TimeLine=TimeLine)
     print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
     ok, get_ods_column = HiveSession.get_column_info(TargetDB, TargetTable)
     system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -949,21 +950,32 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
             as_str = pars_field.split(".")[-1]
             pars_str_list.append("get_json_object(data_num_colums,'$.%s') as `%s`" % (pars_field, as_str))
         pars_str = ','.join(pars_str_list)
+
+        etl_part_field_list = ['request_type']
+        etl_part_field_list.append(TimeLine) if len(TimeLine) > 0 else etl_part_field_list
+        etl_part_field_str = ','.join(etl_part_field_list)##request_type,time_line
+
+        return_fields_tmp = ['returns_colums', 'returns_account_id']
+        return_fields_list = return_fields_tmp + etl_part_field_list
+        return_fields = ','.join(return_fields_list)#returns_colums,returns_account_id,request_type,time_line
+
+        return_fields_str = [
+            ",split(split(data_colums,'@@####@@')[0],'##&&##')[%d] as %s \n" % (i, return_fields_list[i]) for i in
+            range(len(return_fields_list))]
+        return_fields_sql = ''.join(return_fields_str)
+        print(return_fields_sql)
+
+
         sql = """
                 add file hdfs:///tmp/airflow/get_arrary.py;
                 drop table if exists %s.%s_tmp;
                 create table %s.%s_tmp stored as parquet as 
                 select %s
-                from (select returns_colums,%s %s,returns_account_id,request_type
-                      from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
-                                  ,split(data_colums,'@@####@@')[1] as data_colums
-                                  ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
-                                  ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
-                           from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                                from(select %s
-                                            ,%s
-                                            ,%s
-                                            ,request_type
+                from (select %s,%s %s
+                      from(select split(data_colums,'@@####@@')[1] as data_colums
+                                  %s
+                           from(select transform(concat_ws('##@@',concat_ws('##&&##',%s),data_colums)) USING 'python get_arrary.py' as (data_colums)
+                                from(select %s ,%s ,%s ,%s
                                      from %s.%s a
                                      where a.etl_date = '%s'
                                         %s
@@ -976,8 +988,9 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                       ) a
                       ;
                 """ % (
-        "etl_mid", TargetTable, "etl_mid", TargetTable, columns, pars_str, null_field_str, return_regexp_extract,
-        regexp_extract, returns_account_id, SourceDB, SourceTable, ExecDate, filter_line)
+        "etl_mid", TargetTable, "etl_mid", TargetTable, columns, return_fields, pars_str, null_field_str
+        , return_fields_sql, return_fields, return_regexp_extract,regexp_extract, returns_account_id
+        , etl_part_field_str, SourceDB, SourceTable, ExecDate, filter_line)
 
     ok = BeelineSession.execute_sql(sql, CustomSetParameter)
     if ok is False:
