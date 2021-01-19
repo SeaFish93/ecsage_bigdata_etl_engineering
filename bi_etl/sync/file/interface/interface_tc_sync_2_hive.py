@@ -47,6 +47,8 @@ def main(TaskInfo,Level="",**kwargs):
     key_columns = TaskInfo[19]
     array_flag = TaskInfo[28]
     custom_set_parameter = TaskInfo[37]
+    param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
+    time_line = "time_line" if "time_line" in param_json.keys() else ""
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
           get_data_2_etl_mid(BeelineSession=beeline_session, TargetDB=target_db, TargetTable=target_table,
@@ -57,7 +59,8 @@ def main(TaskInfo,Level="",**kwargs):
         hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
-                       ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns,IsReplace="N",DagId=airflow.dag,TaskId=airflow.task,CustomSetParameter=custom_set_parameter)
+                       ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns,IsReplace="N"
+                       ,DagId=airflow.dag,TaskId=airflow.task,CustomSetParameter=custom_set_parameter,TimeLine=time_line)
     elif Level == "snap":
         hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
         get_data_2_snap(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
