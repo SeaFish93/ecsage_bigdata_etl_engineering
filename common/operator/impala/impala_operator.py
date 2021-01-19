@@ -15,7 +15,7 @@ class ImpalaNoSqlDB(BaseDB):
         self.default_db = default_db
         self.cursor = None
         print("get connection")
-        self.conn = pyimpala.connect(host=self.host, port=self.port, username=self.user, database=self.default_db,password=self.password)
+        self.conn = pyimpala.connect(host=self.host, port=self.port, user=self.user, database=self.default_db,password=self.password)
 
     def __del__(self):
         print("ImpalaNoSqlDB %s __del__ : do cursor.close()" % self.host)
