@@ -82,7 +82,6 @@ class ImpalaNoSqlDB(BaseDB):
         try:
             self.get_cursor()
             cursor = self.cursor
-            # sql = str(sql).replace("`", "")
             cursor.execute(sql)
         except Exception as e:
             print("impala execute_sql sql Error:" + sql)
