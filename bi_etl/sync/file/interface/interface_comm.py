@@ -881,17 +881,17 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
 #etl_mid->Ods层
 def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="", TargetTable=""
                    ,IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag="",CustomSetParameter=""
-                   ,IsReplace="Y",DagId="",TaskId="",TimeLine=""):
+                   ,IsReplace="Y",DagId="",TaskId="",ExPartField=""):
     etl_ods_field_diff = def_ods_structure(HiveSession=HiveSession, BeelineSession=BeelineSession
                                            ,SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
                                            ,IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag
-                                           ,IsReplace=IsReplace,TimeLine=TimeLine)
+                                           ,IsReplace=IsReplace,ExPartField=ExPartField)
     print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
     ok, get_ods_column = HiveSession.get_column_info(TargetDB, TargetTable)
     system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
     system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
-    system_table_columns = system_table_columns + ",%s"%(TimeLine) if len(TimeLine) > 0 else system_table_columns
+    system_table_columns = system_table_columns + ",%s"%(ExPartField[0]) if len(ExPartField) > 0 else system_table_columns
 
     is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable,
                    ExecDate=ExecDate, KeyColumns=KeyColumns,DagId=DagId,TaskId=TaskId)
@@ -956,7 +956,7 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
         pars_str = ','.join(pars_str_list)
 
         etl_part_field_list = ['request_type']
-        etl_part_field_list.append(TimeLine) if len(TimeLine) > 0 else etl_part_field_list
+        etl_part_field_list.append(ExPartField[0]) if len(ExPartField) > 0 else etl_part_field_list
         etl_part_field_str = ','.join(etl_part_field_list)##request_type,time_line
 
         return_fields_tmp = ['returns_colums', 'returns_account_id']

@@ -48,19 +48,21 @@ def main(TaskInfo,Level="",**kwargs):
     array_flag = TaskInfo[28]
     custom_set_parameter = TaskInfo[37]
     param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
-    time_line = "time_line" if "time_line" in param_json.keys() else ""
+    ex_part_field_templates = ['time_line', 'is_deleted']#补充分区字段,目前只分区到3级，列表中互斥
+    ex_part_list = list(set(ex_part_field_templates).intersection(set(param_json.keys())))
+    ex_part_field = ex_part_list if ex_part_list else ""
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
           get_data_2_etl_mid(BeelineSession=beeline_session, TargetDB=target_db, TargetTable=target_table,
                              AirflowDag=airflow.dag, AirflowTask=airflow.task,
-                             TaskInfo=TaskInfo, ExecDate=exec_date,ArrayFlag=array_flag
+                             TaskInfo=TaskInfo, ExecDate=exec_date,ArrayFlag=array_flag,ExPartField=ex_part_field
                             )
     elif Level == "ods":
         hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
                        ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns,IsReplace="N"
-                       ,DagId=airflow.dag,TaskId=airflow.task,CustomSetParameter=custom_set_parameter,TimeLine=time_line)
+                       ,DagId=airflow.dag,TaskId=airflow.task,CustomSetParameter=custom_set_parameter,ExPartField=ex_part_field)
     elif Level == "snap":
         hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
         get_data_2_snap(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
@@ -68,7 +70,7 @@ def main(TaskInfo,Level="",**kwargs):
                             ,KeyColumns=key_columns, ExecDate=exec_date
                             ,DagId=airflow.dag,TaskId=airflow.task)
 
-def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate="",ArrayFlag=""):
+def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate="",ArrayFlag="",ExPartField=""):
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
   hostname = socket.gethostname()
@@ -96,16 +98,19 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       filter_list = list(map(lambda x: dict(zip(filter_field, x.split(","))), TaskInfo[8].split("###")))#数据：campaign_id,IN,20121211#int##20121213#int###product_catalog_id,EQUALS,1#bool
       filtering = []
       for filter_js in filter_list:
-          n = 0
           tmp_list2 = []
-          for filter in filter_js['values'].split("##"):
-              n += 1
+          filter_time = int(time.mktime(time.strptime(ExecDate + " 00:00:00",'%Y-%m-%d %H:%M:%S')))
+          for filter in filter_js['values'].split("##"):#多条件
+              filter= filter_time + "#str" if filter_js["field"] == "last_modified_time" else filter
               tmp_list = filter.split("#")
               tmp_list2.append(eval(tmp_list[1])(tmp_list[0]) if tmp_list[1] != '' else tmp_list[1])
-          filter_js['values'] = tmp_list2 if n > 1 else tmp_list2[0]
+          filter_js['values'] = tmp_list2
           filtering.append(filter_js)
       param_json["filtering"] = filtering
-  time_line = param_json["time_line"] if "time_line" in param_json.keys() else ""
+  ex_part_field= { k:v for k,v in param_json.items() if k in ExPartField} if len(ExPartField)>0 else ""
+  #time_line = param_json["time_line"] if "time_line" in param_json.keys() else ""
+
+
   url_path = TaskInfo[4]
   filter_db_name = TaskInfo[21]
   filter_table_name = TaskInfo[22]
@@ -250,7 +255,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           data_task_file_list.append("%s/%s"%(local_dir, files))
   #数据落地至etl_mid
   load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
-                      TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type,TimeLine=time_line
+                      TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type,ExPartField=ex_part_field
                     )
 
 #处理不分页
@@ -395,7 +400,7 @@ def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFla
                     TableName="oe_sync_page_interface", Columns=columns)
 
 
-def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",MediaType="",TimeLine=""):
+def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",MediaType="",ExPartField=""):
    if LocalFileList is None or len(LocalFileList) == 0:
       msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
@@ -407,8 +412,9 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
                                Developer="developer")
       set_exit(LevelStatu="yellow", MSG=msg)
    else:
-    time_part=",time_line string" if len(TimeLine)>0 else ""
-    time_line=",time_line = '%s'"%(TimeLine) if len(TimeLine)>0 else ""
+    ex_part= ''.join([",%s string" % (k) for k in ExPartField.keys()]) if len(ExPartField) > 0 else ""
+    ex_part_load = ''.join([",%s = '%s'"%(k,v) for k,v in ExPartField.items()]) if len(ExPartField)>0 else ""
+
     mid_sql = """
         create table if not exists %s.%s
         (
@@ -416,7 +422,7 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
         )partitioned by(etl_date string,request_type string %s )
         row format delimited fields terminated by '\\001' 
         ;
-        """ % (TargetDB,TargetTable,time_part)
+        """ % (TargetDB,TargetTable,ex_part)
     BeelineSession.execute_sql(mid_sql)
     load_num = 0
     hdfs_dir = conf.get("Airflow_New", "hdfs_home")
@@ -431,7 +437,7 @@ def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTab
                          partition(etl_date='%s',request_type='%s' %s)
                          ;\n
             """%(hdfs_dir, local_file.split("/")[-1],over_flag, TargetDB,
-                       TargetTable,ExecDate,MediaType,time_line)
+                       TargetTable,ExecDate,MediaType,ex_part_load)
         load_table_sqls += load_table_sql
         load_num = load_num + 1
 
