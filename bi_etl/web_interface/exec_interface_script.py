@@ -28,7 +28,6 @@ def execute(InterfaceParamsInfo=""):
         interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         return interface_data
     ok,data = get_interface_meta(MysqlSession=mysql_session,InterfaceId=interface_id)
-    print(data,"========================")
     if data is None or len(data) == 0:
         interface_data["code"] = 30002
         interface_data["msg"] = "PARAM_INTERFACE_ID_ERROR"
@@ -37,11 +36,12 @@ def execute(InterfaceParamsInfo=""):
         interface_data["request_begin_time"] = request_begin_time
         interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         return interface_data
-    project = data[2]
-    item = data[3]
-    is_page = data[4]
-    engine_type = data[5]
-    engine_handle = data[6]
+    #定义元数据
+    project = data[0][2]
+    item = data[0][3]
+    is_page = data[0][4]
+    engine_type = data[0][5]
+    engine_handle = data[0][6]
     #获取对应接口文件
     code,module = get_interface_module(Project=project,Item=item, EngineType=engine_type,Interface=interface_id)
     if int(code) == 40001:
