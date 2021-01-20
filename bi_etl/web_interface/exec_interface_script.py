@@ -28,6 +28,7 @@ def execute(InterfaceParamsInfo=""):
         interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         return interface_data
     ok,data = get_interface_meta(MysqlSession=mysql_session,InterfaceId=interface_id)
+    print(data,"========================")
     if data is None or len(data) == 0:
         interface_data["code"] = 30002
         interface_data["msg"] = "PARAM_INTERFACE_ID_ERROR"

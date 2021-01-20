@@ -16,8 +16,10 @@ def get_interface_meta(MysqlSession="",InterfaceId=""):
     sql = """
           select interface_id
                  ,interface_name
-                 ,project,interface_item
-                 ,is_page,engine_type
+                 ,project
+                 ,interface_item
+                 ,is_page
+                 ,engine_type
                  ,engine_handle
           from metadb.web_interface_info
           where status = 1
