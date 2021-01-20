@@ -81,7 +81,7 @@ def execute(InterfaceParamsInfo=""):
         interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         return interface_data
     #执行sql
-    ok, results,columns_list = exec_session.get_all_rows(exec_sql)
+    ok, results,columns_list = exec_session.get_all_rows(sql=exec_sql)
     if ok is False:
         interface_data["code"] = 40006
         interface_data["msg"] = "SYS_DATA_ERROR"
