@@ -17,7 +17,16 @@ def execute(InterfaceParamsInfo=""):
     interface_data = {}
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
     interface_info = InterfaceParamsInfo
-    interface_id = interface_info["interface_id"]
+    try:
+      interface_id = interface_info["interface_id"]
+    except Exception as e:
+        interface_data["code"] = 30003
+        interface_data["msg"] = "NO_PARAM_INTERFACE_ID_ERROR"
+        interface_data["data"] = {}
+        interface_data["data"]["list"] = []
+        interface_data["request_begin_time"] = request_begin_time
+        interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        return interface_data
     ok,data = get_interface_meta(MysqlSession=mysql_session,InterfaceId=interface_id)
     if data is None or len(data) == 0:
         interface_data["code"] = 30002
