@@ -32,7 +32,7 @@ def execute(InterfaceParamsInfo=""):
     is_page = data[4]
     engine_type = data[5]
     engine_handle = data[6]
-    #获取执行sql
+    #获取对应接口文件
     code,module = get_interface_module(Project=project,Item=item, EngineType=engine_type,Interface=interface_id)
     if int(code) == 40001:
         interface_data["code"] = 40001
@@ -69,7 +69,7 @@ def execute(InterfaceParamsInfo=""):
         interface_data["request_begin_time"] = request_begin_time
         interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         return interface_data
-    # 获取执行sql数据
+    # 获取执行sql
     try:
       exec_sql = module.SQL(InterfaceParamsInfo=InterfaceParamsInfo)
     except Exception as e:
@@ -102,6 +102,7 @@ def execute(InterfaceParamsInfo=""):
             break;
     keys = columns_list
     try:
+      #元组转换json格式
       list_json = [dict(zip(keys, item)) for item in results]
       data = json.dumps(list_json, indent=2, ensure_ascii=False)
       interface_data["code"] = 0
