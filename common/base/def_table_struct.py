@@ -14,7 +14,7 @@ import ast
 #
 #
 
-def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag="",IsReplace="",TimeLine=""):
+def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag="",IsReplace="",ExPartField=""):
     etlmid_table_columns = []
     etlmid_table_columns_str = analysis_etlmid_cloumns(HiveSession=HiveSession, SourceTable=SourceTable,
                                                        TargetTable=TargetTable
@@ -23,7 +23,7 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
         etlmid_table_columns.append(etlmid_table_column.split(".")[-1])
 
     default_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time"
-    default_table_columns = default_table_columns + ",%s"%(TimeLine) if len(TimeLine) > 0 else default_table_columns
+    default_table_columns = default_table_columns + ",%s"%(ExPartField[0]) if len(ExPartField) > 0 else default_table_columns
     exclude_fields = set(default_table_columns.split(","))
     exclude_fields.update({'etl_date'})
 
