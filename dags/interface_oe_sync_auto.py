@@ -58,6 +58,7 @@ for dag_info in get_dags:
         'retries': retries,
         'retry_delay': datetime.timedelta(minutes=2),
         'start_date': start_date,
+        'queue': 'airflow',
        # 'on_failure_callback': hour_failure_callback
     }
     names = locals()
