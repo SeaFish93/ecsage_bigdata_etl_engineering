@@ -44,5 +44,5 @@ CELERY_ROUTES = {
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_oe_status_async_tasks': {'queue': 'oe'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_service_page_data': {'queue': 'oe'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_service_data': {'queue': 'oe'},
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_test_quen': {'queue': 'report'}
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_web_interface_data': {'queue': 'report'}
 }

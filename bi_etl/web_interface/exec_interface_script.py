@@ -1,33 +1,32 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/1/23 19:30
 # @Author  : wangsong
-# @FileName: exec_script_sql.py
+# @FileName: exec_interface_script.py
 # @Software: PyCharm
 # function info：处理报表接口请求
 
 import time
-import datetime
-import importlib
-
-
+import json
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+from ecsage_bigdata_etl_engineering.bi_etl.web_interface.web_interface_comm import get_interface_meta
+from ecsage_bigdata_etl_engineering.bi_etl.web_interface.web_interface_comm import get_interface_module
 
 
-def execute(InterfaceInfo=""):
+def execute(InterfaceParamsInfo=""):
+    request_begin_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    interface_data = {}
     mysql_session = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
-    interface_info = InterfaceInfo
+    interface_info = InterfaceParamsInfo
     interface_id = interface_info["interface_id"]
-    #获取接口元数据信息
-    sql = """
-      select interface_id,interface_name,project,interface_item,is_page,engine_type,engine_handle
-      from metadb.web_interface_info
-      where status = 1
-        and interface_id = '%s'
-    """%(interface_id)
-    ok,data = mysql_session.get_all_rows(sql)
+    ok,data = get_interface_meta(MysqlSession=mysql_session,InterfaceId=interface_id)
     if data is None or len(data) == 0:
-        code = 30002
-        return None
+        interface_data["code"] = 30002
+        interface_data["msg"] = "PARAM_INTERFACE_ID_ERROR"
+        interface_data["data"] = {}
+        interface_data["data"]["list"] = []
+        interface_data["request_begin_time"] = request_begin_time
+        interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        return interface_data
     project = data[2]
     item = data[3]
     is_page = data[4]
@@ -36,39 +35,87 @@ def execute(InterfaceInfo=""):
     #获取执行sql
     code,module = get_interface_module(Project=project,Item=item, EngineType=engine_type,Interface=interface_id)
     if int(code) == 40001:
-        return None
+        interface_data["code"] = 40001
+        interface_data["msg"] = "SYS_DATA_ERROR"
+        interface_data["data"] = {}
+        interface_data["data"]["list"] = []
+        interface_data["request_begin_time"] = request_begin_time
+        interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        return interface_data
     if engine_type is not None and len(engine_type) > 0:
        try:
           exec_session = set_db_session(SessionType=engine_type, SessionHandler=engine_handle)
           if exec_session is None:
-              code = 40004
-              module = "元数据表定义计算引擎字段错误"
-              return None
+              interface_data["code"] = 40004
+              interface_data["msg"] = "SYS_DATA_ERROR"
+              interface_data["data"] = {}
+              interface_data["data"]["list"] = []
+              interface_data["request_begin_time"] = request_begin_time
+              interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+              return interface_data
        except Exception as e:
-           code = 40003
-           module = "元数据表定义计算引擎handle错误"
-           return None
+           interface_data["code"] = 40003
+           interface_data["msg"] = "SYS_DATA_ERROR"
+           interface_data["data"] = {}
+           interface_data["data"]["list"] = []
+           interface_data["request_begin_time"] = request_begin_time
+           interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+           return interface_data
     else:
-        code = 40002
-        return None
-    sql_dict = module.SQL["sql"]
-    sql_str = replace_placeholder(sql_dict)
-    #获取执行sql数据
-
-#替换参数方法
-def replace_placeholder(Sql=""):
-
-    return Sql
-
-#获取处理接口对应脚本
-def get_interface_module(Project="",Item="", EngineType="",Interface=""):
-    #Project：所属项目名称,Item：所属项目的下一级包名,EngineType：计算引擎
-    code = 0
+        interface_data["code"] = 40002
+        interface_data["msg"] = "SYS_DATA_ERROR"
+        interface_data["data"] = {}
+        interface_data["data"]["list"] = []
+        interface_data["request_begin_time"] = request_begin_time
+        interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        return interface_data
+    # 获取执行sql数据
     try:
-        pkg = ".%s.%s.%s" % (Item, EngineType, Interface)
-        module = importlib.import_module(pkg, package=Project)
-        return code,module
+      exec_sql = module.SQL(InterfaceParamsInfo=InterfaceParamsInfo)
     except Exception as e:
-        code = 40001
-        module = "获取处理接口文件异常，读取不到对应接口文件！"
-        return code,module
+        interface_data["code"] = 40005
+        interface_data["msg"] = "SYS_DATA_ERROR"
+        interface_data["data"] = {}
+        interface_data["data"]["list"] = []
+        interface_data["request_begin_time"] = request_begin_time
+        interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        return interface_data
+    #执行sql
+    ok, results,columns_list = exec_session.get_all_rows(exec_sql)
+    if ok is False:
+        interface_data["code"] = 40006
+        interface_data["msg"] = "SYS_DATA_ERROR"
+        interface_data["data"] = {}
+        interface_data["data"]["list"] = []
+        interface_data["request_begin_time"] = request_begin_time
+        interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        return interface_data
+    for columns in columns_list:
+        if " " in columns:
+            interface_data["code"] = 40007
+            interface_data["msg"] = "SYS_DATA_ERROR"
+            interface_data["data"] = {}
+            interface_data["data"]["list"] = []
+            interface_data["request_begin_time"] = request_begin_time
+            interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            return interface_data
+            break;
+    keys = columns_list
+    try:
+      list_json = [dict(zip(keys, item)) for item in results]
+      data = json.dumps(list_json, indent=2, ensure_ascii=False)
+      interface_data["code"] = 0
+      interface_data["msg"] = "OK"
+      interface_data["data"] = {}
+      interface_data["data"]["list"] = data
+      interface_data["request_begin_time"] = request_begin_time
+      interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    except Exception as e:
+        interface_data["code"] = 40008
+        interface_data["msg"] = "SYS_DATA_ERROR"
+        interface_data["data"] = {}
+        interface_data["data"]["list"] = []
+        interface_data["request_begin_time"] = request_begin_time
+        interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        return interface_data
+    return interface_data

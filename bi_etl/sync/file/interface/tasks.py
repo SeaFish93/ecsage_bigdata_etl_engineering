@@ -46,7 +46,7 @@ def get_web_interface_data(**kwargs):
                }
     }
     """
-    data = execute(InterfaceInfo=kwargs)
+    data = execute(InterfaceParamsInfo=kwargs)
     return data
 
 #定义oe任务创建
