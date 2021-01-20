@@ -114,7 +114,7 @@ def execute(InterfaceParamsInfo=""):
     try:
       #元组转换json格式
       list_json = [dict(zip(keys, item)) for item in results]
-      data = json.dumps(list_json)
+      data = list_json#json.dumps(list_json)
       interface_data["code"] = 0
       interface_data["msg"] = "OK"
       interface_data["data"] = {}
