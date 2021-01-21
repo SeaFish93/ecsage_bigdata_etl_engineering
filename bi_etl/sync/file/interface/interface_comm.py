@@ -753,7 +753,12 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
       code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
-      request_id = rsp_data["request_id"]
+      req_flg = {'tc': 'trace_id', 'oe': 'request_id'}
+      if TargetFlag == "tc" and req_flg[TargetFlag] not in rsp_data.keys():#腾讯报表有trace_id，维表没有，没有就构造
+          rsp_data["trace_id"] = str(ReturnAccountId) + str(int(time.time()*1000000))#微秒级时间戳16位
+      else:
+          pass
+      request_id = rsp_data["%s"%(req_flg[TargetFlag])]
       if int(code) == 0:
         file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
         data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
@@ -811,19 +816,21 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
               rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
       elif TargetFlag =='tc':
-          print('2' * 30)
           token = get_oe_account_token(ServiceCode=ServiceCode)
           rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
           if int(rsp_data["code"]) in [11000,11002,11004,11005,30101,30102]:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
-      print('3'*30)
       code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
-      req_flg={'tc':'trace_id','oe':'request_id'}
-      print('1' * 30)
+      req_flg = {'tc': 'trace_id', 'oe': 'request_id'}
+      if TargetFlag == "tc" and req_flg[TargetFlag] not in rsp_data.keys():#腾讯报表有trace_id，维表没有，没有就构造
+          rsp_data["trace_id"] = str(ReturnAccountId) + str(int(time.time()*1000000))#微秒级时间戳16位
+      else:
+          pass
       request_id = rsp_data["%s"%(req_flg[TargetFlag])]
+
       if int(code) == 0:
          file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
          data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
