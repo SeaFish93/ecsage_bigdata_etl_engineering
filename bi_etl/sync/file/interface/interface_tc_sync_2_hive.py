@@ -47,7 +47,7 @@ def main(TaskInfo,Level="",**kwargs):
     key_columns = TaskInfo[19]
     array_flag = TaskInfo[28]
     custom_set_parameter = TaskInfo[37]
-    param_json = json.loads(json.dumps(TaskInfo[5]))
+    param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
     ex_part_field_templates = ['time_line', 'is_deleted']#补充分区字段,目前只分区到3级，列表中互斥
     ex_part_list = list(set(ex_part_field_templates).intersection(set(param_json.keys())))
     ex_part_field = ex_part_list if ex_part_list else ""
@@ -101,7 +101,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           tmp_list2 = []
           filter_time = int(time.mktime(time.strptime(ExecDate + " 00:00:00",'%Y-%m-%d %H:%M:%S')))
           for filter in filter_js['values'].split("##"):#多条件
-              filter= filter_time + "#str" if filter_js["field"] == "last_modified_time" else filter
+              filter= str(filter_time) + "#str" if filter_js["field"] == "last_modified_time" else filter
               tmp_list = filter.split("#")
               tmp_list2.append(eval(tmp_list[1])(tmp_list[0]) if tmp_list[1] != '' else tmp_list[1])
           filter_js['values'] = tmp_list2
