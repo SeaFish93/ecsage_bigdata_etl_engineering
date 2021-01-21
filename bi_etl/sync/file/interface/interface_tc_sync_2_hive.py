@@ -350,7 +350,7 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskEx
       page_number = int(data[3])
       for page in range(page_number):
         if page > 0:
-           param_json = ast.literal_eval(json.loads(json.dumps(str(data[4]).replace("""'""", """\""""))))
+           param_json = ast.literal_eval(json.loads(json.dumps(str(data[4]))))
            if Pagestyle is not None and len(Pagestyle) > 0:
                tmp_offset = page * Pagestyle[0][Pagestyle[2]] #Pagestyle=[{"offset":0,"limit":100},"offset","limit"]
                update_offset = {Pagestyle[1]:tmp_offset}#{"offset":page * offset}
