@@ -101,7 +101,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           tmp_list2 = []
           filter_time = int(time.mktime(time.strptime(ExecDate + " 00:00:00",'%Y-%m-%d %H:%M:%S')))
           for filter in filter_js['values'].split("##"):#多条件
-              filter= filter_time + "#str" if filter_js["field"] == "last_modified_time" else filter
+              filter= str(filter_time) + "#str" if filter_js["field"] == "last_modified_time" else filter
               tmp_list = filter.split("#")
               tmp_list2.append(eval(tmp_list[1])(tmp_list[0]) if tmp_list[1] != '' else tmp_list[1])
           filter_js['values'] = tmp_list2
