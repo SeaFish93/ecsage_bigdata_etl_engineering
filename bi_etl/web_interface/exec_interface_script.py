@@ -64,6 +64,7 @@ def execute(InterfaceParamsInfo=""):
               interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
               return interface_data
        except Exception as e:
+           print("连接计算引擎报错：%s" % (str(e)))
            interface_data["code"] = 40003
            interface_data["msg"] = "SYS_DATA_ERROR"
            interface_data["data"] = {}
@@ -83,6 +84,7 @@ def execute(InterfaceParamsInfo=""):
     try:
       exec_sql = module.SQL(InterfaceParamsInfo=InterfaceParamsInfo)
     except Exception as e:
+        print("处理接口组装SQL异常错误日志：%s" % (str(e)))
         interface_data["code"] = 40005
         interface_data["msg"] = "SYS_DATA_ERROR"
         interface_data["data"] = {}
@@ -102,6 +104,7 @@ def execute(InterfaceParamsInfo=""):
         return interface_data
     for columns in columns_list:
         if " " in columns:
+            print("SQL字段名含有空格异常，请使用字段别名：%s" % (columns))
             interface_data["code"] = 40007
             interface_data["msg"] = "SYS_DATA_ERROR"
             interface_data["data"] = {}
@@ -122,6 +125,7 @@ def execute(InterfaceParamsInfo=""):
       interface_data["request_begin_time"] = request_begin_time
       interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     except Exception as e:
+        print("生成数据json格式异常错误：%s" % (str(e)))
         interface_data["code"] = 40008
         interface_data["msg"] = "SYS_DATA_ERROR"
         interface_data["data"] = {}

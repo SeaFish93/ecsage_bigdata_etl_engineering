@@ -37,6 +37,8 @@ def get_interface_module(Project="",Item="", EngineType="",Interface=""):
         module = importlib.import_module(pkg, package=Project)
         return code,module
     except Exception as e:
+        print("获取不到文件错误日志：%s"%(str(e)))
+        print("文件参数：%s,%s,%s,%s"%(Project,Item, EngineType,Interface))
         code = 40001
         module = "获取处理接口文件异常，读取不到对应接口文件！"
         return code,module
