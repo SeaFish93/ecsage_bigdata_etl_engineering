@@ -169,7 +169,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
              on a.account_id = b.advertiser_id
              where b.flag = '%s'
                and a.media='%s'
-             group by a.account_id, a.media, a.service_code,b.filter_id,b.flag,a.token
+             group by a.account_id, a.media, a.service_code,b.filter_id,b.flag
         """ % (task_flag,media_type)
   else:
        sql = """
