@@ -161,25 +161,15 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
       columns = """advertiser_id,flag,filter_id"""
       load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
-      if int(is_report) == 1:
-        sql = """
-            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token_data
-            from metadb.oe_account_interface a
-            inner join metadb.oe_sync_filter_info b
-            on a.account_id = b.advertiser_id
-            where a.exec_date = '%s'
-              and b.flag = '%s'
-            group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token_data
-        """%(ExecDate,task_flag)
-      else:
-        sql = """
-             select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token
-             from metadb.oe_service_account a
+      sql = """
+             select a.account_id, a.media, a.service_code,b.filter_id as id,b.flag,'1111' as token
+             from big_data_mdg.media_advertiser a
              inner join metadb.oe_sync_filter_info b
              on a.account_id = b.advertiser_id
              where b.flag = '%s'
-             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token
-        """ % (task_flag)
+               and a.media='%s'
+             group by a.account_id, a.media, a.service_code,b.filter_id,b.flag,a.token
+        """ % (task_flag,media_type)
   else:
        sql = """
             select a.account_id, a.media, a.service_code,'' as id,'%s','1111' as token
@@ -263,13 +253,16 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
     for data in DataRows:
        if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
           filter_list = InterfaceFilterList.split(",")
+          filterdatas_list = data[3].split("&&")  # 多字段过滤拼接,字段位置需要一一对应
+          n = 0
           for lists in filter_list:
               get_list = lists.split(".")
-          if len(get_list) == 1:
-             list_value = get_list[0].split("##")#campaign_ids##[]##int
-             ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(data[3])] if list_value[1] == '[]' else eval(list_value[2])(data[3])
-          else:
-             print("含有filter...")
+              filterdata = filterdatas_list[n]
+              if len(get_list) == 1:
+                 list_value = get_list[0].split("##")#campaign_ids##[]##int
+                 ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
+              else:
+                 print("含有filter...")
        if int(IsAdvertiserList) == 1:
            ParamJson["account_ids"] = [int(data[0])]
        else:
@@ -301,15 +294,19 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
        if IsRerun != "Y":
          if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
             filter_list = InterfaceFilterList.split(",")
+            filterdatas_list = data[3].split("&&")#多字段过滤拼接,字段位置需要一一对应
+            n = 0
             for lists in filter_list:
                 get_list = lists.split(".")
-            if len(get_list) == 1:
-                list_value = get_list[0].split("##")  # campaign_ids##[]##int
-                ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(data[3])] if list_value[1] == '[]' else eval(list_value[2])(data[3])
-            else:
-                list_1 = get_list[0]
-                list_value = get_list[1].split("##")
-                ParamJson["%s" % (list_1)]["%s" % (list_value[0])] = [eval(list_value[2])(data[3])] if list_value[1] == '[]' else eval(list_value[2])(data[3])
+                filterdata = filterdatas_list[n]
+                if len(get_list) == 1:
+                    list_value = get_list[0].split("##")  # campaign_ids##[]##int
+                    ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
+                else:
+                    list_1 = get_list[0]
+                    list_value = get_list[1].split("##")
+                    ParamJson["%s" % (list_1)]["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
+                n += 1
        else:
          ParamJson = ast.literal_eval(json.loads(json.dumps(str(data[3]).replace("""'""", """\""""))))
        ParamJson["account_id"] = data[0]
