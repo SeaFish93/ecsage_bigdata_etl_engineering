@@ -174,13 +174,13 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   else:
        sql = """
             select a.account_id, a.media, a.service_code,'' as id,'%s','1111' as token
-            from big_data_mdg.media_advertiser a
+            from metadb.media_advertiser_crm a
             where a.is_actived in ('1','2') 
                 and media='%s'
             group by a.account_id, a.media, a.service_code
        """%(task_flag,media_type)
 
-  ok,db_data = mysql_session.get_all_rows(sql)
+  ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
     print("处理分页逻辑！！！")
