@@ -1,7 +1,7 @@
 from kombu import Queue, Exchange
 
-BROKER_URL = 'amqp://root:1qazXSW2@192.168.30.17:9549//sync'
-CELERY_RESULT_BACKEND = 'db+mysql://root:Yk@123@192.168.30.235:3306/sync'
+BROKER_URL = 'amqp://admin:1qazXSW2@192.168.30.123:9549//sync'
+CELERY_RESULT_BACKEND = 'db+mysql://root:06D567130266EB33098B9F@192.168.30.5:13306/sync'
 #CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/5'
 #use json
 #CELERY_RESULT_SERIALIZER = 'json'
