@@ -264,6 +264,7 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
                  ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
               else:
                  print("含有filter...")
+              n += 1
        if int(IsAdvertiserList) == 1:
            ParamJson["account_ids"] = [int(data[0])]
        else:
