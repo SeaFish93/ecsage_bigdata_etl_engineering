@@ -261,7 +261,10 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
               filterdata = filterdatas_list[n]
               if len(get_list) == 1:
                  list_value = get_list[0].split("##")#campaign_ids##[]##int
-                 ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
+                 if list_value[2] == '':
+                    ParamJson["%s" % (list_value[0])] = '[' + filterdata + ']' if list_value[1] == '[]' else filterdata
+                 else:
+                    ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
               else:
                  print("含有filter...")
               n += 1
@@ -303,11 +306,17 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
                 filterdata = filterdatas_list[n]
                 if len(get_list) == 1:
                     list_value = get_list[0].split("##")  # campaign_ids##[]##int
-                    ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
+                    if list_value[2] == '':
+                        ParamJson["%s" % (list_value[0])] = '[' + filterdata + ']' if list_value[1] == '[]' else filterdata
+                    else:
+                        ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
                 else:
                     list_1 = get_list[0]
                     list_value = get_list[1].split("##")
-                    ParamJson["%s" % (list_1)]["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
+                    if list_value[2] == '':
+                        ParamJson["%s" % (list_1)]["%s" % (list_value[0])] = '[' + filterdata + ']' if list_value[1] == '[]' else filterdata
+                    else:
+                        ParamJson["%s" % (list_1)]["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
                 n += 1
        else:
          ParamJson = ast.literal_eval(json.loads(json.dumps(str(data[3]).replace("""'""", """\""""))))
