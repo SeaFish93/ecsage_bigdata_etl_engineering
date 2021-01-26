@@ -134,7 +134,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
   mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-  filter_column_name_cast = ','.join(["cast(%s as string)"%(x) for x in filter_column_name.split(",")])
+  filter_column_name_cast = ','.join(["cast(%s as string)"%(x) for x in filter_column_name.split("##")])
   #判断是否从列表过滤
   if filter_db_name is not None and len(filter_db_name) > 0:
       filter_sql = """
