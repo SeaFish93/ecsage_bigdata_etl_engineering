@@ -173,7 +173,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
              from metadb.media_advertiser_crm a
              inner join metadb.oe_sync_filter_info b
              on a.account_id = b.advertiser_id
-             where b.flag = '%s'
+             where b.flag = '%s' and a.is_actived in ('1','2') 
                and a.media='%s'
              group by a.account_id, a.media, a.service_code,b.filter_id,b.flag
         """ % (task_flag,media_type)
