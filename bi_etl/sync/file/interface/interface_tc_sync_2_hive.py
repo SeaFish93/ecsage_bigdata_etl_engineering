@@ -134,20 +134,25 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
   mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-  filter_column_name_cast = ','.join(["cast(%s as string)"%(x) for x in filter_column_name.split("##")])
-  filter_column_name_group = filter_column_name.replace('##',',')
+
+
   #判断是否从列表过滤
   if filter_db_name is not None and len(filter_db_name) > 0:
+      filter_cnt = 0
+      inner_str = ""
+      for x in filter_column_name.split("##"):
+          inner_str += "cast(%s as string) as A_%d ," % (x,filter_cnt)
+          filter_cnt += 1
+      outer_str = ','.join(["A_%d"%(un) for un in range(filter_cnt)])
       filter_sql = """
       select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',%s)) 
-      from %s.%s 
-      where etl_date='%s'
-        %s 
-        and request_type = '%s'
-        %s
+      from (select  %s returns_account_id
+            from %s.%s 
+            where etl_date='%s'  %s  and request_type = '%s' %s
+            ) tmp
       group by returns_account_id,%s
      -- limit 1
-      """%(task_flag,filter_column_name_cast,filter_db_name,filter_table_name,ExecDate,filter_config,media_type,filter_time_sql,filter_column_name_group)
+      """%(task_flag,outer_str,inner_str,filter_db_name,filter_table_name,ExecDate,filter_config,media_type,filter_time_sql,outer_str)
       print("过滤sql：%s"%(filter_sql))
       ok = BeelineSession.execute_sql_result_2_local_file(sql=filter_sql,file_name=tmp_data_task_file)
       if ok is False:
