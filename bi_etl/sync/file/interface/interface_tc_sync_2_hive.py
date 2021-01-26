@@ -266,7 +266,12 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
                  else:
                     ParamJson["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
               else:
-                 print("含有filter...")
+                  list_1 = get_list[0]
+                  list_value = get_list[1].split("##")
+                  if list_value[2] == '':
+                      ParamJson["%s" % (list_1)][n]["%s" % (list_value[0])] = '[' + filterdata + ']' if list_value[1] == '[]' else filterdata
+                  else:
+                      ParamJson["%s" % (list_1)][n]["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
               n += 1
        if int(IsAdvertiserList) == 1:
            ParamJson["account_ids"] = [int(data[0])]
@@ -314,9 +319,9 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
                     list_1 = get_list[0]
                     list_value = get_list[1].split("##")
                     if list_value[2] == '':
-                        ParamJson["%s" % (list_1)]["%s" % (list_value[0])] = '[' + filterdata + ']' if list_value[1] == '[]' else filterdata
+                        ParamJson["%s" % (list_1)][n]["%s" % (list_value[0])] = '[' + filterdata + ']' if list_value[1] == '[]' else filterdata
                     else:
-                        ParamJson["%s" % (list_1)]["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
+                        ParamJson["%s" % (list_1)][n]["%s" % (list_value[0])] = [eval(list_value[2])(filterdata)] if list_value[1] == '[]' else eval(list_value[2])(filterdata)
                 n += 1
        else:
          ParamJson = ast.literal_eval(json.loads(json.dumps(str(data[3]).replace("""'""", """\""""))))
