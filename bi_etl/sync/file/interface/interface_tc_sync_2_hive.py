@@ -11,14 +11,12 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_page_data as get_service_page_data_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page as get_not_page_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages as get_pages_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks_for_tencent import get_not_page as get_not_page_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks_for_tencent import get_pages as get_pages_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
+
 
 
 import os
@@ -108,7 +106,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           filtering.append(filter_js)
       param_json["filtering"] = filtering
   ex_part_field= { k:v for k,v in param_json.items() if k in ExPartField} if len(ExPartField)>0 else ""
-  #time_line = param_json["time_line"] if "time_line" in param_json.keys() else ""
+
 
 
   url_path = TaskInfo[4]
@@ -398,26 +396,6 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskEx
                                 InterfaceFlag=TaskFlag,Columns=""
                                 ,ArrayFlag=ArrayFlag
                               )
-
-def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
-    for data in DataRows:
-        celery_task_id = get_service_page_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
-                                                       Media=data[2], Page=str(Page), PageSize=str(PageSize),
-                                                       DataFile=DataFile, PageFileData=PageFileData,
-                                                       TaskFlag=TaskFlag
-                                                       )
-        os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, data[0], data[1], data[2], CeleryGetDataStatus))
-    # 获取状态
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryGetDataStatus)
-    print("正在等待获取页数celery队列执行完成！！！")
-    wait_for_celery_status(StatusList=celery_task_id)
-    print("获取页数celery队列执行完成！！！")
-    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-    # 保存MySQL
-    columns = """page_num,account_id,service_code,remark,data,request_filter,flag,media_type"""
-    load_data_mysql(AsyncAccountFile=LocalDir, DataFile=PageFileData, DbName="metadb",
-                    TableName="oe_sync_page_interface", Columns=columns)
-
 
 def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",MediaType="",ExPartField=""):
    if LocalFileList is None or len(LocalFileList) == 0:
