@@ -739,7 +739,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
     try:
       if TargetFlag == 'oe':
          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-         if int(rsp_data["code"]) == 40105:# token无效重试
+         if int(rsp_data["code"]) in [40102,40103,40104,40105,40107]:# token无效重试
              token = get_oe_account_token(ServiceCode=ServiceCode)
              rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
@@ -811,7 +811,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     try:
       if TargetFlag == 'oe':
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-          if int(rsp_data["code"])== 40105:#token无效重试
+          if int(rsp_data["code"]) in [40102,40103,40104,40105,40107]:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
