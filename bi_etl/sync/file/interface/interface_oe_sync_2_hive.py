@@ -49,6 +49,8 @@ def main(TaskInfo,Level="",**kwargs):
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
        if TaskInfo[0] == "metadb_oe_service_account":
+          #删除celery日志
+          etl_md.execute_sql("truncate table sync.celery_taskmeta")
           get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
        else:
           get_data_2_etl_mid(BeelineSession=beeline_session, TargetDB=target_db, TargetTable=target_table,
