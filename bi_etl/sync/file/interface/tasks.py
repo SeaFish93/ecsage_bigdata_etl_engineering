@@ -5,8 +5,7 @@
 # @Software: PyCharm
 # function info：定义celery任务
 
-from __future__ import absolute_import, unicode_literals
-from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
+#from __future__ import absolute_import, unicode_literals
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import app
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_status_content_content
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
@@ -36,8 +35,13 @@ def get_test(**kwargs):
     now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
     return kwargs
 
+@app.task()
+def get_test_quen(**kwargs):
+    now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
+    return kwargs
+
 #定义oe任务创建
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate="",LocalDir=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
@@ -103,7 +107,7 @@ def get_oe_async_tasks_create_all_exception(AsyncTaskName="", AsyncTaskFile="", 
       n = n + 1
 
 #定义oe任务创建
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_create(AsyncTaskName="", LocalDir="",AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
@@ -134,7 +138,7 @@ def get_oe_async_tasks_create(AsyncTaskName="", LocalDir="",AsyncTaskFile="", As
       n = n + 1
 
 #定义oe任务状态
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatusExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     set_true = True
@@ -154,7 +158,7 @@ def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatus
       n = n + 1
 
 #定义oe任务数据
-@app.task(time_limit=600)
+@app.task(time_limit=3600)
 def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate="",AirflowInstance=""):
     account_id = ExecData[0]
     set_true = True
@@ -174,7 +178,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
        n = n + 1
 
 #定义oe任务数据
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",TaskFlag="",TaskExceptionFile=""):
     print("执行数据子账户：%s"%(ReturnAccountId))
     set_true = True
@@ -293,7 +297,7 @@ def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize=
             set_true = False
         else:
             if n > 2:
-                print("异常：%s,%s"%(ServiceId,ServiceCode))
+                print("异常获取子账户：%s,%s,%s"%(TaskFlag,ServiceId,ServiceCode))
                 set_true = False
             else:
                 time.sleep(2)
@@ -313,7 +317,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
             set_true = False
         else:
             if n > 2:
-                print("异常：%s,%s"%(ServiceId,ServiceCode))
+                print("异常获取子账户：%s,%s,%s"%(TaskFlag,ServiceId,ServiceCode))
                 os.system("""echo "%s %s %s %s %s %s">>%s """ % (ServiceId, ServiceCode, TaskFlag,Media, Page,PageSize, TaskExceptionFile + ".%s" % hostname))
                 set_true = False
             else:
@@ -321,8 +325,8 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
         n = n + 1
 
 #处理不分页
-@app.task(rate_limit='500/m')
-def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag="",TargetFlag="oe"):
+@app.task(rate_limit='1000/m')
+def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag=""):
     set_true = True
     n = 0
     while set_true:
@@ -347,9 +351,8 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
       n = n + 1
 
 #处理分页
-@app.task(rate_limit='1000/m')
-def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
-              ,DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
+@app.task(rate_limit='1000/m',soft_time_limit=60)
+def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
     while set_true:
@@ -378,7 +381,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
       n = n + 1
 
 #创建异步任务
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",MediaType="",TaskExceptionFile="",TaskFlag=""):
     set_true = True
     n = 0
@@ -402,7 +405,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
         n = n + 1
 
 #定义oe任务状态
-@app.task(rate_limit='500/m')
+@app.task(rate_limit='1000/m')
 def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",MediaType="",TaskFlag="",TaskExceptionFile=""):
     set_true = True
     n = 0
@@ -414,7 +417,7 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
             set_true = False
         else:
             if n > 2:
-                print("处理异步任务状态异常：%s,%s" % (ReturnAccountId, ServiceCode))
+                print("处理异步任务状态异常：%s,%s,%s" % (TaskFlag,ReturnAccountId, ServiceCode))
                 status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType,Token, TaskFlag, TaskExceptionFile + ".%s" % hostname))
                 if int(status) != 0:
                     for i in range(100):
