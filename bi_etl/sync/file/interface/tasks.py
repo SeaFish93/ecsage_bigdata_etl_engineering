@@ -85,7 +85,7 @@ def get_oe_async_tasks_create_all(AsyncTaskName="", AsyncTaskFile="", AsyncTaskE
       n = n + 1
 
 #定义oe任务创建
-@app.task(rate_limit='10/s')
+@app.task(rate_limit='1000/m')
 def get_oe_async_tasks_create_all_exception(AsyncTaskName="", AsyncTaskFile="", AsyncTaskExceptionFile="",ExecData="",ExecDate=""):
     account_id = ExecData[0]
     interface_flag = ExecData[1]
@@ -232,7 +232,7 @@ def get_oe_sync_tasks_data_return(ParamJson="",UrlPath="",PageTaskFile="",DataFi
       n = n + 1
     #return data_list
 
-@app.task(rate_limit='2000/m',worker_concurrency=200)
+@app.task(rate_limit='1000/m')
 def get_oe_sync_tasks_data(ParamJson="",UrlPath="",TaskExceptionFile="",DataFileDir="",DataFile=""):
    set_true = True
    n = 0
@@ -296,7 +296,7 @@ def get_creative_detail_data(ParamJson="", UrlPath="", DataFileDir="", DataFile=
         n = n + 1
 
 #获取代理下子账户页数
-@app.task(rate_limit='10/s')
+@app.task(rate_limit='1000/m')
 def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
     set_true = True
     n = 0
@@ -316,7 +316,7 @@ def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize=
         n = n + 1
 
 #获取代理下子账户
-@app.task(rate_limit='10/s')
+@app.task(rate_limit='1000/m')
 def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag="",TaskExceptionFile=""):
     set_true = True
     n = 0
@@ -452,7 +452,7 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
 
 #####################################################腾讯###################################################################
 #处理不分页-腾讯，便于速度控制
-@app.task(rate_limit='200/m')
+@app.task(rate_limit='1000/m')
 def get_not_page_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
@@ -478,7 +478,7 @@ def get_not_page_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccoun
       n = n + 1
 
 #处理分页-腾讯，便于速度控制
-@app.task(rate_limit='200/m')
+@app.task(rate_limit='1000/m')
 def get_pages_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
               ,DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
