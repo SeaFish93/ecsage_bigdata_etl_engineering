@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/1/14 14:36
-# @Author  : luoyh
+# @Author  : wangsong
 # @FileName: column_type.py
 # @Software: PyCharm
 

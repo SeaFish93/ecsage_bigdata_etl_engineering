@@ -39,6 +39,13 @@ def set_db_session(SessionType="",SessionHandler="",AppName=""):
                         user=get_handle[0][2],
                         password=get_handle[0][3],
                         default_db=get_handle[0][4])
+    elif SessionType == "impala":
+      from ecsage_bigdata_etl_engineering.common.operator.impala.impala_operator import ImpalaNoSqlDB
+      session = ImpalaNoSqlDB(port=get_handle[0][1],
+                        host=get_handle[0][0],
+                        user=get_handle[0][2],
+                        password=get_handle[0][3],
+                        default_db=get_handle[0][4])
     elif SessionType == "oss":
       pass
       ##from etl_main.common.oss_operator import OSS
