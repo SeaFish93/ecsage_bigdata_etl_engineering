@@ -1,7 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 from celery import Celery, platforms
 import sys,os
-import time
 
 platforms.C_FORCE_ROOT = True
 
