@@ -789,10 +789,10 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
           n = n + 1
       elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
           code = 0
-          data = str(rsp_data).replace(" ", "")
+          data = str(code)
       else:
           code = 1
-          data = str(rsp_data).replace(" ","")
+          data = str(code) + str(rsp_data["message"]).replace(" ","")
     except Exception as e:
         code = 1
         data = "请求失败：%s"%(str(e).replace("\n","").replace(" ","").replace("""\"""",""))
@@ -866,13 +866,13 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
          else:
              page = rsp_data["data"]["page_info"]["total_page"]
          if page == 0:
-            data = str(rsp_data).replace(" ", "")
+            data = "page=0"
       elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
           remark = "正常"
-          data = str(rsp_data).replace(" ", "")
+          data = str(code)
       else:
           remark = "异常"
-          data = str(rsp_data).replace(" ", "")
+          data = str(rsp_data["code"]).replace(" ", "") + str(rsp_data["message"]).replace(" ", "")
     except Exception as e:
         remark = "异常"
         data = "请求失败：%s"%(str(e).replace("\n","").replace(" ","").replace("""\"""",""))
