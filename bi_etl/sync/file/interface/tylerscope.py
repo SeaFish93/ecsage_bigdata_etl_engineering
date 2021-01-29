@@ -8,7 +8,7 @@ platforms.C_FORCE_ROOT = True
 sys.path.append(os.path.abspath("."))
 
 
-app = Celery('ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks',include=['ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks'])
+app = Celery('ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks',include=['ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks','ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks_for_tencent'])
 app.config_from_object('ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.celeryconfig')
 
 ##### def my_decorator(func):

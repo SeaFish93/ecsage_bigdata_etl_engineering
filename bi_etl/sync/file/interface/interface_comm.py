@@ -14,6 +14,7 @@ import socket
 import time
 import json
 import ast
+import random
 from six import string_types
 import urllib3
 from six.moves.urllib.parse import urlencode, urlunparse
@@ -219,7 +220,6 @@ def local_hdfs_thread(DataFile="",HDFSDir="",arg=None):
        os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
 
 #创建创意
-#def
 def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEmptyFile="",ExecDate=""):
     get_data = ExecData
     media_type = get_data[1]
@@ -730,24 +730,35 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
     return remark
 
 #不翻页处理
-def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",ArrayFlag=""):
+def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",ArrayFlag="",TargetFlag=""):
     code = 1
     data = ""
     set_run = True
     n = 0
     not_exist = "N"
     try:
-      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-      code = rsp_data["code"]
-      # token无效重试
-      if int(code) in [40102,40103,40104,40105,40107]:
-          token = get_oe_account_token(ServiceCode=ServiceCode)
-          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
-          code = rsp_data["code"]
+      if TargetFlag == 'oe':
+         rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
+         if int(rsp_data["code"]) == 40105:# token无效重试
+             token = get_oe_account_token(ServiceCode=ServiceCode)
+             rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
+      elif TargetFlag =='tc':
+         token = get_oe_account_token(ServiceCode=ServiceCode)
+         rsp_data = get_sync_data_tc(Access_Token=token, ParamJson=ParamJson, UrlPath=UrlPath)
+         if int(rsp_data["code"]) in [11000, 11002, 11004, 11005, 30101, 30102]:  # token无效重试
+             token = get_oe_account_token(ServiceCode=ServiceCode)
+             rsp_data = get_sync_data_tc(Access_Token=token, ParamJson=ParamJson, UrlPath=UrlPath)
+
+      code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
-      request_id = rsp_data["request_id"]
+      req_flg = {'tc': 'trace_id', 'oe': 'request_id'}
+      if TargetFlag == "tc" and req_flg[TargetFlag] not in rsp_data.keys():#腾讯报表有trace_id，维表没有，没有就构造
+          rsp_data["trace_id"] = str(ReturnAccountId) + str(int(time.time()*1000000))#微秒级时间戳16位
+      else:
+          pass
+      request_id = rsp_data["%s"%(req_flg[TargetFlag])]
       if int(code) == 0:
         file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
         data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
@@ -772,7 +783,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
               else:
                   time.sleep(2)
           n = n + 1
-      elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
+      elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
           code = 0
           data = str(rsp_data).replace(" ", "")
       else:
@@ -782,8 +793,6 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
         code = 1
         data = "请求失败：%s"%(str(e).replace("\n","").replace(" ","").replace("""\"""",""))
     if int(code) != 0:
-      status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),ReturnAccountId, ServiceCode, str(ParamJson).replace(" ",""), data,Token,DataFileDir, "account_status.log", hostname))
-      if int(status) != 0:
        for i in range(10):
         status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
         if int(status) == 0:
@@ -791,25 +800,37 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
     return code
 
 #翻页处理
-def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",Pagestyle="",ArrayFlag=""):
+def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",Pagestyle="",ArrayFlag="",TargetFlag=""):
     page = 0
     data = ""
     set_run = True
     n = 0
     token = None
     not_exist = "N"
+    code = 1
     try:
-      rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-      code = rsp_data["code"]
-      #token无效重试
-      if int(code) in [40102,40103,40104,40105,40107]:
-          token = get_oe_account_token(ServiceCode=ServiceCode)
-          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
-          code = rsp_data["code"]
+      if TargetFlag == 'oe':
+          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
+          if int(rsp_data["code"])== 40105:#token无效重试
+              token = get_oe_account_token(ServiceCode=ServiceCode)
+              rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
+      elif TargetFlag =='tc':
+          token = get_oe_account_token(ServiceCode=ServiceCode)
+          rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
+          if int(rsp_data["code"]) in [11000,11002,11004,11005,30101,30102]:#token无效重试
+              token = get_oe_account_token(ServiceCode=ServiceCode)
+              rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
+      code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
-      request_id = rsp_data["request_id"]
+      req_flg = {'tc': 'trace_id', 'oe': 'request_id'}
+      if TargetFlag == "tc" and req_flg[TargetFlag] not in rsp_data.keys():#腾讯报表有trace_id，维表没有，没有就构造
+          rsp_data["trace_id"] = str(ReturnAccountId) + str(int(time.time()*1000000))#微秒级时间戳16位
+      else:
+          pass
+      request_id = rsp_data["%s"%(req_flg[TargetFlag])]
+
       if int(code) == 0:
          file_name = """%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1])
          data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
@@ -842,7 +863,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
              page = rsp_data["data"]["page_info"]["total_page"]
          if page == 0:
             data = str(rsp_data).replace(" ", "")
-      elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
+      elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
           remark = "正常"
           data = str(rsp_data).replace(" ", "")
       else:
@@ -864,19 +885,23 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
          else:
            time.sleep(2)
       n = n + 1
-    return remark
+    return code
 
 #etl_mid->Ods层
 def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="", TargetTable=""
-                   ,IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag="",CustomSetParameter="",IsReplace="Y",DagId="",TaskId=""):
+                   ,IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag="",CustomSetParameter=""
+                   ,IsReplace="Y",DagId="",TaskId="",ExPartField=""):
     etl_ods_field_diff = def_ods_structure(HiveSession=HiveSession, BeelineSession=BeelineSession
                                            ,SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
                                            ,IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag
-                                           ,IsReplace=IsReplace)
+                                           ,IsReplace=IsReplace,ExPartField=ExPartField)
     print("返回的表差异 %s || %s || %s" % (etl_ods_field_diff[0], etl_ods_field_diff[1], etl_ods_field_diff[2]))
     ok, get_ods_column = HiveSession.get_column_info(TargetDB, TargetTable)
     system_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
     system_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time,etl_date"
+    system_table_columns = system_table_columns + ",%s"%(ExPartField[0]) if len(ExPartField) > 0 else system_table_columns
+
     is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable,
                    ExecDate=ExecDate, KeyColumns=KeyColumns,DagId=DagId,TaskId=TaskId)
     row_number_columns = ""
@@ -938,21 +963,32 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
             as_str = pars_field.split(".")[-1]
             pars_str_list.append("get_json_object(data_num_colums,'$.%s') as `%s`" % (pars_field, as_str))
         pars_str = ','.join(pars_str_list)
+
+        etl_part_field_list = ['request_type']
+        etl_part_field_list.append(ExPartField[0]) if len(ExPartField) > 0 else etl_part_field_list
+        etl_part_field_str = ','.join(etl_part_field_list)##request_type,time_line
+
+        return_fields_tmp = ['returns_colums', 'returns_account_id']
+        return_fields_list = return_fields_tmp + etl_part_field_list
+        return_fields = ','.join(return_fields_list)#returns_colums,returns_account_id,request_type,time_line
+
+        return_fields_str = [
+            ",split(split(data_colums,'@@####@@')[0],'##&&##')[%d] as %s \n" % (i, return_fields_list[i]) for i in
+            range(len(return_fields_list))]
+        return_fields_sql = ''.join(return_fields_str)
+        print(return_fields_sql)
+
+
         sql = """
                 add file hdfs:///tmp/airflow/get_arrary.py;
                 drop table if exists %s.%s_tmp;
                 create table %s.%s_tmp stored as parquet as 
                 select %s
-                from (select returns_colums,%s %s,returns_account_id,request_type
-                      from(select split(split(data_colums,'@@####@@')[0],'##&&##')[0] as returns_colums
-                                  ,split(data_colums,'@@####@@')[1] as data_colums
-                                  ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id
-                                  ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type
-                           from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
-                                from(select %s
-                                            ,%s
-                                            ,%s
-                                            ,request_type
+                from (select %s,%s %s
+                      from(select split(data_colums,'@@####@@')[1] as data_colums
+                                  %s
+                           from(select transform(concat_ws('##@@',concat_ws('##&&##',%s),data_colums)) USING 'python get_arrary.py' as (data_colums)
+                                from(select %s ,%s ,%s ,%s
                                      from %s.%s a
                                      where a.etl_date = '%s'
                                         %s
@@ -965,8 +1001,9 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                       ) a
                       ;
                 """ % (
-        "etl_mid", TargetTable, "etl_mid", TargetTable, columns, pars_str, null_field_str, return_regexp_extract,
-        regexp_extract, returns_account_id, SourceDB, SourceTable, ExecDate, filter_line)
+        "etl_mid", TargetTable, "etl_mid", TargetTable, columns, return_fields, pars_str, null_field_str
+        , return_fields_sql, return_fields, return_regexp_extract,regexp_extract, returns_account_id
+        , etl_part_field_str, SourceDB, SourceTable, ExecDate, filter_line)
 
     ok = BeelineSession.execute_sql(sql, CustomSetParameter)
     if ok is False:
@@ -1111,3 +1148,22 @@ def get_data_2_snap(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
                               Log="snap入库数据对比不上！！！",
                               Developer="developer")
        set_exit(LevelStatu="red", MSG=msg)
+
+
+
+#腾讯##########################腾讯##########################腾讯##########################腾讯##########################腾讯#########################
+#腾讯同步数据API @Time 2021-01-14
+def get_sync_data_tc(Access_Token="",ParamJson="",UrlPath="daily_reports/get"):
+    url = 'https://api.e.qq.com/v1.3/' + UrlPath
+
+    common_parameters = {
+        'access_token': Access_Token,
+        'timestamp': int(time.time()),
+        'nonce': str(time.time()) + str(random.randint(0, 999999)),
+    }
+    ParamJson.update(common_parameters)
+    ParamJson = {k: v if isinstance(v, string_types) else json.dumps(v) for k, v in ParamJson.items()}
+    print("==================================")
+    r = requests.get(url, params=ParamJson)
+    print("----------------------------------")
+    return r.json()
