@@ -167,21 +167,19 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       columns = """advertiser_id,flag,filter_id"""
       load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
       sql = """
-             select a.account_id, a.media, a.service_code,b.filter_id as id,b.flag,'1111' as token
-             from metadb.media_advertiser_crm a
+            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token_code as token
+             from metadb.media_advertiser a
              inner join metadb.oe_sync_filter_info b
              on a.account_id = b.advertiser_id
-             where b.flag = '%s' and a.is_actived in ('1','2') 
-               and a.media='%s'
-             group by a.account_id, a.media, a.service_code,b.filter_id,b.flag
+             where b.flag = '%s' and a.media_type='%s'
+             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token_code
         """ % (task_flag,media_type)
   else:
        sql = """
-            select a.account_id, a.media, a.service_code,'' as id,'%s','1111' as token
-            from metadb.media_advertiser_crm a
-            where a.is_actived in ('1','2') 
-                and media='%s'
-            group by a.account_id, a.media, a.service_code
+            select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token_code as token
+            from metadb.media_advertiser a
+            where  media_type='%s'
+            group by a.account_id, a.media_type, a.service_code,a.token_code
        """%(task_flag,media_type)
 
   ok,db_data = etl_md.get_all_rows(sql)

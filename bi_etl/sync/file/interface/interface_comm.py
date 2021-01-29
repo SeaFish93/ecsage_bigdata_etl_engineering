@@ -744,8 +744,8 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
              rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
       elif TargetFlag =='tc':
-         token = get_oe_account_token(ServiceCode=ServiceCode)
-         rsp_data = get_sync_data_tc(Access_Token=token, ParamJson=ParamJson, UrlPath=UrlPath)
+         #token = get_oe_account_token(ServiceCode=ServiceCode)
+         rsp_data = get_sync_data_tc(Access_Token=Token, ParamJson=ParamJson, UrlPath=UrlPath)
          if int(rsp_data["code"]) in [11000, 11002, 11004, 11005, 30101, 30102]:  # token无效重试
              token = get_oe_account_token(ServiceCode=ServiceCode)
              rsp_data = get_sync_data_tc(Access_Token=token, ParamJson=ParamJson, UrlPath=UrlPath)
@@ -816,8 +816,8 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
               rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
       elif TargetFlag =='tc':
-          token = get_oe_account_token(ServiceCode=ServiceCode)
-          rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
+          #token = get_oe_account_token(ServiceCode=ServiceCode)
+          rsp_data =  get_sync_data_tc(Access_Token=Token,ParamJson=ParamJson,UrlPath=UrlPath)
           if int(rsp_data["code"]) in [11000,11002,11004,11005,30101,30102]:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
