@@ -27,7 +27,7 @@ import socket
 
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
-
+interface_data_dir = conf.get("Interface", "tc_interface_data_home")
 
 #入口方法
 def main(TaskInfo,Level="",**kwargs):
@@ -72,7 +72,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
   hostname = socket.gethostname()
-  local_dir = """/home/ecsage_data/tencentengine/%s/sync/%s/%s/%s"""%(hostname,ExecDate,AirflowDag,AirflowTask)
+  local_dir = """%s/%s/sync/%s/%s/%s"""%(interface_data_dir,hostname,ExecDate,AirflowDag,AirflowTask)
   celery_first_page_status_file = "%s/celery_first_page_status_file.log"%(local_dir)
   celery_other_page_status_file = "%s/celery_other_page_status_file.log" % (local_dir)
   celery_rerun_page_status_file = "%s/celery_rerun_page_status_file.log" % (local_dir)
