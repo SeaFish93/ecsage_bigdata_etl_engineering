@@ -11,8 +11,8 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks_for_tencent import get_not_page as get_not_page_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks_for_tencent import get_pages as get_pages_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page_tc as get_not_page_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages_tc as get_pages_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
