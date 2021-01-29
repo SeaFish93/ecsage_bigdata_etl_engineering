@@ -5,6 +5,7 @@
 # @Software: PyCharm
 # function info：定义celery任务
 
+#from __future__ import absolute_import, unicode_literals
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope import app
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_async_status_content_content
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_oe_save_exception_file
@@ -20,12 +21,13 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_create_async_tasks
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_status_async_tasks
-from ecsage_bigdata_etl_engineering.bi_etl.web_interface.exec_interface_script import execute
+from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import json
 import ast
 import os
 import time
 import socket
+
 conf = Conf().conf
 hostname = socket.gethostname()
 
@@ -35,19 +37,10 @@ def get_test(**kwargs):
     now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
     return kwargs
 
-#处理报表接口
 @app.task()
-def get_web_interface_data(**kwargs):
-    """
-    元数据表：web_interface_info
-    {'kwargs': {'interface_id':'2',
-                'page': 1,
-                'page_size':100
-               }
-    }
-    """
-    data = execute(InterfaceParamsInfo=kwargs)
-    return data
+def get_test_quen(**kwargs):
+    now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
+    return kwargs
 
 #定义oe任务创建
 @app.task(rate_limit='1000/m')
@@ -335,7 +328,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
 
 #处理不分页
 @app.task(rate_limit='1000/m')
-def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag=""):
+def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
     while set_true:
