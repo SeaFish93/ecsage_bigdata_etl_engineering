@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath("."))
 
 app = Celery('ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks',include=['ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks'])
 app.config_from_object('ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.celeryconfig')
-#app.autodiscover_tasks(packages='ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface',related_name='tasks')
+app.autodiscover_tasks(['ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface'])
 
 if __name__ == '__main__':
     app.start()
