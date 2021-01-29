@@ -31,12 +31,15 @@ CELERY_ACKS_LATE=True
 CELERY_REJECT_ON_WORKER_LOST=True
 CELERY_QUEUES = (
 Queue('report', Exchange('report'), routing_key='report', consumer_arguments={'x-priority': 10}),
-Queue('oe', Exchange('oe'), routing_key='oe', consumer_arguments={'x-priority': 100})
+Queue('oe', Exchange('oe'), routing_key='oe', consumer_arguments={'x-priority': 100}),
+Queue('tc', Exchange('tc'), routing_key='tc', consumer_arguments={'x-priority': 100})
 )
 CELERY_DEFAULT_QUEUE = 'default'
 CELERY_DEFAULT_EXCHANGE = 'default'
 CELERY_DEFAULT_ROUTING_KEY = 'default'
 CELERY_ROUTES = {
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_not_page_tc': {'queue': 'tc'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages_tc': {'queue': 'tc'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages': {'queue': 'oe'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_not_page': {'queue': 'oe'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_oe_async_tasks_data_return': {'queue': 'oe'},
