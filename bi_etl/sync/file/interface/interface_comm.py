@@ -25,8 +25,12 @@ from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import adj_snap_structure
+from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 
 hostname = socket.gethostname()
+conf = Conf().conf
+oe_interface_data_dir = conf.get("Interface", "oe_interface_data_home")
+tc_interface_data_dir = conf.get("Interface", "tc_interface_data_home")
 
 def build_url(path="", netloc="",query=""):
     scheme= "https"
@@ -370,22 +374,22 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
            token = get_oe_account_token(ServiceCode=service_code)
            if n >2:
              set_run = False
-             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s_%s" % (AirflowInstance,hostname)))
+             os.system("""echo '%s'>>%s""" % (account_id, "%s/async/%s/"% (oe_interface_data_dir,media_type) + "token_exception_%s_%s" % (AirflowInstance,hostname)))
            else:
              time.sleep(2)
        else:
-           os.system("""echo '%s %s'>>%s""" % (account_id,code, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s_%s" % (AirflowInstance,hostname)))
+           os.system("""echo '%s %s'>>%s""" % (account_id,code, "%s/async/%s/"% (oe_interface_data_dir,media_type) + "account_sum_%s_%s" % (AirflowInstance,hostname)))
            if int(code) == 0:
              for data in resp_datas:
                  try:
-                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
+                   os.system("""echo '%s'>>%s""" % (account_id, "%s/async/%s/" % (oe_interface_data_dir,media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
                    shell_cmd = """
                    cat >> %s << endwritefilewwwww
 %s
 endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode("utf8","ignore").replace("""`""","%%@@%%").replace("'","%%&&%%"))
                    os.system(shell_cmd)
                  except Exception as e:
-                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s_%s" % (AirflowInstance,hostname)))
+                   os.system("""echo '%s'>>%s""" % (account_id, "%s/async/%s/"%(oe_interface_data_dir,media_type) + "write_exception_%s_%s" % (AirflowInstance,hostname)))
            set_run = False
        n = n + 1
     return code
