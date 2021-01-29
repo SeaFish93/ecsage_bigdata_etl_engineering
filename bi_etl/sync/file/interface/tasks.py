@@ -22,6 +22,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_sync_data
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_oe_status_async_tasks
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
+from ecsage_bigdata_etl_engineering.bi_etl.web_interface.exec_interface_script import execute
 import json
 import ast
 import os
@@ -37,10 +38,19 @@ def get_test(**kwargs):
     now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
     return kwargs
 
+#处理报表接口
 @app.task()
-def get_test_quen(**kwargs):
-    now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
-    return kwargs
+def get_web_interface_data(**kwargs):
+    """
+    元数据表：web_interface_info
+    {'kwargs': {'interface_id':'2',
+                'page': 1,
+                'page_size':100
+               }
+    }
+    """
+    data = execute(InterfaceParamsInfo=kwargs)
+    return data
 
 #定义oe任务创建
 @app.task(rate_limit='1000/m')
