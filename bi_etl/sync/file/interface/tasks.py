@@ -363,7 +363,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
       n = n + 1
 
 #处理分页
-@app.task(rate_limit='1000/m',soft_time_limit=60)
+@app.task(rate_limit='1000/m')
 def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
