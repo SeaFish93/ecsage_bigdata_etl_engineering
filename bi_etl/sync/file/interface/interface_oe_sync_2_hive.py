@@ -279,7 +279,7 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
        # 获取状态
     print("正在等待celery队列执行完成！！！")
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile,AirflowDagId="",AirflowTaskId="",ExecDate="")
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
     wait_for_celery_status(StatusList=celery_task_id)
     print("celery队列执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     #重试异常
@@ -638,22 +638,14 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",DbName="",TableName="",Colum
                   set_run = False
               n = n+1
 
-def get_celery_job_status(CeleryTaskId="",AirflowDagId="",AirflowTaskId="",ExecDate=""):
+def get_celery_job_status(CeleryTaskId=""):
     set_task = AsyncResult(id=str(CeleryTaskId))
     status = set_task.status
-    #写入日志
-    sql = """
-      insert into metadb.airflow_celery_task_log
-      select '%s' as airflow_dag_id,'%s' as airflow_task_id,
-             '%s' as celery_task_id,'%s' as celery_status,
-             '%s' as log_date
-    """%(AirflowDagId,AirflowTaskId,CeleryTaskId,status,ExecDate)
-    etl_md.execute_sql(sql)
     if status == "SUCCESS":
        return True
     if status == "FAILURE":
         msg = "celery队列执行失败！！！"
-        msg = get_alert_info_d(DagId=AirflowDagId, TaskId=AirflowTaskId,
+        msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
                                TargetTable="%s.%s" % ("", ""),
                                BeginExecDate="",
@@ -666,18 +658,16 @@ def get_celery_job_status(CeleryTaskId="",AirflowDagId="",AirflowTaskId="",ExecD
        #print(CeleryTaskId,"##",status)
        return False
 
-def get_celery_status_list(CeleryTaskStatusFile="",AirflowDagId="",AirflowTaskId="",ExecDate=""):
+def get_celery_status_list(CeleryTaskStatusFile=""):
     celery_task_id = []
     status_wait = []
     with open(CeleryTaskStatusFile) as lines:
         array = lines.readlines()
         for data in array:
             get_data1 = data.strip('\n').split(" ")
-            status = get_celery_job_status(CeleryTaskId=get_data1[0], AirflowDagId=AirflowDagId,
-                                           AirflowTaskId=AirflowTaskId, ExecDate=ExecDate)
-            if status is False:
-               status_wait.append(get_data1[0])
-               celery_task_id.append(get_data1[0])
+            if get_celery_job_status(CeleryTaskId=get_data1[0]) is False:
+                status_wait.append(get_data1[0])
+                celery_task_id.append(get_data1[0])
     return celery_task_id,status_wait
 
 def wait_for_celery_status(StatusList=""):
