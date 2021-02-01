@@ -2,7 +2,7 @@ from kombu import Queue, Exchange
 
 BROKER_URL = 'amqp://admin:1qazXSW2@192.168.30.123:9549//sync_broker'
 #CELERY_RESULT_BACKEND = 'file:///data/ecsage_data/celery/sync_backend'
-CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.235:9543/4'
+CELERY_RESULT_BACKEND = 'amqp://admin:1qazXSW2@192.168.30.123:9549//sync_backend'
 #use json
 #CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
