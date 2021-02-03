@@ -25,8 +25,12 @@ from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import adj_snap_structure
+from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 
 hostname = socket.gethostname()
+conf = Conf().conf
+oe_interface_data_dir = conf.get("Interface", "oe_interface_data_home")
+tc_interface_data_dir = conf.get("Interface", "tc_interface_data_home")
 
 def build_url(path="", netloc="",query=""):
     scheme= "https"
@@ -257,7 +261,7 @@ def set_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
         resp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, netloc="ad.toutiao.com", Token=Token,IsPost="N")
         code = resp_data["code"]
         # token无效重试
-        if int(code) == 40105:
+        if int(code) in [40102,40103,40104,40105,40107]:
             token = get_oe_account_token(ServiceCode=ServiceCode)
             resp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, netloc="ad.toutiao.com", Token=token,IsPost="N")
             code = resp_data["code"]
@@ -279,7 +283,7 @@ def set_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
                 remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id,DataFileDir=DataFileDir, DataFile=DataFile)
             if remark != "正常":
                code = 1
-        elif int(code) in [40002, 40105, 40104]:
+        elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
             code = 0
             os.system(""" echo "%s %s">>%s/%s """%(ReturnAccountId,str(resp_data).replace(" ", ""),DataFileDir,"account_perssion.log"))
         else:
@@ -366,26 +370,26 @@ def set_oe_async_tasks_data(DataFile="",ExecData="",AirflowInstance=""):
     code = 0
     while set_run:
        code,resp_datas = get_oe_async_tasks_data(Token=token, AccountId=account_id, TaskId=task_id)
-       if int(code) == 40105:
+       if int(code) in [40102,40103,40104,40105,40107]:
            token = get_oe_account_token(ServiceCode=service_code)
            if n >2:
              set_run = False
-             os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "token_exception_%s_%s" % (AirflowInstance,hostname)))
+             os.system("""echo '%s'>>%s""" % (account_id, "%s/async/%s/"% (oe_interface_data_dir,media_type) + "token_exception_%s_%s" % (AirflowInstance,hostname)))
            else:
              time.sleep(2)
        else:
-           os.system("""echo '%s %s'>>%s""" % (account_id,code, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "account_sum_%s_%s" % (AirflowInstance,hostname)))
+           os.system("""echo '%s %s'>>%s""" % (account_id,code, "%s/async/%s/"% (oe_interface_data_dir,media_type) + "account_sum_%s_%s" % (AirflowInstance,hostname)))
            if int(code) == 0:
              for data in resp_datas:
                  try:
-                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/" % (media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
+                   os.system("""echo '%s'>>%s""" % (account_id, "%s/async/%s/" % (oe_interface_data_dir,media_type) + "test_%s_%s" % (AirflowInstance, hostname)))
                    shell_cmd = """
                    cat >> %s << endwritefilewwwww
 %s
 endwritefilewwwww"""%(DataFile+".%s"%(hostname),data.decode("utf8","ignore").replace("""`""","%%@@%%").replace("'","%%&&%%"))
                    os.system(shell_cmd)
                  except Exception as e:
-                   os.system("""echo '%s'>>%s""" % (account_id, "/home/ecsage_data/oceanengine/async/%s/"%(media_type) + "write_exception_%s_%s" % (AirflowInstance,hostname)))
+                   os.system("""echo '%s'>>%s""" % (account_id, "%s/async/%s/"%(oe_interface_data_dir,media_type) + "write_exception_%s_%s" % (AirflowInstance,hostname)))
            set_run = False
        n = n + 1
     return code
@@ -471,7 +475,7 @@ def get_set_oe_async_tasks_create(InterfaceFlag="",MediaType="",ServiceCode="",A
                code = 1
                mess = "写入失败"
         #没权限创建
-        elif int(code) in [40002, 40105, 40104]:
+        elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
             code = 0
         else:
             code = 1
@@ -490,7 +494,7 @@ def set_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
         resp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, netloc="ad.toutiao.com", Token=Token,IsPost="Y")
         code = resp_data["code"]
         # token无效重试
-        if int(code) == 40105:
+        if int(code) in [40102,40103,40104,40105,40107]:
             token = get_oe_account_token(ServiceCode=ServiceCode)
             resp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, netloc="ad.toutiao.com", Token=token,IsPost="Y")
             code = resp_data["code"]
@@ -502,7 +506,7 @@ def set_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
             remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id, DataFileDir=DataFileDir,DataFile=DataFile)
             if remark != "正常":
                 code = 1
-        elif int(code) in [40002, 40105, 40104]:
+        elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
             code = 0
             task_id = "111111"
             task_name = "无权限"
@@ -537,7 +541,7 @@ def set_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
         except:
           code = 0
         # token无效重试
-        if int(code) == 40105:
+        if int(code) in [40102,40103,40104,40105,40107]:
             token = get_oe_account_token(ServiceCode=ServiceCode)
             resp_datas = get_oe_async_tasks_data_return(UrlPath=UrlPath,ParamJson=ParamJson,Token=token)
             try:
@@ -551,7 +555,7 @@ def set_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
             remark,data = get_write_local_file(RequestsData=resp_data, RequestID=request_id, DataFileDir=DataFileDir, DataFile=DataFile)
             if remark != "正常":
                code = 1
-        elif int(code) in [40002, 40105, 40104]:
+        elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
             code = 0
             data = str(data).replace(" ", "")
         else:
@@ -639,7 +643,7 @@ def get_advertiser_info(AccountIdList="",ServiceCode="",DataFileDir="",DataFile=
            rsp_data["returns_account_id"] = str(AccountIdList).replace("[","").replace("]","")
            test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename="""%s-%s.%s""" % (DataFile.split(".")[0],hostname,DataFile.split(".")[1]))
            test_log.info(json.dumps(rsp_data))
-        elif int(code) in [40002, 40105, 40104]:
+        elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
             code = 0
             os.system(""" echo "%s %s %s">>%s/%s.%s """%(str(rsp_data).replace(" ",""),AccountIdList,ServiceCode,DataFileDir,"account_status.log",hostname))
         else:
@@ -663,7 +667,7 @@ def get_creative_detail_datas(ParamJson="", UrlPath="", DataFileDir="", DataFile
                 test_log.info(json.dumps(data_list))
             else:
                 # 没权限及token失败
-                if int(code) in [40002, 40105, 40104]:
+                if int(code) in [40002, 40105, 40104,40102,40103,40107]:
                     code = 0
                     os.system(""" echo "%s">>%s/%s.%s """ % (str(data_list).replace(" ",""), DataFileDir, "account_status.log", hostname))
                 else:
@@ -716,7 +720,7 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
                  os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId, ServiceCode, list_data["advertiser_id"], Media, DataFile, hostname))
       else:
           # 没权限及token失败
-          if int(code) in [40002, 40105, 40104]:
+          if int(code) in [40002, 40105, 40104,40102,40103,40107]:
               remark = "正常"
               data = str(get_data).replace(" ", "")
           else:
@@ -739,13 +743,13 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
     try:
       if TargetFlag == 'oe':
          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-         if int(rsp_data["code"]) == 40105:# token无效重试
+         if int(rsp_data["code"]) in [40102,40103,40104,40105,40107]:# token无效重试
              token = get_oe_account_token(ServiceCode=ServiceCode)
              rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
       elif TargetFlag =='tc':
-         token = get_oe_account_token(ServiceCode=ServiceCode)
-         rsp_data = get_sync_data_tc(Access_Token=token, ParamJson=ParamJson, UrlPath=UrlPath)
+         #token = get_oe_account_token(ServiceCode=ServiceCode)
+         rsp_data = get_sync_data_tc(Access_Token=Token, ParamJson=ParamJson, UrlPath=UrlPath)
          if int(rsp_data["code"]) in [11000, 11002, 11004, 11005, 30101, 30102]:  # token无效重试
              token = get_oe_account_token(ServiceCode=ServiceCode)
              rsp_data = get_sync_data_tc(Access_Token=token, ParamJson=ParamJson, UrlPath=UrlPath)
@@ -785,10 +789,10 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
           n = n + 1
       elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
           code = 0
-          data = str(rsp_data).replace(" ", "")
+          data = str(code)
       else:
           code = 1
-          data = str(rsp_data).replace(" ","")
+          data = str(code) + str(rsp_data["message"]).replace(" ","")
     except Exception as e:
         code = 1
         data = "请求失败：%s"%(str(e).replace("\n","").replace(" ","").replace("""\"""",""))
@@ -811,13 +815,13 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     try:
       if TargetFlag == 'oe':
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-          if int(rsp_data["code"])== 40105:#token无效重试
+          if int(rsp_data["code"]) in [40102,40103,40104,40105,40107]:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
       elif TargetFlag =='tc':
-          token = get_oe_account_token(ServiceCode=ServiceCode)
-          rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
+          #token = get_oe_account_token(ServiceCode=ServiceCode)
+          rsp_data =  get_sync_data_tc(Access_Token=Token,ParamJson=ParamJson,UrlPath=UrlPath)
           if int(rsp_data["code"]) in [11000,11002,11004,11005,30101,30102]:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
@@ -862,13 +866,13 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
          else:
              page = rsp_data["data"]["page_info"]["total_page"]
          if page == 0:
-            data = str(rsp_data).replace(" ", "")
+            data = "page=0"
       elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
           remark = "正常"
-          data = str(rsp_data).replace(" ", "")
+          data = str(code)
       else:
           remark = "异常"
-          data = str(rsp_data).replace(" ", "")
+          data = str(rsp_data["code"]).replace(" ", "") + str(rsp_data["message"]).replace(" ", "")
     except Exception as e:
         remark = "异常"
         data = "请求失败：%s"%(str(e).replace("\n","").replace(" ","").replace("""\"""",""))

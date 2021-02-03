@@ -42,7 +42,7 @@ class LogManager(object):
     self._formatter = None
 
   def get_logger_and_add_handlers(self, log_level_int=1, is_add_stream_handler=True, log_path=None, log_filename=None,
-                                  log_file_size=128):
+                                  log_file_size=127):
     """
    :param log_level_int: 日志输出级别，设置为 1 2 3 4 5，分别对应输出DEBUG，INFO，WARNING，ERROR,CRITICAL日志
    :param is_add_stream_handler: 是否打印日志到控制台

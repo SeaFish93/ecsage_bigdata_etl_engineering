@@ -11,8 +11,8 @@ from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_sess
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks_for_tencent import get_not_page as get_not_page_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks_for_tencent import get_pages as get_pages_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page_tc as get_not_page_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages_tc as get_pages_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
@@ -27,7 +27,7 @@ import socket
 
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
-
+interface_data_dir = conf.get("Interface", "tc_interface_data_home")
 
 #入口方法
 def main(TaskInfo,Level="",**kwargs):
@@ -72,7 +72,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
   hostname = socket.gethostname()
-  local_dir = """/home/ecsage_data/tencentengine/%s/sync/%s/%s/%s"""%(hostname,ExecDate,AirflowDag,AirflowTask)
+  local_dir = """%s/%s/sync/%s/%s/%s"""%(interface_data_dir,hostname,ExecDate,AirflowDag,AirflowTask)
   celery_first_page_status_file = "%s/celery_first_page_status_file.log"%(local_dir)
   celery_other_page_status_file = "%s/celery_other_page_status_file.log" % (local_dir)
   celery_rerun_page_status_file = "%s/celery_rerun_page_status_file.log" % (local_dir)
@@ -167,21 +167,19 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       columns = """advertiser_id,flag,filter_id"""
       load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
       sql = """
-             select a.account_id, a.media, a.service_code,b.filter_id as id,b.flag,'1111' as token
-             from metadb.media_advertiser_crm a
+            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token_code as token
+             from metadb.media_advertiser a
              inner join metadb.oe_sync_filter_info b
              on a.account_id = b.advertiser_id
-             where b.flag = '%s' and a.is_actived in ('1','2') 
-               and a.media='%s'
-             group by a.account_id, a.media, a.service_code,b.filter_id,b.flag
+             where b.flag = '%s' and a.media_type='%s'
+             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token_code
         """ % (task_flag,media_type)
   else:
        sql = """
-            select a.account_id, a.media, a.service_code,'' as id,'%s','1111' as token
-            from metadb.media_advertiser_crm a
-            where a.is_actived in ('1','2') 
-                and media='%s'
-            group by a.account_id, a.media, a.service_code
+            select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token_code as token
+            from metadb.media_advertiser a
+            where  media_type='%s'
+            group by a.account_id, a.media_type, a.service_code,a.token_code
        """%(task_flag,media_type)
 
   ok,db_data = etl_md.get_all_rows(sql)
