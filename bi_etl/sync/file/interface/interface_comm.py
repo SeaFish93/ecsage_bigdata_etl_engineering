@@ -908,11 +908,11 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
 
     is_key_columns(SourceDB=SourceDB, SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable,
                    ExecDate=ExecDate, KeyColumns=KeyColumns,DagId=DagId,TaskId=TaskId)
-    row_number_columns = KeyColumns#注释以下转义，提高partition的自由度，可以包含函数;关键字由配置注明
-    #key_column_list = KeyColumns.split(",")
-    #for key in key_column_list:
-    #    row_number_columns = row_number_columns + "," + "`" + key + "`"
-    #row_number_columns = row_number_columns.replace(",", "", 1)
+    row_number_columns = ""
+    key_column_list = KeyColumns.split(",")
+    for key in key_column_list:
+        row_number_columns = row_number_columns + "," + "`" + key + "`"
+    row_number_columns = row_number_columns.replace(",", "", 1)
     select_exclude_columns = SelectExcludeColumns
     if select_exclude_columns is None or len(select_exclude_columns) == 0:
         select_exclude_columns = "000000"
