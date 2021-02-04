@@ -195,6 +195,7 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
     print("执行数据子账户：%s"%(ReturnAccountId))
     set_true = True
     n = 0
+    code = 9999
     while set_true:
         code = set_oe_async_tasks_data_return(DataFileDir=DataFileDir,DataFile=DataFile,UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,ReturnAccountId=ReturnAccountId,ServiceCode=ServiceCode)
         if int(code) == 0:
@@ -212,6 +213,7 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
             else:
                 time.sleep(5)
         n = n + 1
+    return """code：%s""" % (code)
 
 #定义oe同步数据
 @app.task(rate_limit='1000/m')
