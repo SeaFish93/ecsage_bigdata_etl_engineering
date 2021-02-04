@@ -1,8 +1,8 @@
 from kombu import Queue, Exchange
 
-BROKER_URL = 'amqp://admin:1qazXSW2@192.168.30.123:9549//sync'
+BROKER_URL = 'amqp://admin:1qazXSW2@192.168.30.130:9549//sync_broker'
+#CELERY_RESULT_BACKEND = 'file:///data/ecsage_data/celery/sync_backend'
 CELERY_RESULT_BACKEND = 'db+mysql://root:06D567130266EB33098B9F@192.168.30.5:13306/sync'
-#CELERY_RESULT_BACKEND = 'redis://:1qazXSW2@192.168.30.17:9543/5'
 #use json
 #CELERY_RESULT_SERIALIZER = 'json'
 #task result expires
@@ -18,6 +18,7 @@ CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'pickle'
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
+#CELERY_RESULT_DB_SHORT_LIVED_SESSIONS = False
 CELERY_ENABLE_UTC = False
 TIME_ZONE = 'Asia/Shanghai'
 CELERY_TIMEZONE = TIME_ZONE

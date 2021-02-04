@@ -195,6 +195,7 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
     print("执行数据子账户：%s"%(ReturnAccountId))
     set_true = True
     n = 0
+    code = 9999
     while set_true:
         code = set_oe_async_tasks_data_return(DataFileDir=DataFileDir,DataFile=DataFile,UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,ReturnAccountId=ReturnAccountId,ServiceCode=ServiceCode)
         if int(code) == 0:
@@ -212,6 +213,7 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
             else:
                 time.sleep(5)
         n = n + 1
+    return """code：%s""" % (code)
 
 #定义oe同步数据
 @app.task(rate_limit='1000/m')
@@ -341,6 +343,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",Da
 def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
+    code = 9999
     while set_true:
       code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token
                           ,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag)
@@ -361,12 +364,14 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
           else:
             time.sleep(5)
       n = n + 1
+    return """code：%s""" % (code)
 
 #处理分页
 @app.task(rate_limit='1000/m')
 def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
+    code = 9999
     while set_true:
       code = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
                             ServiceCode=ServiceCode,DataFileDir=DataFileDir,
@@ -391,12 +396,14 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           else:
             time.sleep(5)
       n = n + 1
+    return """code：%s""" % (code)
 
 #创建异步任务
 @app.task(rate_limit='1000/m')
 def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",MediaType="",TaskExceptionFile="",TaskFlag=""):
     set_true = True
     n = 0
+    code = 9999
     while set_true:
         code = set_oe_create_async_tasks(DataFileDir=DataFileDir, DataFile=DataFile, UrlPath=UrlPath, ParamJson=ParamJson, Token=Token,TaskFlag=TaskFlag,
                                          ReturnAccountId=ReturnAccountId, ServiceCode=ServiceCode, InterfaceFlag=InterfaceFlag, MediaType=MediaType)
@@ -415,12 +422,14 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
             else:
                 time.sleep(5)
         n = n + 1
+    return """code：%s""" % (code)
 
 #定义oe任务状态
 @app.task(rate_limit='1000/m')
 def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",MediaType="",TaskFlag="",TaskExceptionFile=""):
     set_true = True
     n = 0
+    code = 9999
     while set_true:
         code = set_oe_status_async_tasks(ExecDate=ExecDate,DataFileDir=DataFileDir,DataFile=DataFile,
                                          UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,ReturnAccountId=ReturnAccountId,
@@ -447,6 +456,7 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
             else:
                 time.sleep(5)
         n = n + 1
+    return """code：%s""" % (code)
 
 
 
@@ -456,6 +466,7 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
 def get_not_page_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
+    code = 9999
     while set_true:
       code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token
                           ,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag)
@@ -476,6 +487,7 @@ def get_not_page_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccoun
           else:
             time.sleep(5)
       n = n + 1
+    return """code：%s""" % (code)
 
 #处理分页-腾讯，便于速度控制
 @app.task(rate_limit='1000/m')
@@ -483,6 +495,7 @@ def get_pages_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
               ,DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
+    code = 9999
     while set_true:
       code = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
                             ServiceCode=ServiceCode,DataFileDir=DataFileDir,
@@ -507,3 +520,4 @@ def get_pages_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
           else:
             time.sleep(5)
       n = n + 1
+    return """code：%s"""%(code)
