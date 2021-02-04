@@ -16,7 +16,7 @@ class BeelineNoSqlDB(BaseDB):
         self.metastore_uris = metastore_uris
         print("beeline NoSql DB:" + self.metastore_uris)
         #modify by wangsong（source /etc/profile）
-        self.conn = "/opt/hive/apache-hive-2.1.1-bin/bin/beeline -u 'jdbc:hive2://%s:%s' -n %s -d org.apache.hive.jdbc.HiveDriver -p '%s'" % (self.metastore_uris, int(self.port),self.user, self.password)
+        self.conn = "/opt/soft/hive/apache-hive-2.1.1-bin/bin/beeline -u 'jdbc:hive2://%s:%s' -n %s -d org.apache.hive.jdbc.HiveDriver -p '%s'" % (self.metastore_uris, int(self.port),self.user, self.password)
         #print(self.conn,"#########################################=======================")
         # self.conn = "/usr/bin/beeline -u 'jdbc:hive2://%s/' -n %s " % (self.metastore_uris, self.user)
 

@@ -22,7 +22,8 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
         'depends_on_past': False,
         'priority_weight': 10000,
         'retries': 0,
-        'start_date': airflow.utils.dates.days_ago(2)
+        'start_date': airflow.utils.dates.days_ago(2),
+        'queue': 'airflow',
     }
     dag = DAG(
         dag_id=dag_id,
