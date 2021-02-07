@@ -31,6 +31,10 @@ hostname = socket.gethostname()
 conf = Conf().conf
 oe_interface_data_dir = conf.get("Interface", "oe_interface_data_home")
 tc_interface_data_dir = conf.get("Interface", "tc_interface_data_home")
+oe_retry_code = [int(x) for x in conf.get("Oe_Code", "retry_code").split(",")]
+tc_retry_code = [int(x) for x in conf.get("Tc_Code", "retry_code").split(",")]
+oe_as_sucess_code = [int(x) for x in conf.get("Oe_Code", "as_sucess_code").split(",")]
+tc_as_sucess_code = [int(x) for x in conf.get("Tc_Code", "as_sucess_code").split(",")]
 
 def build_url(path="", netloc="",query=""):
     scheme= "https"
@@ -743,14 +747,13 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
     try:
       if TargetFlag == 'oe':
          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-         if int(rsp_data["code"]) in [40102,40103,40104,40105,40107]:# token无效重试
+         if int(rsp_data["code"]) in oe_retry_code:# token无效重试
              token = get_oe_account_token(ServiceCode=ServiceCode)
              rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
       elif TargetFlag =='tc':
-         #token = get_oe_account_token(ServiceCode=ServiceCode)
          rsp_data = get_sync_data_tc(Access_Token=Token, ParamJson=ParamJson, UrlPath=UrlPath)
-         if int(rsp_data["code"]) in [11000, 11002, 11004, 11005, 30101, 30102]:  # token无效重试
+         if int(rsp_data["code"]) in tc_retry_code:  # token无效重试
              token = get_oe_account_token(ServiceCode=ServiceCode)
              rsp_data = get_sync_data_tc(Access_Token=token, ParamJson=ParamJson, UrlPath=UrlPath)
 
@@ -787,12 +790,8 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
               else:
                   time.sleep(2)
           n = n + 1
-      elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
-          code = 0
-          data = str(code)
       else:
-          code = 1
-          data = str(code) + str(rsp_data["message"]).replace(" ","")
+          data = str(code) +" "+ str(rsp_data["message"]).replace(" ","")
     except Exception as e:
         code = 1
         data = "请求失败：%s"%(str(e).replace("\n","").replace(" ","").replace("""\"""",""))
@@ -815,14 +814,14 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     try:
       if TargetFlag == 'oe':
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
-          if int(rsp_data["code"]) in [40102,40103,40104,40105,40107]:#token无效重试
+          if int(rsp_data["code"]) in oe_retry_code:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=token)
 
       elif TargetFlag =='tc':
           #token = get_oe_account_token(ServiceCode=ServiceCode)
           rsp_data =  get_sync_data_tc(Access_Token=Token,ParamJson=ParamJson,UrlPath=UrlPath)
-          if int(rsp_data["code"]) in [11000,11002,11004,11005,30101,30102]:#token无效重试
+          if int(rsp_data["code"]) in tc_retry_code:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
       code = rsp_data["code"]
@@ -867,7 +866,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
              page = rsp_data["data"]["page_info"]["total_page"]
          if page == 0:
             data = "page=0"
-      elif (TargetFlag =='oe' and int(code) in [40002, 40105, 40104]) or (TargetFlag =='tc' and int(code) in [12200,12201]):
+      elif (TargetFlag =='oe' and int(code) in oe_as_sucess_code) or (TargetFlag =='tc' and int(code) in tc_as_sucess_code):
           remark = "正常"
           data = str(code)
       else:
