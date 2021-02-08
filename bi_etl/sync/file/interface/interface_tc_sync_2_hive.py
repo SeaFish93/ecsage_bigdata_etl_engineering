@@ -608,8 +608,9 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
                                                        )
                        os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file + ".%s" % (i)))
                        print("===========================")
+                       values = param_json["filtering"][0]["values"][0]
                        param_json["filtering"][0]["values"] = []
-                       values_list.append(param_json["filtering"][0]["values"][0])
+                       param_json["filtering"][0]["values"].append(values)
                     nn = nn + 1
                     account_id = data[3]
                 else:
