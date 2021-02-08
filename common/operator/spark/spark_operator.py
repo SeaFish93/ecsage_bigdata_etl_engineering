@@ -9,7 +9,7 @@ import sys
 from ecsage_bigdata_etl_engineering.common.base.base_operator import BaseDB
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 
-os.environ['SPARK_HOME'] = "/opt/spark"
+os.environ['SPARK_HOME'] = "/opt/soft/spark"
 os.environ['PYSPARK_SUBMIT_ARGS'] = "--master yarn pyspark-shell"
 sys.path.append(os.path.join(os.environ['SPARK_HOME'], "python"))
 sys.path.append(os.path.join(os.environ['SPARK_HOME'], "python/lib/py4j-0.10.7-src.zip"))
