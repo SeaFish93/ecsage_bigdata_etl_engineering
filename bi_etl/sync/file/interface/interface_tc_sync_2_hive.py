@@ -13,6 +13,7 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page_tc as get_not_page_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages_tc as get_pages_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_targeting_pages_tc as get_targeting_pages_tc_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
@@ -586,21 +587,46 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
            print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           values_list = []
+           account_id = ""
+           nn = 1
            for data in datas:
-             param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
+             param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\"""").replace("EQUALS","IN"))))
              if IsPage == "Y":
-                status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
+                if InterfaceFlag.split(".")[0] in ["day_tc_sync_targeting_tag_reports_region_travel_in"]:
+                    if account_id == data[3] or nn == 1:
+                       values_list.append(param_json["filtering"][0]["values"][0])
+                       print(values_list,"###########")
+                       param_json["filtering"][0]["values"] = []
+                       param_json["filtering"][0]["values"].append(values_list)
+                       print(param_json, "###########")
+                    else:
+                        values_list = []
+                        values_list.append(param_json["filtering"][0]["values"][0])
+                        pass
+                       #######status_id = get_targeting_pages_tc_celery.delay(UrlPath=data[0], ParamJson=param_json, ServiceCode=data[2],
+                       #######                                Token=data[5],
+                       #######                                DataFileDir=DataFileDir, DataFile=DataFile,
+                       #######                                ReturnAccountId=data[3],
+                       #######                                TaskFlag=data[4], PageTaskFile=PageTaskFile,
+                       #######                                TaskExceptionFile=ExceptionFile
+                       #######                                , Pagestyle=Pagestyle, ArrayFlag=ArrayFlag, TargetFlag="tc"
+                       #######                                )
+                    nn = nn + 1
+                else:
+                   status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
                                                      DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
                                                      TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile
-                                                   ,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag="tc"
+                                                     ,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag="tc"
                                                     )
+                   os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file + ".%s" % (i)))
              else:
                 status_id = get_not_page_celery.delay(UrlPath=data[0], ParamJson=param_json,Token=data[5],
                                                       ServiceCode=data[2], ReturnAccountId=data[3],
                                                       TaskFlag=data[4], DataFileDir=DataFileDir,
                                                       DataFile=DataFile, TaskExceptionFile=ExceptionFile,ArrayFlag=ArrayFlag,TargetFlag="tc"
                                                     )
-             os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
+                os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file + ".%s" % (i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
            wait_for_celery_status(StatusList=celery_task_id)
            delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
