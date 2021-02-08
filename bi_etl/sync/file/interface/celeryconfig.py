@@ -40,6 +40,7 @@ CELERY_DEFAULT_EXCHANGE = 'default'
 CELERY_DEFAULT_ROUTING_KEY = 'default'
 CELERY_ROUTES = {
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_not_page_tc': {'queue': 'tc'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_targeting_pages_tc': {'queue': 'tc'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages_tc': {'queue': 'tc'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages': {'queue': 'oe'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_not_page': {'queue': 'oe'},

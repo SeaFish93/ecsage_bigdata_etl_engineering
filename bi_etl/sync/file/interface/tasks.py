@@ -490,8 +490,42 @@ def get_not_page_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccoun
     return """code：%s""" % (code)
 
 #处理分页-腾讯，便于速度控制
-@app.task(rate_limit='10/m')
+@app.task(rate_limit='1000/m')
 def get_pages_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
+              ,DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
+    set_true = True
+    n = 0
+    code = 9999
+    while set_true:
+      time.sleep(30)
+      code = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
+                            ServiceCode=ServiceCode,DataFileDir=DataFileDir,
+                            DataFile=DataFile,ReturnAccountId=ReturnAccountId,
+                            TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag
+                           )
+      if TargetFlag == "tc":
+          sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
+      else:
+          sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
+      print(sucess_code)
+      if int(code) in sucess_code:
+          set_true = False
+      else:
+          if n > 2:
+            print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
+            for i in range(100):
+              status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
+              if int(status) == 0:
+                 break;
+            set_true = False
+          else:
+            time.sleep(5)
+      n = n + 1
+    return """code：%s"""%(code)
+
+#处理分页-腾讯，便于速度控制
+@app.task(rate_limit='300/m')
+def get_targeting_pages_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
               ,DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0

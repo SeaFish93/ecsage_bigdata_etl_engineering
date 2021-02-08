@@ -581,6 +581,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
           select distinct %s
           from %s.%s a
           where interface_flag = '%s'
+          order by account_id desc
         """% (columns,db_name,table_name,InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
