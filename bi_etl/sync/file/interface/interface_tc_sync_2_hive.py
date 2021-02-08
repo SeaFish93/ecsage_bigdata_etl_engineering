@@ -575,7 +575,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
     table_name = "oe_sync_exception_tasks_interface_bak"
     save_exception_tasks(AsyncAccountDir=DataFileDir,ExceptionFile=ExceptionFile,DbName=db_name,TableName=table_name,Columns=columns)
     #
-    n = 10
+    n = 30
     for i in range(n):
         sql = """
           select distinct %s
@@ -616,10 +616,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
            ok, ex_datas = etl_md.get_all_rows(ex_sql)
            if ex_datas is not None and len(ex_datas) > 0:
                print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-               if i == 0:
-                 time.sleep(180)
-               else:
-                 time.sleep(120)
+               time.sleep(20)
     ex_sql = """
          select %s
          from %s.%s a
