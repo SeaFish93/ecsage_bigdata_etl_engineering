@@ -614,6 +614,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
                        #######                                , Pagestyle=Pagestyle, ArrayFlag=ArrayFlag, TargetFlag="tc"
                        #######                                )
                     nn = nn + 1
+                    account_id = data[3]
                 else:
                    status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
                                                      DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
