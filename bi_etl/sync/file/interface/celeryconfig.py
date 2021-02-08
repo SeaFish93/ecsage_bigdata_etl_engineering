@@ -18,6 +18,7 @@ CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'pickle'
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
+CELERY_ANNOTATIONS = {'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages_tc':{'rate_limit':'10/s'}}
 #CELERY_RESULT_DB_SHORT_LIVED_SESSIONS = False
 CELERY_ENABLE_UTC = False
 TIME_ZONE = 'Asia/Shanghai'
