@@ -601,6 +601,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
                        param_json["filtering"][0]["values"].append(values_list)
                        print(param_json, "###########")
                     else:
+                        print("===========================")
                         values_list = []
                         values_list.append(param_json["filtering"][0]["values"][0])
                         pass
