@@ -490,13 +490,14 @@ def get_not_page_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccoun
     return """code：%s""" % (code)
 
 #处理分页-腾讯，便于速度控制
-@app.task(task_default_rate_limit='10/m')
+@app.task(rate_limit='10/m')
 def get_pages_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
               ,DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
     code = 9999
     while set_true:
+      time.sleep(30)
       code = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
                             ServiceCode=ServiceCode,DataFileDir=DataFileDir,
                             DataFile=DataFile,ReturnAccountId=ReturnAccountId,
