@@ -31,9 +31,9 @@ CELERY_ACKS_LATE=True
 # worker进程崩掉之后拒绝确认
 CELERY_REJECT_ON_WORKER_LOST=True
 CELERY_QUEUES = (
-Queue('report_test', Exchange('report_test'), routing_key='report_test', consumer_arguments={'x-priority': 10}),
-Queue('oe_test', Exchange('oe_test'), routing_key='oe_test', consumer_arguments={'x-priority': 100}),
-Queue('tc_test', Exchange('tc_test'), routing_key='tc_test', consumer_arguments={'x-priority': 100})
+Queue('report', Exchange('report'), routing_key='report', consumer_arguments={'x-priority': 10}),
+Queue('oe', Exchange('oe'), routing_key='oe', consumer_arguments={'x-priority': 100}),
+Queue('tc', Exchange('tc'), routing_key='tc', consumer_arguments={'x-priority': 100})
 )
 CELERY_DEFAULT_QUEUE = 'default'
 CELERY_DEFAULT_EXCHANGE = 'default'
