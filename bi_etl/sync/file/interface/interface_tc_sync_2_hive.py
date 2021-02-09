@@ -591,9 +591,10 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
            account_id = ""
            nn = 1
            for data in datas:
-             param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\"""").replace("EQUALS","IN"))))
+             param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
              if IsPage == "Y":
                 if InterfaceFlag.split(".")[0] in ["day_tc_sync_targeting_tag_reports_region_travel_in"]:
+                       #param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""", """\"""").replace("EQUALS", "IN"))))
                     ##if account_id == data[3] or nn == 1:
                     ##   if param_json["filtering"][0]["values"][0] not in param_json["filtering"][0]["values"]:
                     ##      param_json["filtering"][0]["values"].append(param_json["filtering"][0]["values"][0])
