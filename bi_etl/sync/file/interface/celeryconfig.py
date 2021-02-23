@@ -1,6 +1,6 @@
 from kombu import Queue, Exchange
 
-BROKER_URL = 'amqp://admin:1qazXSW2@192.168.30.130:9549//sync_broker'
+BROKER_URL = 'amqp://sync:1qazXSW2@192.168.30.130:9549//sync_brokers'
 #CELERY_RESULT_BACKEND = 'file:///data/ecsage_data/celery/sync_backend'
 CELERY_RESULT_BACKEND = 'db+mysql://root:06D567130266EB33098B9F@192.168.30.5:13306/sync'
 #use json
@@ -11,7 +11,7 @@ CELERY_RESULT_EXPIRES = 60*60*24
 CELERYD_MAX_TASKS_PER_CHILD = 5
 #celery worker amount
 #CELERY_CONCURRENCY = 20
-CELERYD_CONCURRENCY = 300
+CELERYD_CONCURRENCY = 10
 #the amount that a celery worker get task from broker each time
 CELERYD_PREFETCH_MULTIPLIER = 4
 CELERY_TASK_SERIALIZER = 'pickle'
@@ -22,7 +22,7 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 CELERY_ENABLE_UTC = False
 TIME_ZONE = 'Asia/Shanghai'
 CELERY_TIMEZONE = TIME_ZONE
-
+#CELERY_RESULT_DB_SHORT_LIVED_SESSIONS = False
 BROKER_HEARTBEAT = 65535
 # 任务失败或超时自动确认，默认为True
 CELERY_ACKS_ON_FAILURE_OR_TIMEOUT=False
@@ -40,6 +40,7 @@ CELERY_DEFAULT_EXCHANGE = 'default'
 CELERY_DEFAULT_ROUTING_KEY = 'default'
 CELERY_ROUTES = {
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_not_page_tc': {'queue': 'tc'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_targeting_pages_tc': {'queue': 'tc'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages_tc': {'queue': 'tc'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages': {'queue': 'oe'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_not_page': {'queue': 'oe'},
