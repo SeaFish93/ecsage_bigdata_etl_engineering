@@ -48,6 +48,11 @@ def get_web_interface_data(**kwargs):
                 'page_size':100
                }
     }
+    return:
+     {"result": {"data":{报表字段}},
+      "state": "SUCCESS", #已接到请求，并处理成功，但不代表处理接口业务逻辑成功
+      "task-id": "ced6fd57-419e-4b8e-8d99-0770be717cb4"
+     }
     """
     data = execute(InterfaceParamsInfo=kwargs)
     return data
