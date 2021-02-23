@@ -48,6 +48,11 @@ def get_web_interface_data(**kwargs):
                 'page_size':100
                }
     }
+    return:
+     {"result": {"data":{报表字段}},
+      "state": "SUCCESS", #已接到请求，并处理成功，但不代表处理接口业务逻辑成功
+      "task-id": "ced6fd57-419e-4b8e-8d99-0770be717cb4"
+     }
     """
     data = execute(InterfaceParamsInfo=kwargs)
     return data
@@ -497,6 +502,7 @@ def get_pages_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
     n = 0
     code = 9999
     while set_true:
+      time.sleep(30)
       code = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
                             ServiceCode=ServiceCode,DataFileDir=DataFileDir,
                             DataFile=DataFile,ReturnAccountId=ReturnAccountId,
