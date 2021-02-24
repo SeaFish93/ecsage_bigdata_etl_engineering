@@ -43,13 +43,19 @@ def get_test(**kwargs):
 def get_web_interface_data(**kwargs):
     """
     元数据表：web_interface_info
-    {'kwargs': {'interface_id':'2',
+    param:
+      {'kwargs': {'interface_id':'2',
                 'page': 1,
                 'page_size':100
                }
-    }
+      }
     return:
-     {"result": {"data":{报表字段}},
+     {"result": {"code": 0,  #请求接口成功，并返回数据，若code非0，则请求失败，接口使用方最好通过这个来判断接口访问是否成功
+                 "msg": "OK",
+                 "data": {"list": [{"returns_account_id": "1688019616093198","cost": "0.0300"}]},
+                 "request_begin_time": "2021-02-24 15:22:45",
+                 "request_end_time": "2021-02-24 15:22:45"
+                },
       "state": "SUCCESS", #已接到请求，并处理成功，但不代表处理接口业务逻辑成功
       "task-id": "ced6fd57-419e-4b8e-8d99-0770be717cb4"
      }
