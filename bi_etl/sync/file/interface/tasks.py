@@ -43,11 +43,12 @@ def get_test(**kwargs):
 def get_web_interface_data(**kwargs):
     """
     元数据表：web_interface_info
-    {'kwargs': {'interface_id':'2',
+    param:
+      {'kwargs': {'interface_id':'2',
                 'page': 1,
                 'page_size':100
                }
-    }
+      }
     return:
      {"result": {"code": 0,
                  "msg": "OK",
