@@ -50,7 +50,7 @@ def get_web_interface_data(**kwargs):
                }
       }
     return:
-     {"result": {"code": 0,
+     {"result": {"code": 0,  #请求接口成功，并返回数据，若code非0，则请求失败，接口使用方最好通过这个来判断接口访问是否成功
                  "msg": "OK",
                  "data": {"list": [{"returns_account_id": "1688019616093198","cost": "0.0300"}]},
                  "request_begin_time": "2021-02-24 15:22:45",
