@@ -49,7 +49,12 @@ def get_web_interface_data(**kwargs):
                }
     }
     return:
-     {"result": {"data":{报表字段}},
+     {"result": {"code": 0,
+                 "msg": "OK",
+                 "data": {"list": [{"returns_account_id": "1688019616093198","cost": "0.0300"}]},
+                 "request_begin_time": "2021-02-24 15:22:45",
+                 "request_end_time": "2021-02-24 15:22:45"
+                },
       "state": "SUCCESS", #已接到请求，并处理成功，但不代表处理接口业务逻辑成功
       "task-id": "ced6fd57-419e-4b8e-8d99-0770be717cb4"
      }
