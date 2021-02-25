@@ -68,7 +68,7 @@ def execute(InterfaceParamsInfo=""):
     else:
        #分页
        #获取总条数
-       query_total_sql = """%s %s %s"""%("select count(1) from(",exec_sql," ) aa")
+       query_total_sql = """%s %s %s"""%("select count(1) from(",exec_sql," ) tmp")
        query_total_ok, query_total, columns_list = exec_session.get_all_rows(sql=query_total_sql)
        if query_total_ok is False:
            return get_interface_requset_param_exception(code=40009, msg="SYS_DATA_ERROR",request_begin_time=request_begin_time,request_end_time=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime()))
