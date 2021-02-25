@@ -43,10 +43,15 @@ def get_test(**kwargs):
 def get_web_interface_data(**kwargs):
     """
     元数据表：web_interface_info
-    param:
+    param page:
       {"kwargs": {"interface_id":"xxx",
                   "page": 1,
                   "page_size":100
+               }
+      }
+
+    param not page:
+      {"kwargs": {"interface_id":"xxx"
                }
       }
 
@@ -74,6 +79,10 @@ def get_web_interface_data(**kwargs):
       "state": "SUCCESS", #已接到请求，并处理成功，但不代表处理接口业务逻辑成功
       "task-id": "ced6fd57-419e-4b8e-8d99-0770be717cb4"
      }
+     mysql、impala：实现分页案例：select * from snap.etl_metadb_dags_info  order by id limit 20 offset 0
+                  （1）order by必要指定字段，字段类型任意；
+                  （2）limit必要指定，返回条数
+                  （3）offset必要指定，返回从第几条开始，偏移量为0开始
     """
     data = execute(InterfaceParamsInfo=kwargs)
     return data
