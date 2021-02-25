@@ -56,7 +56,6 @@ def execute(InterfaceParamsInfo=""):
         return get_interface_requset_param_exception(code=40002,msg="SYS_DATA_ERROR",request_begin_time=request_begin_time,request_end_time=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
     # 获取执行sql
     try:
-      InterfaceParamsInfo["is_page"] = is_page
       exec_sql = module.SQL(InterfaceParamsInfo=InterfaceParamsInfo)
     except Exception as e:
         print("处理接口组装SQL异常错误日志：%s" % (str(e)))
