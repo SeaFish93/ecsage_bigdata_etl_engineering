@@ -73,7 +73,7 @@ def execute(InterfaceParamsInfo=""):
        if query_total_ok is False:
            return get_interface_requset_param_exception(code=40009, msg="SYS_DATA_ERROR",request_begin_time=request_begin_time,request_end_time=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime()))
        #获取总页数
-       total_page = query_total/interface_info["page_size"]
+       total_page = int(query_total[0][0])/interface_info["page_size"]
        if total_page % interface_info["page_size"] > 0:
            total_page = total_page + 1
        #分页数据
@@ -97,6 +97,10 @@ def execute(InterfaceParamsInfo=""):
       interface_data["msg"] = "OK"
       interface_data["data"] = {}
       interface_data["data"]["list"] = data
+      if int(is_page) == 1:
+          interface_data["page"] = int(interface_info["page"])
+          interface_data["page_size"] = int(interface_info["page_size"])
+          interface_data["total_page"] = int(total_page)
       interface_data["request_begin_time"] = request_begin_time
       interface_data["request_end_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     except Exception as e:
