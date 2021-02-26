@@ -200,6 +200,29 @@ class EtlMetaDataSQL():
     where status = 1
       and dag_id = '%s'
   """ % ("##{dag_id}##")
+#获取hive_mysql任务
+  get_interface_hive_mysql_sql = """
+    select task_id
+           ,tasks_model_id
+           ,dag_id
+           ,interface_module
+           ,source_handle
+           ,source_db
+           ,source_table
+           ,target_handle
+           ,target_db
+           ,sync_level
+           ,target_table
+           ,export_mode
+           ,increment_mode
+           ,increment_columns
+           ,filter_condition
+           ,column_identical
+           ,export_columns
+    from metadb.sync_tasks_hive_mysql
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
 
   #删除etl作业重跑每天条数记录表
   delete_etl_job_rows_sql = """
