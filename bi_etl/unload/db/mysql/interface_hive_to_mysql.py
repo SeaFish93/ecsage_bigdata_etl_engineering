@@ -59,9 +59,9 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
   os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
   mysql_session = set_db_session(SessionType="mysql", SessionHandler=target_handle)
-  if int(column_identical) == 0:
+  if int(column_identical) == 1:
       export_columns = get_create_mysql_table_columns(MysqlSession=mysql_session, DB=target_db, Table=target_table)
-  elif int(column_identical) == 1:
+  elif int(column_identical) == 0:
       export_columns = TaskInfo[16]
 
   if int(increment_mode) == 0:
