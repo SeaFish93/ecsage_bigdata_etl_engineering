@@ -53,8 +53,6 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
   increment_columns = TaskInfo[13]
   filter_condition = TaskInfo[14]
   column_identical = TaskInfo[15]
-  if filter_condition.strip() == '':
-      filter_condition = ''
   filter_sql = ""
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""chmod -R 777 %s""" % (local_dir))
