@@ -82,7 +82,6 @@ for dag_info in get_dags:
           #配置跑批任务属性
           task_id = tasks_info[0]
           print(task_id,"@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!================================")
-          level = tasks_info[9]
           tasks.append({"task_id": task_id, "batch_type": batch_type})
           task = locals()
           #定义task对象
@@ -91,7 +90,7 @@ for dag_info in get_dags:
           task['%s' % (task_id)] = PythonOperator(task_id=task_id,
                                          python_callable=hive_to_mysql_main,
                                          provide_context=True,
-                                         op_args=(tasks_info, level,),
+                                         op_args=(tasks_info,),
                                          dag=dag)
        for task_name in tasks:
           if task_name["batch_type"] == "day":
