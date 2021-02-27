@@ -110,7 +110,7 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",DbName="",TableName="",Colum
         if DataFile.split("/")[-1] in files:
             print(files, "###############################################")
             insert_sql = """
-                  load data local infile '%s' into table %s.%s fields terminated by ' ' lines terminated by '\\n' (%s)
+                  load data local infile '%s' into table %s.%s fields terminated by '	' lines terminated by '\\n' (%s)
                """ % (AsyncAccountFile + "/" + files,DbName,TableName,Columns)
             while set_run:
               ok = etl_md.local_file_to_mysql(sql=insert_sql)
