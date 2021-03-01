@@ -84,7 +84,7 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
                   from %s.%s 
                   where 1 = 1 
                   %s
-                 -- limit 1 
+                 -- limit 1   
                   """ % (export_columns, source_db, source_table, filter_condition)
       print("过滤sql：%s" % (filter_sql))
   ok = BeelineSession.execute_sql_result_2_local_file(sql=filter_sql,file_name=tmp_data_task_file)
