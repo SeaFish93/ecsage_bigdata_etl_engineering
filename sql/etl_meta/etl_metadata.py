@@ -200,6 +200,40 @@ class EtlMetaDataSQL():
     where status = 1
       and dag_id = '%s'
   """ % ("##{dag_id}##")
+
+# 获取tc异步任务
+  get_interface_tc_async_tasks_sql = """
+    select id
+           ,media_type
+           ,task_id
+           ,dag_id
+           ,task_type
+           ,source_handle
+           ,source_db
+           ,source_table
+           ,target_handle
+           ,target_db
+           ,target_table
+           ,interface_group_by
+           ,key_columns
+           ,select_exclude_columns
+           ,status
+           ,comments
+           ,create_user
+           ,update_user
+           ,create_time
+           ,update_time
+           ,`level`
+           ,interface_fields
+           ,is_filter_account
+           ,time_line
+           ,granularity
+
+    from metadb.interface_tc_async_tasks_info
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
+
 #获取hive_mysql任务
   get_interface_hive_mysql_sql = """
     select task_id
