@@ -254,7 +254,6 @@ def get_tc_async_tasks_status(AirflowDagId="", AirflowTaskId="", MediaType="",Ta
         load_data_mysql_tab(AsyncAccountFile=local_dir, DataFile=data_file,
                         TableName="tc_valid_account_interface", Columns=columns)
 
-
 # 创建oe异步任务
 def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
     interface_flag = TaskInfo[20]
