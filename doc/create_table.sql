@@ -339,6 +339,40 @@ inner join metadb.dags_info b
 on a.dag_id = b.dag_id
 where b.status = 1
   and a.status = 1
+union all
+select
+	`a`.`dag_id` as `dag_id`,
+	`a`.`task_id` as `task_id`,
+	`b`.`schedule_interval` as `schedule_interval`
+from
+	(
+		metadb.`interface_tc_async_tasks_info` `a`
+		join metadb.`dags_info` `b` on (
+			(`a`.`dag_id` = `b`.`dag_id`)
+		)
+	)
+where
+	(
+		(`b`.`status` = 1)
+		and (`a`.`status` = 1)
+	)
+union all
+select
+	`a`.`dag_id` as `dag_id`,
+	`a`.`task_id` as `task_id`,
+	`b`.`schedule_interval` as `schedule_interval`
+from
+	(
+		metadb.`sync_tasks_hive_mysql` `a`
+		join metadb.`dags_info` `b` on (
+			(`a`.`dag_id` = `b`.`dag_id`)
+		)
+	)
+where
+	(
+		(`b`.`status` = 1)
+		and (`a`.`status` = 1)
+	)
 ;
 
 create table metadb.etl_tasks_info
@@ -865,5 +899,32 @@ CREATE TABLE `interface_sync_tasks_info` (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
   PRIMARY KEY (`task_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='同步接口作业配置表'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='同步接口作业配置表';
+
+CREATE TABLE `sync_tasks_hive_mysql` (
+  `task_id` varchar(100) NOT NULL COMMENT 'task唯一标识，格式：【业务名】_【源库名】_【源表名】,字母则为小写',
+  `tasks_model_id` varchar(100) NOT NULL COMMENT 'task唯一标识，格式：【业务名】_【源库名】_【源表名】,字母则为小写',
+  `dag_id` varchar(500) DEFAULT NULL,
+  `interface_module` varchar(200) NOT NULL COMMENT '接口模块',
+  `source_handle` varchar(200) DEFAULT NULL COMMENT '连接来源平台handle',
+  `source_db` varchar(20) DEFAULT NULL COMMENT '来源库',
+  `source_table` varchar(200) DEFAULT NULL COMMENT '来源表',
+  `target_handle` varchar(200) DEFAULT NULL COMMENT '连接目标平台handle',
+  `target_db` varchar(20) DEFAULT NULL COMMENT '目标库',
+  `sync_level` varchar(20) NOT NULL COMMENT '同步层级',
+  `target_table` varchar(200) DEFAULT NULL COMMENT '目标表',
+  `export_mode` varchar(20) DEFAULT NULL COMMENT '导出方式(增量1全量0)',
+  `increment_mode` varchar(20) DEFAULT NULL COMMENT '增量方式(年0月1日2)',
+  `increment_columns` varchar(20) DEFAULT NULL COMMENT '增量字段',
+  `filter_condition` varchar(200) DEFAULT NULL COMMENT '过滤条件',
+  `column_identical` int(2) DEFAULT NULL COMMENT '是否按照mysql 表结构导出(mysql表结构和hive表结构一样),1：一致,0:不一致',
+  `export_columns` varchar(2000) DEFAULT NULL COMMENT '如不一致,导出字段',
+  `status` int(2) NOT NULL DEFAULT '0' COMMENT '是否有效，1：有效，0：无效',
+  `key_columns` varchar(2000) DEFAULT NULL COMMENT '目标表主键，多个字段以英文逗号分隔',
+  `create_user` varchar(32) DEFAULT NULL COMMENT '创建者，邮箱@前缀',
+  `update_user` varchar(32) DEFAULT NULL COMMENT '最后更新者，邮箱@前缀',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳',
+  PRIMARY KEY (`task_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='hive同步mysql作业配置表';
 

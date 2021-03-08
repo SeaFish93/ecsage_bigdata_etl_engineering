@@ -30,3 +30,23 @@ def get_oe_account_token(ServiceCode=""):
       n = n + 1
     return token_data
 
+def get_tc_account_token(ServiceCode=""):
+    headers = {'Content-Type': "application/json", "Connection": "close"}
+    token_url = """http://token.ecsage.net/service-media-token/rest/getToken?code=%s""" % (ServiceCode)
+    set_true = True
+    n = 1
+    token_data = None
+    while set_true:
+      try:
+        token_data_list = requests.post(token_url,headers=headers).json()
+        token_data = token_data_list["t"]["token"]
+        set_true = False
+      except Exception as e:
+        if n > 3:
+            os.system("""echo "错误子账户token：%s %s">>/tmp/account_token_token.log """%(ServiceCode,datetime.datetime.now()))
+            set_true = False
+        else:
+            time.sleep(2)
+      n = n + 1
+    return token_data
+
