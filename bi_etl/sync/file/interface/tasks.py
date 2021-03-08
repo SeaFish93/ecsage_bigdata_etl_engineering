@@ -527,10 +527,6 @@ def get_not_page_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccoun
       n = n + 1
     return """code：%s""" % (code)
 
-def get_pages_tc_slow(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag="",TargetFlag="oe"):
-    return ""
-def get_not_page_tc_slow(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag="",TargetFlag="oe"):
-    return ""
 #处理分页-腾讯，便于速度控制
 @app.task(rate_limit='1000/m')
 def get_pages_tc(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
