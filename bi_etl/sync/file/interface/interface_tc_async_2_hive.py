@@ -376,14 +376,14 @@ def get_tc_async_tasks_add(AirflowDagId="", AirflowTaskId="", TaskInfo="", Media
        (media_type,token_data,service_code,account_id,task_id,task_name,level)
        select a.media_type,a.token_code,a.service_code
               ,a.account_id,'0' as task_id,'999999' as task_name,'%s' as level
-       from metadb.media_advertiser a
+       from (select account_id,mt from metadb.adgroup_info group by account_id,mt) a
        left join metadb.tc_async_add_task b
        on a.account_id = b.account_id
        and a.service_code = b.service_code
        and b.media_type = '%s'
        and b.airflow_task_id = '%s.%s'
        where b.account_id is null
-         and a.media_type = '%s'
+         and a.mt = '%s'
     """ % (level,media_type,AirflowDagId,AirflowTaskId,media_type)
     etl_md.execute_sql(sql)
 
@@ -947,8 +947,8 @@ def get_local_file_2_hive(MediaType="", TargetHandleHive="", TargetHandleBeeline
           from(select a.request_data
                from %s a 
               ) tmp
-          where trim(request_data) != 'empty result'
-          and trim(request_data) not like 'trace_id#&#ds{%s'
+          where trim(request_data) != 'empty result' and request_data is not null and  trim(request_data) != ' '
+          and trim(request_data) not like 'trace_id#&#ds{%s' and trim(request_data) != ''
      ) tmp1
      ;
     """ % (etl_mid_table, ExecDate, MediaType, select_colums.replace(",", "", 1), etl_mid_tmp_table, "%")

@@ -46,7 +46,7 @@ def main(TaskInfo,Level="",**kwargs):
     array_flag = TaskInfo[28]
     custom_set_parameter = TaskInfo[37]
     param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
-    ex_part_field_templates = ['time_line', 'is_deleted']#补充分区字段,目前只分区到3级，列表中互斥
+    ex_part_field_templates = ['time_line', 'is_deleted','fund_type']#补充分区字段,目前只分区到3级，列表中互斥
     ex_part_list = list(set(ex_part_field_templates).intersection(set(param_json.keys())))
     ex_part_field = ex_part_list if ex_part_list else ""
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
