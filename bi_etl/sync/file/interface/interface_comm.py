@@ -21,6 +21,7 @@ from six.moves.urllib.parse import urlencode, urlunparse
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_tc_account_token
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_Logger import LogManager
 from ecsage_bigdata_etl_engineering.common.base.def_table_struct import def_ods_structure
@@ -824,6 +825,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           if int(rsp_data["code"]) in tc_retry_code:#token无效重试
               token = get_oe_account_token(ServiceCode=ServiceCode)
               rsp_data =  get_sync_data_tc(Access_Token=token,ParamJson=ParamJson,UrlPath=UrlPath)
+          del ParamJson["access_token"], ParamJson["timestamp"], ParamJson["nonce"]
       code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
@@ -1155,7 +1157,7 @@ def get_data_2_snap(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",
 
 
 #腾讯##########################腾讯##########################腾讯##########################腾讯##########################腾讯#########################
-#腾讯同步数据API @Time 2021-01-14
+#腾讯数据API @Time 2021-01-14
 def get_sync_data_tc(Access_Token="",ParamJson="",UrlPath="daily_reports/get"):
     url = 'https://api.e.qq.com/v1.3/' + UrlPath
 
@@ -1170,3 +1172,208 @@ def get_sync_data_tc(Access_Token="",ParamJson="",UrlPath="daily_reports/get"):
     r = requests.get(url, params=ParamJson)
     print("----------------------------------")
     return r.json()
+
+def get_tc_async_tasks_data_return(Access_Token="",ParamJson="",UrlPath=""):
+    url = 'https://dl.e.qq.com/v1.3/' + UrlPath
+
+    common_parameters = {
+        'access_token': Access_Token,
+        'timestamp': int(time.time()),
+        'nonce': str(time.time()) + str(random.randint(0, 999999)),
+    }
+    ParamJson.update(common_parameters)
+    ParamJson = {k: v if isinstance(v, string_types) else json.dumps(v) for k, v in ParamJson.items()}
+    print("==================================")
+    r = requests.get(url, params=ParamJson)
+    print("----------------------------------")
+    return r.text
+
+#腾讯异步数据API @Time 2021-03-02
+def get_async_data_tc(Token="",ParamJson="",UrlPath="async_reports/add",IsPost=""):
+    url = 'https://api.e.qq.com/v1.3/' + UrlPath
+
+    common_parameters = {
+        'access_token': Token,
+        'timestamp': int(time.time()),
+        'nonce': str(time.time()) + str(random.randint(0, 999999)),
+    }
+    for k in ParamJson:
+        if type(ParamJson[k]) is not str:
+            ParamJson[k] = json.dumps(ParamJson[k])
+    print("==================================")
+    r = requests.post(url, params=common_parameters, data=ParamJson)
+    print("----------------------------------")
+    return r.json()
+#腾讯获取异步报表任务API @Time 2021-03-02
+def get_tc_async_reports(Access_Token="",TaskId="",UrlPath="async_reports/get",ReturnAccountId=""):
+    url = 'https://api.e.qq.com/v1.3/' + UrlPath
+
+    common_parameters = {
+        'access_token': Access_Token,
+        'timestamp': int(time.time()),
+        'nonce': str(time.time()) + str(random.randint(0, 999999)),
+        'fields': ['result']
+    }
+    parameters = {
+        "account_id": ReturnAccountId,
+        "filtering":
+            [
+
+                {
+                    "field": "task_id",
+                    "operator": "EQUALS",
+                    "values":
+                        [
+                            TaskId
+                        ]
+                }
+            ],
+        "page": 1,
+        "page_size": 10
+    }
+    parameters.update(common_parameters)
+    for k in parameters:
+        if type(parameters[k]) is not str:
+            parameters[k] = json.dumps(parameters[k])
+    print("==================================")
+    r = requests.get(url, params=parameters)
+    print("----------------------------------")
+    return r.json()
+
+#定义设置腾讯异步任务创建
+def set_tc_add_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode="",Level="",MediaType="",TaskFlag=""):
+    code = 1
+    data = ""
+    try:
+        resp_data = get_async_data_tc(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token,IsPost="Y")
+        code = resp_data["code"]
+        trace_id = resp_data["trace_id"]
+        if int(code) == 0:
+            task_id = resp_data["data"]["task_id"]
+            resp_data = """%s %s %s %s %s %s %s %s"""%(ReturnAccountId, Level, MediaType, ServiceCode, Token, task_id, str(resp_data).replace(" ",""), TaskFlag)
+            ##腾讯返回 trace_id 头条 RequestID
+            request_id = trace_id
+            remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id, DataFileDir=DataFileDir,DataFile=DataFile)
+            if remark != "正常":
+                code = 1
+        elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
+            code = 0
+            task_id = "111111"
+            resp_data = """%s %s %s %s %s %s %s %s""" % (ReturnAccountId, Level, MediaType, ServiceCode, Token, task_id, str(resp_data).replace(" ", ""), TaskFlag)
+            ##腾讯返回 trace_id 头条 RequestID
+            request_id = trace_id
+            remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id, DataFileDir=DataFileDir,DataFile=DataFile)
+            if remark != "正常":
+                code = 1
+        else:
+            code = 1
+            data = str(resp_data).replace(" ", "")
+    except Exception as e:
+        code = 1
+        data = "请求失败：%s" % (str(e).replace("\n", "").replace(" ", "").replace("""\"""", ""))
+    if int(code) != 0:
+        status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+        if int(status) != 0:
+            for i in range(10):
+                status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+                if int(status) == 0:
+                    break;
+    return code
+
+#腾讯异步任务状态
+def set_tc_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",TaskId="",Token="",ReturnAccountId="",ServiceCode="",MediaType="",TaskFlag=""):
+    code = 1
+    data = ""
+    try:
+        resp_data = get_tc_async_reports(TaskId=TaskId, UrlPath=UrlPath, Access_Token=Token, ReturnAccountId=ReturnAccountId)
+        code = resp_data["code"]
+        trace_id = resp_data["trace_id"]
+        os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,
+        str(TaskId).replace(" ", ""), resp_data, Token, DataFileDir, "account_status1111.log", hostname))
+        # token无效重试
+        if int(code) in [40102,40103,40104,40105,40107]:
+            token = get_oe_account_token(ServiceCode=ServiceCode)
+            resp_data = get_tc_async_reports(TaskId=TaskId, UrlPath=UrlPath, Access_Token=token, ReturnAccountId=ReturnAccountId)
+            code = resp_data["code"]
+        request_id = trace_id
+        if int(code) == 0:
+            task_status = resp_data["data"]["list"][0]["status"]
+            file_result_code = resp_data["data"]["list"][0]["result"]["code"]
+            if task_status == "TASK_STATUS_COMPLETED" and str(file_result_code) == "0":
+                remark = "正常"
+                print("有数据：%s %s" % (ReturnAccountId,ServiceCode))
+                task_id = resp_data["data"]["list"][0]["task_id"]
+                file_info_list = resp_data["data"]["list"][0]["result"]["data"]["file_info_list"]
+                page_info = resp_data["data"]["page_info"]
+                resp_data = """%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s""" % (ExecDate, ReturnAccountId, MediaType, ServiceCode, Token, task_id, "有数",TaskFlag,request_id, file_info_list, page_info)
+                remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id,DataFileDir=DataFileDir,DataFile=DataFile)
+            else:
+                print("媒体异步任务未执行完成/有问题：%s %s" % (ReturnAccountId,ServiceCode))
+                task_id = resp_data["data"]["list"][0]["task_id"]
+                resp_data = """%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s""" % (ExecDate, ReturnAccountId, MediaType, ServiceCode, Token, task_id, "未执行完成/有问题", TaskFlag, request_id)
+                remark, data = get_write_local_file(RequestsData=resp_data, RequestID=request_id,DataFileDir=DataFileDir, DataFile=DataFile)
+            if remark != "正常":
+               code = 1
+        elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
+            code = 0
+            os.system(""" echo "%s %s">>%s/%s """%(ReturnAccountId,str(resp_data).replace(" ", ""),DataFileDir,"account_perssion.log"))
+        else:
+            code = 1
+            data = str(resp_data).replace(" ", "")
+    except Exception as e:
+        code = 1
+        data = "请求失败：%s" % (str(e).replace("\n", "").replace(" ", "").replace("""\"""", ""))
+    if int(code) != 0:
+        status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,
+        str(TaskId).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+        if int(status) != 0:
+            for i in range(10):
+                status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,
+                str(TaskId).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+                if int(status) == 0:
+                    break;
+    return code
+#腾讯异步任务数据获取
+def set_tc_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",ReturnAccountId="",ServiceCode=""):
+    code = 1
+    data = ""
+    try:
+        resp_datas = get_tc_async_tasks_data_return(UrlPath=UrlPath, ParamJson=ParamJson, Access_Token=Token)
+        try:
+          #异步返回数据若是json格式，则是异常
+          code = eval(resp_datas.decode())["code"]
+          data = str(resp_datas.decode()).replace(" ","").replace("'","")
+        except:
+          code = 0
+        # token无效重试
+        if int(code) in [40102,40103,40104,40105,40107]:
+            token = get_oe_account_token(ServiceCode=ServiceCode)
+            resp_datas = get_tc_async_tasks_data_return(UrlPath=UrlPath,ParamJson=ParamJson,Access_Token=token)
+            try:
+                code = eval(resp_datas.decode())["code"]
+                data = str(resp_datas.decode()).replace(" ","").replace("'","")
+            except:
+                code = 0
+        if int(code) == 0:
+            trace_id = "trace_id#&#ds"+str(ParamJson).replace("'", "")+"trace_id#&#ds"
+            resp_data = trace_id + str(resp_datas)
+            remark,data = get_write_local_file(RequestsData=resp_data, RequestID=trace_id, DataFileDir=DataFileDir, DataFile=DataFile)
+            if remark != "正常":
+               code = 1
+        elif int(code) in [40002, 40105, 40104,40102,40103,40107]:
+            code = 0
+            data = str(data).replace(" ", "")
+        else:
+            code = 1
+            data = str(data).replace(" ", "")
+    except Exception as e:
+        code = 1
+        data = "请求失败：%s" % (str(e).replace("\n", "").replace(" ", "").replace("""\"""", ""))
+    if int(code) != 0 or (int(code) == 0 and len(data) > 0):
+        status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+        if int(status) != 0:
+            for i in range(10):
+                status = os.system(""" echo "%s %s %s %s %s %s">>%s/%s.%s """ % (time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()), ReturnAccountId, ServiceCode,str(ParamJson).replace(" ", ""), data, Token, DataFileDir, "account_status.log", hostname))
+                if int(status) == 0:
+                    break;
+    return code
