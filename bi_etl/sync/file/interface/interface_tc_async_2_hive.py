@@ -414,20 +414,20 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
              interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag
              """
              if Flag == "create":
-               status_id = get_oe_create_async_tasks_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
-                                                                UrlPath=data[0],ParamJson=param_json,
+               status_id = get_tc_add_async_tasks_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
+                                                                UrlPath=data[0],ParamJson=data[1],
                                                                 Token=data[5], ReturnAccountId=data[3],
-                                                                ServiceCode=data[2],InterfaceFlag=str(data[6]).split("##")[1],
+                                                                ServiceCode=data[2],Level=str(data[6]).split("##")[1],
                                                                 TaskFlag=str(data[6]).split("##")[0],
                                                                 MediaType=data[4],
                                                                 TaskExceptionFile=ExceptionFile
                                                                 )
              elif Flag == "status":
-               status_id = get_oe_status_async_tasks_celery.delay(ExecDate=ExecDate, DataFileDir=DataFileDir,
+               status_id = get_tc_status_async_tasks_celery.delay(ExecDate=ExecDate, DataFileDir=DataFileDir,
                                                                   DataFile=DataFile,UrlPath=data[0],
-                                                                  ParamJson=param_json, Token=data[5],
+                                                                  TaskId=data[1], Token=data[5],
                                                                   ReturnAccountId=data[3],ServiceCode=data[2], MediaType=data[4],
-                                                                  TaskFlag=InterfaceFlag,
+                                                                  TaskFlag=str(data[6]).split("##")[0],
                                                                   TaskExceptionFile=ExceptionFile
                                                                 )
              os.system("""echo "%s %s">>%s""" % (status_id, data[3], celery_task_data_file+".%s"%(i)))
