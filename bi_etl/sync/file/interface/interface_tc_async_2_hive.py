@@ -311,7 +311,7 @@ def get_tc_async_tasks_add(AirflowDagId="", AirflowTaskId="", TaskInfo="", Media
          select ma.account_id,'%s' as level,ma.media_type,ma.service_code,'%s' as group_by
                 ,'%s' as report_fields,ma.token_code, '%s' as time_line,'%s' as granularity
          from (select account_id from metadb.adgroup_info group by account_id)ai inner join metadb.media_advertiser ma on ai.account_id = ma.account_id
-         where ma.media_type = '%s' limit 1
+         where ma.media_type = '%s'
       """ % (level, group_by, report_fields, time_line, granularity, MediaType)
     else:
       account_sql = """
