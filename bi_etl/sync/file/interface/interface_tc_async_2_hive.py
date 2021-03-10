@@ -415,9 +415,9 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
              """
              if Flag == "create":
                status_id = get_tc_add_async_tasks_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
-                                                                UrlPath=data[0],TaskId=data[1],
+                                                                UrlPath=data[0],ParamJson=data[1],
                                                                 Token=data[5], ReturnAccountId=data[3],
-                                                                ServiceCode=data[2],InterfaceFlag=str(data[6]).split("##")[0],
+                                                                ServiceCode=data[2],Level=str(data[6]).split("##")[1],
                                                                 TaskFlag=str(data[6]).split("##")[0],
                                                                 MediaType=data[4],
                                                                 TaskExceptionFile=ExceptionFile
@@ -427,7 +427,7 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
                                                                   DataFile=DataFile,UrlPath=data[0],
                                                                   TaskId=data[1], Token=data[5],
                                                                   ReturnAccountId=data[3],ServiceCode=data[2], MediaType=data[4],
-                                                                  TaskFlag=InterfaceFlag,
+                                                                  TaskFlag=str(data[6]).split("##")[0],
                                                                   TaskExceptionFile=ExceptionFile
                                                                 )
              os.system("""echo "%s %s">>%s""" % (status_id, data[3], celery_task_data_file+".%s"%(i)))
