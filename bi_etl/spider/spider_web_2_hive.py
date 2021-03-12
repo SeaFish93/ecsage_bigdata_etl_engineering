@@ -10,6 +10,7 @@ from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 import os
+import json
 
 conf = Conf().conf
 etl_md = EtlMetadata()
@@ -40,7 +41,7 @@ def main(TaskInfo,**kwargs):
     spider_info["url"] = url
     print(spider_info,"########################")
     if data_level == "spider":
-      ok = os.system("""cd %s&&python3 ecsage_bigdata_spider/spiders_main.py %s"""%(spider_home,spider_info))
+      ok = os.system("""cd %s&&python3 ecsage_bigdata_spider/spiders_main.py '%s'"""%(spider_home,json.dumps(spider_info)))
     elif data_level == "ods":
       pass
     elif data_level == "snap":
