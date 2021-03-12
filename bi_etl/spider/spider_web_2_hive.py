@@ -31,7 +31,6 @@ def main(TaskInfo,**kwargs):
     url = TaskInfo[7]
     data_level = TaskInfo[8]
     spider_info["spider_data_home"] = spider_data_home
-
     spider_info["spider_date"] = spider_date
     spider_info["module_id"] = module_id
     spider_info["module_name"] = module_name
