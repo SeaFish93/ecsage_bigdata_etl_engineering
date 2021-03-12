@@ -18,6 +18,7 @@ etl_md = EtlMetadata()
 def main(TaskInfo,**kwargs):
     global airflow
     airflow = Airflow(kwargs)
+    spider_info = {}
     spider_home = conf.get("Spider", "spider_home")
     spider_data_home = conf.get("Spider", "spider_data_home")
     spider_date = airflow.execution_date_utc8_str[0:10]
@@ -28,17 +29,16 @@ def main(TaskInfo,**kwargs):
     spider_id = "tophub_today"
     url = TaskInfo[7]
     data_level = TaskInfo[8]
-    spider_info = {
-        "spider_data_home": spider_data_home,
-        "spider_date": spider_date,
-        "module_id": module_id,
-        "module_name": module_name,
-        "platform_id": platform_id,
-        "platform_name": platform_name,
-        "spider_id": spider_id,
-        "url": url
-    }
-    print(type(spider_info),"########################")
+    spider_info["spider_data_home"] = spider_data_home
+
+    spider_info["spider_date"] = spider_date
+    spider_info["module_id"] = module_id
+    spider_info["module_name"] = module_name
+    spider_info["platform_id"] = platform_id
+    spider_info["platform_name"] = platform_name
+    spider_info["spider_id"] = spider_id
+    spider_info["url"] = url
+    print(spider_info,"########################")
     if data_level == "spider":
       ok = os.system("""cd %s&&python3 ecsage_bigdata_spider/spiders_main.py %s"""%(spider_home,spider_info))
     elif data_level == "ods":
