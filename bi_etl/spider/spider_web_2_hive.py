@@ -27,7 +27,7 @@ def main(TaskInfo,**kwargs):
     module_name = TaskInfo[6]
     platform_id = TaskInfo[3]
     platform_name = TaskInfo[4]
-    spider_id = "tophub_today"
+    spider_id = TaskInfo[2]
     url = TaskInfo[7]
     data_level = TaskInfo[8]
     spider_info["spider_data_home"] = spider_data_home
