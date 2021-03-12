@@ -40,7 +40,8 @@ def main(TaskInfo,**kwargs):
     spider_info["url"] = url
     print(spider_info,"########################")
     if data_level == "spider":
-      ok = os.system("""cd %s&&python3 ecsage_bigdata_spider/spiders_main.py '%s'"""%(spider_home,json.dumps(spider_info)))
+      os.chdir(spider_home)
+      ok = os.system("""python3 ecsage_bigdata_spider/spiders_main.py '%s'"""%(json.dumps(spider_info)))
     elif data_level == "ods":
       pass
     elif data_level == "snap":
