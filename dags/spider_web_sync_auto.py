@@ -19,7 +19,7 @@ import os
 
 etl_meta = EtlMetadata()
 #获取dag信息
-ok, get_dags = etl_meta.execute_sql(sqlName="get_data_dags_sql",Parameter={"exec_type":"oe_sync_interface"},IsReturnData="Y")
+ok, get_dags = etl_meta.execute_sql(sqlName="get_data_dags_sql",Parameter={"exec_type":"spider_web"},IsReturnData="Y")
 if ok is False:
     msg = get_create_dag_alert(FileName="%s"%(os.path.basename(__file__)),Log="获取Dags元数据出现异常！！！",Developer="工程维护")
     set_exit(LevelStatu="red", MSG=msg)
