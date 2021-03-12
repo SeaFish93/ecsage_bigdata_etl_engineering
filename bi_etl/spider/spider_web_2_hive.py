@@ -33,9 +33,9 @@ def main(TaskInfo,**kwargs):
     spider_info["spider_data_home"] = spider_data_home
     spider_info["spider_date"] = spider_date
     spider_info["module_id"] = module_id
-    spider_info["module_name"] = str(module_name).replace(" ","##")
+    spider_info["module_name"] = module_name
     spider_info["platform_id"] = platform_id
-    spider_info["platform_name"] = str(platform_name).replace(" ","##")
+    spider_info["platform_name"] = platform_name
     spider_info["spider_id"] = spider_id
     spider_info["url"] = url
     if data_level == "spider":
