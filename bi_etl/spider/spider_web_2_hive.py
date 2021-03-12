@@ -38,9 +38,9 @@ def main(TaskInfo,**kwargs):
     spider_info["platform_name"] = platform_name
     spider_info["spider_id"] = spider_id
     spider_info["url"] = url
-    print(spider_info,"########################")
     if data_level == "spider":
       os.chdir(spider_home)
+      print(os.getcwd(),"=======================================")
       ok = os.system("""python3 ecsage_bigdata_spider/spiders_main.py '%s'"""%(json.dumps(spider_info)))
     elif data_level == "ods":
       pass
