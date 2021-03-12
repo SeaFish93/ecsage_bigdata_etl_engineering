@@ -38,6 +38,7 @@ def main(TaskInfo,**kwargs):
         "spider_id": spider_id,
         "url": url
     }
+    print(type(spider_info),"########################")
     if data_level == "spider":
       ok = os.system("""cd %s&&python3 ecsage_bigdata_spider/spiders_main.py '%s'"""%(spider_home,spider_info))
     elif data_level == "ods":
