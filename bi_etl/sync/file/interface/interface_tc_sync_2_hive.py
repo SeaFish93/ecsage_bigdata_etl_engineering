@@ -122,7 +122,6 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   interface_filter_list = TaskInfo[30]
   page_size = TaskInfo[31]
   is_rerun_firstpage = TaskInfo[32]
-  task_id = TaskInfo[0]
   page_style =eval(TaskInfo[38]) if TaskInfo[38] is not None and len(TaskInfo[38]) >0 else TaskInfo[38]
   if page_size is None or len(str(page_size)) == 0 or page_size == 0:
     page_size = 1000
@@ -182,15 +181,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
             where  media_type='%s'
             group by a.account_id, a.media_type, a.service_code,a.token_code
        """%(task_flag,media_type)
-  if TaskInfo[0] == "etl_mid_tc_getadvertiser_advertiser":
-      mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-      get_service_code_sql = """select account_id,service_code,media
-                                  from big_data_mdg.media_service_provider
-                                  where media = 1
-                                """
-      ok, db_data = mysql_session.get_all_rows(get_service_code_sql)
-  else:
-      ok, db_data = etl_md.get_all_rows(sql)
+
+  ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
     print("处理分页逻辑！！！")
@@ -198,7 +190,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     set_first_page_info(IsRerun="N",DataRows=db_data, UrlPath=url_path, ParamJson=param_json,InterfaceFilterList=interface_filter_list,
                         DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=first_task_exception_file,
                         PageTaskFile=first_page_task_file, CeleryPageStatusFile=celery_first_page_status_file,TaskFlag=task_flag,
-                        Page=1,PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag,TaskId=task_id
+                        Page=1,PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag
                         )
     # 重试页数为0
     if int(is_rerun_firstpage) == 1:
@@ -221,7 +213,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
               set_first_page_info(IsRerun="Y",DataRows=db_data, UrlPath=url_path,DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                                   DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,
                                   PageTaskFile=rerun_page_task_file, CeleryPageStatusFile=celery_rerun_page_status_file,
-                                  TaskFlag=task_flag, Page=1, PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag,TaskId=task_id
+                                  TaskFlag=task_flag, Page=1, PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag
                                   )
               ok, db_data = etl_md.get_all_rows(sql)
               if db_data is not None and len(db_data) > 0:
@@ -241,13 +233,13 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
        set_other_page_info(DataRows=db_data, UrlPath=url_path, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                            DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
                            CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=page_size,Pagestyle=page_style
-                           , ArrayFlag=ArrayFlag,TaskId=task_id
+                           , ArrayFlag=ArrayFlag
                            )
   else:
     #不分页
     set_not_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                       DataFile=data_file, TaskExceptionFile=other_task_exception_file,TaskFlag=task_flag,
-                      IsAdvertiserList=is_advertiser_list, CeleryPageStatusFile=celery_other_page_status_file,ArrayFlag=ArrayFlag,TaskId=task_id)
+                      IsAdvertiserList=is_advertiser_list, CeleryPageStatusFile=celery_other_page_status_file,ArrayFlag=ArrayFlag)
   #获取数据文件
   target_file = os.listdir(local_dir)
   data_task_file_list = []
@@ -309,7 +301,7 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
 
 #处理首页
 def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile=""
-                        ,PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize="",InterfaceFilterList="",Pagestyle="",ArrayFlag="",TaskId=""):
+                        ,PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize="",InterfaceFilterList="",Pagestyle="",ArrayFlag=""):
     for data in DataRows:
        if IsRerun != "Y":
          if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
@@ -335,9 +327,7 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
                 n += 1
        else:
          ParamJson = ast.literal_eval(json.loads(json.dumps(str(data[3]).replace("""'""", """\""""))))
-       if TaskId != "etl_mid_tc_getadvertiser_advertiser":
-           print("TaskId -- %s" %(TaskId))
-           ParamJson["account_id"] = data[0]
+       ParamJson["account_id"] = data[0]
        if Pagestyle is not None and len(Pagestyle)>0: #page_style=[{"offset":0,"limit":100},"offset","limit"]
            ParamJson.update(Pagestyle[0])
        else:
