@@ -931,6 +931,7 @@ CREATE TABLE `sync_tasks_hive_mysql` (
 create table spider_tasks_info(
 task_id                varchar(200) not null  comment'爬虫任务id'
 ,dag_id                varchar(200) not null  comment'爬虫任务dag id'
+,spider_id             varchar(100) not null  comment'scrapy爬虫名'
 ,platform_id           varchar(200) not null  comment'爬虫数据所属平台id'
 ,platform_name         varchar(500) not null  comment'爬虫数据所属平台名称'
 ,module_id             varchar(200) not null  comment'爬虫数据所属平台模块id'
@@ -951,4 +952,5 @@ task_id                varchar(200) not null  comment'爬虫任务id'
 ,CONSTRAINT spider_tasks_info_tasks_PK PRIMARY KEY (task_id)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='爬虫作业配置表'
 ;
+
 

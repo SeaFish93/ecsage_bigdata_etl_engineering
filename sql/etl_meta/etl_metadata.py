@@ -152,6 +152,28 @@ class EtlMetaDataSQL():
       and dag_id = '%s'
   """ % ("##{dag_id}##")
 
+#获取创建爬虫tasks
+  get_spider_tasks_sql = """
+    select task_id
+           ,dag_id
+           ,spider_id
+           ,platform_id
+           ,platform_name
+           ,module_id
+           ,module_name
+           ,url
+           ,data_level
+           ,source_handle
+           ,source_db
+           ,source_table
+           ,target_handle
+           ,target_db
+           ,target_table
+           ,status 
+   from metadb.spider_tasks_info
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
 
   #获取创建接口tasks
   get_interface_sync_account_tasks_sql = """
