@@ -12,9 +12,7 @@ from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page_tc as get_not_page_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page_tc_slow as get_not_page_celery_slow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages_tc as get_pages_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages_tc_slow as get_pages_celery_slow
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
@@ -26,7 +24,6 @@ import time
 import json
 import ast
 import socket
-import re
 
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
@@ -52,7 +49,6 @@ def main(TaskInfo,Level="",**kwargs):
     ex_part_field_templates = ['time_line', 'is_deleted','fund_type']#补充分区字段,目前只分区到3级，列表中互斥
     ex_part_list = list(set(ex_part_field_templates).intersection(set(param_json.keys())))
     ex_part_field = ex_part_list if ex_part_list else ""
-
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
           get_data_2_etl_mid(BeelineSession=beeline_session, TargetDB=target_db, TargetTable=target_table,
@@ -136,53 +132,25 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
   mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-  celery_func_flag = "slow" if len(re.findall('tag_reports_city|tag_reports_region', TaskInfo[0])) > 0 else "normal"
-  page_func_map = {"slow": get_pages_celery_slow, "normal": get_pages_celery}
-  not_page_func_map = {"slow": get_not_page_celery_slow, "normal": get_not_page_celery}
-  page_func=page_func_map[celery_func_flag]
-  not_page_func=not_page_func_map[celery_func_flag]
+
 
   #判断是否从列表过滤
   if filter_db_name is not None and len(filter_db_name) > 0:
       filter_cnt = 0
       inner_str = ""
-      mid_str=""
-      inner_rn = ""
-      origin_field = ""
       for x in filter_column_name.split("##"):
           inner_str += "cast(%s as string) as A_%d ," % (x,filter_cnt)
-          origin_field = origin_field + "," + x
-          mid_str   += ",concat_ws(',',collect_set(A_%d)) as A_%d" % (filter_cnt,filter_cnt)
-          inner_rn  += "floor(row_number() over (partition by returns_account_id order by %s) / 100) as rn ,"%(x) ##100个为in的大小,后期需可以在数据库里自定义长度;后期看是否有多个排序需求
           filter_cnt += 1
       outer_str = ','.join(["A_%d"%(un) for un in range(filter_cnt)])
-      if interface_filter_list.split('.')[0] == "filtering" and "IN" in map(lambda x:x["operator"],param_json["filtering"]):##目前只支持含有filtering
-        filter_sql = """
-          select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',%s)) 
-          from (select 
-                  returns_account_id
-                 ,rn
-                  %s
-                from 
-                  (select  
-                      %s %s returns_account_id
-                   from %s.%s 
-                   where etl_date='%s'  %s  and request_type = '%s' %s
-                   group by returns_account_id %s
-                  ) in_tmp
-                group by returns_account_id,rn
-              ) tmp
-        group by returns_account_id,%s
-        """%(task_flag,outer_str,mid_str,inner_str,inner_rn,filter_db_name,filter_table_name,ExecDate,filter_config,media_type,filter_time_sql,origin_field,outer_str)
-      else :
-        filter_sql = """
-                select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',%s)) 
-                from (select  %s returns_account_id
-                      from %s.%s 
-                      where etl_date='%s'  %s  and request_type = '%s' %s
-                      ) tmp
-                group by returns_account_id,%s
-                """ % (task_flag, outer_str, inner_str, filter_db_name, filter_table_name, ExecDate, filter_config, media_type,filter_time_sql, outer_str)
+      filter_sql = """
+      select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',%s)) 
+      from (select  %s returns_account_id
+            from %s.%s 
+            where etl_date='%s'  %s  and request_type = '%s' %s
+            ) tmp
+      group by returns_account_id,%s
+     -- limit 1
+      """%(task_flag,outer_str,inner_str,filter_db_name,filter_table_name,ExecDate,filter_config,media_type,filter_time_sql,outer_str)
       print("过滤sql：%s"%(filter_sql))
       ok = BeelineSession.execute_sql_result_2_local_file(sql=filter_sql,file_name=tmp_data_task_file)
       if ok is False:
@@ -203,7 +171,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
              from metadb.tc_media_advertiser a
              inner join metadb.oe_sync_filter_info b
              on a.account_id = b.advertiser_id
-             where b.flag = '%s' and a.media_type='%s' and a.service_code = 'mapi-szyk'
+             where b.flag = '%s' and a.media_type='%s'
              group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token_code
         """ % (task_flag,media_type)
   else:
@@ -222,7 +190,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     set_first_page_info(IsRerun="N",DataRows=db_data, UrlPath=url_path, ParamJson=param_json,InterfaceFilterList=interface_filter_list,
                         DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=first_task_exception_file,
                         PageTaskFile=first_page_task_file, CeleryPageStatusFile=celery_first_page_status_file,TaskFlag=task_flag,
-                        Page=1,PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag,PageFunc=page_func,NotPageFunc=not_page_func
+                        Page=1,PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag
                         )
     # 重试页数为0
     if int(is_rerun_firstpage) == 1:
@@ -245,7 +213,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
               set_first_page_info(IsRerun="Y",DataRows=db_data, UrlPath=url_path,DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                                   DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,
                                   PageTaskFile=rerun_page_task_file, CeleryPageStatusFile=celery_rerun_page_status_file,
-                                  TaskFlag=task_flag, Page=1, PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag,PageFunc=page_func,NotPageFunc=not_page_func
+                                  TaskFlag=task_flag, Page=1, PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag
                                   )
               ok, db_data = etl_md.get_all_rows(sql)
               if db_data is not None and len(db_data) > 0:
@@ -265,13 +233,13 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
        set_other_page_info(DataRows=db_data, UrlPath=url_path, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                            DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
                            CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=page_size,Pagestyle=page_style
-                           , ArrayFlag=ArrayFlag,PageFunc=page_func,NotPageFunc=not_page_func
+                           , ArrayFlag=ArrayFlag
                            )
   else:
     #不分页
     set_not_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
-                      DataFile=data_file, TaskExceptionFile=other_task_exception_file,TaskFlag=task_flag,IsAdvertiserList=is_advertiser_list,
-                      CeleryPageStatusFile=celery_other_page_status_file,ArrayFlag=ArrayFlag,PageFunc=page_func,NotPageFunc=not_page_func)
+                      DataFile=data_file, TaskExceptionFile=other_task_exception_file,TaskFlag=task_flag,
+                      IsAdvertiserList=is_advertiser_list, CeleryPageStatusFile=celery_other_page_status_file,ArrayFlag=ArrayFlag)
   #获取数据文件
   target_file = os.listdir(local_dir)
   data_task_file_list = []
@@ -284,8 +252,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                     )
 
 #处理不分页
-def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",IsAdvertiserList="",CeleryPageStatusFile=""
-                      ,TaskFlag="",InterfaceFilterList="",ArrayFlag="",PageFunc="",NotPageFunc=""):
+def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",IsAdvertiserList="",CeleryPageStatusFile="",TaskFlag="",InterfaceFilterList="",ArrayFlag=""):
     for data in DataRows:
        if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
           filter_list = InterfaceFilterList.split(",")
@@ -312,14 +279,12 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
            ParamJson["account_ids"] = [int(data[0])]
        else:
            ParamJson["account_id"] = int(data[0])
-       service_code = data[2]
-       celery_task_id = NotPageFunc.delay(UrlPath=UrlPath, ParamJson=ParamJson,Token=data[5],
-                                                  ServiceCode=service_code, ReturnAccountId=data[0],
+       celery_task_id = get_not_page_celery.delay(UrlPath=UrlPath, ParamJson=ParamJson,Token=data[5],
+                                                  ServiceCode=data[2], ReturnAccountId=data[0],
                                                   TaskFlag=TaskFlag,DataFileDir=DataFileDir,
                                                   DataFile=DataFile, TaskExceptionFile=TaskExceptionFile
                                                   , ArrayFlag=ArrayFlag,TargetFlag="tc"
                                                   )
-       time.sleep(60) if NotPageFunc == get_pages_celery_slow and service_code == 'mapi-szyk' else None
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
        # 获取状态
     print("正在等待celery队列执行完成！！！")
@@ -329,13 +294,14 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
     #重试异常
     rerun_exception_tasks_pages(DataFileDir=DataFileDir, ExceptionFile=TaskExceptionFile, IsPage="N",
                                 DataFile=DataFile, PageTaskFile="/tmp/loglog.log", CeleryTaskDataFile=CeleryPageStatusFile,
-                                InterfaceFlag=TaskFlag,Columns="", ArrayFlag=ArrayFlag,PageFunc=PageFunc,NotPageFunc=NotPageFunc
+                                InterfaceFlag=TaskFlag,
+                                Columns=""
+                                , ArrayFlag=ArrayFlag
                                 )
 
 #处理首页
 def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile=""
-                        ,PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize="",InterfaceFilterList="",Pagestyle=""
-                        ,ArrayFlag="",PageFunc="",NotPageFunc=""):
+                        ,PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize="",InterfaceFilterList="",Pagestyle="",ArrayFlag=""):
     for data in DataRows:
        if IsRerun != "Y":
          if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
@@ -367,14 +333,14 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
        else:
            ParamJson["page"] = int(Page)
            ParamJson["page_size"] = int(PageSize)
+
        service_code = data[2]
        token = data[5]
-       celery_task_id = PageFunc.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
+       celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
                                                DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
                                                TaskExceptionFile=TaskExceptionFile,Token=token,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag="tc"
                                                )
-       time.sleep(60) if PageFunc == get_pages_celery_slow and service_code == 'mapi-szyk' else None
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
@@ -385,7 +351,8 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
     #重试异常
     rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
                                 DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
-                                InterfaceFlag=TaskFlag,Columns="",ArrayFlag=ArrayFlag,PageFunc=PageFunc,NotPageFunc=NotPageFunc
+                                InterfaceFlag=TaskFlag,Columns=""
+                                ,ArrayFlag=ArrayFlag
                                )
     # 保存MySQL
     columns = """page_num,account_id,service_code,remark,data,request_filter,flag,token"""
@@ -393,8 +360,7 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
                     TableName="oe_sync_page_interface", Columns=columns)
 
 #处理其它分页
-def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile=""
-                        ,TaskFlag="",PageSize="",InterfaceFilterList="",Pagestyle="",ArrayFlag="",PageFunc="",NotPageFunc=""):
+def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",PageSize="",InterfaceFilterList="",Pagestyle="",ArrayFlag=""):
     for data in DataRows:
       page_number = int(data[3])
       for page in range(page_number):
@@ -410,12 +376,11 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskEx
                param_json["page_size"] = int(PageSize)
            service_code = data[2]
            token = data[5]
-           celery_task_id = PageFunc.delay(UrlPath=UrlPath,ParamJson=param_json,ServiceCode=service_code,
+           celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=param_json,ServiceCode=service_code,
                                                     DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                     TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
                                                     TaskExceptionFile=TaskExceptionFile,Token=token,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag="tc"
                                                    )
-           time.sleep(60) if PageFunc == get_pages_celery_slow and service_code == 'mapi-szyk' else None
            os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
@@ -426,7 +391,8 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskEx
     #重试异常
     rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
                                 DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
-                                InterfaceFlag=TaskFlag,Columns="",ArrayFlag=ArrayFlag,PageFunc=PageFunc,NotPageFunc=NotPageFunc
+                                InterfaceFlag=TaskFlag,Columns=""
+                                ,ArrayFlag=ArrayFlag
                               )
 
 def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",MediaType="",ExPartField=""):
@@ -599,8 +565,7 @@ def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",DbName="",TableName
 
 
 #分页异常重试
-def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",PageTaskFile="",CeleryTaskDataFile="",InterfaceFlag=""
-                                ,Columns="",IsPage="",Pagestyle="",ArrayFlag="",PageFunc="",NotPageFunc=""):
+def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",PageTaskFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns="",IsPage="",Pagestyle="",ArrayFlag=""):
     celery_task_data_file = """%s/%s"""%(DataFileDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface_bak where interface_flag = '%s' """ % (InterfaceFlag)
@@ -622,20 +587,18 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
            print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
              param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
-             service_code=data[2]
              if IsPage == "Y":
-                status_id = PageFunc.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=service_code,Token=data[5],
+                status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
                                                      DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
                                                      TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile
                                                    ,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag="tc"
                                                     )
              else:
-                status_id = NotPageFunc.delay(UrlPath=data[0], ParamJson=param_json,Token=data[5],
-                                                      ServiceCode=service_code, ReturnAccountId=data[3],
+                status_id = get_not_page_celery.delay(UrlPath=data[0], ParamJson=param_json,Token=data[5],
+                                                      ServiceCode=data[2], ReturnAccountId=data[3],
                                                       TaskFlag=data[4], DataFileDir=DataFileDir,
                                                       DataFile=DataFile, TaskExceptionFile=ExceptionFile,ArrayFlag=ArrayFlag,TargetFlag="tc"
                                                     )
-             time.sleep(60) if PageFunc == get_pages_celery_slow and service_code == 'mapi-szyk' else None
              os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
            wait_for_celery_status(StatusList=celery_task_id)
