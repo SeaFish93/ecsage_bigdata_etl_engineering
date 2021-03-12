@@ -227,66 +227,6 @@ def get_tc_async_tasks_status(AirflowDagId="", AirflowTaskId="", MediaType="",Ta
                         TableName="tc_valid_account_interface", Columns=columns)
 
 
-# 创建oe异步任务
-def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate=""):
-    interface_flag = TaskInfo[20]
-    group_by = TaskInfo[11]
-    fields = TaskInfo[21]
-    hostname = socket.gethostname()
-    async_account_file = "/data/ecsage_data/oceanengine/%s/async/%s/%s" % (hostname,AirflowDagId, AirflowTaskId)
-    async_create_task_file = """%s/async_create.log""" % (async_account_file)
-    async_task_exception_file = """%s/async_exception.log""" % (async_account_file)
-    celery_task_status_file = """%s/celery_task_status.log""" % (async_account_file)
-    os.system("""mkdir -p %s""" % (async_account_file))
-    os.system("""rm -f %s/*""" % (async_account_file))
-    os.system("""chmod -R 777 %s"""%(async_account_file))
-    account_sql = """
-      select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-      from metadb.media_advertiser
-    """ % (interface_flag, group_by, fields)
-    ok, all_rows = etl_md.get_all_rows(account_sql)
-    n = 1
-    for data in all_rows:
-        status_id = get_oe_async_tasks_create_all_celery.delay(AsyncTaskName="%s" % (n),
-                                                               AsyncTaskFile=async_create_task_file,
-                                                               AsyncTaskExceptionFile=async_task_exception_file,
-                                                               ExecData=data, ExecDate=ExecDate,
-                                                               LocalDir=async_account_file)
-        os.system(
-            """echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
-        n = n + 1
-
-    # 获取状态
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
-    print("正在等待celery队列执行完成！！！")
-    wait_for_celery_status(StatusList=celery_task_id)
-    print("celery队列执行完成！！！")
-    print("等待重试异常任务！！！")
-    rerun_exception_account_tasks(AsyncAccountDir=async_account_file, ExceptionFile=async_task_exception_file,
-                                  DataFile=async_create_task_file, CeleryTaskDataFile=celery_task_status_file,
-                                  Columns="account_id,interface_flag,media_type,service_code,group_by,fields,token_data",
-                                  InterfaceFlag=interface_flag, ExecDate=ExecDate)
-    print("等待重试异常任务完成！！！")
-    # 保存MySQL
-    columns = """account_id,interface_flag,media_type,service_code,interface_group_by,interface_columns,token_data,task_id,task_name"""
-    etl_md.execute_sql("delete from metadb.oe_async_create_task where interface_flag='%s' " % (interface_flag))
-    load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
-                    TableName="oe_async_create_task", Columns=columns)
-    # 加载因网络抖动写入nfs系统漏数
-    sql = """
-       insert into metadb.oe_async_create_task
-       select a.media_type,a.token_code,a.service_code
-              ,a.account_id,'0' as task_id,'999999' as task_name,'##'
-              ,'##','%s' as interface_flag
-       from metadb.media_advertiser a
-       left join metadb.oe_async_create_task b
-       on a.account_id = b.account_id
-       and a.service_code = b.service_code
-       where b.account_id is null
-    """ % (interface_flag)
-    etl_md.execute_sql(sql)
-
-
 
 # 创建tc异步任务
 def get_tc_async_tasks_add(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType="", ExecDate="",IsFilterAccount=""):
@@ -310,7 +250,7 @@ def get_tc_async_tasks_add(AirflowDagId="", AirflowTaskId="", TaskInfo="", Media
       account_sql = """
          select ma.account_id,'%s' as level,ma.media_type,ma.service_code,'%s' as group_by
                 ,'%s' as report_fields,ma.token_code, '%s' as time_line,'%s' as granularity
-         from (select account_id from metadb.adgroup_info group by account_id)ai inner join metadb.media_advertiser ma on ai.account_id = ma.account_id
+         from (select account_id from metadb.adgroup_info group by account_id)ai inner join metadb.tc_media_advertiser ma on ai.account_id = ma.account_id
          where ma.media_type = '%s'
       """ % (level, group_by, report_fields, time_line, granularity, MediaType)
     else:
@@ -573,9 +513,9 @@ def get_oe_async_tasks_token(MediaType=""):
         tokens = token_dict["%s" % (data[2])]
         os.system("""echo "%s %s %s %s">>%s """ % (data[0], data[1], data[2], tokens, token_file))
     insert_sql = """
-          load data local infile '%s' into table metadb.media_advertiser fields terminated by ' ' lines terminated by '\\n' (account_id, media_type, service_code,token_code)
+          load data local infile '%s' into table metadb.tc_media_advertiser fields terminated by ' ' lines terminated by '\\n' (account_id, media_type, service_code,token_code)
         """ % (token_file)
-    etl_md.execute_sql("""delete from metadb.media_advertiser""")
+    etl_md.execute_sql("""truncate metadb.tc_media_advertiser""")
     ok = etl_md.local_file_to_mysql(sql=insert_sql)
     if ok is False:
         msg = "获取token出现异常！！！"
