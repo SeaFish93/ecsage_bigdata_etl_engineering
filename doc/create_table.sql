@@ -928,3 +928,27 @@ CREATE TABLE `sync_tasks_hive_mysql` (
   PRIMARY KEY (`task_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='hive同步mysql作业配置表';
 
+create table spider_tasks_info(
+task_id                varchar(200) not null  comment'爬虫任务id'
+,dag_id                varchar(200) not null  comment'爬虫任务dag id'
+,platform_id           varchar(200) not null  comment'爬虫数据所属平台id'
+,platform_name         varchar(500) not null  comment'爬虫数据所属平台名称'
+,module_id             varchar(200) not null  comment'爬虫数据所属平台模块id'
+,module_name           varchar(500) not null  comment'爬虫数据所属平台模块名称'
+,url                   varchar(200) not null  comment'爬虫数据所属平台url地址'
+,data_level            varchar(20)  not null comment'同步层级：file：文件落地至hive，ods：落地至ods库，snap：落地至snap库'
+,source_handle         varchar(200)   comment'连接来源平台handle'
+,source_db             varchar(200)  comment'来源库'
+,source_table          varchar(200)  comment'来源表'
+,target_handle         varchar(200) comment'连接目标平台handle'
+,target_db             varchar(200)   comment'目标库'
+,target_table          varchar(200)   comment'目标表'
+,status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效'
+,create_user           varchar(32)   COMMENT '创建者，邮箱@前缀'
+,update_user           varchar(32)   COMMENT '最后更新者，邮箱@前缀'
+,create_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间戳'
+,update_time           datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间戳'
+,CONSTRAINT spider_tasks_info_tasks_PK PRIMARY KEY (task_id)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='爬虫作业配置表'
+;
+
