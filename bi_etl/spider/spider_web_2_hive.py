@@ -40,7 +40,7 @@ def main(TaskInfo,**kwargs):
     }
     print(type(spider_info),"########################")
     if data_level == "spider":
-      ok = os.system("""cd %s&&python3 ecsage_bigdata_spider/spiders_main.py '%s'"""%(spider_home,spider_info))
+      ok = os.system("""cd %s&&python3 ecsage_bigdata_spider/spiders_main.py %s"""%(spider_home,spider_info))
     elif data_level == "ods":
       pass
     elif data_level == "snap":
