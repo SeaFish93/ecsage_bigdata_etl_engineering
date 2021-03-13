@@ -11,6 +11,9 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 import os
 import json
 import socket
@@ -39,9 +42,10 @@ def main(TaskInfo,**kwargs):
     key_columns = TaskInfo[15]
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if data_level == "spider":
-       exec_spider(SpiderId=spider_id,PlatformId=platform_id,PlatformName=platform_name,
-                   ModuleId=module_id,ModuleName=module_name,URL=url,ExecDate=exec_date,
-                   SpiderDataHome=spider_data_home,SpiderHome=spider_home
+       exec_spider(BeelineSession=beeline_session,SpiderId=spider_id,PlatformId=platform_id,
+                   PlatformName=platform_name,ModuleId=module_id,ModuleName=module_name,URL=url,
+                   ExecDate=exec_date,SpiderDataHome=spider_data_home,SpiderHome=spider_home,
+                   TargetDB=target_db,TargetTable=target_table,RequestType=module_id
                    )
     elif data_level == "ods":
       hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
@@ -55,9 +59,9 @@ def main(TaskInfo,**kwargs):
     else:
       print("元数据表字段data_level未指定对应值：spider、ods、snap")
 
-def exec_spider(SpiderId="",PlatformId="",PlatformName="",
-                ModuleId="",ModuleName="",URL="",ExecDate="",
-                SpiderDataHome="",SpiderHome=""
+def exec_spider(BeelineSession="",SpiderId="",PlatformId="",PlatformName="",
+                ModuleId="",ModuleName="",URL="",ExecDate="",SpiderDataHome="",
+                SpiderHome="",TargetDB="",TargetTable="",RequestType=""
                 ):
     spider_info = {}
     spider_info["spider_date"] = ExecDate
@@ -73,4 +77,76 @@ def exec_spider(SpiderId="",PlatformId="",PlatformName="",
     spider_info["data_file"] = data_file
     os.chdir(SpiderHome)
     ok = os.system("""python3 ecsage_bigdata_spider/spiders_main.py '%s'""" % (json.dumps(spider_info)))
-
+    if ok != 0:
+       print("爬虫出现异常")
+    # 获取数据文件
+    target_file = os.listdir(data_dir)
+    data_task_file_list = []
+    for files in target_file:
+        if str(data_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
+            data_task_file_list.append("%s/%s" % (data_dir, files))
+    load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list,TargetDB=TargetDB,
+                        TargetTable=TargetTable,ExecDate=ExecDate,RequestType=RequestType)
+def load_data_2_etl_mid(BeelineSession="",LocalFileList="",TargetDB="",TargetTable="",ExecDate="",RequestType=""):
+   if LocalFileList is None or len(LocalFileList) == 0:
+      msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="API采集没执行！！！",
+                               Developer="developer")
+      set_exit(LevelStatu="yellow", MSG=msg)
+   else:
+    mid_sql = """
+        create table if not exists %s.%s
+        (
+         request_data string
+        )partitioned by(etl_date string,request_type string)
+        row format delimited fields terminated by '\\001' 
+        ;
+    """ % (TargetDB,TargetTable)
+    BeelineSession.execute_sql(mid_sql)
+    load_num = 0
+    hdfs_dir = conf.get("Airflow_New", "hdfs_home")
+    load_table_sqls = ""
+    load_table_sql_0 = ""
+    load_table_sql = ""
+    for data in LocalFileList:
+        print(data,"####################################")
+        local_file = """%s""" % (data)
+        # 落地mid表
+        if load_num == 0:
+            load_table_sql_0 = """
+                         load data inpath '{hdfs_dir}/{file_name}' OVERWRITE  INTO TABLE {target_db}.{target_table}
+                         partition(etl_date='{exec_date}',request_type='{request_type}')
+                         ;\n
+            """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1], target_db=TargetDB,
+                       target_table=TargetTable,exec_date=ExecDate,request_type=RequestType)
+        else:
+            load_table_sql = """
+                         load data inpath '{hdfs_dir}/{file_name}' INTO TABLE {target_db}.{target_table}
+                         partition(etl_date='{exec_date}',request_type='{request_type}')
+                         ;\n
+                     """.format(hdfs_dir=hdfs_dir, file_name=local_file.split("/")[-1],
+                                target_db=TargetDB,target_table=TargetTable,exec_date=ExecDate,request_type=RequestType
+                                )
+        load_table_sqls = load_table_sql + load_table_sqls
+        load_num = load_num + 1
+    load_table_sqls = load_table_sql_0 + load_table_sqls
+    # 上传hdfs
+    get_local_hdfs_thread(TargetDb=TargetDB, TargetTable=TargetTable, ExecDate=ExecDate, DataFileList=LocalFileList,HDFSDir=hdfs_dir)
+    print("结束上传HDFS，启动load")
+    # 落地至hive
+    ok_data = BeelineSession.execute_sql(load_table_sqls)
+    if ok_data is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="HDFS数据文件load入仓临时表出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
