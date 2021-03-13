@@ -55,7 +55,7 @@ def main(TaskInfo,**kwargs):
                      SourceTable=source_table, TargetDB=target_db, TargetTable=target_table,
                      ExecDate=exec_date, ArrayFlag="list", KeyColumns=key_columns, IsReplace=is_report,
                      DagId=airflow.dag, TaskId=airflow.task, CustomSetParameter="")
-
+    #落地snap
     elif data_level == "snap":
       hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
       get_data_2_snap(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db,
