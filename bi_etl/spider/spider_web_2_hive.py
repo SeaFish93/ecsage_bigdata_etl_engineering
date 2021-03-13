@@ -10,6 +10,7 @@ from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
@@ -40,6 +41,7 @@ def main(TaskInfo,**kwargs):
     target_db = TaskInfo[13]
     target_table = TaskInfo[14]
     key_columns = TaskInfo[15]
+    is_report = TaskInfo[16]
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if data_level == "spider":
        exec_spider(BeelineSession=beeline_session,SpiderId=spider_id,PlatformId=platform_id,
@@ -51,11 +53,15 @@ def main(TaskInfo,**kwargs):
       hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
       get_data_2_ods(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db,
                      SourceTable=source_table, TargetDB=target_db, TargetTable=target_table,
-                     ExecDate=exec_date, ArrayFlag="list", KeyColumns=key_columns, IsReplace="N",
+                     ExecDate=exec_date, ArrayFlag="list", KeyColumns=key_columns, IsReplace=is_report,
                      DagId=airflow.dag, TaskId=airflow.task, CustomSetParameter="")
 
     elif data_level == "snap":
-      pass
+      hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
+      get_data_2_snap(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db,
+                      SourceTable=source_table,TargetDB=target_db, TargetTable=target_table,IsReport=is_report,
+                      KeyColumns=key_columns, ExecDate=exec_date,DagId=airflow.dag, TaskId=airflow.task
+                      )
     else:
       print("元数据表字段data_level未指定对应值：spider、ods、snap")
 

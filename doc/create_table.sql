@@ -928,7 +928,7 @@ CREATE TABLE `sync_tasks_hive_mysql` (
   PRIMARY KEY (`task_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='hive同步mysql作业配置表';
 
-create table spider_tasks_info(
+create  table spider_tasks_info(
 task_id                varchar(200) not null  comment'爬虫任务id'
 ,dag_id                varchar(200) not null  comment'爬虫任务dag id'
 ,spider_id             varchar(100) not null  comment'scrapy爬虫名'
@@ -945,6 +945,7 @@ task_id                varchar(200) not null  comment'爬虫任务id'
 ,target_db             varchar(200)   comment'目标库'
 ,target_table          varchar(200)   comment'目标表'
 ,key_columns           varchar(200)   comment'主键字段，多个字段以英文逗号分隔'
+,is_report             varchar(10)    comment'是否报表'
 ,status                int(2)  DEFAULT 0 not null COMMENT '是否有效，1：有效，0：无效'
 ,create_user           varchar(32)   COMMENT '创建者，邮箱@前缀'
 ,update_user           varchar(32)   COMMENT '最后更新者，邮箱@前缀'
