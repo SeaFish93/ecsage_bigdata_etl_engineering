@@ -169,7 +169,7 @@ class EtlMetaDataSQL():
            ,target_handle
            ,target_db
            ,target_table
-           ,status 
+           ,key_columns 
    from metadb.spider_tasks_info
     where status = 1
       and dag_id = '%s'
