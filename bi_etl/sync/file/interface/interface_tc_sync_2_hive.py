@@ -180,14 +180,14 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
              inner join metadb.oe_sync_filter_info b
              on a.account_id = b.advertiser_id
              where b.flag = '%s' and a.media_type='%s'
-             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token_code
+             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token
         """ % (task_flag,media_type)
   else:
        sql = """
             select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token as token
             from metadb.tc_service_account a
             where  media_type='%s'
-            group by a.account_id, a.media_type, a.service_code,a.token_code
+            group by a.account_id, a.media_type, a.service_code,a.token
        """%(task_flag,media_type)
 
   ok,db_data = etl_md.get_all_rows(sql)
