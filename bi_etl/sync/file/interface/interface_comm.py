@@ -705,6 +705,28 @@ def set_services(Media="",ServiceId="",Token="",Page="",PageSize=""):
         headers = {"Access-Token": Token}
         rsp = requests.get(url, json=params, headers=headers)
         rsp_data = rsp.json()
+    elif int(Media) == 1:
+        open_api_url_prefix = "https://api.e.qq.com/v1.3/"
+        uri = "advertiser/get"
+        url = open_api_url_prefix + uri
+        common_parameters = {
+            'access_token': Token,
+            'timestamp': int(time.time()),
+            'nonce': str(time.time()) + str(random.randint(0, 999999)),
+        }
+
+        parameters = {
+            "fields": ["account_id"],
+            "page": Page,
+            "page_size": PageSize
+        }
+
+        parameters.update(common_parameters)
+        for k in parameters:
+            if type(parameters[k]) is not str:
+                parameters[k] = json.dumps(parameters[k])
+        r = requests.get(url, params=parameters)
+        rsp_data = r.json()
     return rsp_data
 
 def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
@@ -723,6 +745,10 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
           elif int(Media) == 203:
              for list_data in get_data["data"]["list"]:
                  os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId, ServiceCode, list_data["advertiser_id"], Media, DataFile, hostname))
+          elif int(Media) == 1:
+               total_page = int(get_data["data"]["page_info"]["total_page"])
+               for list_data in get_data["data"]["list"]:
+                  os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId, ServiceCode, list_data["account_id"], Media, DataFile, hostname))
       else:
           # 没权限及token失败
           if int(code) in [40002, 40105, 40104,40102,40103,40107]:
