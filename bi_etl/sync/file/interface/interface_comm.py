@@ -783,7 +783,6 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
          if int(rsp_data["code"]) in tc_retry_code:  # token无效重试
              token = get_oe_account_token(ServiceCode=ServiceCode)
              rsp_data = get_sync_data_tc(Access_Token=token, ParamJson=ParamJson, UrlPath=UrlPath)
-         del ParamJson["access_token"], ParamJson["timestamp"], ParamJson["nonce"]
       code = rsp_data["code"]
       rsp_data["returns_account_id"] = str(ReturnAccountId)
       rsp_data["returns_columns"] = str(ParamJson)
