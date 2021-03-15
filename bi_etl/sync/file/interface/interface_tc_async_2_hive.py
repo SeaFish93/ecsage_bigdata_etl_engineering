@@ -275,10 +275,10 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     # 加载因网络抖动写入nfs系统漏数
     sql = """
        insert into metadb.oe_async_create_task
-       select a.media_type,a.token_code,a.service_code
+       select a.media_type,a.token,a.service_code
               ,a.account_id,'0' as task_id,'999999' as task_name,'##'
               ,'##','%s' as interface_flag
-       from metadb.media_advertiser a
+       from metadb.tc_service_account a
        left join metadb.oe_async_create_task b
        on a.account_id = b.account_id
        and a.service_code = b.service_code
@@ -309,8 +309,8 @@ def get_tc_async_tasks_add(AirflowDagId="", AirflowTaskId="", TaskInfo="", Media
     if IsFilterAccount == 1:
       account_sql = """
          select ma.account_id,'%s' as level,ma.media_type,ma.service_code,'%s' as group_by
-                ,'%s' as report_fields,ma.token_code, '%s' as time_line,'%s' as granularity
-         from (select account_id from metadb.adgroup_info group by account_id)ai inner join metadb.media_advertiser ma on ai.account_id = ma.account_id
+                ,'%s' as report_fields,ma.token, '%s' as time_line,'%s' as granularity
+         from (select account_id from metadb.adgroup_info group by account_id)ai inner join metadb.tc_service_account ma on ai.account_id = ma.account_id
          where ma.media_type = '%s'
       """ % (level, group_by, report_fields, time_line, granularity, MediaType)
     else:
