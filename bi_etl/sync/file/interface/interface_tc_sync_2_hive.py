@@ -175,7 +175,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       columns = """advertiser_id,flag,filter_id"""
       load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
       sql = """
-            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token_code as token
+            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token as token
              from metadb.tc_service_account a
              inner join metadb.oe_sync_filter_info b
              on a.account_id = b.advertiser_id
@@ -184,7 +184,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
         """ % (task_flag,media_type)
   else:
        sql = """
-            select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token_code as token
+            select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token as token
             from metadb.tc_service_account a
             where  media_type='%s'
             group by a.account_id, a.media_type, a.service_code,a.token_code
