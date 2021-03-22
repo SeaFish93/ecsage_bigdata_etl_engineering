@@ -46,6 +46,7 @@ def main(TaskInfo,Level="",**kwargs):
     key_columns = TaskInfo[19]
     array_flag = TaskInfo[28]
     custom_set_parameter = TaskInfo[37]
+    orderby_columns = TaskInfo[39]
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
        if TaskInfo[0] == "metadb_oe_service_account":
@@ -61,7 +62,7 @@ def main(TaskInfo,Level="",**kwargs):
         hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
-                       ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns,IsReplace="N",DagId=airflow.dag,TaskId=airflow.task,CustomSetParameter=custom_set_parameter)
+                       ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns,IsReplace="N",DagId=airflow.dag,TaskId=airflow.task,CustomSetParameter=custom_set_parameter,OrderbyColumns=orderby_columns)
     elif Level == "snap":
         hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
         get_data_2_snap(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
