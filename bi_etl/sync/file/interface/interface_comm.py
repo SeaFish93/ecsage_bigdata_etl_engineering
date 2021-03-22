@@ -921,7 +921,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
 #etl_mid->Ods层
 def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="", TargetTable=""
                    ,IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag="",CustomSetParameter=""
-                   ,IsReplace="Y",DagId="",TaskId="",ExPartField=""):
+                   ,IsReplace="Y",DagId="",TaskId="",ExPartField="",OrderbyColumns=""):
     etl_ods_field_diff = def_ods_structure(HiveSession=HiveSession, BeelineSession=BeelineSession
                                            ,SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
                                            ,IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag
@@ -1047,17 +1047,29 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                                Log="ods入库-tmp失败！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
-    sql = """
+    orderby_columns = OrderbyColumns
+    if orderby_columns is not None and len(orderby_columns) > 0:
+        sql = """
                 insert overwrite table %s.%s
                 partition(etl_date = '%s')
                 select %s from(
-                select %s,row_number()over(partition by %s order by 1) as rn_row_number
+                select %s,row_number()over(partition by %s order by %s) as rn_row_number
                 from %s.%s_tmp
                 ) tmp where rn_row_number = 1
                        ;
                 drop table if exists %s.%s_tmp;
-                """ % (
-    TargetDB, TargetTable, ExecDate, columns, columns, row_number_columns, "etl_mid", TargetTable, "etl_mid", TargetTable)
+                """ % (TargetDB, TargetTable, ExecDate, columns, columns, row_number_columns, orderby_columns, "etl_mid", TargetTable, "etl_mid", TargetTable)
+    else:
+        sql = """
+                        insert overwrite table %s.%s
+                        partition(etl_date = '%s')
+                        select %s from(
+                        select %s,row_number()over(partition by %s order by 1) as rn_row_number
+                        from %s.%s_tmp
+                        ) tmp where rn_row_number = 1
+                               ;
+                        drop table if exists %s.%s_tmp;
+                        """ % (TargetDB, TargetTable, ExecDate, columns, columns, row_number_columns, "etl_mid", TargetTable,"etl_mid", TargetTable)
     ok = BeelineSession.execute_sql(sql, CustomSetParameter)
     if ok is False:
         msg = get_alert_info_d(DagId=DagId, TaskId=TaskId,
