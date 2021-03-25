@@ -120,7 +120,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
   if (filter_db_name is not None and len(filter_db_name) > 0) or (customize_sql is not None and len(customize_sql) > 0):
-      if filter_db_name is not None and len(filter_db_name) > 0 and len(customize_sql) == 0:
+      if filter_db_name is not None and len(filter_db_name) > 0 and (customize_sql is None or len(customize_sql) == 0):
           filter_sql = """
          select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',cast(%s as string))) 
          from %s.%s 
