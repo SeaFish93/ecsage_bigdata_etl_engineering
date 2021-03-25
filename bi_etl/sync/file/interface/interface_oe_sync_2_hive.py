@@ -133,6 +133,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
          """ % (task_flag, filter_column_name, filter_db_name, filter_table_name, ExecDate, filter_config, media_type,
                 filter_time_sql, filter_column_name)
       else:
+          customize_query = ("%s" % (customize_sql)) % ExecDate
+          print("customize_query：%s" % (customize_query))
           filter_sql = """
           select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',cast(%s as string))) 
           from (%s) t
@@ -143,7 +145,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           group by returns_account_id,%s
                    -- limit 1
                    """ % (
-          task_flag, filter_column_name, customize_sql, ExecDate, filter_config, media_type, filter_time_sql,
+          task_flag, filter_column_name, customize_query, ExecDate, filter_config, media_type, filter_time_sql,
           filter_column_name)
       print("过滤sql：%s"%(filter_sql))
       ok = BeelineSession.execute_sql_result_2_local_file(sql=filter_sql,file_name=tmp_data_task_file)
