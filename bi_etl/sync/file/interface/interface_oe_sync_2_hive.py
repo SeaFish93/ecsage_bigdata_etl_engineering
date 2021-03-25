@@ -109,6 +109,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   interface_filter_list = TaskInfo[30]
   page_size = TaskInfo[31]
   is_rerun_firstpage = TaskInfo[32]
+  customize_sql = TaskInfo[40]
   page_style =eval(TaskInfo[38]) if TaskInfo[38] is not None and len(TaskInfo[38]) >0 else TaskInfo[38]
   if page_size is None or len(str(page_size)) == 0 or page_size == 0:
     page_size = 1000
@@ -118,18 +119,32 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
-  #判断是否从列表过滤
-  if filter_db_name is not None and len(filter_db_name) > 0:
-      filter_sql = """
-      select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',cast(%s as string))) 
-      from %s.%s 
-      where etl_date='%s'
-        %s 
-        and request_type = '%s'
-        %s
-      group by returns_account_id,%s
-     -- limit 1
-      """%(task_flag,filter_column_name,filter_db_name,filter_table_name,ExecDate,filter_config,media_type,filter_time_sql,filter_column_name)
+  if (filter_db_name is not None and len(filter_db_name) > 0) or (customize_sql is not None and len(customize_sql) > 0):
+      if filter_db_name is not None and len(filter_db_name) > 0 and len(customize_sql) == 0:
+          filter_sql = """
+         select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',cast(%s as string))) 
+         from %s.%s 
+         where etl_date='%s'
+         %s 
+         and request_type = '%s'
+         %s
+         group by returns_account_id,%s
+         -- limit 1
+         """ % (task_flag, filter_column_name, filter_db_name, filter_table_name, ExecDate, filter_config, media_type,
+                filter_time_sql, filter_column_name)
+      else:
+          filter_sql = """
+          select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',cast(%s as string))) 
+          from (%s) t
+          where etl_date='%s'
+          %s 
+          and request_type = '%s'
+          %s
+          group by returns_account_id,%s
+                   -- limit 1
+                   """ % (
+          task_flag, filter_column_name, customize_sql, ExecDate, filter_config, media_type, filter_time_sql,
+          filter_column_name)
       print("过滤sql：%s"%(filter_sql))
       ok = BeelineSession.execute_sql_result_2_local_file(sql=filter_sql,file_name=tmp_data_task_file)
       if ok is False:
