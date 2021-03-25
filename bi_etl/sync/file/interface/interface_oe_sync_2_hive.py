@@ -133,8 +133,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
          """ % (task_flag, filter_column_name, filter_db_name, filter_table_name, ExecDate, filter_config, media_type,
                 filter_time_sql, filter_column_name)
       else:
-          customize_query = customize_sql.replace("etl_date_f",ExecDate)
-          print("customize_query：%s" % (customize_query))
+          customize_query = customize_sql.replace("etl_date_f", ExecDate)
           filter_sql = """
           select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',cast(%s as string))) 
           from (%s) t
