@@ -705,6 +705,28 @@ def set_services(Media="",ServiceId="",Token="",Page="",PageSize=""):
         headers = {"Access-Token": Token}
         rsp = requests.get(url, json=params, headers=headers)
         rsp_data = rsp.json()
+    elif int(Media) == 1:
+        open_api_url_prefix = "https://api.e.qq.com/v1.3/"
+        uri = "advertiser/get"
+        url = open_api_url_prefix + uri
+        common_parameters = {
+            'access_token': Token,
+            'timestamp': int(time.time()),
+            'nonce': str(time.time()) + str(random.randint(0, 999999)),
+        }
+
+        parameters = {
+            "fields": ["account_id"],
+            "page": Page,
+            "page_size": PageSize
+        }
+
+        parameters.update(common_parameters)
+        for k in parameters:
+            if type(parameters[k]) is not str:
+                parameters[k] = json.dumps(parameters[k])
+        r = requests.get(url, params=parameters)
+        rsp_data = r.json()
     return rsp_data
 
 def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFile="",PageFileData="",TaskFlag=""):
@@ -723,6 +745,10 @@ def get_services(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",DataFi
           elif int(Media) == 203:
              for list_data in get_data["data"]["list"]:
                  os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId, ServiceCode, list_data["advertiser_id"], Media, DataFile, hostname))
+          elif int(Media) == 1:
+               total_page = int(get_data["data"]["page_info"]["total_page"])
+               for list_data in get_data["data"]["list"]:
+                  os.system("""echo "%s %s %s %s">>%s.%s """ % (ServiceId, ServiceCode, list_data["account_id"], Media, DataFile, hostname))
       else:
           # 没权限及token失败
           if int(code) in [40002, 40105, 40104,40102,40103,40107]:
@@ -895,7 +921,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
 #etl_mid->Ods层
 def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",TargetDB="", TargetTable=""
                    ,IsReport="",SelectExcludeColumns="",KeyColumns="",ExecDate="",ArrayFlag="",CustomSetParameter=""
-                   ,IsReplace="Y",DagId="",TaskId="",ExPartField=""):
+                   ,IsReplace="Y",DagId="",TaskId="",ExPartField="",OrderbyColumns=""):
     etl_ods_field_diff = def_ods_structure(HiveSession=HiveSession, BeelineSession=BeelineSession
                                            ,SourceTable=SourceTable, TargetDB=TargetDB, TargetTable=TargetTable
                                            ,IsTargetPartition="Y", ExecDate=ExecDate, ArrayFlag=ArrayFlag
@@ -1021,17 +1047,29 @@ def get_data_2_ods(HiveSession="",BeelineSession="",SourceDB="",SourceTable="",T
                                Log="ods入库-tmp失败！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
-    sql = """
+    orderby_columns = OrderbyColumns
+    if orderby_columns is not None and len(orderby_columns) > 0:
+        sql = """
                 insert overwrite table %s.%s
                 partition(etl_date = '%s')
                 select %s from(
-                select %s,row_number()over(partition by %s order by 1) as rn_row_number
+                select %s,row_number()over(partition by %s order by %s) as rn_row_number
                 from %s.%s_tmp
                 ) tmp where rn_row_number = 1
                        ;
                 drop table if exists %s.%s_tmp;
-                """ % (
-    TargetDB, TargetTable, ExecDate, columns, columns, row_number_columns, "etl_mid", TargetTable, "etl_mid", TargetTable)
+                """ % (TargetDB, TargetTable, ExecDate, columns, columns, row_number_columns, orderby_columns, "etl_mid", TargetTable, "etl_mid", TargetTable)
+    else:
+        sql = """
+                        insert overwrite table %s.%s
+                        partition(etl_date = '%s')
+                        select %s from(
+                        select %s,row_number()over(partition by %s order by 1) as rn_row_number
+                        from %s.%s_tmp
+                        ) tmp where rn_row_number = 1
+                               ;
+                        drop table if exists %s.%s_tmp;
+                        """ % (TargetDB, TargetTable, ExecDate, columns, columns, row_number_columns, "etl_mid", TargetTable,"etl_mid", TargetTable)
     ok = BeelineSession.execute_sql(sql, CustomSetParameter)
     if ok is False:
         msg = get_alert_info_d(DagId=DagId, TaskId=TaskId,
