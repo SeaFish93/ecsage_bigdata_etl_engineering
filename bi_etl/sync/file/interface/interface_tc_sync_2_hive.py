@@ -96,7 +96,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
   #设置查询日期
   if TaskInfo[6] is not None and len(TaskInfo[6]) > 0 and TaskInfo[6] != "":
-     param_json["date_range"]["%s"%(TaskInfo[6])] = ExecDate
+    # param_json["date_range"]["%s"%(TaskInfo[6])] = ExecDate
+     param_json["date_range"]["%s" % (TaskInfo[6])] = "2020-10-01"
      param_json["date_range"]["%s"%(TaskInfo[7])] = ExecDate
   #设置查询filter_modify_time_name
   if TaskInfo[8] is not None and len(TaskInfo[8]) > 0 :
