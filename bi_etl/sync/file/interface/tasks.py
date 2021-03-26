@@ -254,7 +254,13 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
             else:
                 time.sleep(5)
         n = n + 1
-    os.system("""echo "1">>%s """%(RequestTaskRowsFile))
+    status = os.system("""echo "1">>%s """%(RequestTaskRowsFile))
+    if int(status) != 0:
+        for i in range(100):
+            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+            if int(status) == 0:
+                break;
+            time.sleep(1)
     return """code：%s""" % (code)
 
 #定义oe同步数据
@@ -359,7 +365,13 @@ def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize=
             else:
                 time.sleep(2)
         n = n + 1
-    os.system("""echo "1">>%s """%(RequestTaskRowsFile))
+    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+    if int(status) != 0:
+        for i in range(100):
+            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+            if int(status) == 0:
+                break;
+            time.sleep(1)
 
 #获取代理下子账户
 @app.task(rate_limit='1000/m')
@@ -383,7 +395,13 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",
             else:
                 time.sleep(5)
         n = n + 1
-    os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+    if int(status) != 0:
+        for i in range(100):
+            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+            if int(status) == 0:
+                break;
+            time.sleep(1)
 
 #处理不分页
 @app.task(rate_limit='1000/m')
@@ -413,7 +431,13 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
           else:
             time.sleep(5)
       n = n + 1
-    os.system("""echo "1">>%s """%(RequestTaskRowsFile))
+    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+    if int(status) != 0:
+        for i in range(100):
+            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+            if int(status) == 0:
+                break;
+            time.sleep(1)
     return """code：%s""" % (code)
 
 #处理分页
@@ -448,7 +472,13 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           else:
             time.sleep(5)
       n = n + 1
-    os.system("""echo "1">>%s """%(RequestTaskRowsFile))
+    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+    if int(status) != 0:
+        for i in range(100):
+            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+            if int(status) == 0:
+                break;
+            time.sleep(1)
     return """code：%s""" % (code)
 
 #创建异步任务
@@ -477,7 +507,13 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
             else:
                 time.sleep(5)
         n = n + 1
-    os.system("""echo "1">>%s """%(RequestTaskRowsFile))
+    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+    if int(status) != 0:
+        for i in range(100):
+            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+            if int(status) == 0:
+                break;
+            time.sleep(1)
     return """code：%s""" % (code)
 
 #定义oe任务状态
@@ -507,7 +543,13 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
             else:
                 time.sleep(5)
         n = n + 1
-    os.system("""echo "1">>%s """%(RequestTaskRowsFile))
+    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+    if int(status) != 0:
+        for i in range(100):
+            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
+            if int(status) == 0:
+                break;
+            time.sleep(1)
     return """code：%s""" % (code)
 
 
