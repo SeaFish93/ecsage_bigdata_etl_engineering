@@ -16,6 +16,9 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_tc_account_token
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_page_data as get_service_page_data_celery
 
 
 
@@ -51,10 +54,15 @@ def main(TaskInfo,Level="",**kwargs):
     ex_part_field = ex_part_list if ex_part_list else ""
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
-          get_data_2_etl_mid(BeelineSession=beeline_session, TargetDB=target_db, TargetTable=target_table,
-                             AirflowDag=airflow.dag, AirflowTask=airflow.task,
-                             TaskInfo=TaskInfo, ExecDate=exec_date,ArrayFlag=array_flag,ExPartField=ex_part_field
-                            )
+        if TaskInfo[0] == "metadb_tc_service_account":
+            # 删除celery日志
+            etl_md.execute_sql("truncate table sync.celery_taskmeta")
+            get_service_info(AirflowDag=airflow.dag, AirflowTask=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+        else:
+            get_data_2_etl_mid(BeelineSession=beeline_session, TargetDB=target_db, TargetTable=target_table,
+                               AirflowDag=airflow.dag, AirflowTask=airflow.task,
+                               TaskInfo=TaskInfo, ExecDate=exec_date, ArrayFlag=array_flag, ExPartField=ex_part_field
+                               )
     elif Level == "ods":
         hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
@@ -675,3 +683,209 @@ def celery_task_status_log(CeleryFileLog="",ExecDate="",CeleryTaskID="",CeleryTa
             else:
                 time.sleep(2)
         n = n + 1
+def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
+  task_flag = "%s.%s"%(AirflowDag,AirflowTask)
+  local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+  hostname = socket.gethostname()
+  local_dir = """%s/%s/sync/%s/%s/%s"""%(interface_data_dir,hostname,ExecDate,AirflowDag,AirflowTask)
+  celery_get_page_status = """%s/celery_get_page_status.log"""%(local_dir)
+  celery_get_data_status = "%s/celery_get_data_status.log"%(local_dir)
+  page_task_file = "%s/page_task_file.log"%(local_dir)
+  data_task_file = """%s/data_task_file.log"""%(local_dir)
+  tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
+  task_exception_file = "%s/task_exception_file.log"%(local_dir)
+  data_file = local_dir + "/" + data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
+  os.system("""mkdir -p %s"""%(local_dir))
+  os.system("""rm -f %s/*"""%(local_dir))
+  is_filter = False
+
+  mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
+  get_service_code_sql = """select '1' as account_id,service_code,media
+                            from big_data_mdg.media_service_provider
+                            where media = 1 group by service_code,media
+                          """
+  ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
+  etl_md.execute_sql("delete from metadb.tc_sync_page_interface where flag = '%s' " % (task_flag))
+  get_service_page(DataRows=all_rows, LocalDir=local_dir, DataFile=data_file,
+                   PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_page_status,
+                   Page="1",PageSize="100")
+  #重试异常
+  n = 10
+  for i in range(n):
+    sql = """
+      select tmp1.account_id, tmp1.media_type, tmp1.service_code,trim(replace(replace(tmp1.request_filter,'[',''),']','')),tmp1.flag
+   from(select account_id,service_code,request_filter,count(distinct remark) as rn
+        from metadb.tc_sync_page_interface
+        where flag = '%s.%s'
+        group by account_id,service_code,request_filter
+        having count(distinct remark) = 1
+       ) tmp
+   inner join metadb.tc_sync_page_interface tmp1
+   on tmp.account_id = tmp1.account_id
+   and tmp.service_code = tmp1.service_code
+   and tmp.request_filter = tmp1.request_filter
+   where tmp1.remark = '异常'
+     and tmp1.flag = '%s.%s'
+   group by tmp1.account_id, tmp1.service_code,tmp1.request_filter,tmp1.request_filter,tmp1.flag,tmp1.media_type
+  """%(AirflowDag,AirflowTask,AirflowDag,AirflowTask)
+    ok, db_data = etl_md.get_all_rows(sql)
+    if db_data is not None and len(db_data) > 0:
+       os.system("""rm -f %s*""" % (celery_get_page_status.split(".")[0]))
+       os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
+       os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
+       os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
+       get_service_page(DataRows=db_data, LocalDir=local_dir, DataFile=data_file,
+                        PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_page_status+"rerun",
+                        Page="1", PageSize="100")
+       ok, db_data = etl_md.get_all_rows(sql)
+       if db_data is not None and len(db_data) > 0:
+         time.sleep(60)
+       else:
+          break
+
+  sql = """
+    select a.account_id, a.media_type as media_type, a.service_code,a.page_num,a.request_filter
+    from metadb.tc_sync_page_interface a where page_num > 1
+    and flag = '%s.%s'
+    group by a.account_id,  a.service_code,a.page_num,a.request_filter,a.media_type
+  """%(AirflowDag,AirflowTask)
+  ok, datas = etl_md.get_all_rows(sql)
+  if datas is not None and len(datas) > 0:
+     for dt in datas:
+        page_number = int(dt[3])
+        for page in range(page_number):
+         if page > 0:
+           pages = page + 1
+           celery_task_id = get_service_data_celery.delay(ServiceId=dt[0], ServiceCode=dt[2],
+                                                          Media=dt[1], Page=str(pages), PageSize=str(100),
+                                                          DataFile=data_file, PageFileData=page_task_file,
+                                                          TaskFlag=task_flag,TaskExceptionFile=task_exception_file
+                                                        )
+           os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, dt[0], dt[1], dt[2], celery_get_data_status))
+     # 获取状态
+     print("正在等待celery队列执行完成！！！")
+     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
+     wait_for_celery_status(StatusList=celery_task_id)
+     print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+     print("正在等待获取重试异常执行完成！！！")
+     rerun_service_exception_tasks(AsyncAccountDir=local_dir, ExceptionFile=task_exception_file,
+                                   DataFile=data_file, CeleryTaskDataFile=celery_get_data_status,
+                                   InterfaceFlag=task_flag, ExecDate=ExecDate,
+                                   Columns="""account_id,service_code,interface_flag,media,page,page_size"""
+                                   )
+     print("获取重试异常执行完成！！！")
+     #写入MySQL
+     etl_md.execute_sql("delete from metadb.tc_service_account ")
+     #101、102数据
+     sql = """
+       select concat_ws(' ',b.service_id,a.service_code,a.account_id,a.media)
+       from big_data_mdg.media_advertiser a
+       left join (select account_id as service_id,service_code 
+                  from big_data_mdg.media_service_provider
+                  where media in (101,102)
+                  group by account_id,service_code
+              ) b
+       on a.service_code = b.service_code
+       where a.media in (101,102)
+     """
+     ok = mysql_session.select_data_to_local_file(sql=sql,filename=data_file)
+     if ok is False:
+         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                TargetTable="%s.%s" % ("TargetDB", "TargetTable"),
+                                BeginExecDate=ExecDate,
+                                EndExecDate=ExecDate,
+                                Status="Error",
+                                Log="获取101、102数据，mysql入库失败！！！",
+                                Developer="developer")
+         set_exit(LevelStatu="red", MSG=msg)
+     columns = """service_id,service_code,account_id,media_type"""
+     load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file, DbName="metadb",TableName="tc_service_account", Columns=columns)
+     #获取token
+     sql = """
+        select  service_code
+        from metadb.tc_service_account a
+        group by service_code
+     """
+     ok,token_data = etl_md.get_all_rows(sql)
+     for service_code in token_data:
+        token = get_tc_account_token(ServiceCode=service_code[0])
+        update_sql = """
+         update metadb.tc_service_account set token='%s' where service_code = '%s'
+        """%(token,service_code[0])
+        etl_md.execute_sql(update_sql)
+#重试代理商
+def rerun_service_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",ExecDate="",IsfilterID="",Columns=""):
+    celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
+    #先保留第一次
+    delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
+    etl_md.execute_sql(delete_sql)
+    columns = Columns
+    db_name = "metadb"
+    table_name = "oe_sync_exception_tasks_interface"
+    save_exception_tasks(AsyncAccountDir=AsyncAccountDir,ExceptionFile=ExceptionFile,DbName=db_name,TableName=table_name,Columns=columns)
+    #
+    n = 10
+    for i in range(n):
+        sql = """
+          select distinct %s
+          from %s.%s a
+          where interface_flag = '%s' 
+        """% (columns,db_name,table_name,InterfaceFlag)
+        ok,datas = etl_md.get_all_rows(sql)
+        if datas is not None and len(datas) > 0:
+           print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           for data in datas:
+               status_id = get_service_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
+                                                         Media=data[3], Page=str(data[4]), PageSize=str(data[5]),
+                                                         DataFile=DataFile, PageFileData="",
+                                                         TaskFlag=InterfaceFlag, TaskExceptionFile=ExceptionFile
+                                                        )
+               os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
+           celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
+           wait_for_celery_status(StatusList=celery_task_id)
+           delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
+           etl_md.execute_sql(delete_sql)
+           save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, DbName = db_name,TableName=table_name,Columns=columns)
+           print("结束第%s次重试异常，时间：%s" % (i + 1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           #判断结果是否还有异常
+           ex_sql = """
+                     select %s
+                     from %s.%s a
+                     where interface_flag = '%s'
+                     limit 1
+              """% (columns,db_name,table_name,InterfaceFlag)
+           ok, ex_datas = etl_md.get_all_rows(ex_sql)
+           if ex_datas is not None and len(ex_datas) > 0:
+               print("休眠中...，时间：%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+               if i == 0:
+                 time.sleep(360)
+               else:
+                 time.sleep(180)
+    ex_sql = """
+         select %s
+         from %s.%s a
+         where interface_flag = '%s'
+    """% (columns,db_name,table_name,InterfaceFlag)
+    ok, ex_datas = etl_md.get_all_rows(ex_sql)
+    if ex_datas is not None and len(ex_datas) > 0:
+        print("还有特别异常任务存在！！！")
+        print(ex_datas[0])
+def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
+    for data in DataRows:
+        celery_task_id = get_service_page_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
+                                                       Media=data[2], Page=str(Page), PageSize=str(PageSize),
+                                                       DataFile=DataFile, PageFileData=PageFileData,
+                                                       TaskFlag=TaskFlag
+                                                       )
+        os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, data[0], data[1], data[2], CeleryGetDataStatus))
+    # 获取状态
+    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryGetDataStatus)
+    print("正在等待获取页数celery队列执行完成！！！")
+    wait_for_celery_status(StatusList=celery_task_id)
+    print("获取页数celery队列执行完成！！！")
+    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+    # 保存MySQL
+    columns = """page_num,account_id,service_code,remark,data,request_filter,flag,media_type"""
+    load_data_mysql(AsyncAccountFile=LocalDir, DataFile=PageFileData, DbName="metadb",
+                    TableName="tc_sync_page_interface", Columns=columns)

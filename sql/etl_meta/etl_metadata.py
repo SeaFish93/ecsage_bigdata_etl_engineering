@@ -147,6 +147,8 @@ class EtlMetaDataSQL():
   ,`update_time`
   ,`custom_set_parameter`
   ,`page_style`
+  ,`orderby_columns`
+  ,`customize_sql`
    from metadb.interface_sync_tasks_info
     where status = 1
       and dag_id = '%s'
