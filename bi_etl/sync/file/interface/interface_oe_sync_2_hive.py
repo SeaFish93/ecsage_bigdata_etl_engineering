@@ -86,6 +86,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   first_task_exception_file = "%s/first_task_exception_file.log"%(local_dir)
   other_task_exception_file = "%s/other_task_exception_file.log" % (local_dir)
   rerun_task_exception_file = "%s/rerun_task_exception_file.log" % (local_dir)
+  request_task_rows_file = "%s/request_task_rows_file.log" % (local_dir)
   data_file = data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
   param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
   #设置查询日期
@@ -208,7 +209,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     set_first_page_info(IsRerun="N",DataRows=db_data, UrlPath=url_path, ParamJson=param_json,InterfaceFilterList=interface_filter_list,
                         DataFileDir=local_dir, DataFile=data_file, TaskExceptionFile=first_task_exception_file,
                         PageTaskFile=first_page_task_file, CeleryPageStatusFile=celery_first_page_status_file,TaskFlag=task_flag,
-                        Page=1,PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag
+                        Page=1,PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag,RequestTaskRowsFile=request_task_rows_file
                         )
     if int(is_rerun_firstpage) == 1:
       # 重试页数为0
@@ -228,10 +229,11 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
               os.system("""rm -f %s*""" % (celery_rerun_page_status_file.split(".")[0]))
               os.system("""rm -f %s*""" % (rerun_page_task_file.split(".")[0]))
               os.system("""rm -f %s*""" % (rerun_task_exception_file.split(".")[0]))
+              os.system("""rm -f %s""" % (request_task_rows_file))
               set_first_page_info(IsRerun="Y",DataRows=db_data, UrlPath=url_path,DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
-                                  DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,
-                                  PageTaskFile=rerun_page_task_file, CeleryPageStatusFile=celery_rerun_page_status_file,
-                                  TaskFlag=task_flag, Page=1, PageSize=page_size,Pagestyle=page_style,ArrayFlag=ArrayFlag
+                                  DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,PageTaskFile=rerun_page_task_file,
+                                  CeleryPageStatusFile=celery_rerun_page_status_file,TaskFlag=task_flag, Page=1, PageSize=page_size,
+                                  Pagestyle=page_style,ArrayFlag=ArrayFlag,RequestTaskRowsFile=request_task_rows_file
                                   )
               ok, db_data = etl_md.get_all_rows(sql)
               if db_data is not None and len(db_data) > 0:
@@ -248,16 +250,18 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     """ % (task_flag)
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
+       os.system("""rm -rf %s""" % (request_task_rows_file))
        set_other_page_info(DataRows=db_data, UrlPath=url_path, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                            DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
                            CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=page_size,Pagestyle=page_style
-                           , ArrayFlag=ArrayFlag
+                           ,ArrayFlag=ArrayFlag,RequestTaskRowsFile=request_task_rows_file
                            )
   else:
     #不分页
     set_not_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                       DataFile=data_file, TaskExceptionFile=other_task_exception_file,TaskFlag=task_flag,
-                      IsAdvertiserList=is_advertiser_list, CeleryPageStatusFile=celery_other_page_status_file,ArrayFlag=ArrayFlag)
+                      IsAdvertiserList=is_advertiser_list, CeleryPageStatusFile=celery_other_page_status_file,
+                      ArrayFlag=ArrayFlag,RequestTaskRowsFile=request_task_rows_file)
   #获取数据文件
   target_file = os.listdir(local_dir)
   data_task_file_list = []
@@ -270,7 +274,9 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                     )
 
 #处理不分页
-def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile="",IsAdvertiserList="",CeleryPageStatusFile="",TaskFlag="",InterfaceFilterList="",ArrayFlag=""):
+def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",
+                      TaskExceptionFile="",IsAdvertiserList="",CeleryPageStatusFile="",
+                      TaskFlag="",InterfaceFilterList="",ArrayFlag="",RequestTaskRowsFile=""):
     for data in DataRows:
        if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
           filter_list = InterfaceFilterList.split(",")
@@ -291,25 +297,27 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
                                                   ServiceCode=data[2], ReturnAccountId=data[0],
                                                   TaskFlag=TaskFlag,DataFileDir=DataFileDir,
                                                   DataFile=DataFile, TaskExceptionFile=TaskExceptionFile
-                                                  , ArrayFlag=ArrayFlag
+                                                  , ArrayFlag=ArrayFlag,RequestTaskRowsFile=RequestTaskRowsFile
                                                   )
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
+    if DataRows is not None and len(DataRows) > 0:
        # 获取状态
-    print("正在等待celery队列执行完成！！！")
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
-    wait_for_celery_status(StatusList=celery_task_id)
-    print("celery队列执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-    #重试异常
-    rerun_exception_tasks_pages(DataFileDir=DataFileDir, ExceptionFile=TaskExceptionFile, IsPage="N",
-                                DataFile=DataFile, PageTaskFile="/tmp/loglog.log", CeleryTaskDataFile=CeleryPageStatusFile,
-                                InterfaceFlag=TaskFlag,
-                                Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
-                                , ArrayFlag=ArrayFlag
-                                )
+       print("总请求数：%s，正在等待celery队列执行完成！！！"%(len(DataRows)))
+       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
+       wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(DataRows),RequestTaskRowsFile=RequestTaskRowsFile)
+       print("celery队列执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+       #重试异常
+       rerun_exception_tasks_pages(DataFileDir=DataFileDir, ExceptionFile=TaskExceptionFile, IsPage="N",
+                                   DataFile=DataFile, PageTaskFile="/tmp/loglog.log", CeleryTaskDataFile=CeleryPageStatusFile,
+                                   InterfaceFlag=TaskFlag,
+                                   Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token",
+                                   ArrayFlag=ArrayFlag,RequestTaskRowsFile=RequestTaskRowsFile
+                                   )
 
 #处理首页
 def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",TaskExceptionFile=""
-                        ,PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize="",InterfaceFilterList="",Pagestyle="",ArrayFlag=""):
+                        ,PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",Page="",PageSize="",InterfaceFilterList="",
+                        Pagestyle="",ArrayFlag="",RequestTaskRowsFile=""):
     for data in DataRows:
        if IsRerun != "Y":
          if InterfaceFilterList is not None and len(InterfaceFilterList) > 0:
@@ -349,37 +357,43 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
        token = data[5]
        celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
                                                DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
-                                               TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
-                                               TaskExceptionFile=TaskExceptionFile,Token=token,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag
+                                               TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,TaskExceptionFile=TaskExceptionFile,
+                                               Token=token,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,
+                                               RequestTaskRowsFile=RequestTaskRowsFile
                                                )
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
-       #记录celery任务日志
-       #celery_task_status_log(CeleryFileLog="", ExecDate="", CeleryTaskID="", CeleryTaskFlag="", CeleryTaskStatus="",
-       #                       InterfaceURL="", InterfaceParamJson={},
-       #                       InterfaceServiceCode="", InterfaceAccountID="", InterfaceFlag="", InterfaceToken="")
-    # 获取状态
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
-    print("正在等待获取页数celery队列执行完成！！！")
-    wait_for_celery_status(StatusList=celery_task_id)
-    print("获取页数celery队列执行完成！！！")
-    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-    #重试异常
-    rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
-                                DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
-                                InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
-                                ,ArrayFlag=ArrayFlag
-                               )
-    # 保存MySQL
-    columns = """page_num,account_id,service_code,remark,data,request_filter,flag,token"""
-    load_data_mysql(AsyncAccountFile=DataFileDir, DataFile=PageTaskFile, DbName="metadb",
-                    TableName="oe_sync_page_interface", Columns=columns)
+    if DataRows is not None and len(DataRows)>0:
+       # 获取状态
+       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
+       print("总请求数：%s，正在等待获取页数celery队列执行完成！！！"%(len(DataRows)))
+       wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(DataRows),RequestTaskRowsFile=RequestTaskRowsFile)
+       print("获取页数celery队列执行完成！！！")
+       print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+       #重试异常
+       rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
+                                   DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
+                                   InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
+                                   ,ArrayFlag=ArrayFlag,RequestTaskRowsFile=RequestTaskRowsFile
+                                  )
+       # 保存MySQL
+       columns = """page_num,account_id,service_code,remark,data,request_filter,flag,token"""
+       load_data_mysql(AsyncAccountFile=DataFileDir, DataFile=PageTaskFile, DbName="metadb",
+                       TableName="oe_sync_page_interface", Columns=columns)
+    else:
+       print("没有对应请求url！！！")
 
 #处理其它分页
-def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",TaskFlag="",PageSize="",InterfaceFilterList="",Pagestyle="",ArrayFlag=""):
+def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",
+                        TaskExceptionFile="",PageTaskFile="",CeleryPageStatusFile="",
+                        TaskFlag="",PageSize="",InterfaceFilterList="",Pagestyle="",
+                        ArrayFlag="",RequestTaskRowsFile=""
+                       ):
+    n = 0
     for data in DataRows:
       page_number = int(data[3])
       for page in range(page_number):
         if page > 0:
+           n = n + 1
            param_json = ast.literal_eval(json.loads(json.dumps(str(data[4]).replace("""'""", """\""""))))
            if Pagestyle is not None and len(Pagestyle) > 0:
                tmp_offset = page * Pagestyle[0][Pagestyle[2]] #Pagestyle=[{"offset":0,"limit":100},"offset","limit"]
@@ -392,36 +406,39 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",TaskEx
            service_code = data[2]
            token = data[5]
            celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=param_json,ServiceCode=service_code,
-                                                    DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
-                                                    TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,
-                                                    TaskExceptionFile=TaskExceptionFile,Token=token,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag
+                                                   DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
+                                                   TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,TaskExceptionFile=TaskExceptionFile,
+                                                   Token=token,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,RequestTaskRowsFile=RequestTaskRowsFile
                                                    )
            os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
-    # 获取状态
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
-    print("正在等待获取页数celery队列执行完成！！！")
-    wait_for_celery_status(StatusList=celery_task_id)
-    print("获取页数celery队列执行完成！！！")
-    print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
-    #重试异常
-    rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
-                                DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
-                                InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
-                                ,ArrayFlag=ArrayFlag
-                              )
+    if n > 0:
+       # 获取状态
+       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
+       print("请求总页数：%s，正在等待获取页数celery队列执行完成！！！"%(n))
+       wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(DataRows),RequestTaskRowsFile=RequestTaskRowsFile)
+       print("获取页数celery队列执行完成！！！")
+       print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+       #重试异常
+       rerun_exception_tasks_pages(DataFileDir=DataFileDir,ExceptionFile=TaskExceptionFile,IsPage="Y",
+                                   DataFile=DataFile,PageTaskFile=PageTaskFile,CeleryTaskDataFile=CeleryPageStatusFile,
+                                   InterfaceFlag=TaskFlag,Columns="interface_url,interface_param_json,service_code,account_id,interface_flag,token"
+                                   ,ArrayFlag=ArrayFlag,RequestTaskRowsFile=RequestTaskRowsFile
+                                 )
+    else:
+       print("请求总页数：%s，正在等待获取页数celery队列执行完成！！！" % (n))
 
-def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
+def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize="",RequestTaskRowsFile=""):
     for data in DataRows:
         celery_task_id = get_service_page_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
                                                        Media=data[2], Page=str(Page), PageSize=str(PageSize),
                                                        DataFile=DataFile, PageFileData=PageFileData,
-                                                       TaskFlag=TaskFlag
+                                                       TaskFlag=TaskFlag,RequestTaskRowsFile=RequestTaskRowsFile
                                                        )
         os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, data[0], data[1], data[2], CeleryGetDataStatus))
     # 获取状态
     celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryGetDataStatus)
-    print("正在等待获取页数celery队列执行完成！！！")
-    wait_for_celery_status(StatusList=celery_task_id)
+    print("总请求数：%s，正在等待获取页数celery队列执行完成！！！"%(len(DataRows)))
+    wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(DataRows),RequestTaskRowsFile=RequestTaskRowsFile)
     print("获取页数celery队列执行完成！！！")
     print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
     # 保存MySQL
@@ -440,6 +457,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   data_task_file = """%s/data_task_file.log"""%(local_dir)
   tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
   task_exception_file = "%s/task_exception_file.log"%(local_dir)
+  request_task_rows_file = "%s/request_task_rows_file.log" % (local_dir)
   data_file = local_dir + "/" + data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
@@ -454,7 +472,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   etl_md.execute_sql("delete from metadb.oe_sync_page_interface where flag = '%s' " % (task_flag))
   get_service_page(DataRows=all_rows, LocalDir=local_dir, DataFile=data_file,
                    PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_page_status,
-                   Page="1",PageSize="1000")
+                   Page="1",PageSize="1000",RequestTaskRowsFile=request_task_rows_file)
   #重试异常
   n = 10
   for i in range(n):
@@ -482,7 +500,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
        os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
        get_service_page(DataRows=db_data, LocalDir=local_dir, DataFile=data_file,
                         PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_page_status+"rerun",
-                        Page="1", PageSize="1000")
+                        Page="1", PageSize="1000",RequestTaskRowsFile=request_task_rows_file)
        ok, db_data = etl_md.get_all_rows(sql)
        if db_data is not None and len(db_data) > 0:
          time.sleep(60)
@@ -505,18 +523,19 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
            celery_task_id = get_service_data_celery.delay(ServiceId=dt[0], ServiceCode=dt[2],
                                                           Media=dt[1], Page=str(pages), PageSize=str(1000),
                                                           DataFile=data_file, PageFileData=page_task_file,
-                                                          TaskFlag=task_flag,TaskExceptionFile=task_exception_file
+                                                          TaskFlag=task_flag,TaskExceptionFile=task_exception_file,
+                                                          RequestTaskRowsFile=request_task_rows_file
                                                         )
            os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, dt[0], dt[1], dt[2], celery_get_data_status))
      # 获取状态
-     print("正在等待celery队列执行完成！！！")
+     print("总请求数：%s，正在等待celery队列执行完成！！！"%(len(datas)))
      celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
-     wait_for_celery_status(StatusList=celery_task_id)
+     wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(datas),RequestTaskRowsFile=request_task_rows_file)
      print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
      print("正在等待获取重试异常执行完成！！！")
      rerun_service_exception_tasks(AsyncAccountDir=local_dir, ExceptionFile=task_exception_file,
                                    DataFile=data_file, CeleryTaskDataFile=celery_get_data_status,
-                                   InterfaceFlag=task_flag, ExecDate=ExecDate,
+                                   InterfaceFlag=task_flag, ExecDate=ExecDate,RequestTaskRowsFile=request_task_rows_file,
                                    Columns="""account_id,service_code,interface_flag,media,page,page_size"""
                                    )
      print("获取重试异常执行完成！！！")
@@ -687,7 +706,7 @@ def get_celery_status_list(CeleryTaskStatusFile=""):
                 celery_task_id.append(get_data1[0])
     return celery_task_id,status_wait
 
-def wait_for_celery_status(StatusList=""):
+def wait_for_celery_status(StatusList="",RequestRows="",RequestTaskRowsFile=""):
     status_false = []
     run_wait = True
     sleep_num = 1
@@ -719,9 +738,18 @@ def wait_for_celery_status(StatusList=""):
           run_wait = False
       status_false.clear()
       sleep_num = sleep_num + 1
+      # 判断请求个数是否与请求完成个数一致
+      if os.path.exists(RequestTaskRowsFile):
+          request_task_finish_rows = """cat %s|wc -l""" % (RequestTaskRowsFile)
+          request_task_finish_rows = os.popen(request_task_finish_rows)
+          request_task_finish_rows = request_task_finish_rows.read().split()[0]
+          if int(RequestRows) == int(request_task_finish_rows):
+              run_wait = False
 
 #重试代理商
-def rerun_service_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",ExecDate="",IsfilterID="",Columns=""):
+def rerun_service_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",
+                                  CeleryTaskDataFile="",InterfaceFlag="",ExecDate="",
+                                  IsfilterID="",Columns="",RequestTaskRowsFile=""):
     celery_task_data_file = """%s/%s"""%(AsyncAccountDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface where interface_flag = '%s' """ % (InterfaceFlag)
@@ -740,16 +768,18 @@ def rerun_service_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="
         """% (columns,db_name,table_name,InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
-           print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           os.system("""rm -rf %s"""%(RequestTaskRowsFile))
+           print("开始第%s次重试异常，请求总数：%s，时间：%s"%(i+1,len(datas),time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
                status_id = get_service_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
                                                          Media=data[3], Page=str(data[4]), PageSize=str(data[5]),
                                                          DataFile=DataFile, PageFileData="",
-                                                         TaskFlag=InterfaceFlag, TaskExceptionFile=ExceptionFile
+                                                         TaskFlag=InterfaceFlag, TaskExceptionFile=ExceptionFile,
+                                                         RequestTaskRowsFile=RequestTaskRowsFile
                                                         )
                os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
-           wait_for_celery_status(StatusList=celery_task_id)
+           wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(datas),RequestTaskRowsFile=RequestTaskRowsFile)
            delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
            etl_md.execute_sql(delete_sql)
            save_exception_tasks(AsyncAccountDir=AsyncAccountDir, ExceptionFile=ExceptionFile, DbName = db_name,TableName=table_name,Columns=columns)
@@ -794,7 +824,11 @@ def save_exception_tasks(AsyncAccountDir="",ExceptionFile="",DbName="",TableName
               os.system("""rm -f %s/%s""" % (file[0], file[1]))
 
 #分页异常重试
-def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",PageTaskFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns="",IsPage="",Pagestyle="",ArrayFlag=""):
+def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",
+                                PageTaskFile="",CeleryTaskDataFile="",InterfaceFlag="",
+                                Columns="",IsPage="",Pagestyle="",ArrayFlag=""
+                                ,RequestTaskRowsFile=""
+                                ):
     celery_task_data_file = """%s/%s"""%(DataFileDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface_bak where interface_flag = '%s' """ % (InterfaceFlag)
@@ -813,24 +847,26 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",Page
         """% (columns,db_name,table_name,InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
-           print("开始第%s次重试异常，时间：%s"%(i+1,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
+           os.system("""rm -rf %s"""%(RequestTaskRowsFile))
+           print("开始第%s次重试异常，总请求数%s，时间：%s"%(i+1,len(datas),time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
              param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
              if IsPage == "Y":
                 status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
-                                                     DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
-                                                     TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile
-                                                   ,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag
-                                                    )
+                                                   DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
+                                                   TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile,
+                                                   Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,RequestTaskRowsFile=RequestTaskRowsFile
+                                                  )
              else:
                 status_id = get_not_page_celery.delay(UrlPath=data[0], ParamJson=param_json,Token=data[5],
                                                       ServiceCode=data[2], ReturnAccountId=data[3],
                                                       TaskFlag=data[4], DataFileDir=DataFileDir,
-                                                      DataFile=DataFile, TaskExceptionFile=ExceptionFile,ArrayFlag=ArrayFlag
-                                                    )
+                                                      DataFile=DataFile, TaskExceptionFile=ExceptionFile,ArrayFlag=ArrayFlag,
+                                                      RequestTaskRowsFile=RequestTaskRowsFile
+                                                     )
              os.system("""echo "%s %s">>%s""" % (status_id, data[0], celery_task_data_file+".%s"%(i)))
            celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_data_file + ".%s"%i)
-           wait_for_celery_status(StatusList=celery_task_id)
+           wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(datas),RequestTaskRowsFile=RequestTaskRowsFile)
            delete_sql = """delete from %s.%s where interface_flag = '%s' """ % (db_name,table_name,InterfaceFlag)
            etl_md.execute_sql(delete_sql)
            save_exception_tasks(AsyncAccountDir=DataFileDir, ExceptionFile=ExceptionFile, DbName = db_name,TableName=table_name,Columns=columns)

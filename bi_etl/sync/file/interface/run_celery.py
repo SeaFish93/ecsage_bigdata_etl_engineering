@@ -12,7 +12,7 @@ done
 cd /code/bigdata_item_code/ecsage_bigdata_etl_engineering
 git pull
  #巨量
- nohup /usr/local/python3/bin/celery -A ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope worker --concurrency=5 -l info -n oe_test.%h -Q oe_test >/tmp/oe_celery.log 2>&1 &
+ nohup /usr/local/python3/bin/celery -A ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope worker --concurrency=100 -l info -n oe_test.%h -Q oe_test >/tmp/oe_celery.log 2>&1 &
  #腾讯
  nohup /usr/local/python3/bin/celery -A ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tylerscope worker --concurrency=50 -l info -n tc_test.%h -Q tc_test >/tmp/tc_celery.log 2>&1 &
  #报表接口
