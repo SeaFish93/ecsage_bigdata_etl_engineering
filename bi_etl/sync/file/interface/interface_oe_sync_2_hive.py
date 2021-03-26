@@ -498,6 +498,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
        os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
        os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
        os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
+       os.system("""rm -rf %s"""%(request_task_rows_file))
        get_service_page(DataRows=db_data, LocalDir=local_dir, DataFile=data_file,
                         PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_page_status+"rerun",
                         Page="1", PageSize="1000",RequestTaskRowsFile=request_task_rows_file)
@@ -514,11 +515,14 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
     group by a.account_id,  a.service_code,a.page_num,a.request_filter,a.media_type
   """%(AirflowDag,AirflowTask)
   ok, datas = etl_md.get_all_rows(sql)
+  n = 0
   if datas is not None and len(datas) > 0:
+     os.system("""rm -rf %s"""%(request_task_rows_file))
      for dt in datas:
         page_number = int(dt[3])
         for page in range(page_number):
          if page > 0:
+           n = n + 1
            pages = page + 1
            celery_task_id = get_service_data_celery.delay(ServiceId=dt[0], ServiceCode=dt[2],
                                                           Media=dt[1], Page=str(pages), PageSize=str(1000),
@@ -528,9 +532,9 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
                                                         )
            os.system("""echo "%s %s %s %s ">>%s""" % (celery_task_id, dt[0], dt[1], dt[2], celery_get_data_status))
      # 获取状态
-     print("总请求数：%s，正在等待celery队列执行完成！！！"%(len(datas)))
+     print("总请求数：%s，正在等待celery队列执行完成！！！"%(n))
      celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_get_data_status)
-     wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(datas),RequestTaskRowsFile=request_task_rows_file)
+     wait_for_celery_status(StatusList=celery_task_id,RequestRows=n,RequestTaskRowsFile=request_task_rows_file)
      print("celery队列执行完成！！！%s"%(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
      print("正在等待获取重试异常执行完成！！！")
      rerun_service_exception_tasks(AsyncAccountDir=local_dir, ExceptionFile=task_exception_file,
