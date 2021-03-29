@@ -257,7 +257,7 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
                 time.sleep(5)
         n = n + 1
     #记录状态
-    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(), DataFileDir=DataFileDir,DataFile=RequestTaskRowsFile)
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(str(ParamJson).encode('utf8')).hexdigest(), DataFileDir=DataFileDir,DataFile=RequestTaskRowsFile)
     if remark != "正常":
         code = 999999999
     return """code：%s""" % (code)
@@ -431,7 +431,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
             time.sleep(5)
       n = n + 1
     # 记录状态
-    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(),
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(str(ParamJson).encode('utf8')).hexdigest(),
                                         DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
     if remark != "正常":
        code = 999999999
@@ -470,7 +470,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
             time.sleep(5)
       n = n + 1
     # 记录状态
-    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(),
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(str(ParamJson).encode('utf8')).hexdigest(),
                                         DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
     if remark != "正常":
        code = 999999999
@@ -503,7 +503,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
                 time.sleep(5)
         n = n + 1
     # 记录状态
-    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(),
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(str(ParamJson).encode('utf8')).hexdigest(),
                                         DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
     if remark != "正常":
        code = 999999999
@@ -537,7 +537,7 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
                 time.sleep(5)
         n = n + 1
     # 记录状态
-    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(),
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(str(ParamJson).encode('utf8')).hexdigest(),
                                         DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
     if remark != "正常":
        code = 999999999
