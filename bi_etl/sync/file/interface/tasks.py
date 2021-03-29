@@ -269,6 +269,7 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
       if ok is False:
           code = 999999999
           print(code)
+      a = 1/0
     except Exception as e:
         status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),TaskFlag, Token, TaskExceptionFile + ".%s" % hostname))
         if int(status) != 0:
