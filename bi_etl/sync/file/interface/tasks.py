@@ -543,7 +543,6 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
       if ok is False:
           code = 999999999
           print(code)
-      a = 1/0
     except Exception as e:
         status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType, Token,TaskFlag + "##" + InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
         if int(status) != 0:
