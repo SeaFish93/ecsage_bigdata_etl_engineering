@@ -348,7 +348,6 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
                 ,'%s' as fields,a.token_data
          from metadb.oe_account_interface a
          where a.exec_date = '%s'
-         limit 1
       """ % (interface_flag, group_by, fields, ExecDate)
     ok, all_rows = etl_md.get_all_rows(account_sql)
     n = 1
@@ -727,7 +726,7 @@ def wait_for_celery_status(StatusList="",RequestRows="",RequestTaskRowsFile=""):
         sleep_num = sleep_num + 1
         #判断请求个数是否与请求完成个数一致
         if os.path.exists(RequestTaskRowsFile):
-           request_task_finish_rows = """cat %s|sort|uniq|wc -l"""%(RequestTaskRowsFile)
+           request_task_finish_rows = """cat %s|wc -l"""%(RequestTaskRowsFile)
            request_task_finish_rows = os.popen(request_task_finish_rows)
            request_task_finish_rows = request_task_finish_rows.read().split()[0]
            if int(RequestRows) == int(request_task_finish_rows):

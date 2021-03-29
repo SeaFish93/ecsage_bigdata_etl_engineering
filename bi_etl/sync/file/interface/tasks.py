@@ -239,29 +239,37 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
     set_true = True
     n = 0
     code = 9999
-    while set_true:
-        code = set_oe_async_tasks_data_return(DataFileDir=DataFileDir,DataFile=DataFile,UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,ReturnAccountId=ReturnAccountId,ServiceCode=ServiceCode)
-        if int(code) == 0:
-            set_true = False
-        else:
-            if n > 2:
-                print("异常处理异步数据子账户：%s,%s" % (ReturnAccountId, ServiceCode))
-                status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
-                if int(status) != 0:
-                    for i in range(100):
-                        status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),TaskFlag, Token, TaskExceptionFile + ".%s" % hostname))
-                        if int(status) == 0:
-                            break;
-                set_true = False
-            else:
-                time.sleep(5)
-        n = n + 1
-    # 记录状态
-    status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-    remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-    if remark != "正常":
-        code = 999999999
+    try:
+      while set_true:
+          code = set_oe_async_tasks_data_return(DataFileDir=DataFileDir,DataFile=DataFile,UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,ReturnAccountId=ReturnAccountId,ServiceCode=ServiceCode)
+          if int(code) == 0:
+              set_true = False
+          else:
+              if n > 2:
+                  print("异常处理异步数据子账户：%s,%s" % (ReturnAccountId, ServiceCode))
+                  status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token, TaskExceptionFile + ".%s" % hostname))
+                  if int(status) != 0:
+                      for i in range(100):
+                          status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),TaskFlag, Token, TaskExceptionFile + ".%s" % hostname))
+                          if int(status) == 0:
+                              break;
+                  set_true = False
+              else:
+                  time.sleep(5)
+          n = n + 1
+      # 记录状态
+      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+                                          DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
+      if remark != "正常":
+          code = 999999999
+    except Exception as e:
+        status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),TaskFlag, Token, TaskExceptionFile + ".%s" % hostname))
+        if int(status) != 0:
+            for i in range(100):
+                status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),TaskFlag, Token, TaskExceptionFile + ".%s" % hostname))
+                if int(status) == 0:
+                    break;
     return """code：%s""" % (code)
 
 #定义oe同步数据
@@ -412,33 +420,41 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
     set_true = True
     n = 0
     code = 9999
-    while set_true:
-      code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token
-                          ,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag)
-      if TargetFlag == "tc":
-          sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
-      else:
-          sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
-      if int(code) in sucess_code:
-          set_true = False
-      else:
-          if n > 2:
-            print("处理不分页异常：%s,%s"%(ReturnAccountId,ServiceCode))
-            for i in range(100):
-              status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token,int(code), TaskExceptionFile + ".%s" % hostname))
-              if int(status) == 0:
-                  break;
+    try:
+      while set_true:
+        code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token
+                            ,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag)
+        if TargetFlag == "tc":
+            sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
+        else:
+            sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
+        if int(code) in sucess_code:
             set_true = False
-          else:
-            time.sleep(5)
-      n = n + 1
-    # 记录状态
-    status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-    remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-    if remark != "正常":
-        code = 999999999
-        print(code)
+        else:
+            if n > 2:
+              print("处理不分页异常：%s,%s"%(ReturnAccountId,ServiceCode))
+              for i in range(100):
+                status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token,int(code), TaskExceptionFile + ".%s" % hostname))
+                if int(status) == 0:
+                    break;
+              set_true = False
+            else:
+              time.sleep(5)
+        n = n + 1
+      # 记录状态
+      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+                                          DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
+      if remark != "正常":
+          code = 999999999
+          print(code)
+    except Exception as e:
+        status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token,int(code), TaskExceptionFile + ".%s" % hostname))
+        if int(status) != 0:
+            for i in range(100):
+                status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token,int(code), TaskExceptionFile + ".%s" % hostname))
+                if int(status) == 0:
+                    break;
     return """code：%s""" % (code)
 
 #处理分页
@@ -449,36 +465,44 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     set_true = True
     n = 0
     code = 9999
-    while set_true:
-      code = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
-                            ServiceCode=ServiceCode,DataFileDir=DataFileDir,
-                            DataFile=DataFile,ReturnAccountId=ReturnAccountId,
-                            TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag
-                           )
-      if TargetFlag == "tc":
-          sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
-      else:
-          sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
-      print(sucess_code)
-      if int(code) in sucess_code:
-          set_true = False
-      else:
-          if n > 2:
-            print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
+    try:
+       while set_true:
+         code = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
+                               ServiceCode=ServiceCode,DataFileDir=DataFileDir,
+                               DataFile=DataFile,ReturnAccountId=ReturnAccountId,
+                               TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag
+                              )
+         if TargetFlag == "tc":
+             sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
+         else:
+             sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
+         print(sucess_code)
+         if int(code) in sucess_code:
+             set_true = False
+         else:
+             if n > 2:
+               print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
+               for i in range(100):
+                 status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
+                 if int(status) == 0:
+                    break;
+               set_true = False
+             else:
+               time.sleep(5)
+         n = n + 1
+       # 记录状态
+       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+       remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
+       if remark != "正常":
+           code = 999999999
+    except Exception as e:
+        status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
+        if int(status) != 0:
             for i in range(100):
-              status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
-              if int(status) == 0:
-                 break;
-            set_true = False
-          else:
-            time.sleep(5)
-      n = n + 1
-    # 记录状态
-    status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-    remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-    if remark != "正常":
-        code = 999999999
+                status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
+                if int(status) == 0:
+                    break;
     return """code：%s""" % (code)
 
 #创建异步任务
@@ -493,7 +517,6 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
       while set_true:
           code = set_oe_create_async_tasks(DataFileDir=DataFileDir, DataFile=DataFile, UrlPath=UrlPath, ParamJson=ParamJson, Token=Token,TaskFlag=TaskFlag,
                                            ReturnAccountId=ReturnAccountId, ServiceCode=ServiceCode, InterfaceFlag=InterfaceFlag, MediaType=MediaType)
-          a = 1/0
           if int(code) == 0:
               set_true = False
           else:
@@ -532,31 +555,39 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
     set_true = True
     n = 0
     code = 9999
-    while set_true:
-        code = set_oe_status_async_tasks(ExecDate=ExecDate,DataFileDir=DataFileDir,DataFile=DataFile,
-                                         UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,ReturnAccountId=ReturnAccountId,
-                                         ServiceCode=ServiceCode,MediaType=MediaType,TaskFlag=TaskFlag)
-        if int(code) == 0:
-            set_true = False
-        else:
-            if n > 2:
-                print("处理异步任务状态异常：%s,%s,%s" % (TaskFlag,ReturnAccountId, ServiceCode))
+    try:
+      while set_true:
+          code = set_oe_status_async_tasks(ExecDate=ExecDate,DataFileDir=DataFileDir,DataFile=DataFile,
+                                           UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,ReturnAccountId=ReturnAccountId,
+                                           ServiceCode=ServiceCode,MediaType=MediaType,TaskFlag=TaskFlag)
+          if int(code) == 0:
+              set_true = False
+          else:
+              if n > 2:
+                  print("处理异步任务状态异常：%s,%s,%s" % (TaskFlag,ReturnAccountId, ServiceCode))
+                  status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType,Token, TaskFlag, TaskExceptionFile + ".%s" % hostname))
+                  if int(status) != 0:
+                      for i in range(100):
+                          status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),MediaType, Token, TaskFlag, TaskExceptionFile + ".%s" % hostname))
+                          if int(status) == 0:
+                              break;
+                  set_true = False
+              else:
+                  time.sleep(5)
+          n = n + 1
+      # 记录状态
+      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+                                          DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
+      if remark != "正常":
+          code = 999999999
+    except Exception as e:
+        status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType, Token,TaskFlag, TaskExceptionFile + ".%s" % hostname))
+        if int(status) != 0:
+            for i in range(100):
                 status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType,Token, TaskFlag, TaskExceptionFile + ".%s" % hostname))
-                if int(status) != 0:
-                    for i in range(100):
-                        status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),MediaType, Token, TaskFlag, TaskExceptionFile + ".%s" % hostname))
-                        if int(status) == 0:
-                            break;
-                set_true = False
-            else:
-                time.sleep(5)
-        n = n + 1
-    # 记录状态
-    status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-    remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-    if remark != "正常":
-        code = 999999999
+                if int(status) == 0:
+                    break;
     return """code：%s""" % (code)
 
 
