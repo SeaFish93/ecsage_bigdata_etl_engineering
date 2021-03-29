@@ -120,6 +120,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
+  etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(task_flag))
   if (filter_db_name is not None and len(filter_db_name) > 0) or (customize_sql is not None and len(customize_sql) > 0):
       if filter_db_name is not None and len(filter_db_name) > 0 and (customize_sql is None or len(customize_sql) == 0):
           filter_sql = """
@@ -229,7 +230,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
               os.system("""rm -f %s*""" % (celery_rerun_page_status_file.split(".")[0]))
               os.system("""rm -f %s*""" % (rerun_page_task_file.split(".")[0]))
               os.system("""rm -f %s*""" % (rerun_task_exception_file.split(".")[0]))
-              os.system("""rm -f %s""" % (request_task_rows_file))
+              etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(task_flag))
               set_first_page_info(IsRerun="Y",DataRows=db_data, UrlPath=url_path,DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                                   DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,PageTaskFile=rerun_page_task_file,
                                   CeleryPageStatusFile=celery_rerun_page_status_file,TaskFlag=task_flag, Page=1, PageSize=page_size,
@@ -250,7 +251,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     """ % (task_flag)
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
-       os.system("""rm -rf %s""" % (request_task_rows_file))
+       etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(task_flag))
        set_other_page_info(DataRows=db_data, UrlPath=url_path, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                            DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
                            CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=page_size,Pagestyle=page_style
