@@ -26,7 +26,9 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import set_tc_status_async_tasks
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.bi_etl.web_interface.exec_interface_script import execute
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_write_local_file
 import json
+from hashlib import md5
 import ast
 import os
 import time
@@ -254,13 +256,10 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
             else:
                 time.sleep(5)
         n = n + 1
-    status = os.system("""echo "1">>%s """%(RequestTaskRowsFile))
-    if int(status) != 0:
-        for i in range(100):
-            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-            if int(status) == 0:
-                break;
-            time.sleep(1)
+    #记录状态
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(), DataFileDir=DataFileDir,DataFile=RequestTaskRowsFile)
+    if remark != "正常":
+        code = 999999999
     return """code：%s""" % (code)
 
 #定义oe同步数据
@@ -431,13 +430,11 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
           else:
             time.sleep(5)
       n = n + 1
-    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-    if int(status) != 0:
-        for i in range(100):
-            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-            if int(status) == 0:
-                break;
-            time.sleep(1)
+    # 记录状态
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(),
+                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
+    if remark != "正常":
+       code = 999999999
     return """code：%s""" % (code)
 
 #处理分页
@@ -472,13 +469,11 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
           else:
             time.sleep(5)
       n = n + 1
-    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-    if int(status) != 0:
-        for i in range(100):
-            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-            if int(status) == 0:
-                break;
-            time.sleep(1)
+    # 记录状态
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(),
+                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
+    if remark != "正常":
+       code = 999999999
     return """code：%s""" % (code)
 
 #创建异步任务
@@ -507,13 +502,11 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
             else:
                 time.sleep(5)
         n = n + 1
-    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-    if int(status) != 0:
-        for i in range(100):
-            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-            if int(status) == 0:
-                break;
-            time.sleep(1)
+    # 记录状态
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(),
+                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
+    if remark != "正常":
+       code = 999999999
     return """code：%s""" % (code)
 
 #定义oe任务状态
@@ -543,13 +536,11 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
             else:
                 time.sleep(5)
         n = n + 1
-    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-    if int(status) != 0:
-        for i in range(100):
-            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-            if int(status) == 0:
-                break;
-            time.sleep(1)
+    # 记录状态
+    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(ParamJson.encode('utf8')).hexdigest(),
+                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
+    if remark != "正常":
+       code = 999999999
     return """code：%s""" % (code)
 
 
