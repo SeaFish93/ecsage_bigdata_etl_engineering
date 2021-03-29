@@ -591,7 +591,6 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
       if ok is False:
           code = 999999999
           print(code)
-      a = 1/0
     except Exception as e:
         status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType, Token,TaskFlag, TaskExceptionFile + ".%s" % hostname))
         if int(status) != 0:
