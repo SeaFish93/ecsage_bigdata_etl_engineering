@@ -744,7 +744,7 @@ def wait_for_celery_status(StatusList="",RequestRows="",RequestTaskRowsFile=""):
       sleep_num = sleep_num + 1
       # 判断请求个数是否与请求完成个数一致
       if os.path.exists(RequestTaskRowsFile):
-          request_task_finish_rows = """cat %s|wc -l""" % (RequestTaskRowsFile)
+          request_task_finish_rows = """cat %s|sort|uniq|wc -l""" % (RequestTaskRowsFile)
           request_task_finish_rows = os.popen(request_task_finish_rows)
           request_task_finish_rows = request_task_finish_rows.read().split()[0]
           if int(RequestRows) == int(request_task_finish_rows):
