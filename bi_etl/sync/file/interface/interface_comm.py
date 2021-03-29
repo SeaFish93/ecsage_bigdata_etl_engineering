@@ -625,7 +625,6 @@ def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""
             else:
                 time.sleep(2)
         n = n + 1
-    print(remark,"========================================")
     return remark,data
 
 #广告主

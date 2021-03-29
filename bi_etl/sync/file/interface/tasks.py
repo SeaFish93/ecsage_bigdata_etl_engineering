@@ -507,6 +507,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
                                         DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
     if remark != "正常":
        code = 999999999
+       print(md5(str(ParamJson).encode('utf8')).hexdigest(),code,"==============================")
     return """code：%s""" % (code)
 
 #定义oe任务状态
