@@ -27,6 +27,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.bi_etl.web_interface.exec_interface_script import execute
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_write_local_file
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 import json
 from hashlib import md5
 import ast
@@ -536,6 +537,12 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
           n = n + 1
       # 记录状态
       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+      etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+      sql = """
+         insert into metadb.test_status
+         select '%s'
+      """%(status_id)
+      etl_md.execute_sql(sql=sql)
       remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="N",
                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
       if remark != "正常":
