@@ -489,31 +489,39 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
     set_true = True
     n = 0
     code = 9999
-    while set_true:
-        code = set_oe_create_async_tasks(DataFileDir=DataFileDir, DataFile=DataFile, UrlPath=UrlPath, ParamJson=ParamJson, Token=Token,TaskFlag=TaskFlag,
-                                         ReturnAccountId=ReturnAccountId, ServiceCode=ServiceCode, InterfaceFlag=InterfaceFlag, MediaType=MediaType)
-        a = 1/0
-        if int(code) == 0:
-            set_true = False
-        else:
-            if n > 2:
-                print("处理创建异步任务异常：%s,%s" % (ReturnAccountId, ServiceCode))
-                status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % ( UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType,Token,TaskFlag+"##"+InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
-                if int(status) != 0:
-                    for i in range(100):
-                        status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),MediaType, Token,TaskFlag+"##"+InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
-                        if int(status) == 0:
-                            break;
-                set_true = False
-            else:
-                time.sleep(5)
-        n = n + 1
-    # 记录状态
-    status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-    remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-    if remark != "正常":
-        code = 999999999
+    try:
+      while set_true:
+          code = set_oe_create_async_tasks(DataFileDir=DataFileDir, DataFile=DataFile, UrlPath=UrlPath, ParamJson=ParamJson, Token=Token,TaskFlag=TaskFlag,
+                                           ReturnAccountId=ReturnAccountId, ServiceCode=ServiceCode, InterfaceFlag=InterfaceFlag, MediaType=MediaType)
+          a = 1/0
+          if int(code) == 0:
+              set_true = False
+          else:
+              if n > 2:
+                  print("处理创建异步任务异常：%s,%s" % (ReturnAccountId, ServiceCode))
+                  status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % ( UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType,Token,TaskFlag+"##"+InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
+                  if int(status) != 0:
+                      for i in range(100):
+                          status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),MediaType, Token,TaskFlag+"##"+InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
+                          if int(status) == 0:
+                              break;
+                  set_true = False
+              else:
+                  time.sleep(5)
+          n = n + 1
+      # 记录状态
+      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+                                          DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
+      if remark != "正常":
+          code = 999999999
+    except Exception as e:
+        status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType, Token,TaskFlag + "##" + InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
+        if int(status) != 0:
+            for i in range(100):
+                status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType,Token, TaskFlag + "##" + InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
+                if int(status) == 0:
+                    break;
     return """code：%s""" % (code)
 
 #定义oe任务状态
