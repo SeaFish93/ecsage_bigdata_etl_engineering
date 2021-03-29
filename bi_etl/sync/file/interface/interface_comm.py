@@ -598,8 +598,11 @@ def get_oe_async_tasks_data_return(UrlPath="",ParamJson="",Token=""):
     resp = s.get(url=url, json=ParamJson,headers=headers, verify=False, stream=False, timeout=300)
     return resp.content
 
-def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""):
-    file_name = """%s-%s.%s""" % (DataFile.split(".")[0], hostname, DataFile.split(".")[1])
+def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile="",IsHost=""):
+    if IsHost == "Y":
+       file_name = """%s.%s""" % (DataFile.split(".")[0], DataFile.split(".")[1])
+    else:
+       file_name = """%s-%s.%s""" % (DataFile.split(".")[0], hostname, DataFile.split(".")[1])
     n = 0
     data = "写入日志正常"
     not_exist = "N"
