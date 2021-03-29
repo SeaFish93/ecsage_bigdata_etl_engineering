@@ -505,10 +505,10 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
     # 记录状态
     status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
     remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,
-                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
+                                        DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
     if remark != "正常":
        code = 999999999
-       print(md5(str(ParamJson).encode('utf8')).hexdigest(),code,"==============================")
+       print(status_id,code,"==============================")
     return """code：%s""" % (code)
 
 #定义oe任务状态
