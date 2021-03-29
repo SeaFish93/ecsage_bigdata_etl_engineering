@@ -434,7 +434,7 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
         """% (columns,db_name,table_name,InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
-           etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(InterfaceFlag))
+           etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(InterfaceFlag.split("##")[0]))
            print("开始第%s次重试异常，请求个数：%s，时间：%s"%(i+1,len(datas),time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
              param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
@@ -442,6 +442,7 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
              interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag
              """
              if Flag == "create":
+               print(str(data[6]).split("##")[0],"=====================")
                status_id = get_oe_create_async_tasks_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
                                                                 UrlPath=data[0],ParamJson=param_json,
                                                                 Token=data[5], ReturnAccountId=data[3],
@@ -450,6 +451,7 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
                                                                 TaskExceptionFile=ExceptionFile
                                                                 )
              elif Flag == "status":
+               print(InterfaceFlag, "=====================")
                status_id = get_oe_status_async_tasks_celery.delay(ExecDate=ExecDate, DataFileDir=DataFileDir,
                                                                   DataFile=DataFile,UrlPath=data[0],
                                                                   ParamJson=param_json, Token=data[5],
