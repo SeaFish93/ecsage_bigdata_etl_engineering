@@ -580,7 +580,7 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
           n = n + 1
       # 记录状态
       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="N",
                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
       if remark != "正常":
           code = 999999999
