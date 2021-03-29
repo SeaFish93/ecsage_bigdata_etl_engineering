@@ -492,6 +492,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
     while set_true:
         code = set_oe_create_async_tasks(DataFileDir=DataFileDir, DataFile=DataFile, UrlPath=UrlPath, ParamJson=ParamJson, Token=Token,TaskFlag=TaskFlag,
                                          ReturnAccountId=ReturnAccountId, ServiceCode=ServiceCode, InterfaceFlag=InterfaceFlag, MediaType=MediaType)
+        a = 1/0
         if int(code) == 0:
             set_true = False
         else:
