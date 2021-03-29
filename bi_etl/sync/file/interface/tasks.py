@@ -503,7 +503,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
                 time.sleep(5)
         n = n + 1
     # 记录状态
-    remark, data = get_write_local_file(RequestsData="1", RequestID=md5(str(ParamJson).encode('utf8')).hexdigest(),
+    remark, data = get_write_local_file(RequestsData=md5(str(ParamJson).encode('utf8')).hexdigest(), RequestID=md5(str(ParamJson).encode('utf8')).hexdigest(),
                                         DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile)
     if remark != "正常":
        code = 999999999
