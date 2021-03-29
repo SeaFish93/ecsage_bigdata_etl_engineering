@@ -263,6 +263,7 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
       if remark != "正常":
           code = 999999999
+          print(code)
     except Exception as e:
         status = os.system("""echo "%s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""),TaskFlag, Token, TaskExceptionFile + ".%s" % hostname))
         if int(status) != 0:
@@ -496,6 +497,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
                                            DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
        if remark != "正常":
            code = 999999999
+           print(code)
     except Exception as e:
         status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
         if int(status) != 0:
@@ -538,6 +540,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
       if remark != "正常":
           code = 999999999
+          print(code)
     except Exception as e:
         status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType, Token,TaskFlag + "##" + InterfaceFlag, TaskExceptionFile + ".%s" % hostname))
         if int(status) != 0:
@@ -581,6 +584,7 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
       if remark != "正常":
           code = 999999999
+          print(code)
     except Exception as e:
         status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), MediaType, Token,TaskFlag, TaskExceptionFile + ".%s" % hostname))
         if int(status) != 0:
