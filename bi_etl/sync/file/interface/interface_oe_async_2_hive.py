@@ -212,7 +212,7 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
     os.system("""rm -f %s/*""" % (local_dir))
     os.system("""chmod -R 777 %s""" % (local_dir))
     etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where  exec_date = '%s' and airflow_task_id='%s.%s' """ % (ExecDate,AirflowDagId, AirflowTaskId))
-    etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """ % (task_flag))
+    etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """ % (task_flag))
     # 获取子账户
     source_data_sql = """
         select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
@@ -334,7 +334,7 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
     os.system("""chmod -R 777 %s""" % (local_dir))
-    etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """ % (task_flag))
+    etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """ % (task_flag))
     if IsFilterAccount == 1:
       account_sql = """
          select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by
@@ -434,7 +434,7 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
         """% (columns,db_name,table_name,InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
-           etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(InterfaceFlag))
+           etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(InterfaceFlag))
            print("开始第%s次重试异常，请求个数：%s，时间：%s"%(i+1,len(datas),time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
              param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
@@ -815,7 +815,7 @@ def get_oe_async_tasks_data(AirflowDagId="", AirflowTaskId="", TaskInfo="", Medi
     os.system("""mkdir -p %s""" % (local_dir))
     os.system("""rm -f %s/*""" % (local_dir))
     os.system("""chmod -R 777 %s""" % (local_dir))
-    etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """ % (task_flag))
+    etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """ % (task_flag))
     # 获取子账户
     source_data_sql = """
             select a.account_id,a.media_type,a.service_code,a.token_data,a.task_id,a.task_name
@@ -1162,7 +1162,7 @@ def rerun_exception_async_tasks(DataFileDir="", ExceptionFile="", DataFile="", C
         """ % (columns, db_name, table_name, InterfaceFlag)
         ok, datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
-            etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(InterfaceFlag))
+            etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(InterfaceFlag))
             print("开始第%s次重试异常，总请求数：%s，时间：%s" % (i + 1,len(datas), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
             for data in datas:
                 param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""", """\""""))))
