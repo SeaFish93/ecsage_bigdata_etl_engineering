@@ -609,6 +609,7 @@ def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""
         test_log.info(RequestsData)
         get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
         for files in get_dir.read().split():
+            print(RequestID, DataFileDir, files,"##########################3")
             is_exist = os.popen("grep -o '%s' %s/%s" % (RequestID, DataFileDir, files))
             is_exist_value = is_exist.read().split()
             if is_exist_value is not None and len(is_exist_value) > 0:
