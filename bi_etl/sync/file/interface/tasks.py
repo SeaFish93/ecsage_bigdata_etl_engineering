@@ -235,7 +235,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
 @app.task(rate_limit='1000/m')
 def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",
                                    ReturnAccountId="",ServiceCode="",TaskFlag="",
-                                   TaskExceptionFile="",RequestTaskRowsFile=""):
+                                   TaskExceptionFile=""):
     print("执行数据子账户：%s"%(ReturnAccountId))
     set_true = True
     n = 0
@@ -363,7 +363,7 @@ def get_creative_detail_data(ParamJson="", UrlPath="", DataFileDir="", DataFile=
 #获取代理下子账户页数
 @app.task(rate_limit='1000/m')
 def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",
-                          DataFile="",PageFileData="",TaskFlag="",RequestTaskRowsFile=""):
+                          DataFile="",PageFileData="",TaskFlag=""):
     set_true = True
     n = 0
     while set_true:
@@ -380,19 +380,11 @@ def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize=
             else:
                 time.sleep(2)
         n = n + 1
-    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-    if int(status) != 0:
-        for i in range(100):
-            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-            if int(status) == 0:
-                break;
-            time.sleep(1)
 
 #获取代理下子账户
 @app.task(rate_limit='1000/m')
 def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",
-                     DataFile="",PageFileData="",TaskFlag="",TaskExceptionFile="",
-                     RequestTaskRowsFile=""):
+                     DataFile="",PageFileData="",TaskFlag="",TaskExceptionFile=""):
     set_true = True
     n = 0
     while set_true:
@@ -410,19 +402,12 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",
             else:
                 time.sleep(5)
         n = n + 1
-    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-    if int(status) != 0:
-        for i in range(100):
-            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-            if int(status) == 0:
-                break;
-            time.sleep(1)
 
 #处理不分页
 @app.task(rate_limit='1000/m')
 def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",
                  TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",
-                 ArrayFlag="",TargetFlag="oe",RequestTaskRowsFile=""):
+                 ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
     code = 9999
@@ -471,7 +456,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
 @app.task(rate_limit='1000/m')
 def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",
               ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",
-              Pagestyle="",ArrayFlag="",TargetFlag="oe",RequestTaskRowsFile=""):
+              Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
     code = 9999
@@ -524,7 +509,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
 @app.task(rate_limit='1000/m')
 def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",
                               Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",
-                              MediaType="",TaskExceptionFile="",TaskFlag="",RequestTaskRowsFile=""):
+                              MediaType="",TaskExceptionFile="",TaskFlag=""):
     set_true = True
     n = 0
     code = 9999
@@ -571,7 +556,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
 @app.task(rate_limit='1000/m')
 def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",ParamJson="",
                               Token="",ReturnAccountId="",ServiceCode="",MediaType="",TaskFlag="",
-                              TaskExceptionFile="",RequestTaskRowsFile=""):
+                              TaskExceptionFile=""):
     set_true = True
     n = 0
     code = 9999
