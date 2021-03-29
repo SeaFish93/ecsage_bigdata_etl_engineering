@@ -783,7 +783,7 @@ def get_tc_async_tasks_data(AirflowDagId="", AirflowTaskId="", TaskInfo="", Medi
     task_flag = "%s.%s" % (AirflowDagId, AirflowTaskId)
     local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
     hostname = socket.gethostname()
-    local_dir = """/data/ecsage_data/oceanengine/%s/async/%s/%s/%s""" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
+    local_dir = """/data/ecsage_data/tencentengine/%s/async/%s/%s/%s""" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
     celery_status_file = "%s/celery_status_file.log" % (local_dir)
     data_task_file = """%s/data_%s.log""" % (local_dir, AirflowTaskId)
     task_exception_file = "%s/task_exception_file.log" % (local_dir)
