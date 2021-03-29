@@ -698,6 +698,7 @@ def get_celery_job_status(CeleryTaskId=""):
        #print(CeleryTaskId,"##",status)
        return False
 
+#
 def get_celery_status_list(CeleryTaskStatusFile=""):
     celery_task_id = []
     status_wait = []
