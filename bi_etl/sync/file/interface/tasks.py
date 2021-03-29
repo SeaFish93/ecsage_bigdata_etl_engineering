@@ -259,7 +259,7 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
           n = n + 1
       # 记录状态
       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="N",
                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
       if remark != "正常":
           code = 999999999
@@ -444,7 +444,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
         n = n + 1
       # 记录状态
       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="N",
                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
       if remark != "正常":
           code = 999999999
@@ -493,7 +493,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
          n = n + 1
        # 记录状态
        status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-       remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+       remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="N",
                                            DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
        if remark != "正常":
            code = 999999999
@@ -536,7 +536,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
           n = n + 1
       # 记录状态
       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
+      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="N",
                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
       if remark != "正常":
           code = 999999999
