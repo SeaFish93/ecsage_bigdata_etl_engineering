@@ -119,7 +119,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
-  etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(task_flag))
+  etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
   if (filter_db_name is not None and len(filter_db_name) > 0) or (customize_sql is not None and len(customize_sql) > 0):
       if filter_db_name is not None and len(filter_db_name) > 0 and (customize_sql is None or len(customize_sql) == 0):
           filter_sql = """
@@ -229,7 +229,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
               os.system("""rm -f %s*""" % (celery_rerun_page_status_file.split(".")[0]))
               os.system("""rm -f %s*""" % (rerun_page_task_file.split(".")[0]))
               os.system("""rm -f %s*""" % (rerun_task_exception_file.split(".")[0]))
-              etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(task_flag))
+              etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
               set_first_page_info(IsRerun="Y",DataRows=db_data, UrlPath=url_path,DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                                   DataFile=data_file, TaskExceptionFile=rerun_task_exception_file,PageTaskFile=rerun_page_task_file,
                                   CeleryPageStatusFile=celery_rerun_page_status_file,TaskFlag=task_flag, Page=1, PageSize=page_size,
@@ -250,7 +250,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     """ % (task_flag)
     ok, db_data = etl_md.get_all_rows(sql)
     if db_data is not None and len(db_data) > 0:
-       etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(task_flag))
+       etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
        set_other_page_info(DataRows=db_data, UrlPath=url_path, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
                            DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
                            CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=page_size,Pagestyle=page_style
@@ -496,7 +496,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
        os.system("""rm -f %s*""" % (page_task_file.split(".")[0]))
        os.system("""rm -f %s*""" % (celery_get_data_status.split(".")[0]))
        os.system("""rm -f %s*""" % (task_exception_file.split(".")[0]))
-       etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(task_flag))
+       etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
        get_service_page(DataRows=db_data, LocalDir=local_dir, DataFile=data_file,
                         PageFileData=page_task_file, TaskFlag=task_flag, CeleryGetDataStatus=celery_get_page_status+"rerun",
                         Page="1", PageSize="1000")
@@ -515,7 +515,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   ok, datas = etl_md.get_all_rows(sql)
   n = 0
   if datas is not None and len(datas) > 0:
-     etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(task_flag))
+     etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
      for dt in datas:
         page_number = int(dt[3])
         for page in range(page_number):
@@ -770,7 +770,7 @@ def rerun_service_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="
         """% (columns,db_name,table_name,InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
-           etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(InterfaceFlag))
+           etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(InterfaceFlag))
            print("开始第%s次重试异常，请求总数：%s，时间：%s"%(i+1,len(datas),time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
                status_id = get_service_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
@@ -847,7 +847,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",
         """% (columns,db_name,table_name,InterfaceFlag)
         ok,datas = etl_md.get_all_rows(sql)
         if datas is not None and len(datas) > 0:
-           etl_md.execute_sql("""delete from sync.celery_sync_status where task_id='%s' """%(InterfaceFlag))
+           etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(InterfaceFlag))
            print("开始第%s次重试异常，总请求数%s，时间：%s"%(i+1,len(datas),time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
              param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
