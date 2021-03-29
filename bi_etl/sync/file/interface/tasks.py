@@ -262,9 +262,9 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
       sql = """
-               insert into metadb.test_status
-               select '%s'
-            """ % (status_id)
+               insert into sync.celery_sync_status
+               select '%s','%s'
+            """ % (TaskFlag,status_id)
       ok = etl_md.execute_sql(sql=sql)
       if ok is False:
           code = 999999999
@@ -451,9 +451,9 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
       sql = """
-               insert into metadb.test_status
-               select '%s'
-            """ % (status_id)
+           insert into sync.celery_sync_status
+           select '%s','%s'
+        """ % (TaskFlag, status_id)
       ok = etl_md.execute_sql(sql=sql)
       if ok is False:
           code = 999999999
@@ -504,9 +504,9 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
        status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
        etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
        sql = """
-                insert into metadb.test_status
-                select '%s'
-             """ % (status_id)
+           insert into sync.celery_sync_status
+           select '%s','%s'
+        """ % (TaskFlag, status_id)
        ok = etl_md.execute_sql(sql=sql)
        if ok is False:
            code = 999999999
@@ -551,9 +551,9 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
       sql = """
-         insert into metadb.test_status
-         select '%s'
-      """%(status_id)
+        insert into sync.celery_sync_status
+        select '%s','%s'
+      """ % (TaskFlag, status_id)
       ok = etl_md.execute_sql(sql=sql)
       if ok is False:
           code = 999999999
@@ -599,9 +599,9 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
       sql = """
-               insert into metadb.test_status
-               select '%s'
-            """ % (status_id)
+        insert into sync.celery_sync_status
+        select '%s','%s'
+      """ % (TaskFlag, status_id)
       ok = etl_md.execute_sql(sql=sql)
       if ok is False:
           code = 999999999
