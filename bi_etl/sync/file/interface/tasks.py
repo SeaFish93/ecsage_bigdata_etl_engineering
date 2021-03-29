@@ -438,6 +438,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
                                         DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
     if remark != "正常":
         code = 999999999
+        print(code)
     return """code：%s""" % (code)
 
 #处理分页
