@@ -598,8 +598,11 @@ def get_oe_async_tasks_data_return(UrlPath="",ParamJson="",Token=""):
     resp = s.get(url=url, json=ParamJson,headers=headers, verify=False, stream=False, timeout=300)
     return resp.content
 
-def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""):
-    file_name = """%s-%s.%s""" % (DataFile.split(".")[0], hostname, DataFile.split(".")[1])
+def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile="",IsHost=""):
+    if IsHost == "Y":
+       file_name = """%s.%s""" % (DataFile.split(".")[0], DataFile.split(".")[1])
+    else:
+       file_name = """%s-%s.%s""" % (DataFile.split(".")[0], hostname, DataFile.split(".")[1])
     n = 0
     data = "写入日志正常"
     not_exist = "N"
@@ -608,7 +611,6 @@ def get_write_local_file(RequestsData="",RequestID="",DataFileDir="",DataFile=""
         test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
         test_log.info(RequestsData)
         get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
-        print(get_dir,RequestID, DataFileDir, "##########################3",file_name)
         for files in get_dir.read().split():
             is_exist = os.popen("grep -o '%s' %s/%s" % (RequestID, DataFileDir, files))
             is_exist_value = is_exist.read().split()
