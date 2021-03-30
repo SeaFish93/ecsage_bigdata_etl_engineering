@@ -70,15 +70,19 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
   elif int(increment_mode) == 2:
       increment_date = airflow.execution_date_utc8_str[0:10]
   if int(export_mode) == 0:
+      delete_sql = """
+            delete from %s.%s where %s = %s""" %(target_db, target_table, increment_date, increment_date)
       filter_sql = """
             select  %s
             from %s.%s 
-            where 1 = 1 and %s >= %s
+            where 1 = 1 and %s = %s
             %s
            -- limit 1 
             """ % (export_columns, source_db, source_table,increment_columns, increment_date, filter_condition)
       print("过滤sql：%s" % (filter_sql))
   elif int(export_mode) == 1:
+      delete_sql = """
+                   truncate %s.%s""" %(target_db, target_table)
       filter_sql = """
                   select  %s
                   from %s.%s 
@@ -100,10 +104,21 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
      set_exit(LevelStatu="red", MSG=msg)
 
   load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName=target_db, TableName=target_table,
-                  Columns=export_columns)
+                  Columns=export_columns, DeleteSql=delete_sql,ExecDate=ExecDate)
 
-def load_data_mysql(AsyncAccountFile="",DataFile="",DbName="",TableName="",Columns=""):
+def load_data_mysql(AsyncAccountFile="",DataFile="",DbName="",TableName="",Columns="",DeleteSql="",ExecDate=""):
     target_file = os.listdir(AsyncAccountFile)
+    ok = etl_md.local_file_to_mysql(sql=DeleteSql)
+    if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (DbName, TableName),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="删除mysql数据出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
     for files in target_file:
         n = 0
         set_run = True
