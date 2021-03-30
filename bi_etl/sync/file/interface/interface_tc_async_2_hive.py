@@ -1357,7 +1357,7 @@ def account_info_data(AirflowDagId="", AirflowTaskId="", MediaType="",TaskInfo="
      where --a.vc > 0 or
      cost > 0
      ) t  where service_code is not null and service_code !='' order by mt
-     """ % (ExecDate)
+     """ % (ExecDate, ExecDate, ExecDate)
     print("过滤sql：%s" % (filter_sql))
 
     ok = beeline_session.execute_sql_result_2_local_file(sql=filter_sql,file_name=adgroup_info_data_file)
