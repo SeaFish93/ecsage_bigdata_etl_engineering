@@ -704,6 +704,7 @@ def wait_for_celery_status(StatusList="",RequestRows="",TaskFlag=""):
         sql = """select count(1) from metadb.celery_sync_status where task_id = '%s' """ % (TaskFlag)
         ok, request_task_finish_rows = etl_md.get_all_rows(sql=sql)
         if ok:
+            print("等待完成个数：【源数%s】【目标数%s】"%(int(RequestRows),int(request_task_finish_rows[0][0])))
             if int(RequestRows) == int(request_task_finish_rows[0][0]):
                 run_wait = False
                 break;
