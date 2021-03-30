@@ -193,7 +193,7 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
         if int(file_size) == 0:
             print("【%s】文件大小异常，请注意" % (data_files))
             data_files_list=data_files.rsplit("/",1)
-            os.system("""echo "%s %s %s" >> %s""" % (data_files_list[0],data_files_list[1],int(file_size),size_error_file))
+            #os.system("""echo "%s %s %s" >> %s""" % (data_files_list[0],data_files_list[1],int(file_size),size_error_file))
 
         status = os.system("""hadoop fs -ls %s/%s"""%(HDFSDir,data_files.split("/")[-1]))
         if int(status) == 0:
