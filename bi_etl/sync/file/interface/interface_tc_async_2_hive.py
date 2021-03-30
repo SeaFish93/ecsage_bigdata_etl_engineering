@@ -35,7 +35,6 @@ import ast
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
-
 # 入口方法
 def main(TaskInfo, **kwargs):
     global airflow
@@ -66,7 +65,10 @@ def main(TaskInfo, **kwargs):
         get_tc_async_tasks_status(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, MediaType=media_type,
                                          TaskInfo=TaskInfo, ExecDate=exec_date
                                          )
-
+    elif task_type == 7:
+        account_info_data(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo, MediaType=media_type,
+                          ExecDate=exec_date
+                                         )
 
 def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", ExecDate=""):
     media_type = 2
@@ -1318,3 +1320,60 @@ def rerun_exception_create_tasks(AsyncAccountDir="", ExceptionFile="", DataFile=
     if ex_datas is not None and len(ex_datas) > 0:
         print("还有特别异常任务存在！！！")
         print(ex_datas[0])
+def account_info_data(AirflowDagId="", AirflowTaskId="", MediaType="",TaskInfo="", ExecDate=""):
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
+    hostname = socket.gethostname()
+    async_account_file = "/data/ecsage_data/tencentengine/%s/async/%s/%s/%s" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
+    adgroup_info_data_file = """%s/adgroup_info_data_file.log""" % (async_account_file)
+    os.system("""mkdir -p %s""" % (async_account_file))
+    os.system("""chmod -R 777 %s""" % (async_account_file))
+    os.system("""rm -f %s/*""" % (async_account_file))
+    filter_sql = """
+    select account_id,adgroup_id,mt,service_code from (
+     select account_id, adgroup_id, '1' as mt, service_code from
+     (select tc_inder.account_id, tc_inder.campaign_id, tc_inder.adgroup_id, ma.service_code, sum(cast(tc_inder.view_count as double)) as vc, sum(cast(tc_inder.cost as double)) as cost
+     from ods.tc_getdailyreports_daily_reports tc_inder
+     left join ods.media_account_big_data_mdg_media_advertiser ma
+     on tc_inder.account_id = ma.account_id
+     where tc_inder.etl_date='%s' and tc_inder.time_line='REQUEST_TIME' and request_type='1'
+     group by tc_inder.account_id, tc_inder.campaign_id, tc_inder.adgroup_id, ma.service_code) a
+     where --a.vc > 0 or
+     cost > 0
+     union all
+     select account_id, adgroup_id, '101' as mt, service_code from
+     (select tc_outer.account_id, tc_outer.campaign_id, tc_outer.adgroup_id, ma.service_code, sum(cast(tc_outer.view_count as double)) as vc, sum(cast(tc_outer.cost as double)) as cost
+     from ods.tc_getdailyreports_daily_reports tc_outer
+     left join ods.media_account_big_data_mdg_media_advertiser ma
+     on tc_outer.account_id = ma.account_id
+     where tc_outer.etl_date='%s' and tc_outer.time_line='REQUEST_TIME' and request_type='101'
+     group by tc_outer.account_id, tc_outer.campaign_id, tc_outer.adgroup_id, ma.service_code) a
+     where -- a.vc > 0 or
+     cost > 0
+     union all
+     select account_id, adgroup_id, '102' as mt, service_code from
+     (select tc_wechat.account_id, tc_wechat.campaign_id, tc_wechat.adgroup_id, ma.service_code, sum(cast(tc_wechat.view_count as double)) as vc, sum(cast(tc_wechat.cost as double)) as cost
+     from ods.tc_getdailyreports_wechat_daily_reports tc_wechat
+     left join ods.media_account_big_data_mdg_media_advertiser ma
+     on tc_wechat.account_id = ma.account_id
+     where tc_wechat.etl_date='%s' and tc_wechat.time_line='REPORTING_TIME'
+     group by tc_wechat.account_id, tc_wechat.campaign_id, tc_wechat.adgroup_id, ma.service_code) a
+     where --a.vc > 0 or
+     cost > 0
+     ) t  where service_code is not null and service_code !='' order by mt
+     """ % (ExecDate, ExecDate, ExecDate)
+    print("过滤sql：%s" % (filter_sql))
+    ok = beeline_session.execute_sql_result_2_local_file(sql=filter_sql,file_name=adgroup_info_data_file)
+    if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % ("metadb", "adgroup_info"),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="导出文件出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    etl_md.execute_sql("truncate metadb.adgroup_info")
+    columns = """account_id,adgroup_id,mt,service_code"""
+    load_data_mysql_tab(AsyncAccountFile=async_account_file, DataFile=adgroup_info_data_file,
+                    TableName="adgroup_info",  Columns=columns)
