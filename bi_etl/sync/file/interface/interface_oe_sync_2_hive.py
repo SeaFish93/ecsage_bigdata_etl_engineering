@@ -751,7 +751,7 @@ def wait_for_celery_status(StatusList="",RequestRows="",TaskFlag=""):
               run_wait = False
           status_false.clear()
           sleep_num = sleep_num + 1
-
+      time.sleep(60)
 
 #重试代理商
 def rerun_service_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="",
