@@ -1376,4 +1376,4 @@ def account_info_data(AirflowDagId="", AirflowTaskId="", MediaType="",TaskInfo="
     etl_md.execute_sql("truncate metadb.adgroup_info")
     columns = """account_id,adgroup_id,mt,service_code"""
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=adgroup_info_data_file,
-                    TableName="adgroup_info", Columns=columns)
+                    TableName="adgroup_info",  Columns=columns)
