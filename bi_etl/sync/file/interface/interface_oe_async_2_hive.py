@@ -701,7 +701,7 @@ def wait_for_celery_status(StatusList="",RequestRows="",TaskFlag=""):
     sleep_num = 1
     while run_wait:
         # 判断请求个数是否与请求完成个数一致
-        sql = """select count(distinct status_id) from metadb.celery_sync_status where task_id = '%s' """ % (TaskFlag)
+        sql = """select count(1) from metadb.celery_sync_status where task_id = '%s' """ % (TaskFlag)
         ok, request_task_finish_rows = etl_md.get_all_rows(sql=sql)
         if ok:
             print("等待完成个数：【源数%s】【目标数%s】"%(int(RequestRows),int(request_task_finish_rows[0][0])))
@@ -709,6 +709,17 @@ def wait_for_celery_status(StatusList="",RequestRows="",TaskFlag=""):
                 print("完成！！！")
                 run_wait = False
                 break;
+            elif int(RequestRows) < int(request_task_finish_rows[0][0]):
+                msg = "celery队列执行失败！！！"
+                msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
+                                       SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                       TargetTable="%s.%s" % ("", ""),
+                                       BeginExecDate="",
+                                       EndExecDate="",
+                                       Status="Error",
+                                       Log=msg,
+                                       Developer="developer")
+                set_exit(LevelStatu="red", MSG=msg)
         if StatusList is not None and len(StatusList) > 0:
            for status in StatusList:
                # 判断是否成功
