@@ -417,7 +417,7 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",
        #celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
        print("请求总页数：%s，正在等待获取页数celery队列执行完成！！！"%(n))
        #wait_for_celery_status(StatusList=celery_task_id,RequestRows=n,TaskFlag=TaskFlag)
-       wait_for_celery_status(StatusList=[], RequestRows=len(DataRows), TaskFlag=TaskFlag)
+       wait_for_celery_status(StatusList=[], RequestRows=n, TaskFlag=TaskFlag)
        print("获取页数celery队列执行完成！！！")
        print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
        #重试异常
