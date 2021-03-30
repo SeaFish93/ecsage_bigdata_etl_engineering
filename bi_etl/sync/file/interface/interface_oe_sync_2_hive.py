@@ -303,8 +303,9 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
     if DataRows is not None and len(DataRows) > 0:
        # 获取状态
        print("总请求数：%s，正在等待celery队列执行完成！！！"%(len(DataRows)))
-       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
-       wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(DataRows),TaskFlag=TaskFlag)
+       #celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
+       #wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(DataRows),TaskFlag=TaskFlag)
+       wait_for_celery_status(StatusList=[], RequestRows=len(DataRows), TaskFlag=TaskFlag)
        print("celery队列执行完成！！！%s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
        #重试异常
        rerun_exception_tasks_pages(DataFileDir=DataFileDir, ExceptionFile=TaskExceptionFile, IsPage="N",
@@ -363,9 +364,10 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
        os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
     if DataRows is not None and len(DataRows)>0:
        # 获取状态
-       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
+       #celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
        print("总请求数：%s，正在等待获取页数celery队列执行完成！！！"%(len(DataRows)))
-       wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(DataRows),TaskFlag=TaskFlag)
+       #wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(DataRows),TaskFlag=TaskFlag)
+       wait_for_celery_status(StatusList=[], RequestRows=len(DataRows), TaskFlag=TaskFlag)
        print("获取页数celery队列执行完成！！！")
        print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
        #重试异常
@@ -412,9 +414,10 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",
            os.system("""echo "%s %s %s">>%s""" % (celery_task_id, data[0], data[2], CeleryPageStatusFile))
     if n > 0:
        # 获取状态
-       celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
+       #celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=CeleryPageStatusFile)
        print("请求总页数：%s，正在等待获取页数celery队列执行完成！！！"%(n))
-       wait_for_celery_status(StatusList=celery_task_id,RequestRows=n,TaskFlag=TaskFlag)
+       #wait_for_celery_status(StatusList=celery_task_id,RequestRows=n,TaskFlag=TaskFlag)
+       wait_for_celery_status(StatusList=[], RequestRows=len(DataRows), TaskFlag=TaskFlag)
        print("获取页数celery队列执行完成！！！")
        print("end %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
        #重试异常
