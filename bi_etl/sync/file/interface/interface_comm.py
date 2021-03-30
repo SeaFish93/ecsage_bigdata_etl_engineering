@@ -226,7 +226,7 @@ def local_hdfs_thread(DataFile="",HDFSDir="",arg=None):
     if arg is not None or len(arg) > 0:
        DataFile = arg["DataFile"]
        HDFSDir = arg["HDFSDir"]
-       os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
+       os.system("hadoop fs -moveFromLocal -f %s %s" % (DataFile, HDFSDir))
 
 #创建创意
 def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEmptyFile="",ExecDate=""):
