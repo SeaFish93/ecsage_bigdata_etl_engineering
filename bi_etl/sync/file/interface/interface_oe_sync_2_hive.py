@@ -722,6 +722,7 @@ def wait_for_celery_status(StatusList="",RequestRows="",TaskFlag=""):
       if ok:
           print("等待完成个数：【源数%s】【目标数%s】" % (int(RequestRows), int(request_task_finish_rows[0][0])))
           if int(RequestRows) == int(request_task_finish_rows[0][0]):
+              print("完成！！！")
               run_wait = False
               break;
       if StatusList is not None and len(StatusList) > 0:
