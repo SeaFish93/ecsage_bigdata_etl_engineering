@@ -1323,8 +1323,11 @@ def rerun_exception_create_tasks(AsyncAccountDir="", ExceptionFile="", DataFile=
 def account_info_data(AirflowDagId="", AirflowTaskId="", MediaType="",TaskInfo="", ExecDate=""):
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     hostname = socket.gethostname()
-    async_account_file = "/data/ecsage_data/tencentengine/%s/async" % (hostname)
+    async_account_file = """/data/ecsage_data/tencentengine/%s/async/%s/%s/%s""" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
     adgroup_info_data_file = """%s/adgroup_info_data_file.log""" % (async_account_file)
+    os.system("""mkdir -p %s""" % (async_account_file))
+    os.system("""chmod -R 777 %s""" % (async_account_file))
+    os.system("""rm -f %s/*""" % (async_account_file))
     filter_sql = """
     select account_id,adgroup_id,mt,service_code from (
      select account_id, adgroup_id, '1' as mt, service_code from
@@ -1359,7 +1362,6 @@ def account_info_data(AirflowDagId="", AirflowTaskId="", MediaType="",TaskInfo="
      ) t  where service_code is not null and service_code !='' order by mt
      """ % (ExecDate, ExecDate, ExecDate)
     print("过滤sql：%s" % (filter_sql))
-
     ok = beeline_session.execute_sql_result_2_local_file(sql=filter_sql,file_name=adgroup_info_data_file)
     if ok is False:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
