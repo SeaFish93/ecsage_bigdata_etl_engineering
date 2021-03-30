@@ -239,9 +239,10 @@ def get_oe_async_tasks_status_all_01(AirflowDagId="", AirflowTaskId="", MediaTyp
                                                                )
             os.system("""echo "%s">>%s""" % (status_id, celery_task_status_file))
         # 获取状态
-        celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+        #celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
         print("总请求数：%s，正在等待celery队列执行完成！！！" % (len(datas)))
-        wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(datas),TaskFlag=task_flag)
+        #wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(datas),TaskFlag=task_flag)
+        wait_for_celery_status(StatusList=[], RequestRows=len(datas), TaskFlag=task_flag)
         print("celery队列执行完成！！！")
         print("等待重试异常任务！！！")
         rerun_async_create_tasks_exception(DataFileDir=local_dir, ExceptionFile=task_exception_file,Flag="status",
@@ -380,9 +381,10 @@ def get_oe_async_tasks_create_all_01(AirflowDagId="", AirflowTaskId="", TaskInfo
         os.system("""echo "%s %s %s %s %s">>%s""" % (status_id, data[0], data[1], data[2], data[3], celery_task_status_file))
         n = n + 1
     # 获取状态
-    celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
+    #celery_task_id, status_wait = get_celery_status_list(CeleryTaskStatusFile=celery_task_status_file)
     print("总请求数：%s，正在等待celery队列执行完成！！！"%(len(all_rows)))
-    wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(all_rows),TaskFlag=task_flag)
+    #wait_for_celery_status(StatusList=celery_task_id,RequestRows=len(all_rows),TaskFlag=task_flag)
+    wait_for_celery_status(StatusList=[], RequestRows=len(all_rows), TaskFlag=task_flag)
     print("celery队列执行完成！！！")
     print("等待重试异常任务！！！")
     rerun_async_create_tasks_exception(DataFileDir=local_dir, ExceptionFile=task_exception_file,Flag="create",

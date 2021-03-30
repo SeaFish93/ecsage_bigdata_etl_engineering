@@ -1418,3 +1418,13 @@ def set_tc_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
                 if int(status) == 0:
                     break;
     return code
+
+def celery_task_status_in_database(MysqlSession="",TaskFlag="",RequestRows=""):
+    run_wait = False
+    # 判断请求个数是否与请求完成个数一致
+    sql = """select count(1) from metadb.celery_sync_status where task_id = '%s' """ % (TaskFlag)
+    ok, request_task_finish_rows = MysqlSession.get_all_rows(sql=sql)
+    if ok:
+        if int(RequestRows) == int(request_task_finish_rows[0][0]):
+            run_wait = True
+    return run_wait
