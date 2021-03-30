@@ -259,7 +259,7 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
                   time.sleep(5)
           n = n + 1
       # 记录状态
-      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+      status_id = md5(str(str(ParamJson) + ServiceCode + Token).encode('utf8')).hexdigest()
       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
       sql = """
                insert into metadb.celery_sync_status
@@ -433,7 +433,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
               time.sleep(5)
         n = n + 1
       # 记录状态
-      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+      status_id = md5(str(str(ParamJson) + ServiceCode + Token).encode('utf8')).hexdigest()
       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
       sql = """
            insert into metadb.celery_sync_status
@@ -486,7 +486,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
                time.sleep(5)
          n = n + 1
        # 记录状态
-       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+       status_id = md5(str(str(ParamJson)+ServiceCode+Token).encode('utf8')).hexdigest()
        etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
        sql = """
            insert into metadb.celery_sync_status
@@ -533,7 +533,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
                   time.sleep(5)
           n = n + 1
       # 记录状态
-      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+      status_id = md5(str(str(ParamJson) + ServiceCode + Token).encode('utf8')).hexdigest()
       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
       sql = """
         insert into metadb.celery_sync_status
@@ -581,7 +581,7 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
                   time.sleep(5)
           n = n + 1
       # 记录状态
-      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
+      status_id = md5(str(str(ParamJson) + ServiceCode + Token).encode('utf8')).hexdigest()
       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
       sql = """
         insert into metadb.celery_sync_status
