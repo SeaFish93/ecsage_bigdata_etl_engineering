@@ -13,11 +13,10 @@ import json
 import ast
 
 conf = Conf().conf
-etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+
 
 #入口方法
 def main(TaskInfo,**kwargs):
-    print("111")
     global airflow
     global developer
     global regexp_extract_column
@@ -26,9 +25,9 @@ def main(TaskInfo,**kwargs):
     hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     exec_date = airflow.execution_date_utc8_str[0:10]
+    target_handle = TaskInfo[7]
     target_db = TaskInfo[8]
     target_table = TaskInfo[10]
-
     export_hive_datafile(BeelineSession=beeline_session, TargetDB=target_db, TargetTable=target_table,
                        AirflowDag=airflow.dag, AirflowTask=airflow.task,
                        TaskInfo=TaskInfo, ExecDate=exec_date
@@ -79,6 +78,7 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
             %s
            -- limit 1 
             """ % (export_columns, source_db, source_table,increment_columns, increment_date, filter_condition)
+      print("delete_sqlsql：%s" % (delete_sql))
       print("过滤sql：%s" % (filter_sql))
   elif int(export_mode) == 1:
       delete_sql = """
@@ -90,6 +90,7 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
                   %s
                  -- limit 1   
                   """ % (export_columns, source_db, source_table, filter_condition)
+      print("delete_sqlsql：%s" % (delete_sql))
       print("过滤sql：%s" % (filter_sql))
   ok = BeelineSession.execute_sql_result_2_local_file(sql=filter_sql,file_name=tmp_data_task_file)
   if ok is False:
@@ -104,11 +105,11 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
      set_exit(LevelStatu="red", MSG=msg)
 
   load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName=target_db, TableName=target_table,
-                  Columns=export_columns, DeleteSql=delete_sql,ExecDate=ExecDate)
+                  Columns=export_columns, DeleteSql=delete_sql,ExecDate=ExecDate, MysqlSession=mysql_session)
 
-def load_data_mysql(AsyncAccountFile="",DataFile="",DbName="",TableName="",Columns="",DeleteSql="",ExecDate=""):
+def load_data_mysql(AsyncAccountFile="",DataFile="",DbName="",TableName="",Columns="",DeleteSql="",ExecDate="",MysqlSession=""):
     target_file = os.listdir(AsyncAccountFile)
-    ok = etl_md.local_file_to_mysql(sql=DeleteSql)
+    ok = MysqlSession.local_file_to_mysql(sql=DeleteSql)
     if ok is False:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
                                SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
