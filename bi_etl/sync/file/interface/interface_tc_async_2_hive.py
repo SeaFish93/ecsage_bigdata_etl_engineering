@@ -1323,7 +1323,7 @@ def rerun_exception_create_tasks(AsyncAccountDir="", ExceptionFile="", DataFile=
 def account_info_data(AirflowDagId="", AirflowTaskId="", MediaType="",TaskInfo="", ExecDate=""):
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     hostname = socket.gethostname()
-    async_account_file = """/data/ecsage_data/tencentengine/%s/async/%s/%s/%s""" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
+    async_account_file = "/data/ecsage_data/tencentengine/%s/async/%s/%s/%s" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
     adgroup_info_data_file = """%s/adgroup_info_data_file.log""" % (async_account_file)
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""chmod -R 777 %s""" % (async_account_file))
