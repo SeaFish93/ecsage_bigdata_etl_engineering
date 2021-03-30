@@ -707,33 +707,34 @@ def wait_for_celery_status(StatusList="",RequestRows="",TaskFlag=""):
             if int(RequestRows) == int(request_task_finish_rows[0][0]):
                 run_wait = False
                 break;
-        for status in StatusList:
-            # 判断是否成功
-            if get_celery_job_status(CeleryTaskId=status) is False:
-                status_false.append(status)
-            else:
-                pass
-        if len(status_false) > 0:
-            wait_mins = 600
-            if sleep_num <= wait_mins:
-                min = 60
-                print("等待第%s次%s秒" % (sleep_num, min))
-                time.sleep(min)
-            else:
-                msg = "等待celery队列完成超时！！！\n%s" % (status_false)
-                msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                                       SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                                       TargetTable="%s.%s" % ("", ""),
-                                       BeginExecDate="",
-                                       EndExecDate="",
-                                       Status="Error",
-                                       Log=msg,
-                                       Developer="developer")
-                set_exit(LevelStatu="red", MSG=msg)
-        else:
-            run_wait = False
-        status_false.clear()
-        sleep_num = sleep_num + 1
+        if StatusList is not None and len(StatusList) > 0:
+           for status in StatusList:
+               # 判断是否成功
+               if get_celery_job_status(CeleryTaskId=status) is False:
+                   status_false.append(status)
+               else:
+                   pass
+           if len(status_false) > 0:
+               wait_mins = 600
+               if sleep_num <= wait_mins:
+                   min = 60
+                   print("等待第%s次%s秒" % (sleep_num, min))
+                   time.sleep(min)
+               else:
+                   msg = "等待celery队列完成超时！！！\n%s" % (status_false)
+                   msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                                          SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                                          TargetTable="%s.%s" % ("", ""),
+                                          BeginExecDate="",
+                                          EndExecDate="",
+                                          Status="Error",
+                                          Log=msg,
+                                          Developer="developer")
+                   set_exit(LevelStatu="red", MSG=msg)
+           else:
+               run_wait = False
+           status_false.clear()
+           sleep_num = sleep_num + 1
 
 # 重跑异常任务
 def rerun_exception_tasks(AsyncAccountDir="", ExceptionFile="", AsyncNotemptyFile="", AsyncemptyFile="",
