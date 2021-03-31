@@ -31,7 +31,7 @@ import socket
 
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
-
+interface_data_dir = conf.get("Interface", "oe_interface_data_home")
 
 # 入口方法
 def main(TaskInfo, **kwargs):
@@ -57,7 +57,8 @@ def main(TaskInfo, **kwargs):
     elif task_type == 5:
         get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 6:
-        get_oe_async_tasks_account(ExecDate=exec_date,TaskInfo=TaskInfo)
+        beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
+        get_oe_async_tasks_account(BeelineSession=beeline_session,ExecDate=exec_date,TaskInfo=TaskInfo)
     elif task_type == 1:
         get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
                                              MediaType=media_type, ExecDate=exec_date,IsFilterAccount=is_filter_account)
@@ -66,21 +67,76 @@ def main(TaskInfo, **kwargs):
                                          TaskInfo=TaskInfo, ExecDate=exec_date
                                          )
 
-def get_oe_async_tasks_account(ExecDate="",TaskInfo=""):
+def get_oe_async_tasks_account(BeelineSession="",ExecDate="",TaskInfo=""):
+    hostname = socket.gethostname()
+    local_dir = """%s/%s/sync/%s/%s/%s""" % (interface_data_dir, hostname, ExecDate, airflow.dag, airflow.task)
+    data_file = """%s/data_file.log"""%(local_dir)
+    os.system("""mkdir -p %s""" % (local_dir))
+    os.system("""chmod -R 777 %s""" % (local_dir))
+    os.system("""rm -f %s/*""" % (local_dir))
+    hive_sql = """
+      add file hdfs:///tmp/airflow/get_arrary.py;
+      select returns_account_id
+      from (select returns_account_id
+                   ,get_json_object(data_num_colums,'$.cost') as cost
+            from(select split(data_colums,'@@####@@')[1] as data_colums
+                        ,split(split(data_colums,'@@####@@')[0],'##&&##')[1] as returns_account_id 
+                        ,split(split(data_colums,'@@####@@')[0],'##&&##')[2] as request_type 
+                from(select transform(concat_ws('##@@',concat_ws('##&&##',returns_colums,returns_account_id,request_type),data_colums)) USING 'python get_arrary.py' as (data_colums)
+                     from(select trim(get_json_object(a.request_data,'$.returns_columns')) as returns_colums 
+                                 ,get_json_object(a.request_data,'$.data.list') as data_colums 
+                                 ,trim(get_json_object(a.request_data,'$.returns_account_id')) as returns_account_id 
+                                 ,request_type
+                          from etl_mid.oe_set_insert_sync_account a
+                          where a.etl_date = '2021-03-30'
+                         ) a
+                     where data_colums is not null
+                       and data_colums  <> '[]'
+                    ) b
+                ) c
+            lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
+      ) a
+      where cost > 0
+    """
+    ok = BeelineSession.execute_sql_result_2_local_file(sql=hive_sql,file_name=data_file)
+    if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % ("TargetDB", "TargetTable"),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="拉取过滤子账户表出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    # 落地有消耗数据
+    load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file,
+                    TableName="oe_valid_account_interface", Columns="account_id")
     interface_flag = TaskInfo[20]
     etl_md.execute_sql("""delete from metadb.oe_account_interface where  exec_date = '%s'""" % (ExecDate))
     sql = """
        insert into metadb.oe_account_interface
        (account_id,media_type,service_code,token_data,exec_date)
-       select account_id,media_type,service_code,token_data,exec_date
-       from metadb.oe_valid_account_interface where exec_date = '%s'
-              union all
-       select a.account_id,a.media_type,a.service_code,a.token_data,'%s' as exec_date
-       from metadb.oe_async_create_task a
-       where task_id = '111111'
-         and interface_flag = '%s'
-         and task_id <> '0'
-    """ % (ExecDate,ExecDate,interface_flag)
+       select a.account_id,b.media_type
+              ,b.service_code,b.token_code
+              ,'%s' as exec_date
+       from metadb.oe_account_interface a
+       inner join metadb.media_advertiser b
+       on a.account_id = b.account_id
+       where b.media_type in (2,201,203) 
+    """%(ExecDate)
+    ### sql = """
+    ###    insert into metadb.oe_account_interface
+    ###    (account_id,media_type,service_code,token_data,exec_date)
+    ###    select account_id,media_type,service_code,token_data,exec_date
+    ###    from metadb.oe_valid_account_interface where exec_date = '%s'
+    ###           union all
+    ###    select a.account_id,a.media_type,a.service_code,a.token_data,'%s' as exec_date
+    ###    from metadb.oe_async_create_task a
+    ###    where task_id = '111111'
+    ###      and interface_flag = '%s'
+    ###      and task_id <> '0'
+    ### """ % (ExecDate,ExecDate,interface_flag)
     ok = etl_md.execute_sql(sql)
     if ok is False:
         msg = "写入目标MySQL筛选子账户表出现异常！！！"
