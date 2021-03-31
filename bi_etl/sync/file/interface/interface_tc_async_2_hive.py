@@ -888,12 +888,6 @@ def get_local_file_2_hive(MediaType="", TargetHandleHive="", TargetHandleBeeline
                                Log="API采集没执行！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
-    print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
-    print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
-    os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
-    if data_file_list is not None and len(data_file_list) > 0:
-        get_local_hdfs_thread(TargetDb=TargetDb, TargetTable=TargetTable, ExecDate=ExecDate,
-                              DataFileList=data_file_list, HDFSDir=hdfs_dir)
     # 获取列名
     get_source_columns = os.popen(
         """grep -v 'empty result' %s |head -1|sed "s/trace_id#&#ds{.*}trace_id#&#ds//g" """ % (data_file_list[0]))
@@ -928,6 +922,12 @@ def get_local_file_2_hive(MediaType="", TargetHandleHive="", TargetHandleBeeline
          ;
         """ % (etl_mid_table, columns.replace(",", "", 1))
     beeline_session.execute_sql(create_sql)
+    print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
+    print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
+    os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
+    if data_file_list is not None and len(data_file_list) > 0:
+        get_local_hdfs_thread(TargetDb=TargetDb, TargetTable=TargetTable, ExecDate=ExecDate,
+                              DataFileList=data_file_list, HDFSDir=hdfs_dir)
     # load hdfs文件落地至hive
     ok = beeline_session.execute_sql(load_sqls)
     if ok is False:
