@@ -76,7 +76,7 @@ def get_oe_async_tasks_account(BeelineSession="",ExecDate="",TaskInfo=""):
     os.system("""rm -f %s/*""" % (local_dir))
     hive_sql = """
       add file hdfs:///tmp/airflow/get_arrary.py;
-      select returns_account_id
+      select concat_ws(' ',returns_account_id,'%s')
       from (select returns_account_id
                    ,get_json_object(data_num_colums,'$.cost') as cost
             from(select split(data_colums,'@@####@@')[1] as data_colums
@@ -97,7 +97,7 @@ def get_oe_async_tasks_account(BeelineSession="",ExecDate="",TaskInfo=""):
             lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
       ) a
       where cost > 0
-    """
+    """%(ExecDate)
     ok = BeelineSession.execute_sql_result_2_local_file(sql=hive_sql,file_name=data_file)
     if ok is False:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
@@ -110,8 +110,9 @@ def get_oe_async_tasks_account(BeelineSession="",ExecDate="",TaskInfo=""):
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
     # 落地有消耗数据
+    etl_md.execute_sql("""delete from metadb.oe_valid_account_interface where exec_date = '%s'""" % (ExecDate))
     load_data_mysql(AsyncAccountFile=local_dir, DataFile=data_file,
-                    TableName="oe_valid_account_interface", Columns="account_id")
+                    TableName="oe_valid_account_interface", Columns="account_id,exec_date")
     interface_flag = TaskInfo[20]
     etl_md.execute_sql("""delete from metadb.oe_account_interface where  exec_date = '%s'""" % (ExecDate))
     sql = """
