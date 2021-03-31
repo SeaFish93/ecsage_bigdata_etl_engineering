@@ -404,7 +404,7 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",
         n = n + 1
 
 #处理不分页
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='2000/m')
 def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",
                  TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",
                  ArrayFlag="",TargetFlag="oe"):
