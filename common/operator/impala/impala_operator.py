@@ -32,6 +32,7 @@ class ImpalaNoSqlDB(BaseDB):
 
     def get_all_rows(self, sql):
         try:
+            print("执行SQL：%s"%(sql))
             self.get_cursor()
             cursor = self.cursor
             cursor.execute(sql)

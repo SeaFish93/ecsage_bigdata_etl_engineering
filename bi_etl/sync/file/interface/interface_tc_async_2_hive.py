@@ -35,7 +35,6 @@ import ast
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 
-
 # 入口方法
 def main(TaskInfo, **kwargs):
     global airflow
@@ -66,7 +65,10 @@ def main(TaskInfo, **kwargs):
         get_tc_async_tasks_status(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, MediaType=media_type,
                                          TaskInfo=TaskInfo, ExecDate=exec_date
                                          )
-
+    elif task_type == 7:
+        account_info_data(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo, MediaType=media_type,
+                          ExecDate=exec_date
+                                         )
 
 def get_oe_async_tasks_status_all(AirflowDagId="", AirflowTaskId="", TaskInfo="", ExecDate=""):
     media_type = 2
@@ -783,7 +785,7 @@ def get_tc_async_tasks_data(AirflowDagId="", AirflowTaskId="", TaskInfo="", Medi
     task_flag = "%s.%s" % (AirflowDagId, AirflowTaskId)
     local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
     hostname = socket.gethostname()
-    local_dir = """/data/ecsage_data/oceanengine/%s/async/%s/%s/%s""" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
+    local_dir = """/data/ecsage_data/tencentengine/%s/async/%s/%s/%s""" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
     celery_status_file = "%s/celery_status_file.log" % (local_dir)
     data_task_file = """%s/data_%s.log""" % (local_dir, AirflowTaskId)
     task_exception_file = "%s/task_exception_file.log" % (local_dir)
@@ -886,12 +888,6 @@ def get_local_file_2_hive(MediaType="", TargetHandleHive="", TargetHandleBeeline
                                Log="API采集没执行！！！",
                                Developer="developer")
         set_exit(LevelStatu="red", MSG=msg)
-    print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
-    print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
-    os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
-    if data_file_list is not None and len(data_file_list) > 0:
-        get_local_hdfs_thread(TargetDb=TargetDb, TargetTable=TargetTable, ExecDate=ExecDate,
-                              DataFileList=data_file_list, HDFSDir=hdfs_dir)
     # 获取列名
     get_source_columns = os.popen(
         """grep -v 'empty result' %s |head -1|sed "s/trace_id#&#ds{.*}trace_id#&#ds//g" """ % (data_file_list[0]))
@@ -926,6 +922,12 @@ def get_local_file_2_hive(MediaType="", TargetHandleHive="", TargetHandleBeeline
          ;
         """ % (etl_mid_table, columns.replace(",", "", 1))
     beeline_session.execute_sql(create_sql)
+    print("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file), "************************************")
+    print("hadoop fs -put %s* %s" % (DataFile, hdfs_dir), "************************************")
+    os.system("hadoop fs -rmr %s*" % (hdfs_dir + "/" + data_file))
+    if data_file_list is not None and len(data_file_list) > 0:
+        get_local_hdfs_thread(TargetDb=TargetDb, TargetTable=TargetTable, ExecDate=ExecDate,
+                              DataFileList=data_file_list, HDFSDir=hdfs_dir)
     # load hdfs文件落地至hive
     ok = beeline_session.execute_sql(load_sqls)
     if ok is False:
@@ -1318,3 +1320,60 @@ def rerun_exception_create_tasks(AsyncAccountDir="", ExceptionFile="", DataFile=
     if ex_datas is not None and len(ex_datas) > 0:
         print("还有特别异常任务存在！！！")
         print(ex_datas[0])
+def account_info_data(AirflowDagId="", AirflowTaskId="", MediaType="",TaskInfo="", ExecDate=""):
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
+    hostname = socket.gethostname()
+    async_account_file = "/data/ecsage_data/tencentengine/%s/async/%s/%s/%s" % (hostname,ExecDate, AirflowDagId, AirflowTaskId)
+    adgroup_info_data_file = """%s/adgroup_info_data_file.log""" % (async_account_file)
+    os.system("""mkdir -p %s""" % (async_account_file))
+    os.system("""chmod -R 777 %s""" % (async_account_file))
+    os.system("""rm -f %s/*""" % (async_account_file))
+    filter_sql = """
+    select account_id,adgroup_id,mt,service_code from (
+     select account_id, adgroup_id, '1' as mt, service_code from
+     (select tc_inder.account_id, tc_inder.campaign_id, tc_inder.adgroup_id, ma.service_code, sum(cast(tc_inder.view_count as double)) as vc, sum(cast(tc_inder.cost as double)) as cost
+     from ods.tc_getdailyreports_daily_reports tc_inder
+     left join ods.media_account_big_data_mdg_media_advertiser ma
+     on tc_inder.account_id = ma.account_id
+     where tc_inder.etl_date='%s' and tc_inder.time_line='REQUEST_TIME' and request_type='1'
+     group by tc_inder.account_id, tc_inder.campaign_id, tc_inder.adgroup_id, ma.service_code) a
+     where --a.vc > 0 or
+     cost > 0
+     union all
+     select account_id, adgroup_id, '101' as mt, service_code from
+     (select tc_outer.account_id, tc_outer.campaign_id, tc_outer.adgroup_id, ma.service_code, sum(cast(tc_outer.view_count as double)) as vc, sum(cast(tc_outer.cost as double)) as cost
+     from ods.tc_getdailyreports_daily_reports tc_outer
+     left join ods.media_account_big_data_mdg_media_advertiser ma
+     on tc_outer.account_id = ma.account_id
+     where tc_outer.etl_date='%s' and tc_outer.time_line='REQUEST_TIME' and request_type='101'
+     group by tc_outer.account_id, tc_outer.campaign_id, tc_outer.adgroup_id, ma.service_code) a
+     where -- a.vc > 0 or
+     cost > 0
+     union all
+     select account_id, adgroup_id, '102' as mt, service_code from
+     (select tc_wechat.account_id, tc_wechat.campaign_id, tc_wechat.adgroup_id, ma.service_code, sum(cast(tc_wechat.view_count as double)) as vc, sum(cast(tc_wechat.cost as double)) as cost
+     from ods.tc_getdailyreports_wechat_daily_reports tc_wechat
+     left join ods.media_account_big_data_mdg_media_advertiser ma
+     on tc_wechat.account_id = ma.account_id
+     where tc_wechat.etl_date='%s' and tc_wechat.time_line='REPORTING_TIME'
+     group by tc_wechat.account_id, tc_wechat.campaign_id, tc_wechat.adgroup_id, ma.service_code) a
+     where --a.vc > 0 or
+     cost > 0
+     ) t  where service_code is not null and service_code !='' order by mt
+     """ % (ExecDate, ExecDate, ExecDate)
+    print("过滤sql：%s" % (filter_sql))
+    ok = beeline_session.execute_sql_result_2_local_file(sql=filter_sql,file_name=adgroup_info_data_file)
+    if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % ("metadb", "adgroup_info"),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="导出文件出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+    etl_md.execute_sql("truncate metadb.adgroup_info")
+    columns = """account_id,adgroup_id,mt,service_code"""
+    load_data_mysql_tab(AsyncAccountFile=async_account_file, DataFile=adgroup_info_data_file,
+                    TableName="adgroup_info",  Columns=columns)
