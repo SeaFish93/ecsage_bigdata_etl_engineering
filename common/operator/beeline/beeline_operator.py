@@ -27,6 +27,7 @@ class BeelineNoSqlDB(BaseDB):
                           set hive.auto.convert.join=false;
           """
         exec_sql = config_param + sql
+        print(exec_sql)
         (res, output) = subprocess.getstatusoutput("""%s --showHeader="false" --outputformat="tsv2" -e "%s">%s"""%(self.conn, exec_sql,file_name))
         if res != 0:
             print("beeline execute_sql_result_2_local_file sql Error:" + exec_sql)

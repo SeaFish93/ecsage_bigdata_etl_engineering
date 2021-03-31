@@ -88,7 +88,7 @@ def get_oe_async_tasks_account(BeelineSession="",ExecDate="",TaskInfo=""):
                                  ,trim(get_json_object(a.request_data,'$.returns_account_id')) as returns_account_id 
                                  ,request_type
                           from etl_mid.oe_set_insert_sync_account a
-                          where a.etl_date = '2021-03-30'
+                          where a.etl_date = '%s'
                          ) a
                      where data_colums is not null
                        and data_colums  <> '[]'
@@ -97,7 +97,7 @@ def get_oe_async_tasks_account(BeelineSession="",ExecDate="",TaskInfo=""):
             lateral view explode(split(data_colums, '##@@')) num_line as data_num_colums
       ) a
       where cost > 0
-    """%(ExecDate)
+    """%(ExecDate,ExecDate)
     ok = BeelineSession.execute_sql_result_2_local_file(sql=hive_sql,file_name=data_file)
     if ok is False:
         msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
