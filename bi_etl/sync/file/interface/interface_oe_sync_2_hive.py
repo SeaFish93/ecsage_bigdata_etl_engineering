@@ -201,6 +201,16 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           and a.media_type = '%s'
         group by a.account_id, a.media_type, a.service_code,a.token_data
       """ % (task_flag,ExecDate,media_type)
+  #过滤有消耗的广告主
+  if "etl_mid_oe_set_insert_sync_account" in AirflowTask:
+      sql = """
+        select a.account_id, a.media_type, a.service_code,'' as id
+               ,'%s' as flag
+               ,a.token_code
+        from metadb.media_advertiser a
+        where a.media_type = '%s'
+        group by a.account_id, a.media_type, a.service_code,a.token_code
+      """%(task_flag,ExecDate,media_type)
   ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
