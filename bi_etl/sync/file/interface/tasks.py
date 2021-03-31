@@ -27,6 +27,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.bi_etl.web_interface.exec_interface_script import execute
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_write_local_file
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 import json
 from hashlib import md5
 import ast
@@ -234,7 +235,7 @@ def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate=""
 @app.task(rate_limit='1000/m')
 def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJson="",Token="",
                                    ReturnAccountId="",ServiceCode="",TaskFlag="",
-                                   TaskExceptionFile="",RequestTaskRowsFile=""):
+                                   TaskExceptionFile=""):
     print("执行数据子账户：%s"%(ReturnAccountId))
     set_true = True
     n = 0
@@ -258,10 +259,14 @@ def get_oe_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
                   time.sleep(5)
           n = n + 1
       # 记录状态
-      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                          DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-      if remark != "正常":
+      status_id = md5(str(str(ParamJson) + ServiceCode + Token).encode('utf8')).hexdigest()
+      etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+      sql = """
+               insert into metadb.celery_sync_status
+               select '%s','%s'
+            """ % (TaskFlag,status_id)
+      ok = etl_md.execute_sql(sql=sql)
+      if ok is False:
           code = 999999999
           print(code)
     except Exception as e:
@@ -358,7 +363,7 @@ def get_creative_detail_data(ParamJson="", UrlPath="", DataFileDir="", DataFile=
 #获取代理下子账户页数
 @app.task(rate_limit='1000/m')
 def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",
-                          DataFile="",PageFileData="",TaskFlag="",RequestTaskRowsFile=""):
+                          DataFile="",PageFileData="",TaskFlag=""):
     set_true = True
     n = 0
     while set_true:
@@ -375,19 +380,11 @@ def get_service_page_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize=
             else:
                 time.sleep(2)
         n = n + 1
-    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-    if int(status) != 0:
-        for i in range(100):
-            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-            if int(status) == 0:
-                break;
-            time.sleep(1)
 
 #获取代理下子账户
 @app.task(rate_limit='1000/m')
 def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",
-                     DataFile="",PageFileData="",TaskFlag="",TaskExceptionFile="",
-                     RequestTaskRowsFile=""):
+                     DataFile="",PageFileData="",TaskFlag="",TaskExceptionFile=""):
     set_true = True
     n = 0
     while set_true:
@@ -405,19 +402,12 @@ def get_service_data(ServiceId="",ServiceCode="",Media="",Page="",PageSize="",
             else:
                 time.sleep(5)
         n = n + 1
-    status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-    if int(status) != 0:
-        for i in range(100):
-            status = os.system("""echo "1">>%s """ % (RequestTaskRowsFile))
-            if int(status) == 0:
-                break;
-            time.sleep(1)
 
 #处理不分页
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='2000/m')
 def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",
                  TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",
-                 ArrayFlag="",TargetFlag="oe",RequestTaskRowsFile=""):
+                 ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
     code = 9999
@@ -443,10 +433,14 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
               time.sleep(5)
         n = n + 1
       # 记录状态
-      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                          DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-      if remark != "正常":
+      status_id = md5(str(str(ParamJson) + ServiceCode + Token).encode('utf8')).hexdigest()
+      etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+      sql = """
+           insert into metadb.celery_sync_status
+           select '%s','%s'
+        """ % (TaskFlag, status_id)
+      ok = etl_md.execute_sql(sql=sql)
+      if ok is False:
           code = 999999999
           print(code)
     except Exception as e:
@@ -459,10 +453,10 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
     return """code：%s""" % (code)
 
 #处理分页
-@app.task(rate_limit='1000/m')
+@app.task(rate_limit='3000/m')
 def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",
               ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",
-              Pagestyle="",ArrayFlag="",TargetFlag="oe",RequestTaskRowsFile=""):
+              Pagestyle="",ArrayFlag="",TargetFlag="oe"):
     set_true = True
     n = 0
     code = 9999
@@ -492,10 +486,14 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
                time.sleep(5)
          n = n + 1
        # 记录状态
-       status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-       remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                           DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-       if remark != "正常":
+       status_id = md5(str(str(ParamJson)+ServiceCode+Token).encode('utf8')).hexdigest()
+       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+       sql = """
+           insert into metadb.celery_sync_status
+           select '%s','%s'
+        """ % (TaskFlag, status_id)
+       ok = etl_md.execute_sql(sql=sql)
+       if ok is False:
            code = 999999999
            print(code)
     except Exception as e:
@@ -511,7 +509,7 @@ def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
 @app.task(rate_limit='1000/m')
 def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson="",
                               Token="",ReturnAccountId="",ServiceCode="",InterfaceFlag="",
-                              MediaType="",TaskExceptionFile="",TaskFlag="",RequestTaskRowsFile=""):
+                              MediaType="",TaskExceptionFile="",TaskFlag=""):
     set_true = True
     n = 0
     code = 9999
@@ -535,10 +533,14 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
                   time.sleep(5)
           n = n + 1
       # 记录状态
-      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                          DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-      if remark != "正常":
+      status_id = md5(str(str(ParamJson) + ServiceCode + Token).encode('utf8')).hexdigest()
+      etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+      sql = """
+        insert into metadb.celery_sync_status
+        select '%s','%s'
+      """ % (TaskFlag, status_id)
+      ok = etl_md.execute_sql(sql=sql)
+      if ok is False:
           code = 999999999
           print(code)
     except Exception as e:
@@ -554,7 +556,7 @@ def get_oe_create_async_tasks(DataFileDir="",DataFile="",UrlPath="",ParamJson=""
 @app.task(rate_limit='1000/m')
 def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",ParamJson="",
                               Token="",ReturnAccountId="",ServiceCode="",MediaType="",TaskFlag="",
-                              TaskExceptionFile="",RequestTaskRowsFile=""):
+                              TaskExceptionFile=""):
     set_true = True
     n = 0
     code = 9999
@@ -579,10 +581,14 @@ def get_oe_status_async_tasks(ExecDate="",DataFileDir="",DataFile="",UrlPath="",
                   time.sleep(5)
           n = n + 1
       # 记录状态
-      status_id = md5(str(ParamJson).encode('utf8')).hexdigest()
-      remark, data = get_write_local_file(RequestsData=status_id, RequestID=status_id,IsHost="Y",
-                                          DataFileDir=DataFileDir, DataFile=RequestTaskRowsFile.split("/")[-1])
-      if remark != "正常":
+      status_id = md5(str(str(ParamJson) + ServiceCode + Token).encode('utf8')).hexdigest()
+      etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+      sql = """
+        insert into metadb.celery_sync_status
+        select '%s','%s'
+      """ % (TaskFlag, status_id)
+      ok = etl_md.execute_sql(sql=sql)
+      if ok is False:
           code = 999999999
           print(code)
     except Exception as e:

@@ -186,28 +186,28 @@ def get_local_hdfs_thread(TargetDb="",TargetTable="",ExecDate="",DataFileList=""
         th_n = th_n + 1
         i = i + 1
 
-    size_error_file = DataFileList[0].rsplit("/", 1)[0] + '/' + 'file_size_error.log'
-    os.system(""" > %s"""%(size_error_file))
+    ####size_error_file = DataFileList[0].rsplit("/", 1)[0] + '/' + 'file_size_error.log'
+    ####os.system(""" > %s"""%(size_error_file))
     for data_files in DataFileList:
-        file_size = os.path.getsize(data_files)
-        if int(file_size) == 0:
-            print("【%s】文件大小异常，请注意" % (data_files))
-            data_files_list=data_files.rsplit("/",1)
-            os.system("""echo "%s %s %s" >> %s""" % (data_files_list[0],data_files_list[1],int(file_size),size_error_file))
+        ###file_size = os.path.getsize(data_files)
+        ###if int(file_size) == 0:
+        ###    print("【%s】文件大小异常，请注意" % (data_files))
+        ###    data_files_list=data_files.rsplit("/",1)
+            #os.system("""echo "%s %s %s" >> %s""" % (data_files_list[0],data_files_list[1],int(file_size),size_error_file))
 
         status = os.system("""hadoop fs -ls %s/%s"""%(HDFSDir,data_files.split("/")[-1]))
         if int(status) == 0:
             file_num = file_num + 1
 
-    error_file_size = os.path.getsize(size_error_file)
-    if int(error_file_size) > 0 and EtlMdSession is not None :
-        insert_sql = """
-            load data local infile '%s' into table metadb.monitor_collect_file_log fields terminated by ' ' lines terminated by '\\n' (target_file_dir,target_file,target_file_size)
-        """ % (size_error_file)
-        print(insert_sql)
-        if len(EtlMdSession) > 0:#故意错误代码
-            print("利用报错使其重跑！！！并记录到Mysql！")
-       #etl_md.local_file_to_mysql(sql=insert_sql)
+    ####error_file_size = os.path.getsize(size_error_file)
+    ####if int(error_file_size) > 0 and EtlMdSession is not None :
+    ####    insert_sql = """
+    ####        load data local infile '%s' into table metadb.monitor_collect_file_log fields terminated by ' ' lines terminated by '\\n' (target_file_dir,target_file,target_file_size)
+    ####    """ % (size_error_file)
+    ####    print(insert_sql)
+    ####    if len(EtlMdSession) > 0:#故意错误代码
+    ####        print("利用报错使其重跑！！！并记录到Mysql！")
+    ####   #etl_md.local_file_to_mysql(sql=insert_sql)
 
     if len(DataFileList) != file_num:
        msg = get_alert_info_d(DagId="airflow.dag", TaskId="airflow.task",
@@ -226,7 +226,7 @@ def local_hdfs_thread(DataFile="",HDFSDir="",arg=None):
     if arg is not None or len(arg) > 0:
        DataFile = arg["DataFile"]
        HDFSDir = arg["HDFSDir"]
-       os.system("hadoop fs -put %s %s/" % (DataFile, HDFSDir))
+       os.system("hadoop fs -moveFromLocal -f %s %s" % (DataFile, HDFSDir))
 
 #创建创意
 def set_oe_async_status_content_content(ExecData="",AsyncNotemptyFile="",AsyncEmptyFile="",ExecDate=""):
@@ -1418,3 +1418,13 @@ def set_tc_async_tasks_data_return(DataFileDir="",DataFile="",UrlPath="",ParamJs
                 if int(status) == 0:
                     break;
     return code
+
+def celery_task_status_in_database(MysqlSession="",TaskFlag="",RequestRows=""):
+    run_wait = False
+    # 判断请求个数是否与请求完成个数一致
+    sql = """select count(1) from metadb.celery_sync_status where task_id = '%s' """ % (TaskFlag)
+    ok, request_task_finish_rows = MysqlSession.get_all_rows(sql=sql)
+    if ok:
+        if int(RequestRows) == int(request_task_finish_rows[0][0]):
+            run_wait = True
+    return run_wait
