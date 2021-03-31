@@ -120,7 +120,7 @@ def get_oe_async_tasks_account(BeelineSession="",ExecDate="",TaskInfo=""):
        select a.account_id,b.media_type
               ,b.service_code,b.token_code
               ,'%s' as exec_date
-       from metadb.oe_account_interface a
+       from metadb.oe_valid_account_interface a
        inner join metadb.media_advertiser b
        on a.account_id = b.account_id
        where b.media_type in (2,201,203) 
