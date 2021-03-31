@@ -124,8 +124,9 @@ def get_oe_async_tasks_account(BeelineSession="",ExecDate="",TaskInfo=""):
        from metadb.oe_valid_account_interface a
        inner join metadb.media_advertiser b
        on a.account_id = b.account_id
-       where b.media_type in (2,201,203) 
-    """%(ExecDate)
+       where a.exec_date = '%s'
+         and b.media_type in (2,201,203) 
+    """%(ExecDate,ExecDate)
     ### sql = """
     ###    insert into metadb.oe_account_interface
     ###    (account_id,media_type,service_code,token_data,exec_date)
