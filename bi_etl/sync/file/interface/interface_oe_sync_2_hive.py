@@ -250,23 +250,22 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                   time.sleep(10)
               else:
                   break
-    if "etl_mid_oe_set_insert_sync_account" not in AirflowTask:
-        #处理其它分页
-        sql = """
-            select a.account_id, a.media_type as media_type, a.service_code,a.page_num,a.request_filter,a.token
-            from metadb.oe_sync_page_interface a 
-            where page_num > 1
-              and flag = '%s'
-            group by a.account_id,  a.service_code,a.page_num,a.request_filter,a.media_type,a.token
-        """ % (task_flag)
-        ok, db_data = etl_md.get_all_rows(sql)
-        if db_data is not None and len(db_data) > 0:
-           etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
-           set_other_page_info(DataRows=db_data, UrlPath=url_path, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
-                               DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
-                               CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=page_size,Pagestyle=page_style
-                               ,ArrayFlag=ArrayFlag
-                               )
+    #处理其它分页
+    sql = """
+        select a.account_id, a.media_type as media_type, a.service_code,a.page_num,a.request_filter,a.token
+        from metadb.oe_sync_page_interface a 
+        where page_num > 1
+          and flag = '%s'
+        group by a.account_id,  a.service_code,a.page_num,a.request_filter,a.media_type,a.token
+    """ % (task_flag)
+    ok, db_data = etl_md.get_all_rows(sql)
+    if db_data is not None and len(db_data) > 0:
+       etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
+       set_other_page_info(DataRows=db_data, UrlPath=url_path, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
+                           DataFile=data_file, TaskExceptionFile=other_task_exception_file,PageTaskFile=other_page_task_file,
+                           CeleryPageStatusFile=celery_other_page_status_file, TaskFlag=task_flag, PageSize=page_size,Pagestyle=page_style
+                           ,ArrayFlag=ArrayFlag
+                           )
   else:
     #不分页
     set_not_page_info(DataRows=db_data, UrlPath=url_path, ParamJson=param_json, DataFileDir=local_dir,InterfaceFilterList=interface_filter_list,
