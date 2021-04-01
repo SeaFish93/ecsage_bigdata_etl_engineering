@@ -9,10 +9,6 @@ do
  kill -9 $line
 done
 
-ps -ef|grep 'report_test.%h'|awk '{print $2}'|while read line ;
-do
- kill -9 $line
-done
 
 cd /code/bigdata_item_code/ecsage_bigdata_etl_engineering
 git pull
