@@ -378,7 +378,7 @@ def get_tc_async_tasks_add(AirflowDagId="", AirflowTaskId="", TaskInfo="", Media
        (media_type,token_data,service_code,account_id,task_id,task_name,level)
        select a.media_type,a.token_code,a.service_code
               ,a.account_id,'0' as task_id,'999999' as task_name,'%s' as level
-       from (select account_id,mt from metadb.adgroup_info group by account_id,mt) a
+       from (select account_id,mt media_type from metadb.adgroup_info group by account_id,mt) a
        left join metadb.tc_async_add_task b
        on a.account_id = b.account_id
        and a.service_code = b.service_code
