@@ -415,7 +415,7 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
              """
              interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag
              """
-             interface_param_json = data[1]
+             interface_param_json = data[1].json()
              interface_param_json["report_fields"] = ReportFieldsList
              interface_param_json["group_by"] = GroupBy.split(",")
              if Flag == "create":
