@@ -9,7 +9,6 @@ do
  kill -9 $line
 done
 
-
 cd /code/bigdata_item_code/ecsage_bigdata_etl_engineering
 git pull
  #巨量
