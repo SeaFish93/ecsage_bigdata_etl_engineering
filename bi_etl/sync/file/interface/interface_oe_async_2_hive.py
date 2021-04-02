@@ -641,7 +641,7 @@ def get_oe_async_tasks_token(MediaType=""):
              select  service_code
              from big_data_mdg.media_advertiser a
              where media in (%s)
-               and is_actived = '1' 
+             --  and is_actived = '1' 
              group by service_code
             """ % (get_media_type)
     ok, all_rows = mysql_session.get_all_rows(get_service_code_sql)
@@ -654,7 +654,7 @@ def get_oe_async_tasks_token(MediaType=""):
                  select  account_id, media, service_code
                  from big_data_mdg.media_advertiser a
                  where media in (%s)
-                   and is_actived = '1'
+                 --  and is_actived = '1'
                    and account_id is not null
                    and account_id <> 'null'
                  group by account_id, media, service_code
