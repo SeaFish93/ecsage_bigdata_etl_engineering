@@ -365,8 +365,8 @@ def get_tc_async_tasks_add(AirflowDagId="", AirflowTaskId="", TaskInfo="", Media
     rerun_async_create_tasks_exception(DataFileDir=local_dir, ExceptionFile=task_exception_file,Flag="create",
                                        DataFile=data_file,CeleryTaskDataFile=celery_task_status_file,
                                        InterfaceFlag="%s.%s##%s"%(AirflowDagId,AirflowTaskId,level),
-                                       Columns="interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag"
-                                      )
+                                       Columns="interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag",
+                                      GroupBy=group_by,ReportFieldsList=report_fields_list)
     print("等待重试异常任务完成！！！")
     # 保存MySQL
     columns = """account_id,level,media_type,service_code,token_data,task_id,return_data,airflow_task_id"""
@@ -376,9 +376,9 @@ def get_tc_async_tasks_add(AirflowDagId="", AirflowTaskId="", TaskInfo="", Media
     sql = """
        insert into metadb.tc_async_add_task
        (media_type,token_data,service_code,account_id,task_id,task_name,level)
-       select a.media_type,a.token_code,a.service_code
+       select b.media_type,b.token_data,b.service_code
               ,a.account_id,'0' as task_id,'999999' as task_name,'%s' as level
-       from (select account_id,mt from metadb.adgroup_info group by account_id,mt) a
+       from (select account_id,mt,service_code from metadb.adgroup_info group by account_id,mt,service_code) a
        left join metadb.tc_async_add_task b
        on a.account_id = b.account_id
        and a.service_code = b.service_code
@@ -390,7 +390,7 @@ def get_tc_async_tasks_add(AirflowDagId="", AirflowTaskId="", TaskInfo="", Media
     etl_md.execute_sql(sql)
 
 #异常重试
-def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns="",Flag="create"):
+def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile="",DataFile="",CeleryTaskDataFile="",InterfaceFlag="",Columns="",Flag="create",GroupBy="",ReportFieldsList=""):
     celery_task_data_file = """%s/%s"""%(DataFileDir,CeleryTaskDataFile.split("/")[-1])
     #先保留第一次
     delete_sql = """delete from metadb.oe_sync_exception_tasks_interface_bak where interface_flag = '%s' """ % (InterfaceFlag)
@@ -415,9 +415,12 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
              """
              interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag
              """
+             interface_param_json = data[1].json()
+             interface_param_json["report_fields"] = ReportFieldsList
+             interface_param_json["group_by"] = GroupBy.split(",")
              if Flag == "create":
                status_id = get_tc_add_async_tasks_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
-                                                                UrlPath=data[0],ParamJson=data[1],
+                                                                UrlPath=data[0],ParamJson=interface_param_json,
                                                                 Token=data[5], ReturnAccountId=data[3],
                                                                 ServiceCode=data[2],Level=str(data[6]).split("##")[1],
                                                                 TaskFlag=str(data[6]).split("##")[0],

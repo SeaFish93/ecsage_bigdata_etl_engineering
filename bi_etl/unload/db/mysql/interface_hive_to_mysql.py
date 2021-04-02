@@ -41,7 +41,6 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
   data_task_file = """%s/data_%s.log"""%(local_dir,AirflowTask)
   tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
   data_file = data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
-
   source_db = TaskInfo[5]
   source_table = TaskInfo[6]
   target_handle = TaskInfo[7]
