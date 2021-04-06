@@ -415,12 +415,11 @@ def rerun_async_create_tasks_exception(ExecDate="",DataFileDir="",ExceptionFile=
              """
              interface_url,interface_param_json,service_code,account_id,media_type,token,interface_flag
              """
-             interface_param_json = data[1].json()
-             interface_param_json["report_fields"] = ReportFieldsList
-             interface_param_json["group_by"] = GroupBy.split(",")
              if Flag == "create":
+               param_json["report_fields"] = ReportFieldsList
+               param_json["group_by"] = GroupBy.split(",")
                status_id = get_tc_add_async_tasks_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
-                                                                UrlPath=data[0],ParamJson=interface_param_json,
+                                                                UrlPath=data[0],ParamJson=param_json,
                                                                 Token=data[5], ReturnAccountId=data[3],
                                                                 ServiceCode=data[2],Level=str(data[6]).split("##")[1],
                                                                 TaskFlag=str(data[6]).split("##")[0],
@@ -1151,7 +1150,7 @@ def rerun_exception_async_tasks(DataFileDir="", ExceptionFile="", DataFile="", C
             for data in datas:
                 param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""", """\""""))))
                 status_id = get_tc_async_tasks_data_celery.delay(DataFileDir=DataFileDir, DataFile=DataFile,
-                                                                 UrlPath="/open_api/2/async_task/download/",
+                                                                 UrlPath="async_report_files/get",
                                                                  ParamJson=param_json, Token=data[5],
                                                                  ReturnAccountId=data[3],
                                                                  ServiceCode=data[2], TaskFlag=InterfaceFlag,
