@@ -36,7 +36,7 @@ ES_2_HIVE = {
 def get_column_hive_type(column):
     c_d_type = str(column[1]).upper()
     if c_d_type in ["DOUBLE", "FLOAT", "DECIMAL"]:
-        c_style = re.match(r'.*(\(.*\)).*', column[3], re.L)
+        c_style = re.match(r'.*(\(.*\)).*', column[3])##c_style = re.match(r'.*(\(.*\)).*', column[3], re.L)
         if c_style:
             return MYSQL_2_HIVE[c_d_type] + c_style.group(1)
         return MYSQL_2_HIVE[c_d_type]+"(20,6)"
