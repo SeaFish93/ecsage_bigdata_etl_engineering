@@ -45,6 +45,28 @@ def get_test(**kwargs):
     now = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
     return kwargs
 
+@app.task()
+def PMI(words_fre="", pmi_threshold="",i=""):
+    import re
+    """
+    凝固度：min{P(abc)/P(ab)P(c),P(abc)/P(a)P(bc)}
+    """
+    #过滤单个字
+    if len(i) == 1:
+        pass
+    else:
+        if len(i) == 3:
+            pmi_threshold = 0.05
+        #计算px*py
+        p_x_p_y = min([words_fre.get(i[:j]) * words_fre.get(i[j:]) for j in range(1, len(i))])
+        #大于阈值的添加为新词
+        if words_fre.get(i) / p_x_p_y > pmi_threshold:
+          #过滤掉含有字母
+          if len(re.findall(re.compile(r'[A-Za-z]'), i)) == 0:
+            #new_words.append(i)
+            os.system(""" echo "%s,%s,%s,%s,%s">>/root/wangsong/data.pmi.log """ % (i,words_fre.get(i),p_x_p_y,words_fre.get(i) / p_x_p_y,pmi_threshold))
+
+
 #处理报表接口
 @app.task()
 def get_web_interface_data(**kwargs):
