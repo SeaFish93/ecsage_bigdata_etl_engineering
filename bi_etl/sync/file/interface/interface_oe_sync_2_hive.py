@@ -29,6 +29,7 @@ import socket
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 interface_data_dir = conf.get("Interface", "oe_interface_data_home")
+oe_celery_works_hostnames = eval(conf.get("Interface", "oe_celery_works_hostname"))
 
 #入口方法
 def main(TaskInfo,Level="",**kwargs):
@@ -119,6 +120,12 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""chmod -R 777 %s""" % (local_dir))
   os.system("""rm -f %s/*"""%(local_dir))
+  ##删除数据文件
+  for oe_celery_works_hostname in oe_celery_works_hostnames:
+    os.system("mkdir -p %s"%(local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
+    os.system("""chmod -R 777 %s""" % (local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
+    os.system("""rm -f %s/*""" % (local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
+
   etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
   if (filter_db_name is not None and len(filter_db_name) > 0) or (customize_sql is not None and len(customize_sql) > 0):
       if filter_db_name is not None and len(filter_db_name) > 0 and (customize_sql is None or len(customize_sql) == 0):
@@ -273,15 +280,16 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                       IsAdvertiserList=is_advertiser_list, CeleryPageStatusFile=celery_other_page_status_file,
                       ArrayFlag=ArrayFlag)
   #获取数据文件
-  target_file = os.listdir(local_dir)
   data_task_file_list = []
-  for files in target_file:
-      if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
-          data_task_file_list.append("%s/%s"%(local_dir, files))
+  for oe_celery_works_hostname in oe_celery_works_hostnames:
+    if os.path.exists(local_dir.replace("ecsage_data", "ecsage_data_%s" % oe_celery_works_hostname)):
+      target_file = os.listdir(local_dir.replace("ecsage_data", "ecsage_data_%s" % oe_celery_works_hostname))
+      for files in target_file:
+          if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
+              data_task_file_list.append("%s/%s"%(local_dir.replace("ecsage_data", "ecsage_data_%s" % oe_celery_works_hostname), files))
   #数据落地至etl_mid
   load_data_2_etl_mid(BeelineSession=BeelineSession, LocalFileList=data_task_file_list, TargetDB=TargetDB,
-                      TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type
-                    )
+                      TargetTable=TargetTable, ExecDate=ExecDate,MediaType=media_type)
 
 #处理不分页
 def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFile="",
