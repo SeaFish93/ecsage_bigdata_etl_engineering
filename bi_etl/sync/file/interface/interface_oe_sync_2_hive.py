@@ -281,8 +281,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
                       ArrayFlag=ArrayFlag)
   #获取数据文件
   for oe_celery_works_hostname in oe_celery_works_hostnames:
+    if os.path.exists(local_dir.replace("ecsage_data", "ecsage_data_%s" % oe_celery_works_hostname)):
       target_file = os.listdir(local_dir.replace("ecsage_data", "ecsage_data_%s" % oe_celery_works_hostname))
-      print(target_file,"====================#########################################")
       data_task_file_list = []
       for files in target_file:
           if str(data_task_file.split("/")[-1]).split(".")[0] in files and '.lock' not in files:
