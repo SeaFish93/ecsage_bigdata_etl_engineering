@@ -4,7 +4,7 @@ ps -ef|grep 'oe_test.%h'|awk '{print $2}'|while read line ;
 do
  kill -9 $line
 done
-ps -ef|grep 'tc_test.%h'|awk '{print $2}'|while read line ;
+ps -ef|grep 'report_test.%h'|awk '{print $2}'|while read line ;
 do
  kill -9 $line
 done
