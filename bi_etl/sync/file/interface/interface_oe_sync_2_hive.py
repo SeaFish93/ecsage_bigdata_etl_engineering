@@ -122,6 +122,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   os.system("""rm -f %s/*"""%(local_dir))
   ##删除数据文件
   for oe_celery_works_hostname in oe_celery_works_hostnames:
+    print(oe_celery_works_hostname,"====================##########################################")
+    print(local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname),"###########")
     os.system("mkdir -p %s"%(local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
     os.system("""chmod -R 777 %s""" % (local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
     os.system("""rm -f %s/*""" % (local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
