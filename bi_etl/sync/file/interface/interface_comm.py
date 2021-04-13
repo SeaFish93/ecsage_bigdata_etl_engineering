@@ -843,7 +843,7 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     not_exist = "N"
     code = 1
     data_file_dir = DataFileDir.replace("ecsage_data","ecsage_data_%s"%(hostname))
-    print(data_file_dir,"====================##################################################")
+    #print(data_file_dir,"====================##################################################")
     try:
       if TargetFlag == 'oe':
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
