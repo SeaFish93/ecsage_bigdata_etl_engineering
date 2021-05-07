@@ -53,6 +53,7 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
   mysql_delete_condition = TaskInfo[14]
   filter_condition = TaskInfo[15]
   column_identical = TaskInfo[16]
+  print("column_identical：%s" % (column_identical))
   filter_sql = ""
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""chmod -R 777 %s""" % (local_dir))
