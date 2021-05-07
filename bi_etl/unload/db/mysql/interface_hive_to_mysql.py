@@ -11,9 +11,9 @@ import os
 import time
 import json
 import ast
-
+import socket
 conf = Conf().conf
-
+etl_data_dir = conf.get("Etl", "hive_mysql_data_home")
 
 #入口方法
 def main(TaskInfo,**kwargs):
@@ -37,7 +37,8 @@ def main(TaskInfo,**kwargs):
 def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-  local_dir = """/home/ecsage_data/etl/sync/%s/%s/%s"""%(ExecDate,AirflowDag,AirflowTask)
+  hostname = socket.gethostname()
+  local_dir = """%s/%s/%s/%s/%s"""%(etl_data_dir,hostname,ExecDate,AirflowDag,AirflowTask)
   data_task_file = """%s/data_%s.log"""%(local_dir,AirflowTask)
   tmp_data_task_file = """%s/tmp_data_file.log""" % (local_dir)
   data_file = data_task_file.split("/")[-1].split(".")[0] + "_1_%s." % (local_time) + data_task_file.split("/")[-1].split(".")[1]
@@ -128,7 +129,7 @@ def load_data_mysql(AsyncAccountFile="",DataFile="",DbName="",TableName="",Colum
                   load data local infile '%s' into table %s.%s fields terminated by '\\t' lines terminated by '\\n' (%s)
                """ % (AsyncAccountFile + "/" + files,DbName,TableName,Columns)
             while set_run:
-              ok = etl_md.local_file_to_mysql(sql=insert_sql)
+              ok = MysqlSession.local_file_to_mysql(sql=insert_sql)
               if ok is False:
                  if n > 3:
                    set_run = False
