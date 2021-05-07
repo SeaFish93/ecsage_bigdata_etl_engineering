@@ -275,6 +275,7 @@ class EtlMetaDataSQL():
            ,export_mode
            ,increment_mode
            ,increment_columns
+           ,mysql_delete_condition
            ,filter_condition
            ,column_identical
            ,export_columns
