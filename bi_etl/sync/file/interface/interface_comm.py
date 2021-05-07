@@ -774,6 +774,7 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
     set_run = True
     n = 0
     not_exist = "N"
+    data_file_dir = DataFileDir.replace("ecsage_data", "ecsage_data_%s" % (hostname))
     try:
       if TargetFlag == 'oe':
          rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
@@ -801,11 +802,11 @@ def set_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",
         data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
         rsp_data["len_flag"] = 'Y' if data_len > 0 else 'N'
         while set_run:
-          test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
+          test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=data_file_dir,log_filename=file_name)
           test_log.info(json.dumps(rsp_data))
-          get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
+          get_dir = os.popen("ls -t %s|grep %s" % (data_file_dir, file_name))
           for files in get_dir.read().split():
-              is_exist = os.popen("grep -o '%s' %s/%s" % (request_id, DataFileDir, files))
+              is_exist = os.popen("grep -o '%s' %s/%s" % (request_id, data_file_dir, files))
               is_exist_value = is_exist.read().split()
               if is_exist_value is not None and len(is_exist_value) > 0:
                   not_exist = "Y"
@@ -841,6 +842,8 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
     token = None
     not_exist = "N"
     code = 1
+    data_file_dir = DataFileDir.replace("ecsage_data","ecsage_data_%s"%(hostname))
+    #print(data_file_dir,"====================##################################################")
     try:
       if TargetFlag == 'oe':
           rsp_data = set_sync_data(ParamJson=ParamJson, UrlPath=UrlPath, Token=Token)
@@ -870,11 +873,11 @@ def set_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",Dat
          data_len = len(rsp_data["data"]["%s" % (ArrayFlag)]) if ArrayFlag is not None and len(ArrayFlag) > 0 else len(rsp_data["data"])
          rsp_data["len_flag"] = 'Y' if data_len > 0 else 'N'
          while set_run:
-           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=DataFileDir,log_filename=file_name)
+           test_log = LogManager("""%s-%s""" % (DataFile.split(".")[0], hostname)).get_logger_and_add_handlers(2,log_path=data_file_dir,log_filename=file_name)
            test_log.info(json.dumps(rsp_data))
-           get_dir = os.popen("ls -t %s|grep %s" % (DataFileDir, file_name))
+           get_dir = os.popen("ls -t %s|grep %s" % (data_file_dir, file_name))
            for files in get_dir.read().split():
-               is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,DataFileDir,files))
+               is_exist = os.popen("grep -o '%s' %s/%s" % (request_id,data_file_dir,files))
                is_exist_value = is_exist.read().split()
                if is_exist_value is not None and len(is_exist_value) > 0:
                   not_exist = "Y"
