@@ -50,8 +50,9 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
   export_mode  = TaskInfo[11]
   increment_mode = TaskInfo[12]
   increment_columns = TaskInfo[13]
-  filter_condition = TaskInfo[14]
-  column_identical = TaskInfo[15]
+  mysql_delete_condition = TaskInfo[14]
+  filter_condition = TaskInfo[15]
+  column_identical = TaskInfo[16]
   filter_sql = ""
   os.system("""mkdir -p %s"""%(local_dir))
   os.system("""chmod -R 777 %s""" % (local_dir))
@@ -60,7 +61,7 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
   if int(column_identical) == 1:
       export_columns = get_create_mysql_table_columns(MysqlSession=mysql_session, DB=target_db, Table=target_table)
   elif int(column_identical) == 0:
-      export_columns = TaskInfo[16]
+      export_columns = TaskInfo[17]
 
   if int(increment_mode) == 0:
       increment_date = airflow.execution_date_utc8_str[0:4]
@@ -68,16 +69,30 @@ def export_hive_datafile(BeelineSession="",TargetDB="",TargetTable="",AirflowDag
       increment_date = airflow.execution_date_utc8_str[0:7]
   elif int(increment_mode) == 2:
       increment_date = airflow.execution_date_utc8_str[0:10]
-  if int(export_mode) == 0:
+  if int(export_mode) == 0 and int(increment_mode) == 3:
       delete_sql = """
-            delete from %s.%s where %s = %s""" %(target_db, target_table, increment_date, increment_date)
+            delete from %s.%s where 1 = 1 
+            %s""" %(target_db, target_table, mysql_delete_condition)
       filter_sql = """
             select  %s
             from %s.%s 
-            where 1 = 1 and %s = %s
+            where 1 = 1
             %s
            -- limit 1 
-            """ % (export_columns, source_db, source_table,increment_columns, increment_date, filter_condition)
+            """ % (export_columns, source_db, source_table, filter_condition)
+      print("delete_sqlsql：%s" % (delete_sql))
+      print("过滤sql：%s" % (filter_sql))
+  elif int(export_mode) == 0 and int(increment_mode) != 3:
+      delete_sql = """
+                  delete from %s.%s where %s = %s 
+                  %s""" % (target_db, target_table, increment_columns, increment_date, mysql_delete_condition)
+      filter_sql = """
+                  select  %s
+                  from %s.%s 
+                  where 1 = 1 and %s = %s
+                  %s
+                 -- limit 1 
+                  """ % (export_columns, source_db, source_table, increment_columns, increment_date, filter_condition)
       print("delete_sqlsql：%s" % (delete_sql))
       print("过滤sql：%s" % (filter_sql))
   elif int(export_mode) == 1:
