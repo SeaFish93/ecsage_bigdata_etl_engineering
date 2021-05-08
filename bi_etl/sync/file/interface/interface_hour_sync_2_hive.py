@@ -132,7 +132,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           filter_sql = """
          select concat_ws(' ',account_id,'%s',concat_ws('&&',cast(%s as string))) 
          from %s.%s 
-         where etl_date='%s'
+         where -- etl_date='%s'
          %s 
          and media = '%s'
          %s
@@ -145,7 +145,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           filter_sql = """
           select concat_ws(' ',account_id,'%s',concat_ws('&&',cast(%s as string))) 
           from (%s) t
-          where etl_date='%s'
+          where -- etl_date='%s'
           %s 
           and media = '%s'
           %s
