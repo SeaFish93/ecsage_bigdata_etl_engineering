@@ -134,7 +134,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
          from %s.%s 
          where -- etl_date='%s'
          %s 
-         and request_type = '%s'
+         and media = '%s'
          %s
          group by account_id,%s
          -- limit 1
@@ -147,7 +147,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           from (%s) t
           where -- etl_date='%s'
           %s 
-          and request_type = '%s'
+          and media = '%s'
           %s
           group by account_id,%s
                    -- limit 1
