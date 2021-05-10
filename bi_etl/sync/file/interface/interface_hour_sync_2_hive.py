@@ -136,7 +136,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
          from %s.%s 
          where -- etl_date='%s'
          %s 
-         and media = '%s'
+         and media_id = '%s'
          %s
          group by %s
          -- limit 1
@@ -149,7 +149,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
           from (%s) t
           where -- etl_date='%s'
           %s 
-          and media = '%s'
+          and media_id = '%s'
           %s
           group by %s
                    -- limit 1
