@@ -1,6 +1,6 @@
 from kombu import Queue, Exchange
 
-BROKER_URL = 'amqp://sync:1qazXSW2@192.168.30.130:9549//sync_brokers'
+BROKER_URL = 'amqp://admin:1qazXSW2@192.168.30.130:9549//sync_broker_test'
 #CELERY_RESULT_BACKEND = 'file:///data/ecsage_data/celery/sync_backend'
 CELERY_RESULT_BACKEND = 'db+mysql://root:06D567130266EB33098B9F@192.168.30.5:13306/sync'
 #use json
