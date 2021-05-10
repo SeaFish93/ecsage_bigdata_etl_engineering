@@ -56,8 +56,8 @@ CELERY_ROUTES = {
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_tc_status_async_tasks': {'queue': 'tc_test'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_tc_async_tasks_data_return': {'queue': 'tc_test'},
 'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.PMI': {'queue': 'oe_test'},
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages_hour': {'queue': 'hour_test'},
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_not_page_hour': {'queue': 'hour_test'},
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_service_page_data_hour': {'queue': 'hour_test'},
-'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_service_data_hour': {'queue': 'hour_test'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_pages_hour': {'queue': 'report_test'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_not_page_hour': {'queue': 'report_test'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_service_page_data_hour': {'queue': 'report_test'},
+'ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks.get_service_data_hour': {'queue': 'report_test'},
 }
