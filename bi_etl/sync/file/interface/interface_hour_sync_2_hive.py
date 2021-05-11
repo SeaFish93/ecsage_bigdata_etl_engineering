@@ -74,6 +74,7 @@ def main(TaskInfo,Level="",**kwargs):
 def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate="",ArrayFlag=""):
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+  now_time = time.strftime("%Y-%m-%d", time.localtime())
   hostname = socket.gethostname()
   local_dir = """%s/%s/sync/%s/%s/%s"""%(interface_data_dir,hostname,ExecDate,AirflowDag,AirflowTask)
   celery_first_page_status_file = "%s/celery_first_page_status_file.log"%(local_dir)
@@ -91,8 +92,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
   #设置查询日期
   if TaskInfo[6] is not None and len(TaskInfo[6]) > 0 and TaskInfo[6] != "":
-     param_json["%s"%(TaskInfo[6])] = "2021-05-10"
-     param_json["%s"%(TaskInfo[7])] = "2021-05-10"
+     param_json["%s"%(TaskInfo[6])] = now_time
+     param_json["%s"%(TaskInfo[7])] = now_time
   #设置查询filter_modify_time_name
   if TaskInfo[8] is not None and len(TaskInfo[8]) > 0 and TaskInfo[8] != "":
      for filter_date in TaskInfo[8].split(","):
