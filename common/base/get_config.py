@@ -10,7 +10,7 @@ from os.path import abspath, dirname
 
 class Conf:
     print(dirname(__file__))
-    __CONF_FILE = "/root/bigdata_item_code/ecsage_bigdata_etl_engineering/config/config.ini"
+    __CONF_FILE = "/code/bigdata_item_code/ecsage_bigdata_etl_engineering/config/config.ini"
     conf = configparser.RawConfigParser()
     try:
         conf.read(__CONF_FILE,encoding='utf-8')

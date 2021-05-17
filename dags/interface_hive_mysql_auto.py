@@ -6,12 +6,12 @@
 #function info：接口数据采集
 
 import datetime
-from ecsage_bigdata_etl_engineering.bi_etl.sync.db.mysql.mysql_2_hive import main as sync_hive_main
+from ecsage_bigdata_etl_engineering.bi_etl.unload.db.mysql.interface_hive_to_mysql import main as hive_to_mysql_main
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import DAG
 import airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_oe_sync_2_hive import main as sync_interface_main
+
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
@@ -20,7 +20,7 @@ import os
 
 etl_meta = EtlMetadata()
 #获取dag信息
-ok, get_dags = etl_meta.execute_sql(sqlName="get_data_dags_sql",Parameter={"exec_type":"oe_sync_interface"},IsReturnData="Y")
+ok, get_dags = etl_meta.execute_sql(sqlName="get_data_dags_sql",Parameter={"exec_type":"interface_hive_mysql"},IsReturnData="Y")
 if ok is False:
     msg = get_create_dag_alert(FileName="%s"%(os.path.basename(__file__)),Log="获取Dags元数据出现异常！！！",Developer="工程维护")
     set_exit(LevelStatu="red", MSG=msg)
@@ -58,7 +58,6 @@ for dag_info in get_dags:
         'retries': retries,
         'retry_delay': datetime.timedelta(minutes=2),
         'start_date': start_date,
-        'queue': 'airflow',
        # 'on_failure_callback': hour_failure_callback
     }
     names = locals()
@@ -73,7 +72,7 @@ for dag_info in get_dags:
     start_sync_task = DummyOperator(task_id="start_sync_task", dag=dag)
     end_sync_task = DummyOperator(task_id="end_sync_task", dag=dag)
     # 同步任务配置
-    ok, get_tasks = etl_meta.execute_sql(sqlName="get_interface_oe_sync_tasks_sql",Parameter={"dag_id":dag_id},IsReturnData="Y")
+    ok, get_tasks = etl_meta.execute_sql(sqlName="get_interface_hive_mysql_sql",Parameter={"dag_id":dag_id},IsReturnData="Y")
     if ok is False:
       msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="获取Tasks元数据出现异常！！！",Developer="工程维护")
       set_exit(LevelStatu="red", MSG=msg)
@@ -83,25 +82,16 @@ for dag_info in get_dags:
           #配置跑批任务属性
           task_id = tasks_info[0]
           print(task_id,"@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!================================")
-          level = tasks_info[9]
           tasks.append({"task_id": task_id, "batch_type": batch_type})
           task = locals()
           #定义task对象
-          if batch_type == "hour":
-             # 动态创建dag实例
-             task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                        python_callable=sync_hive_main,
-                                        provide_context=True,
-                                        op_args=(tasks_info, level,),
-                                        dag=dag)
-          elif batch_type == "day":
-              task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                         python_callable=sync_interface_main,
+
+          # 动态创建dag实例
+          task['%s' % (task_id)] = PythonOperator(task_id=task_id,
+                                         python_callable=hive_to_mysql_main,
                                          provide_context=True,
-                                         op_args=(tasks_info, level,),
+                                         op_args=(tasks_info,),
                                          dag=dag)
-          else:
-              pass
        for task_name in tasks:
           if task_name["batch_type"] == "day":
               # 设置task依赖

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/11/19 17:05
 # @Author  : wangsong
-# @FileName: interface_sync_account_auto.py
+# @FileName: interface_sync_oe_async_auto.py
 # @Software: PyCharm
-#function info：接口过滤子账户数据采集
+#function info：oe异步数据采集
 
 import datetime
 from ecsage_bigdata_etl_engineering.bi_etl.sync.db.mysql.mysql_2_hive import main as sync_hive_main
@@ -11,8 +11,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import DAG
 import airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_create_oe_async_tasks import main as create_main
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.set_oe_async_tasks_status import main as status_main
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_tc_async_2_hive import main as interface_tc_async_main
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
@@ -21,7 +20,7 @@ import os
 
 etl_meta = EtlMetadata()
 #获取dag信息
-ok, get_dags = etl_meta.execute_sql(sqlName="get_data_dags_sql",Parameter={"exec_type":"interface-account"},IsReturnData="Y")
+ok, get_dags = etl_meta.execute_sql(sqlName="get_data_dags_sql",Parameter={"exec_type":"interface-tc-async"},IsReturnData="Y")
 if ok is False:
     msg = get_create_dag_alert(FileName="%s"%(os.path.basename(__file__)),Log="获取Dags元数据出现异常！！！",Developer="工程维护")
     set_exit(LevelStatu="red", MSG=msg)
@@ -36,7 +35,7 @@ for dag_info in get_dags:
     if batch_type == "hour":
         start_date = datetime.datetime.now() + datetime.timedelta(hours=-2)
     elif batch_type == "day":
-        start_date = airflow.utils.dates.days_ago(30)
+        start_date = airflow.utils.dates.days_ago(2)
     else:
         print("dag【%s】配置作业出现异常，未提供正确批次频率！！！"%(dag_id))
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
@@ -59,6 +58,7 @@ for dag_info in get_dags:
         'retries': retries,
         'retry_delay': datetime.timedelta(minutes=2),
         'start_date': start_date,
+        'queue': 'airflow',
        # 'on_failure_callback': hour_failure_callback
     }
     names = locals()
@@ -73,7 +73,7 @@ for dag_info in get_dags:
     start_sync_task = DummyOperator(task_id="start_sync_task", dag=dag)
     end_sync_task = DummyOperator(task_id="end_sync_task", dag=dag)
     # 同步任务配置
-    ok, get_tasks = etl_meta.execute_sql(sqlName="get_interface_sync_account_tasks_sql",Parameter={"dag_id":dag_id},IsReturnData="Y")
+    ok, get_tasks = etl_meta.execute_sql(sqlName="get_interface_tc_async_tasks_sql",Parameter={"dag_id":dag_id},IsReturnData="Y")
     if ok is False:
       msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="获取Tasks元数据出现异常！！！",Developer="工程维护")
       set_exit(LevelStatu="red", MSG=msg)
@@ -90,23 +90,16 @@ for dag_info in get_dags:
           if batch_type == "hour":
              # 动态创建dag实例
              task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                        python_callable=sync_hive_main,
+                                        python_callable=interface_tc_async_main,
                                         provide_context=True,
                                         op_args=(tasks_info, level,),
                                         dag=dag)
           elif batch_type == "day":
-              if level == 1:
-                 task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                         python_callable=create_main,
-                                         provide_context=True,
-                                         op_args=(tasks_info,),
-                                         dag=dag)
-              else:
-                 task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                                          python_callable=status_main,
-                                                          provide_context=True,
-                                                          op_args=(tasks_info,),
-                                                          dag=dag)
+             task['%s' % (task_id)] = PythonOperator(task_id=task_id,
+                                                     python_callable=interface_tc_async_main,
+                                                     provide_context=True,
+                                                     op_args=(tasks_info,),
+                                                     dag=dag)
           else:
               pass
        for task_name in tasks:
@@ -114,6 +107,7 @@ for dag_info in get_dags:
               # 设置task依赖
               ok, task_deps = etl_meta.execute_sql(sqlName="get_task_dep_sql", Parameter={"task_id": task_name["task_id"]},IsReturnData="Y")
               if len(task_deps) > 0:
+                  external_task = locals()
                   for task_dep in task_deps:
                       if task_dep[0] == task_dep[3]:
                           task[task_dep[2]].set_upstream(task[task_dep[1]])
@@ -121,13 +115,24 @@ for dag_info in get_dags:
                           if len(task_downstream_deps) == 0:
                               task[task_dep[1]].set_upstream(start_sync_task)
                       else:
-                          external_task = PythonOperator(task_id='external_%s_%s' % (task_dep[0], task_dep[1]),
-                                                         python_callable=dep_task_main,
-                                                         provide_context=True,
-                                                         op_args=(task_dep[0], task_dep[1], task_dep[4],),
-                                                         dag=dag)
-                          task[task_dep[2]].set_upstream(external_task)
-                          external_task.set_upstream(start_sync_task)
+                          external_task_id = 'external_%s_%s' % (task_dep[0], task_dep[1])
+                          if external_task_id in list(external_task.keys()) and external_task[external_task_id].dag_id == dag_id:
+                              task[task_dep[2]].set_upstream(external_task[external_task_id])
+                          else:
+                              external_task['%s' % (external_task_id)] = PythonOperator(task_id=external_task_id,
+                                                                                        python_callable=dep_task_main,
+                                                                                        provide_context=True,
+                                                                                        op_args=(task_dep[0], task_dep[1],task_dep[4],),
+                                                                                        dag=dag)
+                              task[task_dep[2]].set_upstream(external_task[external_task_id])
+                              external_task[external_task_id].set_upstream(start_sync_task)
+                              ####external_task = PythonOperator(task_id='external_%s_%s' % (task_dep[0], task_dep[1]),
+                              ####                               python_callable=dep_task_main,
+                              ####                               provide_context=True,
+                              ####                               op_args=(task_dep[0], task_dep[1], task_dep[4],),
+                              ####                               dag=dag)
+                              ####task[task_dep[2]].set_upstream(external_task)
+                              ####external_task.set_upstream(start_sync_task)
               else:
                   task['%s' % (task_name["task_id"])].set_upstream(start_sync_task)
               ok, task_upstream_deps = etl_meta.execute_sql(sqlName="get_ods_upstream_depend_sql",Parameter={"dep_task_id": task_name["task_id"]}, IsReturnData="Y")

@@ -14,13 +14,18 @@ import ast
 #
 #
 
-def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag="",IsReplace=""):
+def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="",TargetTable="",IsTargetPartition="Y",ExecDate="",ArrayFlag="",IsReplace="",ExPartField=""):
     etlmid_table_columns = []
     etlmid_table_columns_str = analysis_etlmid_cloumns(HiveSession=HiveSession, SourceTable=SourceTable,
                                                        TargetTable=TargetTable
                                                        , ExecDate=ExecDate, ArrayFlag=ArrayFlag,IsReplace=IsReplace)
     for etlmid_table_column in etlmid_table_columns_str.split(','):
         etlmid_table_columns.append(etlmid_table_column.split(".")[-1])
+
+    default_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time"
+    default_table_columns = default_table_columns + ",%s"%(ExPartField[0]) if len(ExPartField) > 0 else default_table_columns
+    exclude_fields = set(default_table_columns.split(","))
+    exclude_fields.update({'etl_date'})
 
     sql = """ show tables in %s like '%s' """ % (TargetDB, TargetTable)
     ok, get_target_table = HiveSession.get_all_rows(sql)
@@ -43,12 +48,12 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
         if IsTargetPartition == "Y":
             # 默认配置表结构
             str = ','.join(etlmid_table_columns)
-            default_table_columns = "returns_account_id,returns_colums,request_type,extract_system_time"
+
             # 直接依赖配置的字段信息，类型以String为主
             field_list = []
             strs = str + ',' + default_table_columns
             for field_str in strs.split(","):
-                field_list.append(field_str + " String\n")
+                field_list.append("`%s`"%(field_str) + " String\n")
             create_table_colums = ','.join(field_list)
 
             create_table_sql = """
@@ -67,18 +72,23 @@ def def_ods_structure(HiveSession="",BeelineSession="",SourceTable="",TargetDB="
     target_table_columns = target_table_columns_list[2]
     # 找出ODS在etl_mid表不一致的字段
     diff_source_target_columns = set(target_table_columns).difference(set(etlmid_table_columns))
-    exclude_fields={'returns_account_id', 'returns_colums','request_type','extract_system_time', 'etl_date'}
+
     diff_source_target_columns = list(diff_source_target_columns - exclude_fields)
     #1.ODS-ETL_MID,2,ODS,3.ETL_MID
     return list(diff_source_target_columns),target_table_columns,etlmid_table_columns,etlmid_table_columns_str
 
 #解析etl_mid文档
 def analysis_etlmid_cloumns(HiveSession="",BeelineSession="",SourceTable="", TargetTable="",ExecDate="",ArrayFlag="",IsReplace="Y"):
-    filter_line = """ where etl_date = '%s' and length(request_data) > 1000 limit 1 """%(ExecDate)
     spec_pars = """dimensions,metrics"""
     spec_pars_list = list(spec_pars.split(","))
     all_pars_list = []
-    get_field_sql = """select request_data from %s.%s %s""" % ("etl_mid",SourceTable,filter_line)
+    #filter_line = """ where etl_date = '%s'""" % (ExecDate)
+    #get_field_sql = """select request_data from %s.%s %s""" % ("etl_mid",SourceTable,filter_line)
+    get_field_sql = """select request_data
+                              from %s.%s 
+                              where etl_date = '%s' and request_data like '%%len_flag": "Y%%' limit 1
+                    """ % ("etl_mid",SourceTable,ExecDate)
+
     ok, data = HiveSession.get_all_rows(get_field_sql)
     if len(data)>0:
         split_flag = """## {"""

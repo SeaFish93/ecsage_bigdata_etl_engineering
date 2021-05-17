@@ -140,15 +140,43 @@ class EtlMetaDataSQL():
   ,filter_time
   ,interface_filter_list
   ,page_size
+  ,is_rerun_firstpage
   ,`create_user`
   ,`update_user`
   ,`create_time`
   ,`update_time`
+  ,`custom_set_parameter`
+  ,`page_style`
+  ,`orderby_columns`
+  ,`customize_sql`
    from metadb.interface_sync_tasks_info
     where status = 1
       and dag_id = '%s'
   """ % ("##{dag_id}##")
 
+#获取创建爬虫tasks
+  get_spider_tasks_sql = """
+    select task_id
+           ,dag_id
+           ,spider_id
+           ,platform_id
+           ,platform_name
+           ,module_id
+           ,module_name
+           ,url
+           ,data_level
+           ,source_handle
+           ,source_db
+           ,source_table
+           ,target_handle
+           ,target_db
+           ,target_table
+           ,key_columns
+           ,is_report 
+   from metadb.spider_tasks_info
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
 
   #获取创建接口tasks
   get_interface_sync_account_tasks_sql = """
@@ -192,7 +220,66 @@ class EtlMetaDataSQL():
            ,update_time
            ,interface_flag
            ,interface_fields
+           ,is_filter_account
     from metadb.interface_oe_async_tasks_info
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
+
+# 获取tc异步任务
+  get_interface_tc_async_tasks_sql = """
+    select id
+           ,media_type
+           ,task_id
+           ,dag_id
+           ,task_type
+           ,source_handle
+           ,source_db
+           ,source_table
+           ,target_handle
+           ,target_db
+           ,target_table
+           ,interface_group_by
+           ,key_columns
+           ,select_exclude_columns
+           ,status
+           ,comments
+           ,create_user
+           ,update_user
+           ,create_time
+           ,update_time
+           ,`level`
+           ,interface_fields
+           ,is_filter_account
+           ,time_line
+           ,granularity
+
+    from metadb.interface_tc_async_tasks_info
+    where status = 1
+      and dag_id = '%s'
+  """ % ("##{dag_id}##")
+
+#获取hive_mysql任务
+  get_interface_hive_mysql_sql = """
+    select task_id
+           ,tasks_model_id
+           ,dag_id
+           ,interface_module
+           ,source_handle
+           ,source_db
+           ,source_table
+           ,target_handle
+           ,target_db
+           ,sync_level
+           ,target_table
+           ,export_mode
+           ,increment_mode
+           ,increment_columns
+           ,mysql_delete_condition
+           ,filter_condition
+           ,column_identical
+           ,export_columns
+    from metadb.sync_tasks_hive_mysql
     where status = 1
       and dag_id = '%s'
   """ % ("##{dag_id}##")

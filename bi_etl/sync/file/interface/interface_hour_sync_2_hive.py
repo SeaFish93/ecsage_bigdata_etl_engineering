@@ -10,10 +10,10 @@ from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_inf
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_page_data as get_service_page_data_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page as get_not_page_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages as get_pages_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data as get_service_data_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_page_data_hour as get_service_page_data_celery_hour
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page_hour as get_not_page_celery_hour
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages_hour as get_pages_celery_hour
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_service_data_hour as get_service_data_celery_hour
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
@@ -50,7 +50,7 @@ def main(TaskInfo,Level="",**kwargs):
     orderby_columns = TaskInfo[39]
     beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
     if Level == "file":
-       if TaskInfo[0] == "metadb_oe_service_account":
+       if TaskInfo[0] == "metadb_oe_service_account_hour":
           #删除celery日志
           etl_md.execute_sql("truncate table sync.celery_taskmeta")
           get_service_info(AirflowDag=airflow.dag,AirflowTask=airflow.task,TaskInfo=TaskInfo,ExecDate=exec_date)
@@ -74,6 +74,7 @@ def main(TaskInfo,Level="",**kwargs):
 def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate="",ArrayFlag=""):
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+  now_time = time.strftime("%Y-%m-%d", time.localtime())
   hostname = socket.gethostname()
   local_dir = """%s/%s/sync/%s/%s/%s"""%(interface_data_dir,hostname,ExecDate,AirflowDag,AirflowTask)
   celery_first_page_status_file = "%s/celery_first_page_status_file.log"%(local_dir)
@@ -91,8 +92,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   param_json = ast.literal_eval(json.loads(json.dumps(TaskInfo[5])))
   #设置查询日期
   if TaskInfo[6] is not None and len(TaskInfo[6]) > 0 and TaskInfo[6] != "":
-     param_json["%s"%(TaskInfo[6])] = ExecDate
-     param_json["%s"%(TaskInfo[7])] = ExecDate
+     param_json["%s"%(TaskInfo[6])] = now_time
+     param_json["%s"%(TaskInfo[7])] = now_time
   #设置查询filter_modify_time_name
   if TaskInfo[8] is not None and len(TaskInfo[8]) > 0 and TaskInfo[8] != "":
      for filter_date in TaskInfo[8].split(","):
@@ -130,26 +131,26 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   if (filter_db_name is not None and len(filter_db_name) > 0) or (customize_sql is not None and len(customize_sql) > 0):
       if filter_db_name is not None and len(filter_db_name) > 0 and (customize_sql is None or len(customize_sql) == 0):
           filter_sql = """
-         select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',cast(%s as string))) 
+         select concat_ws(' ',account_id,'%s',concat_ws('&&',cast(%s as string))) 
          from %s.%s 
-         where etl_date='%s'
+         where -- etl_date='%s'
          %s 
-         and request_type = '%s'
+         and media_id = '%s'
          %s
-         group by returns_account_id,%s
+         group by %s
          -- limit 1
          """ % (task_flag, filter_column_name, filter_db_name, filter_table_name, ExecDate, filter_config, media_type,
                 filter_time_sql, filter_column_name)
       else:
           customize_query = customize_sql.replace("etl_date_f", ExecDate)
           filter_sql = """
-          select concat_ws(' ',returns_account_id,'%s',concat_ws('&&',cast(%s as string))) 
+          select concat_ws(' ',account_id,'%s',concat_ws('&&',cast(%s as string))) 
           from (%s) t
-          where etl_date='%s'
+          where -- etl_date='%s'
           %s 
-          and request_type = '%s'
+          and media_id = '%s'
           %s
-          group by returns_account_id,%s
+          group by %s
                    -- limit 1
                    """ % (
           task_flag, filter_column_name, customize_query, ExecDate, filter_config, media_type, filter_time_sql,
@@ -311,7 +312,7 @@ def set_not_page_info(DataRows="",UrlPath="",ParamJson="",DataFileDir="",DataFil
            ParamJson["advertiser_ids"] = [int(data[0])]
        else:
            ParamJson["advertiser_id"] = int(data[0])
-       celery_task_id = get_not_page_celery.delay(UrlPath=UrlPath, ParamJson=ParamJson,Token=data[5],
+       celery_task_id = get_not_page_celery_hour.delay(UrlPath=UrlPath, ParamJson=ParamJson,Token=data[5],
                                                   ServiceCode=data[2], ReturnAccountId=data[0],
                                                   TaskFlag=TaskFlag,DataFileDir=DataFileDir,
                                                   DataFile=DataFile, TaskExceptionFile=TaskExceptionFile
@@ -374,7 +375,7 @@ def set_first_page_info(IsRerun="",DataRows="",UrlPath="",ParamJson="",DataFileD
 
        service_code = data[2]
        token = data[5]
-       celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
+       celery_task_id = get_pages_celery_hour.delay(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=service_code,
                                                DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,TaskExceptionFile=TaskExceptionFile,
                                                Token=token,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag
@@ -431,7 +432,7 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",
                param_json["page_size"] = int(PageSize)
            service_code = data[2]
            token = data[5]
-           celery_task_id = get_pages_celery.delay(UrlPath=UrlPath,ParamJson=param_json,ServiceCode=service_code,
+           celery_task_id = get_pages_celery_hour.delay(UrlPath=UrlPath,ParamJson=param_json,ServiceCode=service_code,
                                                    DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[0],
                                                    TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,TaskExceptionFile=TaskExceptionFile,
                                                    Token=token,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag
@@ -456,7 +457,7 @@ def set_other_page_info(DataRows="",UrlPath="",DataFileDir="",DataFile="",
 
 def get_service_page(DataRows="",LocalDir="",DataFile="",PageFileData="",TaskFlag="",CeleryGetDataStatus="",Page="",PageSize=""):
     for data in DataRows:
-        celery_task_id = get_service_page_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
+        celery_task_id = get_service_page_data_celery_hour.delay(ServiceId=data[0], ServiceCode=data[1],
                                                        Media=data[2], Page=str(Page), PageSize=str(PageSize),
                                                        DataFile=DataFile, PageFileData=PageFileData,
                                                        TaskFlag=TaskFlag
@@ -550,7 +551,7 @@ def get_service_info(AirflowDag="",AirflowTask="",TaskInfo="",ExecDate=""):
          if page > 0:
            n = n + 1
            pages = page + 1
-           celery_task_id = get_service_data_celery.delay(ServiceId=dt[0], ServiceCode=dt[2],
+           celery_task_id = get_service_data_celery_hour.delay(ServiceId=dt[0], ServiceCode=dt[2],
                                                           Media=dt[1], Page=str(pages), PageSize=str(1000),
                                                           DataFile=data_file, PageFileData=page_task_file,
                                                           TaskFlag=task_flag,TaskExceptionFile=task_exception_file
@@ -817,7 +818,7 @@ def rerun_service_exception_tasks(AsyncAccountDir="",ExceptionFile="",DataFile="
            etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(InterfaceFlag))
            print("开始第%s次重试异常，请求总数：%s，时间：%s"%(i+1,len(datas),time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
            for data in datas:
-               status_id = get_service_data_celery.delay(ServiceId=data[0], ServiceCode=data[1],
+               status_id = get_service_data_celery_hour.delay(ServiceId=data[0], ServiceCode=data[1],
                                                          Media=data[3], Page=str(data[4]), PageSize=str(data[5]),
                                                          DataFile=DataFile, PageFileData="",
                                                          TaskFlag=InterfaceFlag, TaskExceptionFile=ExceptionFile
@@ -896,13 +897,13 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",
            for data in datas:
              param_json = ast.literal_eval(json.loads(json.dumps(str(data[1]).replace("""'""","""\""""))))
              if IsPage == "Y":
-                status_id = get_pages_celery.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
+                status_id = get_pages_celery_hour.delay(UrlPath=data[0],ParamJson=param_json,ServiceCode=data[2],Token=data[5],
                                                    DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=data[3],
                                                    TaskFlag=data[4],PageTaskFile=PageTaskFile,TaskExceptionFile=ExceptionFile,
                                                    Pagestyle=Pagestyle,ArrayFlag=ArrayFlag
                                                   )
              else:
-                status_id = get_not_page_celery.delay(UrlPath=data[0], ParamJson=param_json,Token=data[5],
+                status_id = get_not_page_celery_hour.delay(UrlPath=data[0], ParamJson=param_json,Token=data[5],
                                                       ServiceCode=data[2], ReturnAccountId=data[3],
                                                       TaskFlag=data[4], DataFileDir=DataFileDir,
                                                       DataFile=DataFile, TaskExceptionFile=ExceptionFile,ArrayFlag=ArrayFlag
