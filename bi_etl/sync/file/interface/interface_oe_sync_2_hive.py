@@ -38,8 +38,7 @@ def main(TaskInfo,Level="",**kwargs):
     global regexp_extract_column
     airflow = Airflow(kwargs)
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-#    exec_date = airflow.execution_date_utc8_str[0:10]
-    exec_date = '2021-05-01'
+    exec_date = airflow.execution_date_utc8_str[0:10]
     target_db = TaskInfo[14]
     target_table = TaskInfo[15]
     source_db = TaskInfo[11]
