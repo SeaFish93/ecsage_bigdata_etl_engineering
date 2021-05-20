@@ -38,7 +38,8 @@ def main(TaskInfo,Level="",**kwargs):
     global regexp_extract_column
     airflow = Airflow(kwargs)
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    exec_date = airflow.execution_date_utc8_str[0:10]
+#    exec_date = airflow.execution_date_utc8_str[0:10]
+    exec_date = time.strftime("%Y-%m-%d", time.localtime())
     target_db = TaskInfo[14]
     target_table = TaskInfo[15]
     source_db = TaskInfo[11]
@@ -74,7 +75,8 @@ def main(TaskInfo,Level="",**kwargs):
 def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="",AirflowTask="",TaskInfo="",ExecDate="",ArrayFlag=""):
   task_flag = "%s.%s"%(AirflowDag,AirflowTask)
   local_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
-  now_time = time.strftime("%Y-%m-%d", time.localtime())
+#  now_time = time.strftime("%Y-%m-%d", time.localtime())
+  now_time = "2021-04-17"
   hostname = socket.gethostname()
   local_dir = """%s/%s/sync/%s/%s/%s"""%(interface_data_dir,hostname,ExecDate,AirflowDag,AirflowTask)
   celery_first_page_status_file = "%s/celery_first_page_status_file.log"%(local_dir)
