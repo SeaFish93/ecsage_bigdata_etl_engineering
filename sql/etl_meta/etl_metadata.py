@@ -254,7 +254,7 @@ class EtlMetaDataSQL():
            ,is_filter_account
            ,time_line
            ,granularity
-
+           ,is_report
     from metadb.interface_tc_async_tasks_info
     where status = 1
       and dag_id = '%s'
