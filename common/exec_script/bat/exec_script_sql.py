@@ -38,6 +38,7 @@ def run(jd,no_run_date, **kwargs):
     ok = True
     for sql in sql_list:
         sql_str = replace_placeholder(sql["sql"])
+        print(sql_str)
         ok = session.execute_sql(sql=sql_str)
         if ok is False:
             msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
