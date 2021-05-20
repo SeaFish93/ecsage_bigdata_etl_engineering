@@ -342,10 +342,18 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     os.system("""mkdir -p %s""" % (async_account_file))
     os.system("""rm -f %s/*""" % (async_account_file))
     os.system("""chmod -R 777 %s"""%(async_account_file))
-    account_sql = """
-      select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
-      from metadb.media_advertiser
-    """ % (interface_flag, group_by, fields)
+
+    if AirflowTaskId == "set_oe_getadvertiserreport_advertiserreport_create":
+        account_sql = """
+                  select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,code 
+                  from metadb.oe_service_account where media_type='2'
+                """ % (interface_flag, group_by, fields)
+    else:
+        account_sql = """
+            select account_id,'%s' as interface_flag,media_type,service_code,'%s' as group_by,'%s' as fields,token_code 
+            from metadb.media_advertiser
+          """ % (interface_flag, group_by, fields)
+
     ok, all_rows = etl_md.get_all_rows(account_sql)
     n = 1
     for data in all_rows:
@@ -375,18 +383,18 @@ def get_oe_async_tasks_create_all(AirflowDagId="", AirflowTaskId="", TaskInfo=""
     load_data_mysql(AsyncAccountFile=async_account_file, DataFile=async_create_task_file,
                     TableName="oe_async_create_task", Columns=columns)
     # 加载因网络抖动写入nfs系统漏数
-    sql = """
-       insert into metadb.oe_async_create_task
-       select a.media_type,a.token_code,a.service_code
-              ,a.account_id,'0' as task_id,'999999' as task_name,'##'
-              ,'##','%s' as interface_flag
-       from metadb.media_advertiser a
-       left join metadb.oe_async_create_task b
-       on a.account_id = b.account_id
-       and a.service_code = b.service_code
-       where b.account_id is null
-    """ % (interface_flag)
-    etl_md.execute_sql(sql)
+    # sql = """
+    #   insert into metadb.oe_async_create_task
+    #   select a.media_type,a.token_code,a.service_code
+    #          ,a.account_id,'0' as task_id,'999999' as task_name,'##'
+    #          ,'##','%s' as interface_flag
+    #   from metadb.media_advertiser a
+    #   left join metadb.oe_async_create_task b
+    #   on a.account_id = b.account_id
+    #  and a.service_code = b.service_code
+    #  where b.account_id is null
+    #""" % (interface_flag)
+    #etl_md.execute_sql(sql)
 
 
 
