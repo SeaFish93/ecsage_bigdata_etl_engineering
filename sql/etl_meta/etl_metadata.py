@@ -221,6 +221,7 @@ class EtlMetaDataSQL():
            ,interface_flag
            ,interface_fields
            ,is_filter_account
+           ,is_report
     from metadb.interface_oe_async_tasks_info
     where status = 1
       and dag_id = '%s'

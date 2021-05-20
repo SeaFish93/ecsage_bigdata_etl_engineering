@@ -21,6 +21,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.sync_method import get_table_columns_info
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_data_2_snap import exec_snap_hive_table
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
 from ecsage_bigdata_etl_engineering.common.base.etl_thread import EtlThread
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 import os
@@ -43,8 +44,16 @@ def main(TaskInfo, **kwargs):
     task_type = TaskInfo[4]
     task_id = TaskInfo[2]
     is_filter_account = int(TaskInfo[22])
+    source_db = TaskInfo[6]
+    source_table = TaskInfo[7]
+    target_db = TaskInfo[9]
+    target_table = TaskInfo[10]
+    key_columns= TaskInfo[12]
+    is_report = TaskInfo[23]
     print(TaskInfo, "####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     exec_date = airflow.execution_date_utc8_str[0:10]
+    beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
+    hive_session = set_db_session(SessionType="hive", SessionHandler="hive")
     """任务类型，1：创建异步任务，0：获取异步任务状态，2：获取异步任务数据，3：ods同步，4：snap同步，5：获取token，6：写入目标account筛选表"""
     if task_type == 2:
         get_oe_async_tasks_data(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
@@ -53,11 +62,15 @@ def main(TaskInfo, **kwargs):
         get_etl_mid_2_ods(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo, MediaType=media_type,
                           ExecDate=exec_date)
     elif task_type == 4:
-        get_ods_2_snap(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+        #get_ods_2_snap(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo, ExecDate=exec_date)
+        get_data_2_snap(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
+                             TargetDB=target_db, TargetTable=target_table, IsReport=is_report
+                            ,KeyColumns=key_columns, ExecDate=exec_date
+                            ,DagId=airflow.dag,TaskId=airflow.task)
     elif task_type == 5:
         get_oe_async_tasks_token(MediaType=media_type)
     elif task_type == 6:
-        beeline_session = set_db_session(SessionType="beeline", SessionHandler="beeline")
+
         get_oe_async_tasks_account(BeelineSession=beeline_session,ExecDate=exec_date,TaskInfo=TaskInfo)
     elif task_type == 1:
         get_oe_async_tasks_create_all_01(AirflowDagId=airflow.dag, AirflowTaskId=airflow.task, TaskInfo=TaskInfo,
@@ -1143,21 +1156,21 @@ def get_etl_mid_2_ods(AirflowDagId="", AirflowTaskId="", TaskInfo="", MediaType=
 
 
 # 落地数据至snap
-def get_ods_2_snap(AirflowDagId="", AirflowTaskId="", TaskInfo="", ExecDate=""):
-    source_db = TaskInfo[6]
-    source_table = TaskInfo[7]
-    hive_handler = "hive"
-    beeline_handler = "beeline"
-    target_db = TaskInfo[9]
-    target_table = TaskInfo[10]
-
-    hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
-    beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
-    exec_snap_hive_table(AirflowDagId=AirflowDagId, AirflowTaskId=AirflowTaskId, HiveSession=hive_session,
-                         BeelineSession=beeline_session,
-                         SourceDB=source_db, SourceTable=source_table, TargetDB=target_db, TargetTable=target_table,
-                         IsReport=1,
-                         KeyColumns="", ExecDate=ExecDate)
+#def get_ods_2_snap(AirflowDagId="", AirflowTaskId="", TaskInfo="", ExecDate=""):
+#    source_db = TaskInfo[6]
+#    source_table = TaskInfo[7]
+#    hive_handler = "hive"
+#    beeline_handler = "beeline"
+#    target_db = TaskInfo[9]
+#    target_table = TaskInfo[10]
+#
+#    hive_session = set_db_session(SessionType="hive", SessionHandler=hive_handler)
+#    beeline_session = set_db_session(SessionType="beeline", SessionHandler=beeline_handler)
+#    exec_snap_hive_table(AirflowDagId=AirflowDagId, AirflowTaskId=AirflowTaskId, HiveSession=hive_session,
+#                         BeelineSession=beeline_session,
+#                         SourceDB=source_db, SourceTable=source_table, TargetDB=target_db, TargetTable=target_table,
+#                         IsReport=1,
+#                         KeyColumns="", ExecDate=ExecDate)
 
 
 def rerun_exception_account_tasks(AsyncAccountDir="", ExceptionFile="", DataFile="", CeleryTaskDataFile="",
