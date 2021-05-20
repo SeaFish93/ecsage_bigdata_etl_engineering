@@ -212,7 +212,7 @@ def get_oe_async_tasks_status(AsyncNotemptyFile="",AsyncEmptyFile="",AsyncStatus
       n = n + 1
 
 #定义oe任务数据
-@app.task(time_limit=3600)
+@app.task(time_limit=2000)
 def get_oe_async_tasks_data(DataFile="",ExceptionFile="",ExecData="",ExecDate="",AirflowInstance=""):
     account_id = ExecData[0]
     set_true = True
@@ -453,7 +453,7 @@ def get_not_page(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId
     return """code：%s""" % (code)
 
 #处理分页
-@app.task(rate_limit='3000/m')
+@app.task(rate_limit='2000/m')
 def get_pages(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",
               ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",
               Pagestyle="",ArrayFlag="",TargetFlag="oe"):
