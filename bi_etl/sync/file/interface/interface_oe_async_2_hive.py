@@ -1247,7 +1247,7 @@ def rerun_exception_async_tasks(DataFileDir="", ExceptionFile="", DataFile="", C
     save_exception_tasks(AsyncAccountDir=DataFileDir, ExceptionFile=ExceptionFile, TableName=table_name,
                          Columns=columns)
     #
-    n = 50
+    n = 15
     for i in range(n):
         sql = """
           select distinct %s
