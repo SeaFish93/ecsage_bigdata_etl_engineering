@@ -19,11 +19,11 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
-import pandas as pd
-import pymysql
-from sqlalchemy import create_engine
+#import pandas as pd
+#import pymysql
+#from sqlalchemy import create_engine
 
-pymysql.install_as_MySQLdb()
+#pymysql.install_as_MySQLdb()
 import os
 import time
 import json
@@ -133,24 +133,8 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     os.system("""chmod -R 777 %s""" % (local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
     os.system("""rm -f %s/*""" % (local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
 
-  eng1 = create_engine('mysql://ecdc:y8#90d#s7f66a@192.168.30.186:3306/ec_cloud_crm?charset=utf8')
-  eng2 = create_engine('mysql://root:06D567130266EB33098B9F@192.168.30.5:13306/metadb?charset=utf8')
-  sql1 = '''
-      select distinct t1.advertiser_id as account_id, t3.service_code
-      from ec_cloud_crm.advertiser t1
-           left join demons_media.media_account t2 on t1.advertiser_id = t2.account_id
-           inner join demons_media.media_service_provider t3 on t2.service_provider_id = t3.id
-      where t1.customer_id = 10484
-      '''
-  sql2 = '''
-      select account_id, media_type, token, service_code
-      from oe_service_account
-  '''
-  account_df = pd.read_sql(sql1, con=eng1)
 
-  token_df = pd.read_sql(sql2, con=eng2)
-  res_df = pd.merge(account_df, token_df, how='inner', on=['service_code', 'account_id'])
-  db_data = res_df.values.tolist()
+  db_data = ''
 
   #处理翻页
   if int(is_page) == 1:
