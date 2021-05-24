@@ -19,11 +19,7 @@ from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm im
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.get_account_tokens import get_oe_account_token
 from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
-import pandas as pd
-import pymysql
-from sqlalchemy import create_engine
 
-pymysql.install_as_MySQLdb()
 import os
 import time
 import json
@@ -133,25 +129,75 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     os.system("""chmod -R 777 %s""" % (local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
     os.system("""rm -f %s/*""" % (local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
 
-  eng1 = create_engine('mysql://ecdc:y8#90d#s7f66a@192.168.30.186:3306/ec_cloud_crm?charset=utf8')
-  eng2 = create_engine('mysql://root:06D567130266EB33098B9F@192.168.30.5:13306/metadb?charset=utf8')
-  sql1 = '''
-      select distinct t1.advertiser_id as account_id, t3.service_code
-      from ec_cloud_crm.advertiser t1
-           left join demons_media.media_account t2 on t1.advertiser_id = t2.account_id
-           inner join demons_media.media_service_provider t3 on t2.service_provider_id = t3.id
-      where t1.customer_id = 10484
-      '''
-  sql2 = '''
-      select account_id, media_type, token, service_code
-      from oe_service_account
-  '''
-  account_df = pd.read_sql(sql1, con=eng1)
+  etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
+  if (filter_db_name is not None and len(filter_db_name) > 0) or (customize_sql is not None and len(customize_sql) > 0):
 
-  token_df = pd.read_sql(sql2, con=eng2)
-  res_df = pd.merge(account_df, token_df, how='inner', on=['service_code', 'account_id'])
-  db_data = res_df.values.tolist()
-
+      filter_sql = ''''''
+      print("过滤sql：%s"%(filter_sql))
+      ok = BeelineSession.execute_sql_result_2_local_file(sql=filter_sql,file_name=tmp_data_task_file)
+      if ok is False:
+        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
+                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
+                               TargetTable="%s.%s" % (TargetDB, TargetTable),
+                               BeginExecDate=ExecDate,
+                               EndExecDate=ExecDate,
+                               Status="Error",
+                               Log="拉取snap表出现异常！！！",
+                               Developer="developer")
+        set_exit(LevelStatu="red", MSG=msg)
+      etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
+      columns = """advertiser_id,flag,filter_id"""
+      load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
+      if int(is_report) == 1:
+        sql = """
+            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token_data
+            from metadb.oe_account_interface a
+            inner join metadb.oe_sync_filter_info b
+            on a.account_id = b.advertiser_id
+            where a.exec_date = '%s'
+              and b.flag = '%s'
+            group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token_data
+        """%(ExecDate,task_flag)
+      else:
+        sql = """
+             select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token
+             from metadb.oe_service_account a
+             inner join metadb.oe_sync_filter_info b
+             on a.account_id = b.advertiser_id
+             where b.flag = '%s'
+             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token
+        """ % (task_flag)
+  else:
+      #处理维度表分支
+      if int(is_report) == 0:
+       sql = """
+            select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token
+            from metadb.oe_service_account a
+            where a.media_type = '%s'
+          --   and a.account_id in ('1675330446032899','1682305992183822')
+            group by a.account_id, a.media_type, a.service_code,a.token
+          --  limit 1
+       """%(task_flag,media_type)
+      else:
+      #处理报表分支
+       sql = """
+        select a.account_id, a.media_type, a.service_code,'' as id,'%s' as flag,a.token_data
+        from metadb.oe_account_interface a
+        where a.exec_date = '%s'
+          and a.media_type = '%s'
+        group by a.account_id, a.media_type, a.service_code,a.token_data
+      """ % (task_flag,ExecDate,media_type)
+  #过滤有消耗的广告主
+  if "etl_mid_oe_set_insert_sync_account" in AirflowTask:
+      sql = """
+        select a.account_id, a.media_type, a.service_code,'' as id
+               ,'%s' as flag
+               ,a.token_code
+        from metadb.media_advertiser a
+        where a.media_type = '%s'
+        group by a.account_id, a.media_type, a.service_code,a.token_code
+      """%(task_flag,media_type)
+  ok,db_data = etl_md.get_all_rows(sql)
   #处理翻页
   if int(is_page) == 1:
     print("处理分页逻辑！！！")
