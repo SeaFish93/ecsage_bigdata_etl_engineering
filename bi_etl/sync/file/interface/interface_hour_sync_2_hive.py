@@ -131,8 +131,32 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
 
   etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
   if (filter_db_name is not None and len(filter_db_name) > 0) or (customize_sql is not None and len(customize_sql) > 0):
-
-      filter_sql = ''''''
+      if filter_db_name is not None and len(filter_db_name) > 0 and (customize_sql is None or len(customize_sql) == 0):
+          filter_sql = """
+         select concat_ws(' ',account_id,'%s',concat_ws('&&',cast(%s as string))) 
+         from %s.%s 
+         where -- etl_date='%s'
+         %s 
+         and media_id = '%s'
+         %s
+         group by %s
+         -- limit 1
+         """ % (task_flag, filter_column_name, filter_db_name, filter_table_name, ExecDate, filter_config, media_type,
+                filter_time_sql, filter_column_name)
+      else:
+          customize_query = customize_sql.replace("etl_date_f", ExecDate)
+          filter_sql = """
+          select concat_ws(' ',account_id,'%s',concat_ws('&&',cast(%s as string))) 
+          from (%s) t
+          where -- etl_date='%s'
+          %s 
+          and media_id = '%s'
+          %s
+          group by %s
+                   -- limit 1
+                   """ % (
+          task_flag, filter_column_name, customize_query, ExecDate, filter_config, media_type, filter_time_sql,
+          filter_column_name)
       print("过滤sql：%s"%(filter_sql))
       ok = BeelineSession.execute_sql_result_2_local_file(sql=filter_sql,file_name=tmp_data_task_file)
       if ok is False:
