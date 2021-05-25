@@ -25,7 +25,8 @@ import time
 import json
 import ast
 import socket
-
+import pandas as pd
+import pymysql
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 interface_data_dir = conf.get("Interface", "oe_interface_data_home")
@@ -130,98 +131,27 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
     os.system("""rm -f %s/*""" % (local_dir.replace("ecsage_data","ecsage_data_%s"%oe_celery_works_hostname)))
 
   etl_md.execute_sql("""delete from metadb.celery_sync_status where task_id='%s' """%(task_flag))
-  if (filter_db_name is not None and len(filter_db_name) > 0) or (customize_sql is not None and len(customize_sql) > 0):
-      if filter_db_name is not None and len(filter_db_name) > 0 and (customize_sql is None or len(customize_sql) == 0):
-          filter_sql = """
-         select concat_ws(' ',account_id,'%s',concat_ws('&&',cast(%s as string))) 
-         from %s.%s 
-         where -- etl_date='%s'
-         %s 
-         and media_id = '%s'
-         %s
-         group by %s
-         -- limit 1
-         """ % (task_flag, filter_column_name, filter_db_name, filter_table_name, ExecDate, filter_config, media_type,
-                filter_time_sql, filter_column_name)
-      else:
-          customize_query = customize_sql.replace("etl_date_f", ExecDate)
-          filter_sql = """
-          select concat_ws(' ',account_id,'%s',concat_ws('&&',cast(%s as string))) 
-          from (%s) t
-          where -- etl_date='%s'
-          %s 
-          and media_id = '%s'
-          %s
-          group by %s
-                   -- limit 1
-                   """ % (
-          task_flag, filter_column_name, customize_query, ExecDate, filter_config, media_type, filter_time_sql,
-          filter_column_name)
-      print("过滤sql：%s"%(filter_sql))
-      ok = BeelineSession.execute_sql_result_2_local_file(sql=filter_sql,file_name=tmp_data_task_file)
-      if ok is False:
-        msg = get_alert_info_d(DagId=airflow.dag, TaskId=airflow.task,
-                               SourceTable="%s.%s" % ("SourceDB", "SourceTable"),
-                               TargetTable="%s.%s" % (TargetDB, TargetTable),
-                               BeginExecDate=ExecDate,
-                               EndExecDate=ExecDate,
-                               Status="Error",
-                               Log="拉取snap表出现异常！！！",
-                               Developer="developer")
-        set_exit(LevelStatu="red", MSG=msg)
-      etl_md.execute_sql("delete from metadb.oe_sync_filter_info where flag = '%s' "%(task_flag))
-      columns = """advertiser_id,flag,filter_id"""
-      load_data_mysql(AsyncAccountFile=local_dir, DataFile=tmp_data_task_file, DbName="metadb", TableName="oe_sync_filter_info",Columns=columns)
-      if int(is_report) == 1:
-        sql = """
-            select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token_data
-            from metadb.oe_account_interface a
-            inner join metadb.oe_sync_filter_info b
-            on a.account_id = b.advertiser_id
-            where a.exec_date = '%s'
-              and b.flag = '%s'
-            group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token_data
-        """%(ExecDate,task_flag)
-      else:
-        sql = """
-             select a.account_id, a.media_type, a.service_code,b.filter_id as id,b.flag,a.token
-             from metadb.oe_service_account a
-             inner join metadb.oe_sync_filter_info b
-             on a.account_id = b.advertiser_id
-             where b.flag = '%s'
-             group by a.account_id, a.media_type, a.service_code,b.filter_id,b.flag,a.token
-        """ % (task_flag)
-  else:
-      #处理维度表分支
-      if int(is_report) == 0:
-       sql = """
-            select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token
-            from metadb.oe_service_account a
-            where a.media_type = '%s'
-          --   and a.account_id in ('1675330446032899','1682305992183822')
-            group by a.account_id, a.media_type, a.service_code,a.token
-          --  limit 1
-       """%(task_flag,media_type)
-      else:
-      #处理报表分支
-       sql = """
-        select a.account_id, a.media_type, a.service_code,'' as id,'%s' as flag,a.token_data
-        from metadb.oe_account_interface a
-        where a.exec_date = '%s'
-          and a.media_type = '%s'
-        group by a.account_id, a.media_type, a.service_code,a.token_data
-      """ % (task_flag,ExecDate,media_type)
-  #过滤有消耗的广告主
-  if "etl_mid_oe_set_insert_sync_account" in AirflowTask:
-      sql = """
-        select a.account_id, a.media_type, a.service_code,'' as id
-               ,'%s' as flag
-               ,a.token_code
-        from metadb.media_advertiser a
-        where a.media_type = '%s'
-        group by a.account_id, a.media_type, a.service_code,a.token_code
-      """%(task_flag,media_type)
-  ok,db_data = etl_md.get_all_rows(sql)
+
+  conn1 = pymysql.connect(host='192.168.30.186', port=3306, user='ecdc', passwd='y8#90d#s7f66a',
+                          db='ec_cloud_crm', charset='utf8')
+  conn2 = pymysql.connect(host='192.168.30.5', port=13306, user='root', passwd='06D567130266EB33098B9F',
+                          db='metadb', charset='utf8')
+  sql1 = '''
+      select distinct t1.advertiser_id as account_id, t3.service_code
+      from ec_cloud_crm.advertiser t1
+           left join demons_media.media_account t2 on t1.advertiser_id = t2.account_id
+           inner join demons_media.media_service_provider t3 on t2.service_provider_id = t3.id
+      where t1.customer_id = 10484
+      '''
+  sql2 = '''
+      select account_id, media_type, service_code, account_id as id, '%s' as flag,token
+      from oe_service_account
+  '''%(task_flag)
+  account_df = pd.read_sql(sql1, con=conn1)
+
+  token_df = pd.read_sql(sql2, con=conn2)
+  res_df = pd.merge(token_df, account_df, how='inner', on=['service_code', 'account_id'])
+  db_data = res_df.values.tolist()
   #处理翻页
   if int(is_page) == 1:
     print("处理分页逻辑！！！")
