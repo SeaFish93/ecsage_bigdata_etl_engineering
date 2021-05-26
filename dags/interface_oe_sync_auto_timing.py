@@ -33,7 +33,7 @@ for dag_info in get_dags:
     retries = int(dag_info[2])
     batch_type = dag_info[3]
     if batch_type == "hour":
-        start_date = datetime.datetime.now() + datetime.timedelta(hours= -1)
+        start_date = airflow.utils.dates.days_ago(2)
     else:
         print("dag【%s】配置作业出现异常，未提供正确批次频率！！！"%(dag_id))
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
