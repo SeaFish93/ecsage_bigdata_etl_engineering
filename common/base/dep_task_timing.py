@@ -5,7 +5,7 @@
 # @Software: PyCharm
 # function info：airflow 任务依赖
 
-from datetime import datetime
+import datetime
 from croniter import croniter
 from airflow.sensors.external_task_sensor import ExternalTaskSensor
 import airflow
@@ -13,17 +13,18 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from airflow.models import DAG
 import pendulum
 
+
 def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
     global execution_date
     execution_date = Airflow(kwargs).execution_date_utc8
-    print("【execution_date】：%s " % execution_date)
+    print("【execution_date_utc8】：%s " % execution_date)
     dag_id = "external_" + DepDagID
     args = {
         'owner': 'etl',
         'depends_on_past': False,
         'priority_weight': 10000,
         'retries': 0,
-        'start_date': datetime.datetime.now(),
+        'start_date':  datetime.datetime.now() + datetime.timedelta(hours= -1),
         'queue': 'airflow',
     }
     dag = DAG(
