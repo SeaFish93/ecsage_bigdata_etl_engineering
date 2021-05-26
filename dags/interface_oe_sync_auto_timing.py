@@ -33,14 +33,14 @@ for dag_info in get_dags:
     retries = int(dag_info[2])
     batch_type = dag_info[3]
     if batch_type == "hour":
-        start_date = datetime.datetime.now()
+        start_date = datetime.datetime.now() + datetime.timedelta(hours= -1)
     else:
         print("dag【%s】配置作业出现异常，未提供正确批次频率！！！"%(dag_id))
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
                                    Log="dag【%s】配置作业出现异常，未提供正确批次频率！！！"%(dag_id),
                                    Developer="工程维护")
         set_exit(LevelStatu="red", MSG=msg)
-        start_date = datetime.datetime.now()
+        start_date = datetime.datetime.now() + datetime.timedelta(hours= -1)
     schedule_interval = dag_info[4]
     if int(dag_info[5]) == 1:
         depends_on_past = True
@@ -88,7 +88,7 @@ for dag_info in get_dags:
           if batch_type == "hour":
              # 动态创建dag实例
              task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                        python_callable=sync_hive_main,
+                                        python_callable=sync_interface_main,
                                         provide_context=True,
                                         op_args=(tasks_info, level,),
                                         dag=dag)
