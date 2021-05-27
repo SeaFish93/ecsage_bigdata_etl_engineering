@@ -11,7 +11,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import DAG
 import airflow
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_oe_sync_2_hive import main as sync_interface_main
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_oe_sync_2_hive_timing import timing_hourly_interface
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
@@ -33,14 +33,14 @@ for dag_info in get_dags:
     retries = int(dag_info[2])
     batch_type = dag_info[3]
     if batch_type == "hour":
-        start_date = airflow.utils.dates.days_ago(2)
+        start_date = datetime.datetime.now() - datetime.timedelta(hours= 1)
     else:
         print("dag【%s】配置作业出现异常，未提供正确批次频率！！！"%(dag_id))
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
                                    Log="dag【%s】配置作业出现异常，未提供正确批次频率！！！"%(dag_id),
                                    Developer="工程维护")
         set_exit(LevelStatu="red", MSG=msg)
-        start_date = datetime.datetime.now() + datetime.timedelta(hours= -1)
+        start_date = datetime.datetime.now() - datetime.timedelta(hours= 1)
     schedule_interval = dag_info[4]
     if int(dag_info[5]) == 1:
         depends_on_past = True
@@ -88,7 +88,7 @@ for dag_info in get_dags:
           if batch_type == "hour":
              # 动态创建dag实例
              task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                        python_callable=sync_interface_main,
+                                        python_callable=timing_hourly_interface,
                                         provide_context=True,
                                         op_args=(tasks_info, level,),
                                         dag=dag)
