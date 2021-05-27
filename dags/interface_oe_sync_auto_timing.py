@@ -34,14 +34,14 @@ for dag_info in get_dags:
     batch_type = dag_info[3]
     schedule_interval = dag_info[4]
     if batch_type == "hour":
-        start_date = datetime.datetime.utcnow() + datetime.timedelta(hours= -1)
+        start_date = airflow.utils.dates.days_ago(0,hours=datetime.datetime.utcnow().hour - 2)
     else:
         print("dag【%s】配置作业出现异常，未提供正确批次频率！！！"%(dag_id))
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
                                    Log="dag【%s】配置作业出现异常，未提供正确批次频率！！！"%(dag_id),
                                    Developer="工程维护")
         set_exit(LevelStatu="red", MSG=msg)
-        start_date = datetime.datetime.utcnow() + datetime.timedelta(hours= -1)
+        start_date = airflow.utils.dates.days_ago(0,hours=datetime.datetime.utcnow().hour - 2)
     if int(dag_info[5]) == 1:
         depends_on_past = True
     else:
