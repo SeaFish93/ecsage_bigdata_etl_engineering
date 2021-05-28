@@ -6,16 +6,22 @@
 # function info：定义oe异步接口
 
 from celery.result import AsyncResult
+import importlib
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_alert_info_d
+from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
+
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
-from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
 from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
+from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
+from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
+
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page as get_not_page_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages as get_pages_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
-from ecsage_bigdata_etl_engineering.common.base.get_config import Conf
+
 
 import os
 import time
@@ -25,6 +31,7 @@ import socket
 
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+etl_meta = EtlMetadata()
 interface_data_dir = conf.get("Interface", "oe_interface_data_home")
 oe_celery_works_hostnames = eval(conf.get("Interface", "oe_celery_works_hostname"))
 
@@ -56,6 +63,8 @@ def timing_hourly_interface(TaskInfo,Level="",**kwargs):
         get_data_2_ods(HiveSession=hive_session,BeelineSession=beeline_session,SourceDB=source_db,
                        SourceTable=source_table,TargetDB=target_db,TargetTable=target_table,
                        ExecDate=exec_date,ArrayFlag=array_flag,KeyColumns=key_columns,IsReplace="N",DagId=airflow.dag,TaskId=airflow.task,CustomSetParameter=custom_set_parameter,OrderbyColumns=orderby_columns)
+    elif Level == "diy":#目前调度py脚本
+        get_date_2_ods_diy(etl_md=etl_md,dag_id=airflow.dag,task_id=airflow.task)
     elif Level == "snap":
         get_data_2_snap(HiveSession=hive_session, BeelineSession=beeline_session, SourceDB=source_db, SourceTable=source_table,
                              TargetDB=target_db, TargetTable=target_table, IsReport=is_report
@@ -122,8 +131,7 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   sql = """
       select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token
       from metadb.oe_service_account a
-      where --a.media_type = '%s' and
-            a.account_id in ('1675330446032899','1682305992183822')
+      where a.account_id in ('1675330446032899','1682305992183822')
       group by a.account_id, a.media_type, a.service_code,a.token
   """%(task_flag)
   ok,db_data = etl_md.get_all_rows(sql)
@@ -631,3 +639,20 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",
     if ex_datas is not None and len(ex_datas) > 0:
         print("还有特别异常任务存在！！！")
         print(ex_datas[0])
+#使用Shell调度
+def get_date_2_ods_diy(etl_md="",dag_id="",task_id=""):
+    diy_sql = """select dag_id,task_id,business,dw_level,target_db,target_table from metadb.etl_tasks_info where status = 1 and and dag_id= '%s' and  task_id = '%s' limit 1 """ % (dag_id,task_id)
+    ok, request_rows = etl_md.get_all_rows(sql=diy_sql)
+    Business = request_rows [0][2]
+    DWLevel = request_rows [0][3]
+    DB = request_rows [0][4]
+    Table = request_rows [0][5]
+    try:
+        pkg = ".%s.%s.%s" % (DWLevel, DB, Table)
+        module = importlib.import_module(pkg, package=Business)
+        return module
+    except Exception as e:
+        msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
+                                   Developer="xxx开发人员")
+        set_exit(LevelStatu="red", MSG=msg)
+    module.unified_execution_entrance()#统一入口
