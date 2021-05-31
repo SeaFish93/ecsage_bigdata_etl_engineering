@@ -641,7 +641,10 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",
         print(ex_datas[0])
 #使用Shell调度
 def get_date_2_ods_diy(etl_md="",dag_id="",task_id=""):
-    diy_sql = """select dag_id,task_id,business,dw_level,target_db,target_table from metadb.etl_tasks_info where status = 1 and and dag_id= '%s' and  task_id = '%s' limit 1 """ % (dag_id,task_id)
+    diy_sql = """select dag_id,task_id,business,dw_level,target_db,target_table 
+                 from metadb.etl_tasks_info 
+                 where status = 1 and  dag_id= '%s' and  task_id = '%s' 
+                 limit 1 """ % (dag_id,task_id)
     ok, request_rows = etl_md.get_all_rows(sql=diy_sql)
     Business = request_rows [0][2]
     DWLevel = request_rows [0][3]
@@ -650,7 +653,6 @@ def get_date_2_ods_diy(etl_md="",dag_id="",task_id=""):
     try:
         pkg = ".%s.%s.%s" % (DWLevel, DB, Table)
         module = importlib.import_module(pkg, package=Business)
-        return module
     except Exception as e:
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
                                    Developer="xxx开发人员")
