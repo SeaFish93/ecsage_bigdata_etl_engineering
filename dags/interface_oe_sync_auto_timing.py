@@ -33,7 +33,7 @@ for dag_info in get_dags:
     retries = int(dag_info[2])
     batch_type = dag_info[3]
     schedule_interval = dag_info[4]
-    hour = datetime.datetime.utcnow().hour
+    hour = (datetime.datetime.utcnow().hour -1) if datetime.datetime.utcnow().hour < 1 else 0
     if batch_type == "hour":
         start_date = airflow.utils.dates.days_ago(0,hour=hour)
     else:
