@@ -643,8 +643,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",
 def get_date_2_ods_diy(etl_md="",dag_id="",task_id=""):
     diy_sql = """select dag_id,task_id,business,dw_level,target_db,target_table 
                  from metadb.etl_tasks_info 
-                 where status = 1 and  dag_id= '%s' and  task_id = '%s' 
-                 limit 1 """ % (dag_id,task_id)
+                 """
     ok, request_rows = etl_md.get_all_rows(sql=diy_sql)
     print(ok,request_rows)
     Business = request_rows [0][2]
