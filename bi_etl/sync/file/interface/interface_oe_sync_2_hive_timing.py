@@ -643,19 +643,24 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",
 def get_date_2_ods_diy(etl_md="",dag_id="",task_id=""):
     diy_sql = """select dag_id,task_id,business,dw_level,target_db,target_table 
                  from metadb.etl_tasks_info 
-                 """
+                 where status = 1 and  dag_id= '%s' and  task_id = '%s' 
+                 limit 1 """ % (dag_id,task_id)
     ok, request_rows = etl_md.get_all_rows(sql=diy_sql)
-    print(ok,request_rows)
-    Business = request_rows [0][2]
-    DWLevel = request_rows [0][3]
-    DB = request_rows [0][4]
-    Table = request_rows [0][5]
-    try:
-        pkg = ".%s.%s.%s" % (DWLevel, DB, Table)
-        print(pkg)
-        module = importlib.import_module(pkg, package=Business)
-    except Exception as e:
-        msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
-                                   Developer="xxx开发人员")
+    if request_rows:
+        print(ok,request_rows)
+        Business = request_rows [0][2]
+        DWLevel = request_rows [0][3]
+        DB = request_rows [0][4]
+        Table = request_rows [0][5]
+        try:
+            pkg = ".%s.%s.%s" % (DWLevel, DB, Table)
+            print(pkg)
+            module = importlib.import_module(pkg, package=Business)
+        except Exception as e:
+            msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",
+                                       Developer="xxx开发人员")
+            set_exit(LevelStatu="red", MSG=msg)
+        module.unified_execution_entrance()#统一入口
+    else:
+        msg = "DIY脚本未配置路径任务(metadb.etl_tasks_info)"
         set_exit(LevelStatu="red", MSG=msg)
-    module.unified_execution_entrance()#统一入口
