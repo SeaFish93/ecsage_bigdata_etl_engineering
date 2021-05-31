@@ -646,12 +646,14 @@ def get_date_2_ods_diy(etl_md="",dag_id="",task_id=""):
                  where status = 1 and  dag_id= '%s' and  task_id = '%s' 
                  limit 1 """ % (dag_id,task_id)
     ok, request_rows = etl_md.get_all_rows(sql=diy_sql)
+    print(request_rows)
     Business = request_rows [0][2]
     DWLevel = request_rows [0][3]
     DB = request_rows [0][4]
     Table = request_rows [0][5]
     try:
         pkg = ".%s.%s.%s" % (DWLevel, DB, Table)
+        print(pkg)
         module = importlib.import_module(pkg, package=Business)
     except Exception as e:
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)), Log="执行接口出现异常！！！",

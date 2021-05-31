@@ -19,12 +19,13 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
     execution_date = Airflow(kwargs).execution_date_utc8
     print("【execution_date_utc8】：%s " % execution_date)
     dag_id = "external_" + DepDagID
+    hour = datetime.datetime.utcnow().hour
     args = {
         'owner': 'etl',
         'depends_on_past': False,
         'priority_weight': 10000,
         'retries': 0,
-        'start_date':  datetime.datetime.now() - datetime.timedelta(hours= 1),
+        'start_date':  airflow.utils.dates.days_ago(0,hour=hour),
         'queue': 'airflow',
     }
     dag = DAG(
