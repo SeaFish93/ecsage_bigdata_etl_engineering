@@ -33,9 +33,11 @@ for dag_info in get_dags:
     retries = int(dag_info[2])
     batch_type = dag_info[3]
     schedule_interval = dag_info[4]
-    hour = (datetime.datetime.utcnow().hour -1) if datetime.datetime.utcnow().hour >= 1 else 0
+    utc_hour = datetime.datetime.utcnow().hour
+    day_offset,hour_offset = (0,utc_hour -1) if utc_hour >= 1 else (1,23)#Airfflow 不能突破UTC所在的小时，需要偏移1小时
     if batch_type == "hour":
-        start_date = airflow.utils.dates.days_ago(0,hour=hour)
+        #start_date = airflow.utils.dates.days_ago(day_offset,hour=hour_offset)
+        start_date = airflow.utils.dates.days_ago(0,hour=utc_hour)
     else:
         print("dag【%s】配置作业出现异常，未提供正确批次频率！！！"%(dag_id))
         msg = get_create_dag_alert(FileName="%s" % (os.path.basename(__file__)),
