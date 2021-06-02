@@ -42,7 +42,8 @@ def timing_hourly_interface(TaskInfo,Level="",**kwargs):
     global regexp_extract_column
     airflow = Airflow(kwargs)
     print(TaskInfo,"####################@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-    exec_date = airflow.execution_date_utc8_str[0:10]
+    exec_date_utc8 = airflow.execution_date_utc8 if airflow.execution_date_utc8.hour == 23 else airflow.execution_date_utc8.add(hours=1)
+    exec_date = exec_date_utc8.to_datetime_string()[0:10]
     target_db = TaskInfo[14]
     target_table = TaskInfo[15]
     source_db = TaskInfo[11]
