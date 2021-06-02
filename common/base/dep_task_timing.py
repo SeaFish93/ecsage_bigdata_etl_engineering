@@ -38,7 +38,7 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
 
     def external_schedule_interval(execution_date):
         # 服务器上的pendulum版本为1.4.4，此版本不支持转为datetime类型，固此处人工转化
-        ex_date_datetime = datetime(execution_date.year, execution_date.month, execution_date.day, execution_date.hour,
+        ex_date_datetime = datetime.datetime(execution_date.year, execution_date.month, execution_date.day, execution_date.hour,
                                     execution_date.minute, execution_date.second)
         # pendulum 2.0.5及以后，可以直接传入execution_date（pendulum类型）
         cron = croniter(DepTaskCrontab, ex_date_datetime)
