@@ -45,11 +45,10 @@ def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
         cron_prev = cron.get_prev(datetime)
         cron_current = cron.get_current(datetime)
         cron_next = cron.get_next(datetime)
-        cron_current = cron_next if ex_date_datetime.minute == 0 else cron_current
-        print("上一个调度周期：%s"%cron_prev)
-        print("当前调度周期：%s"%cron_current)
+        print("上一个调度周期：%s" % cron_prev)
+        print("当前调度周期：%s" % cron_current)
         print("下一个调度周期：%s"%cron_next)
-
+        cron_current = cron_next
         cron_prev_pendulum = pendulum.datetime(cron_current.year,
                                                   cron_current.month,
                                                   cron_current.day,
