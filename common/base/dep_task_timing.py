@@ -16,8 +16,11 @@ import pendulum
 
 def dep_task_main(DepDagID="",DepTaskID="",DepTaskCrontab="",**kwargs):
     global execution_date
-    execution_date = Airflow(kwargs).execution_date_utc8 #Tips:execution_date 实际比现实时间滞后1小时，是否需要调整带需求
-    print("【execution_date_utc8】：%s " % execution_date)
+    execution_date = Airflow(kwargs).execution_date
+    print("【execution_date】：%s " % execution_date)
+    execution_date_utc8 = Airflow(kwargs).execution_date_utc8
+    print("【execution_date_utc8】：%s " % execution_date_utc8)
+
     dag_id = "external_" + DepDagID
     utc_hour = datetime.datetime.utcnow().hour
     day_offset,hour_offset = (0,utc_hour -1) if utc_hour >= 1 else (1,23)#Airfflow 不能突破UTC所在的小时，需要偏移1小时
