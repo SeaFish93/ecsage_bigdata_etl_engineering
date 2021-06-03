@@ -16,7 +16,7 @@ from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb impo
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.dep_task import dep_task_main
-from ecsage_bigdata_etl_engineering.common.base.dep_task_timing import dep_task_main_timing
+from ecsage_bigdata_etl_engineering.common.base.dep_task_timing import dep_task_main as dep_task_main_timing
 import os
 
 etl_meta = EtlMetadata()
