@@ -30,7 +30,8 @@ import time
 import json
 import ast
 import socket
-
+import pandas as pd
+import pymysql
 conf = Conf().conf
 etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
 interface_data_dir = conf.get("Interface", "tc_interface_data_home")
@@ -154,14 +155,27 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
       os.system("""rm -f %s/*""" % (local_dir.replace("ecsage_data", "ecsage_data_%s" % tc_celery_works_hostname)))
 
   mysql_session = set_db_session(SessionType="mysql", SessionHandler="mysql_media")
-  #判断是否从列表过滤
-  sql = """
-      select a.account_id, a.media_type, a.service_code,'' as id,'%s',a.token
-      from metadb.oe_service_account a
-      where a.account_id in ('17027677')
-      group by a.account_id, a.media_type, a.service_code,a.token
-  """%(task_flag)
-  ok,db_data = etl_md.get_all_rows(sql)
+  conn1 = pymysql.connect(host='192.168.30.186', port=3306, user='ecdc', passwd='y8#90d#s7f66a',
+                          db='demons_media', charset='utf8')
+  conn2 = pymysql.connect(host='192.168.30.5', port=13306, user='root', passwd='06D567130266EB33098B9F',
+                          db='metadb', charset='utf8')
+  sql1 = '''
+      select distinct t1.advertiser_id as account_id, t3.service_code
+      from demons_media.media_advertiser_hour_data_config t1
+           left join demons_media.media_account t2 on t1.advertiser_id = t2.account_id
+           left join demons_media.media_advertiser t22 on t1.advertiser_id = t22.account_id
+           inner join demons_media.media_service_provider t3 on coalesce(t2.service_provider_id,t22.service_provider_id) = t3.id
+      where media_id = '%s'
+      '''%(media_type)
+  sql2 = '''
+      select account_id, media_type, service_code, account_id as id, '%s' as flag,token
+      from metadb.oe_service_account
+  '''%(task_flag)
+  account_df = pd.read_sql(sql1, con=conn1)
+  token_df = pd.read_sql(sql2, con=conn2)
+
+  res_df = pd.merge(token_df, account_df, how='inner', on=['service_code', 'account_id'])
+  db_data = res_df.values.tolist()
   #处理翻页
   if int(is_page) == 1:
     print("处理分页逻辑！！！")
