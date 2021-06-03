@@ -16,6 +16,7 @@ from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb impo
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.dep_task import dep_task_main
+from ecsage_bigdata_etl_engineering.common.base.dep_task_timing import dep_task_main_timing
 import os
 
 etl_meta = EtlMetadata()
@@ -32,8 +33,11 @@ for dag_info in get_dags:
     owner = dag_info[1]
     retries = int(dag_info[2])
     batch_type = dag_info[3]
+    schedule_interval = dag_info[4]
+    utc_hour = datetime.datetime.utcnow().hour
+    day_offset,hour_offset = (0,utc_hour -1) if utc_hour >= 1 else (1,23)#Airfflow 不能突破UTC所在的小时，需要偏移1小时
     if batch_type == "hour":
-        start_date = datetime.datetime.now() + datetime.timedelta(hours=-2)
+        start_date = airflow.utils.dates.days_ago(day_offset,hour=hour_offset)
     elif batch_type == "day":
         start_date = airflow.utils.dates.days_ago(2)
     else:
@@ -43,7 +47,6 @@ for dag_info in get_dags:
                                    Developer="工程维护")
         set_exit(LevelStatu="red", MSG=msg)
         start_date = datetime.datetime.now()
-    schedule_interval = dag_info[4]
     if int(dag_info[5]) == 1:
         depends_on_past = True
     else:
@@ -93,7 +96,9 @@ for dag_info in get_dags:
                                          op_args=(tasks_info,),
                                          dag=dag)
        for task_name in tasks:
-          if task_name["batch_type"] == "day":
+          if task_name["batch_type"] in ("day","hour"):
+              #小时与天的嗅探方法不同
+              dep_task_main_flag = dep_task_main if task_name["batch_type"] == "day" else dep_task_main_timing
               # 设置task依赖
               ok, task_deps = etl_meta.execute_sql(sqlName="get_task_dep_sql", Parameter={"task_id": task_name["task_id"]},IsReturnData="Y")
               if len(task_deps) > 0:
@@ -110,20 +115,12 @@ for dag_info in get_dags:
                               task[task_dep[2]].set_upstream(external_task[external_task_id])
                           else:
                               external_task['%s' % (external_task_id)] = PythonOperator(task_id=external_task_id,
-                                                                                        python_callable=dep_task_main,
+                                                                                        python_callable=dep_task_main_flag,
                                                                                         provide_context=True,
                                                                                         op_args=(task_dep[0], task_dep[1],task_dep[4],),
                                                                                         dag=dag)
                               task[task_dep[2]].set_upstream(external_task[external_task_id])
                               external_task[external_task_id].set_upstream(start_sync_task)
-
-                              ####external_task = PythonOperator(task_id='external_%s_%s' % (task_dep[0], task_dep[1]),
-                              ####                               python_callable=dep_task_main,
-                              ####                               provide_context=True,
-                              ####                               op_args=(task_dep[0], task_dep[1], task_dep[4],),
-                              ####                               dag=dag)
-                              ####task[task_dep[2]].set_upstream(external_task)
-                              ####external_task.set_upstream(start_sync_task)
               else:
                   task['%s' % (task_name["task_id"])].set_upstream(start_sync_task)
               ok, task_upstream_deps = etl_meta.execute_sql(sqlName="get_ods_upstream_depend_sql",Parameter={"dep_task_id": task_name["task_id"]}, IsReturnData="Y")
