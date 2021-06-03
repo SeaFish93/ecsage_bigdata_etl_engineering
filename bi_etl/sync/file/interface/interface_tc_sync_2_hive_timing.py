@@ -160,16 +160,16 @@ def get_data_2_etl_mid(BeelineSession="",TargetDB="",TargetTable="",AirflowDag="
   conn2 = pymysql.connect(host='192.168.30.5', port=13306, user='root', passwd='06D567130266EB33098B9F',
                           db='metadb', charset='utf8')
   sql1 = '''
-      select distinct t1.advertiser_id as account_id, t3.service_code
-      from demons_media.media_advertiser_hour_data_config t1
-           left join demons_media.media_account t2 on t1.advertiser_id = t2.account_id
-           left join demons_media.media_advertiser t22 on t1.advertiser_id = t22.account_id
+      select distinct t1.account_id, t3.service_code
+      from ec_cloud_mk.mk_account_group t1
+           left join demons_media.media_account t2 on t1.account_id = t2.account_id
+           left join demons_media.media_advertiser t22 on t1.account_id = t22.account_id
            inner join demons_media.media_service_provider t3 on coalesce(t2.service_provider_id,t22.service_provider_id) = t3.id
       where media_id = '%s'
       '''%(media_type)
   sql2 = '''
       select account_id, media_type, service_code, account_id as id, '%s' as flag,token
-      from metadb.oe_service_account
+      from metadb.tc_service_account
   '''%(task_flag)
   account_df = pd.read_sql(sql1, con=conn1)
   token_df = pd.read_sql(sql2, con=conn2)
