@@ -16,8 +16,8 @@ from ecsage_bigdata_etl_engineering.common.base.airflow_instance import Airflow
 from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb import EtlMetadata
 from ecsage_bigdata_etl_engineering.common.session.db_session import set_db_session
 
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page as get_not_page_celery
-from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages as get_pages_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_not_page_timing as get_not_page_celery
+from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.tasks import get_pages_timing as get_pages_celery
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_local_hdfs_thread
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_ods
 from ecsage_bigdata_etl_engineering.bi_etl.sync.file.interface.interface_comm import get_data_2_snap
@@ -640,7 +640,7 @@ def rerun_exception_tasks_pages(DataFileDir="",ExceptionFile="",DataFile="",
     if ex_datas is not None and len(ex_datas) > 0:
         print("还有特别异常任务存在！！！")
         print(ex_datas[0])
-#使用Shell调度
+#使用自定义调度
 def get_date_2_ods_diy(etl_md="",dag_id="",task_id=""):
     diy_sql = """select dag_id,task_id,business,dw_level,target_db,target_table 
                  from metadb.etl_tasks_info 

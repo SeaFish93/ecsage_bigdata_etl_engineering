@@ -894,3 +894,167 @@ def get_service_data_hour(ServiceId="",ServiceCode="",Media="",Page="",PageSize=
             else:
                 time.sleep(5)
         n = n + 1
+
+#小时定时任务-处理不分页
+@app.task(rate_limit='2000/m')
+def get_not_page_timing(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",
+                 TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",
+                 ArrayFlag="",TargetFlag="oe"):
+    set_true = True
+    n = 0
+    code = 9999
+    try:
+      while set_true:
+        code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token
+                            ,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag)
+        if TargetFlag == "tc":
+            sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
+        else:
+            sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
+        if int(code) in sucess_code:
+            set_true = False
+        else:
+            if n > 2:
+              print("处理不分页异常：%s,%s"%(ReturnAccountId,ServiceCode))
+              for i in range(100):
+                status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token,int(code), TaskExceptionFile + ".%s" % hostname))
+                if int(status) == 0:
+                    break;
+              set_true = False
+            else:
+              time.sleep(5)
+        n = n + 1
+      # 记录状态
+      status_id = md5(str(str(ParamJson) + ServiceCode + Token).encode('utf8')).hexdigest()
+      etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+      sql = """
+           insert into metadb.celery_sync_status
+           select '%s','%s'
+        """ % (TaskFlag, status_id)
+      ok = etl_md.execute_sql(sql=sql)
+      if ok is False:
+          code = 999999999
+          print(code)
+    except Exception as e:
+        status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token,int(code), TaskExceptionFile + ".%s" % hostname))
+        if int(status) != 0:
+            for i in range(100):
+                status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token,int(code), TaskExceptionFile + ".%s" % hostname))
+                if int(status) == 0:
+                    break;
+    return """code：%s""" % (code)
+
+#小时定时任务-处理分页
+@app.task(rate_limit='2000/m')
+def get_pages_timing(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir="",DataFile="",
+              ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",
+              Pagestyle="",ArrayFlag="",TargetFlag="oe"):
+    set_true = True
+    n = 0
+    code = 9999
+    try:
+       while set_true:
+         code = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
+                               ServiceCode=ServiceCode,DataFileDir=DataFileDir,
+                               DataFile=DataFile,ReturnAccountId=ReturnAccountId,
+                               TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag
+                              )
+         if TargetFlag == "tc":
+             sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
+         else:
+             sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
+         print(sucess_code)
+         if int(code) in sucess_code:
+             set_true = False
+         else:
+             if n > 2:
+               print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
+               for i in range(100):
+                 status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
+                 if int(status) == 0:
+                    break;
+               set_true = False
+             else:
+               time.sleep(5)
+         n = n + 1
+       # 记录状态
+       status_id = md5(str(str(ParamJson)+ServiceCode+Token).encode('utf8')).hexdigest()
+       etl_md = set_db_session(SessionType="mysql", SessionHandler="etl_metadb")
+       sql = """
+           insert into metadb.celery_sync_status
+           select '%s','%s'
+        """ % (TaskFlag, status_id)
+       ok = etl_md.execute_sql(sql=sql)
+       if ok is False:
+           code = 999999999
+           print(code)
+    except Exception as e:
+        status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
+        if int(status) != 0:
+            for i in range(100):
+                status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
+                if int(status) == 0:
+                    break;
+    return """code：%s""" % (code)
+
+#处理不分页-腾讯，便于速度控制
+@app.task(rate_limit='1000/m')
+def get_not_page_tc_timing(UrlPath="",ParamJson="",ServiceCode="",Token="",ReturnAccountId="",TaskFlag="",DataFileDir="",DataFile="",TaskExceptionFile="",ArrayFlag="",TargetFlag="oe"):
+    set_true = True
+    n = 0
+    code = 9999
+    while set_true:
+      code = set_not_page(UrlPath=UrlPath,ParamJson=ParamJson,ServiceCode=ServiceCode,Token=Token
+                          ,DataFileDir=DataFileDir,DataFile=DataFile,ReturnAccountId=ReturnAccountId,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag)
+      if TargetFlag == "tc":
+          sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
+      else:
+          sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
+      if int(code) in sucess_code:
+          set_true = False
+      else:
+          if n > 2:
+            print("处理不分页异常：%s,%s"%(ReturnAccountId,ServiceCode))
+            for i in range(100):
+              status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ",""),ServiceCode,str(ReturnAccountId).replace(" ",""), TaskFlag,Token,int(code), TaskExceptionFile + ".%s" % hostname))
+              if int(status) == 0:
+                  break;
+            set_true = False
+          else:
+            time.sleep(5)
+      n = n + 1
+    return """code：%s""" % (code)
+
+#处理分页-腾讯，便于速度控制
+@app.task(rate_limit='1000/m')
+def get_pages_tc_timing(UrlPath="",ParamJson="",ServiceCode="",Token="",DataFileDir=""
+              ,DataFile="",ReturnAccountId="",TaskFlag="",PageTaskFile="",TaskExceptionFile="",Pagestyle="",ArrayFlag="",TargetFlag="oe"):
+    set_true = True
+    n = 0
+    code = 9999
+    while set_true:
+      time.sleep(30)
+      code = set_pages(UrlPath=UrlPath,ParamJson=ParamJson,Token=Token,
+                            ServiceCode=ServiceCode,DataFileDir=DataFileDir,
+                            DataFile=DataFile,ReturnAccountId=ReturnAccountId,
+                            TaskFlag=TaskFlag,PageTaskFile=PageTaskFile,Pagestyle=Pagestyle,ArrayFlag=ArrayFlag,TargetFlag=TargetFlag
+                           )
+      if TargetFlag == "tc":
+          sucess_code=[ int(x) for x in conf.get("Tc_Code", "sucess_code").split(",")]
+      else:
+          sucess_code=[ int(x) for x in conf.get("Oe_Code", "sucess_code").split(",")]
+      print(sucess_code)
+      if int(code) in sucess_code:
+          set_true = False
+      else:
+          if n > 2:
+            print("异常分页：%s,%s"%(ReturnAccountId,ServiceCode))
+            for i in range(100):
+              status = os.system("""echo "%s %s %s %s %s %s %s">>%s """ % (UrlPath, str(ParamJson).replace(" ", ""), ServiceCode, str(ReturnAccountId).replace(" ", ""), TaskFlag,Token,int(code),TaskExceptionFile + ".%s" % hostname))
+              if int(status) == 0:
+                 break;
+            set_true = False
+          else:
+            time.sleep(5)
+      n = n + 1
+    return """code：%s"""%(code)
