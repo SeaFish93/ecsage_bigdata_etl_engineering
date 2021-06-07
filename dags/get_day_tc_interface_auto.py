@@ -88,7 +88,7 @@ for dag_info in get_dags:
           #配置跑批任务属性
           task_id = tasks_info[2]
           level = ''
-          batch_type = "day"
+          #batch_type = "day"
           tasks.append({"task_id": task_id, "batch_type": batch_type})
           no_run_time = []
           task = locals()
