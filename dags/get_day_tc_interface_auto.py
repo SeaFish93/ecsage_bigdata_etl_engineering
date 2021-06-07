@@ -35,8 +35,11 @@ for dag_info in get_dags:
     owner = dag_info[1]
     retries = int(dag_info[2])
     batch_type = dag_info[3]
+    schedule_interval = dag_info[4]
+    utc_hour = datetime.datetime.utcnow().hour
+    day_offset,hour_offset = (0,utc_hour -1) if utc_hour >= 1 else (1,23)#Airfflow 不能突破UTC所在的小时，需要偏移1小时
     if batch_type == "hour":
-        start_date = datetime.datetime.now() + datetime.timedelta(hours=-2)
+        start_date = airflow.utils.dates.days_ago(day_offset,hour=hour_offset)
     elif batch_type == "day":
         start_date = airflow.utils.dates.days_ago(2)
     else:
@@ -46,7 +49,6 @@ for dag_info in get_dags:
                                    Developer="工程维护")
         set_exit(LevelStatu="red", MSG=msg)
         start_date = datetime.datetime.now()
-    schedule_interval = dag_info[4]
     if int(dag_info[5]) == 1:
         depends_on_past = True
     else:
