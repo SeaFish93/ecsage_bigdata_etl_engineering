@@ -18,6 +18,7 @@ from ecsage_bigdata_etl_engineering.common.operator.mysql.conn_mysql_metadb impo
 from ecsage_bigdata_etl_engineering.common.alert.alert_info import get_create_dag_alert
 from ecsage_bigdata_etl_engineering.common.base.set_process_exit import set_exit
 from ecsage_bigdata_etl_engineering.common.base.dep_task import dep_task_main
+from ecsage_bigdata_etl_engineering.common.base.dep_task_timing import dep_task_main as dep_task_main_timing
 import os
 
 etl_meta = EtlMetadata()
@@ -93,9 +94,9 @@ for dag_info in get_dags:
           if batch_type == "hour":
              # 动态创建dag实例
              task['%s' % (task_id)] = PythonOperator(task_id=task_id,
-                                        python_callable=sync_hive_main,
+                                        python_callable=main,
                                         provide_context=True,
-                                        op_args=(tasks_info, level,no_run_time,),
+                                        op_args=(tasks_info, level,),
                                         dag=dag)
           elif batch_type == "day":
               task['%s' % (task_id)] = PythonOperator(task_id=task_id,
@@ -106,7 +107,8 @@ for dag_info in get_dags:
           else:
               pass
        for task_name in tasks:
-          if task_name["batch_type"] == "day":
+          if task_name["batch_type"] in ("day","hour"):
+              dep_task_main_flag = dep_task_main if task_name["batch_type"] == "day" else dep_task_main_timing
               # 设置task依赖
               ok, task_deps = etl_meta.execute_sql(sqlName="get_task_dep_sql", Parameter={"task_id": task_name["task_id"]},IsReturnData="Y")
               if len(task_deps) > 0:
@@ -118,7 +120,7 @@ for dag_info in get_dags:
                               task[task_dep[1]].set_upstream(start_sync_task)
                       else:
                           external_task = PythonOperator(task_id='external_%s_%s' % (task_dep[0], task_dep[1]),
-                                                         python_callable=dep_task_main,
+                                                         python_callable=dep_task_main_flag,
                                                          provide_context=True,
                                                          op_args=(task_dep[0], task_dep[1], task_dep[4],),
                                                          dag=dag)
